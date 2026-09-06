@@ -99,12 +99,20 @@ const CartDrawer = ({ open, onClose }) => {
 
   const totalSavings = couponDiscount + lineSavings;
 
-  const shippingCost = cartTotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
-  const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal);
-  const shippingProgress = Math.min(
-    100,
-    (cartTotal / FREE_SHIPPING_THRESHOLD) * 100
-  );
+  // FREE_SHIPPING_THRESHOLD is null until the owner sets a `freeAbove` on a
+  // shipping method. Unknown means UNKNOWN, not "free": the meter is hidden
+  // altogether and the flat rate stands, rather than a bar racing towards a
+  // figure nobody has committed to (or, worse, a silently free order).
+  const hasFreeShipping =
+    Number.isFinite(FREE_SHIPPING_THRESHOLD) && FREE_SHIPPING_THRESHOLD > 0;
+  const shippingCost =
+    hasFreeShipping && cartTotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
+  const amountToFreeShipping = hasFreeShipping
+    ? Math.max(0, FREE_SHIPPING_THRESHOLD - cartTotal)
+    : 0;
+  const shippingProgress = hasFreeShipping
+    ? Math.min(100, (cartTotal / FREE_SHIPPING_THRESHOLD) * 100)
+    : 0;
   const grandTotal = cartTotal - couponDiscount + shippingCost;
 
   // Lock body scroll while the drawer is open so the page behind it can't move.
@@ -349,34 +357,38 @@ const CartDrawer = ({ open, onClose }) => {
               </div>
             ) : (
               <>
-                {/* ---- Free-shipping meter — one hairline, one honest line */}
-                <div className={styles.meter}>
-                  <p className={styles.meterText}>
-                    {amountToFreeShipping > 0 ? (
-                      <>
-                        <strong>{formatCurrency(amountToFreeShipping)}</strong>{" "}
-                        away from complimentary shipping
-                      </>
-                    ) : (
-                      "Complimentary shipping unlocked"
-                    )}
-                  </p>
-                  <div
-                    className={styles.meterTrack}
-                    role="progressbar"
-                    aria-label="Progress towards complimentary shipping"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={Math.round(shippingProgress)}
-                  >
-                    <motion.div
-                      className={styles.meterFill}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${shippingProgress}%` }}
-                      transition={t(reduceMotion, DURATION.slow)}
-                    />
+                {/* ---- Free-shipping meter — one hairline, one honest line.
+                        Rendered only when there is a real threshold to race
+                        towards. */}
+                {hasFreeShipping && (
+                  <div className={styles.meter}>
+                    <p className={styles.meterText}>
+                      {amountToFreeShipping > 0 ? (
+                        <>
+                          <strong>{formatCurrency(amountToFreeShipping)}</strong>{" "}
+                          away from complimentary shipping
+                        </>
+                      ) : (
+                        "Complimentary shipping unlocked"
+                      )}
+                    </p>
+                    <div
+                      className={styles.meterTrack}
+                      role="progressbar"
+                      aria-label="Progress towards complimentary shipping"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.round(shippingProgress)}
+                    >
+                      <motion.div
+                        className={styles.meterFill}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${shippingProgress}%` }}
+                        transition={t(reduceMotion, DURATION.slow)}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* ---- Scroll region: lines + promo + summary ------------- */}
                 <div className={styles.body}>

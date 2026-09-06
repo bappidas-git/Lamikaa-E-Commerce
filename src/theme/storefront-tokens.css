@@ -31,12 +31,13 @@
  * Warm-minimalist, gallery-like, image-forward. Three materials only:
  * IVORY ground, INK type, GOLD seasoning. Gold is never a fill for large areas.
  *
- * SAMPLED FROM THE BRAND ASSETS (not guessed). Both logo PNGs were decoded and
- * pixel-histogrammed; the wordmark is a gold gradient on a TRANSPARENT ground —
- * there is no green anywhere in either asset (every chromatic pixel falls in
- * hue 37–53°, i.e. gold/amber).
- *   Light logo  → …/v1787592407/meghali-silk-logo.png        (gold on transparent)
- *   White logo  → …/v1787592405/meghali-silk-logo-white.png  (white on transparent)
+ * BRAND ASSETS ARE NOT DECLARED HERE ANY MORE. The wordmark and the mark live
+ * in src/config/brand.js (brand.logoUrl / brand.iconUrl) and reach the page
+ * through <Logo>; no stylesheet, component or HTML file outside brand.js and
+ * public/index.html may name their URLs.
+ *
+ * The palette below is still the retired one and is rewritten to the LAMIKAA
+ * "Luxury Skincare After Dark" set in Prompt 03.
  *
  *   Sampled gold gradient, by luminance percentile of the logo's gold pixels:
  *     p95 highlight  #F0D06B      p50 mid   #E1A52D      p10 shadow  #CC940B

@@ -1,7 +1,22 @@
-// App Info (override via .env)
-export const APP_NAME = process.env.REACT_APP_NAME || "Meghali's Silk";
-export const APP_TAGLINE = "Heritage handloom silk, woven for you";
-export const APP_DESCRIPTION = "Authentic women's silk sarees and ethnic wear, handwoven by master artisans – free shipping, easy returns, 100% genuine silk";
+// =============================================================================
+// Constants — the shared vocabularies, plus the brand-bound copy
+// =============================================================================
+// Everything that names the brand now reads from src/config/brand.js. The
+// exports below are re-exported from there so the call sites that already
+// import from this file keep working, but brand.js is the ONLY place the name,
+// the tagline, the contact block or a social handle is written down.
+//
+// The rest of the file (routes, statuses, reasons, currencies, motion variants,
+// breakpoints) is vocabulary, not brand, and is unchanged.
+// =============================================================================
+import brand from "../config/brand";
+
+// App Info. Deliberately NOT read from the environment any more: a store name
+// that a build flag can change is a store name that can differ between the tab
+// title, the invoice and the transactional email.
+export const APP_NAME = brand.name;
+export const APP_TAGLINE = brand.tagline;
+export const APP_DESCRIPTION = brand.seo.defaultDescription;
 
 // Routes
 export const ROUTES = {
@@ -100,84 +115,102 @@ export const CURRENCIES = {
 export const DEFAULT_CURRENCY = CURRENCIES.INR;
 
 // Shipping
-// Single source of truth for the free-shipping threshold. Mirrors the
-// Standard shipping method's `freeAbove` value in db.json (₹999) and is
-// shared by the Header banner and the CartDrawer progress bar.
-export const FREE_SHIPPING_THRESHOLD = 999;
+// ---------------------------------------------------------------------------
+// THERE IS NO BUILT-IN FREE-SHIPPING THRESHOLD ANY MORE.
+//
+// The old constant (999) was a figure the store had never actually committed
+// to, yet it was quoted on the announcement bar, in the cart meter, in the
+// footer promise row and inside a FAQ answer. LAMIKAA has not set one, so the
+// only honest value is "unknown": null.
+//
+// EVERY CONSUMER MUST TREAT null AS "unknown → hide" — not as zero, and not as
+// "everything ships free". The real threshold, once the owner sets one in
+// Admin > Shipping, is the lowest `freeAbove` across the active shipping
+// methods (resolveTrustBadgeDetail in theme/tokens.js already reads it that
+// way), and it reaches shared copy through fillStoreCopy's `freeAbove` option.
+export const FREE_SHIPPING_THRESHOLD = null;
 
 // Social links — the SEED values only. Where the marks actually point is owned
-// by the admin now (Settings > Social Links, persisted as `settings.social`);
-// these are what a store starts with, and what utils/socialLinks.js falls back
-// to when a settings record carries no `social` section at all. Editing them
-// will not move a live store's links — edit those in the admin.
+// by the admin (Settings > Social Links, persisted as `settings.social`); these
+// are what a store starts with, and what utils/socialLinks.js falls back to when
+// a settings record carries no `social` section at all. Every LAMIKAA profile is
+// still a placeholder, and normalizeSocialUrl() turns a placeholder into "" — so
+// no https:// link built from a token can ever reach the page.
 export const SOCIAL_LINKS = {
-  FACEBOOK: "https://facebook.com/meghalisilk",
-  TWITTER: "https://twitter.com/meghalisilk",
-  INSTAGRAM: "https://instagram.com/meghalisilk",
-  YOUTUBE: "https://youtube.com/@meghalisilk",
-  WHATSAPP: "https://wa.me/913340001100",
+  FACEBOOK: brand.social.facebook,
+  TWITTER: brand.social.twitter,
+  INSTAGRAM: brand.social.instagram,
+  YOUTUBE: brand.social.youtube,
+  WHATSAPP: brand.social.whatsapp,
 };
 
-// Store contact (Meghali's Silk — Kolkata). Single source so the Header top bar,
-// Footer, Help Center and Support/Contact page all stay in sync.
-export const SUPPORT_EMAIL = "care@meghalisilk.com";
-export const SUPPORT_PHONE = "+91 33 4000 1100";
-export const SUPPORT_ADDRESS =
-  "Galleria Producer Company Limited, Park Street, Kolkata, West Bengal 700016";
-export const SUPPORT_HOURS = "Mon – Sat: 10:00 AM – 7:00 PM IST";
+// Store contact. Single source so the Footer, Help Centre and Contact page all
+// stay in sync. All four are unresolved placeholders until the owner supplies
+// them; every surface that reads one hides the row rather than print a token.
+export const SUPPORT_EMAIL = brand.contact.email;
+export const SUPPORT_PHONE = brand.contact.phone;
+export const SUPPORT_ADDRESS = brand.contact.address;
+export const SUPPORT_HOURS = brand.contact.hours;
 
 // Date the legal/policy pages were last reviewed. Single source so the Privacy,
 // Terms, Cookie and Refund pages never show contradictory "last updated" dates.
-export const POLICY_LAST_UPDATED = "August 26, 2026";
+export const POLICY_LAST_UPDATED = "September 6, 2026";
 
 // FAQs — one shared set, read on three surfaces: the Help Centre (/help), the
-// home FAQ block and the PDP's FAQ panel. The copy therefore has to work both
-// beside a single product and on its own, and every number in it is one the
-// store actually runs on — the windows and thresholds come from the shipping
-// methods, the Cash-on-Delivery ceiling from the payment settings, and the
-// return window from the Refund Policy page. Nothing here is invented.
+// home FAQ block and the PDP's FAQ panel. This is also the set FaqContext falls
+// back to when the API is unreachable, and Prompt 06 seeds the same rows into
+// db.json.
+//
+// The copy is quoted from BRAND.md and from the packaging. Nothing is invented:
+// the ownership answers keep their legal qualifiers word for word, and the two
+// answers that would need a figure the store has not set carry a token instead —
+// fillStoreCopy fills it when the setting exists and drops the whole sentence
+// when it does not.
 export const FAQ_ITEMS = [
   {
     id: 1,
-    question: "How should I care for Muga, Pat and Eri silk?",
+    question: "Who owns LAMIKAA Naturals?",
     answer:
-      "Dry-clean for the first couple of years, then a gentle cold hand wash with a mild detergent — Muga in particular grows softer and deepens in lustre each time it is washed. Dry in the shade, never in direct sun, and press on the reverse with a warm iron. Store the piece folded in unbleached muslin rather than plastic, refold it along a different line every few months so no crease ever sets, and keep perfume and deodorant off the fabric.",
+      "LAMIKAA Naturals is owned by Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company owned by its farmer members. The value created through LAMIKAA contributes to the farmer-owned enterprise, and profits distributed by BAOPCL can reach its member farmers as dividends, subject to applicable laws and the company's dividend declaration.",
   },
   {
     id: 2,
-    question: "Is the silk really handwoven in Assam?",
+    question: "Does buying LAMIKAA products benefit farmers?",
     answer:
-      "Yes. Every piece is woven on a handloom and bought directly from weaving families in and around Sualkuchi, the weaving village on the north bank of the Brahmaputra. Undyed Muga is sold undyed — the deep honey gold is the fibre's own colour and not a dye — and Eri is handspun before it is woven. Each product page carries the details the weaver gave us for that particular piece.",
+      "LAMIKAA Naturals is part of a farmer-owned value chain: farmer, FPC, value addition, LAMIKAA Naturals, consumer. When the business succeeds and profits are distributed by BAOPCL, its farmer members can benefit through dividends, subject to applicable laws and the company's dividend declaration. Your choice of LAMIKAA can help create value beyond the product — value that may ultimately return to the farming community.",
   },
   {
     id: 3,
-    question: "What is the difference between Muga, Pat, Eri and Nuni silk?",
+    question: "Why is black rice in every product?",
     answer:
-      "Muga is the golden silk unique to Assam — undyed, unusually strong, and it only improves with age. Pat is the bright ivory-to-white mulberry silk, the one most often woven with zari for weddings and festivals. Eri is soft, matte and handspun; it behaves more like a fine wool and is warm to wear, which is why it is used for shawls and stoles. Nuni is a mulberry silk with a quieter, everyday finish. Every listing states which of them the piece is woven in.",
+      "Black rice is the hero ingredient of the range: antioxidant-rich and traditionally valued in Northeast India. Each product pairs it with botanicals chosen for a specific step of your routine.",
   },
   {
     id: 4,
-    question: "What comes in a Mekhela Chador set, and does it arrive stitched?",
+    question: "Are the products suitable for all skin types?",
     answer:
-      "A set is the two-piece drape: the mekhela, worn as the lower wrap, and the chador that goes over it. Both arrive unstitched and unpleated so your tailor can pleat, hem and finish them to your own measurements. A matching blouse piece is listed separately where one has been woven for the set. Lengths and widths appear on the product page wherever the weaver has supplied them — if a measurement you need is not listed, write to us before you order.",
+      "The range is formulated for everyday use. As printed on the packs, do a patch test before first use, keep away from the eyes and discontinue use if irritation occurs.",
   },
   {
     id: 5,
-    question: "How long does delivery take, and is shipping free?",
+    question: "Do the products have a fragrance?",
     answer:
-      "Standard delivery reaches most of India in 5-7 business days and is free on orders above {freeShipping}. Express delivery arrives in 2-3 business days, and same-day delivery is available within select Kolkata pin codes. Every order is packed in insured silk packaging, and the exact delivery charge for your address is shown at checkout before you pay.",
+      "The Black Rice range carries a mild sandalwood fragrance, as printed on the packs.",
   },
   {
     id: 6,
-    question: "What is your return policy?",
+    question: "How long does delivery take, and is shipping free?",
+    // The second sentence is the {freeShipping} sentence: fillStoreCopy drops
+    // it whole while no shipping method carries a free-shipping threshold, so
+    // the answer never quotes a figure the store has not set.
     answer:
-      "We offer a 7-day return. Request one from My Orders within 7 days of delivery and send the piece back unworn, unwashed and with its original tags and packaging intact. Once it reaches us and passes inspection, the refund is processed to your original payment method within 5-7 business days. Blouses stitched to measure and made-to-order pieces cannot be returned, since they were finished to your own measurements.",
+      "Dispatch and delivery times are shown at checkout for your address. Shipping is free on orders above {freeShipping}.",
   },
   {
     id: 7,
-    question: "Which payments do you accept, and is Cash on Delivery available?",
+    question: "What is your return policy?",
     answer:
-      "UPI, credit and debit cards, net banking and wallets are all accepted, and every payment is handled over an encrypted connection by the payment gateway. {codSentence} Prices are shown {taxNote}.",
+      "You can request a return from My Orders within {{RETURN_WINDOW_DAYS}} days of delivery for unopened products in their original packaging. Opened skincare cannot be returned for hygiene reasons unless it arrived damaged.",
   },
   {
     id: 8,
@@ -187,39 +220,23 @@ export const FAQ_ITEMS = [
   },
 ];
 
-// Why choose us — the four things the storefront can actually stand behind.
-// Every line is traceable: the loom provenance to the catalogue copy and
-// settings.store.tagline, the undyed-Muga claim to the FAQ above, the ₹999
-// threshold to the Standard shipping method, the seven-day window to the
-// Refund Policy page. Read on the Contact page as quiet hairline rows; the
-// icon field is retained for surfaces that still want a glyph.
-export const WHY_CHOOSE_US = [
-  {
-    id: 1,
-    title: "Handwoven in Sualkuchi",
-    description:
-      "Bought directly from weaving families on the north bank of the Brahmaputra",
-    icon: "mdi:hand-back-right",
-  },
-  {
-    id: 2,
-    title: "Undyed Muga, handspun Eri",
-    description: "The honey gold is the fibre's own colour — never a dye, never a blend",
-    icon: "mdi:check-decagram",
-  },
-  {
-    id: 3,
-    title: "Free shipping above {freeShipping}",
-    description: "Complimentary insured delivery on every order over the threshold",
-    icon: "mdi:truck-fast",
-  },
-  {
-    id: 4,
-    title: "Seven-day returns",
-    description: "Unworn, unwashed and with its tags, within seven days of delivery",
-    icon: "mdi:backup-restore",
-  },
-];
+// Why choose us — the four brand pillars (BRAND.md 3.2), in canonical order.
+// Title and description come from brand.pillars so the pillar copy is written
+// down once; only the glyph is chosen here, because it belongs to this surface
+// rather than to the brand.
+const PILLAR_ICONS = {
+  "indigenous-knowledge": "mdi:leaf",
+  "modern-science": "mdi:flask-outline",
+  "farmer-ownership": "mdi:account-group-outline",
+  "responsible-beauty": "mdi:earth",
+};
+
+export const WHY_CHOOSE_US = brand.pillars.map((pillar, index) => ({
+  id: index + 1,
+  title: pillar.title,
+  description: pillar.text,
+  icon: PILLAR_ICONS[pillar.key],
+}));
 
 // Framer Motion animation variants
 export const ANIMATION_VARIANTS = {
@@ -264,10 +281,6 @@ export const BREAKPOINTS = {
   XL: 1440,
 };
 
-// Trust badges
-export const TRUST_BADGES = [
-  "7-Day Easy Returns",
-  "100% Money Back",
-  "Free Shipping",
-  "Authentic Silk",
-];
+// Trust badges — owner-mandated wording, configurable in brand.js so it can be
+// adjusted for compliance without touching a component (BRAND.md 3.9 rule 4).
+export const TRUST_BADGES = brand.trustBadges;

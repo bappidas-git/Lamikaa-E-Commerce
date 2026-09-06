@@ -15,6 +15,7 @@ import {
   fillStoreCopy,
 } from "../utils/storeSettings";
 import { activeSocialLinks } from "../utils/socialLinks";
+import { STOREFRONT_CONFIG } from "../theme/tokens";
 import { setActiveCurrency } from "../utils/helpers";
 import { applyStoreTitle, storeDocumentTitle } from "../utils/documentTitle";
 
@@ -48,12 +49,20 @@ export const notifyStoreSettingsUpdated = () => {
   window.dispatchEvent(new CustomEvent(STORE_SETTINGS_UPDATED_EVENT));
 };
 
+// The built-in seed, run through the same normaliser an API record goes
+// through. That matters before launch: DEFAULT_STORE_SETTINGS documents the
+// contact fields as {{TOKENS}} (they come from brand.js), and normalising is
+// what turns an unresolved one into "" — the value every contact surface
+// already reads as "no such row". Without this, an unreachable API would print
+// "{{LAMIKAA_EMAIL}}" on the page.
+const DEFAULTS = normalizeStoreSettings(DEFAULT_STORE_SETTINGS);
+
 const defaultValue = {
-  ...DEFAULT_STORE_SETTINGS,
+  ...DEFAULTS,
   // Same shape the provider hands down, so a consumer rendered outside it (a
   // test, a stray subtree) still maps over a list rather than crashing on
   // undefined.
-  socialLinks: activeSocialLinks(DEFAULT_STORE_SETTINGS.social),
+  socialLinks: activeSocialLinks(DEFAULTS.social),
   loading: true,
   refresh: () => {},
 };
@@ -63,7 +72,7 @@ const StoreSettingsContext = createContext(defaultValue);
 export const useStoreSettings = () => useContext(StoreSettingsContext);
 
 export const StoreSettingsProvider = ({ children }) => {
-  const [settings, setSettings] = useState(DEFAULT_STORE_SETTINGS);
+  const [settings, setSettings] = useState(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
 
@@ -149,9 +158,15 @@ export const StoreSettingsProvider = ({ children }) => {
 
       formatPrice,
 
-      // Fills {freeShipping} / {codSentence} / {taxNote} in the shared copy
-      // (FAQ answers, the promise strip) from these same settings.
-      fillCopy: (text) => fillStoreCopy(text, { store, payment }),
+      // Fills {freeShipping} / {codSentence} / {taxNote} / {{RETURN_WINDOW_DAYS}}
+      // in the shared copy (FAQ answers, the promise strip) from these same
+      // settings, and drops any sentence still quoting a fact nobody has
+      // supplied. The returns window is passed in rather than imported inside
+      // storeSettings.js, which would close a cycle through utils/helpers.
+      fillCopy: (text) =>
+        fillStoreCopy(text, { store, payment }, {
+          returnWindowDays: STOREFRONT_CONFIG.returnsWindowDays,
+        }),
     };
   }, [store, payment, social, loading, load]);
 

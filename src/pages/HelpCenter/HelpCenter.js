@@ -32,7 +32,12 @@ import { useTheme } from "../../context/ThemeContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { useFaqs } from "../../context/FaqContext";
 import { SUPPORT_HOURS } from "../../utils/constants";
+import { resolveOrNull } from "../../utils/placeholders";
 import styles from "./HelpCenter.module.css";
+
+// Care-desk hours are a {{SUPPORT_HOURS}} placeholder until the owner supplies
+// them; unresolved, the sentence that would quote them is simply not written.
+const supportHours = resolveOrNull(SUPPORT_HOURS);
 
 // ---- Inline icon set ------------------------------------------------------
 // Hairline weight, stroke = currentColor. Same drawing language as the Contact
@@ -322,27 +327,34 @@ const HelpCenter = () => {
                 Still need help?
               </h2>
               <p className={styles.bandLede}>
-                The care desk is open {SUPPORT_HOURS}. Write, call, or send us a
-                photograph of the piece you are asking about.
+                {supportHours ? `The care desk is open ${supportHours}. ` : ""}
+                Write, call, or send us a photograph of the product you are
+                asking about.
               </p>
               <p className={styles.bandMeta}>
+                {supportEmail && (
                 <a href={emailHref}>
                   <Glyph name="mail" size={16} />
                   {supportEmail}
                 </a>
+                )}
+                {supportPhone && (
                 <a href={phoneHref}>
                   <Glyph name="phone" size={16} />
                   {supportPhone}
                 </a>
+                )}
               </p>
             </div>
             <div className={styles.bandActions}>
               <Link to="/support" className={styles.primaryBtn}>
                 Contact support
               </Link>
-              <a href={emailHref} className={styles.ghostBtn}>
-                Email us
-              </a>
+              {supportEmail && (
+                <a href={emailHref} className={styles.ghostBtn}>
+                  Email us
+                </a>
+              )}
             </div>
           </div>
         </div>

@@ -8,14 +8,17 @@ import {
   POLICY_LAST_UPDATED,
   SUPPORT_HOURS,
 } from "../../utils/constants";
+import brand from "../../config/brand";
+import { resolveOrNull } from "../../utils/placeholders";
 import { isEmailValid } from "../../utils/helpers";
+import Logo from "../brand/Logo";
 import styles from "./Footer.module.css";
 
 /**
- * Footer — Meghali's Silk editorial close.
+ * Footer — the editorial close.
  *
  * Four bands on one deep ground, top to bottom:
- *   1. the invitation  — serif "Letters from the loom" + the newsletter row
+ *   1. the invitation  — serif "Letters from LAMIKAA" + the newsletter row
  *   2. the grid        — white wordmark, brand statement, contact, 4 link columns
  *   3. the promises    — store-attested policy + accepted payment marks
  *   4. the colophon    — copyright and legal links in tiny tracked type
@@ -34,25 +37,22 @@ import styles from "./Footer.module.css";
  * apiService.leads.createNewsletter(email) → success / error state.
  */
 
-// The footer ground is deep in both modes, so the WHITE wordmark is the only
-// correct art here — the gold one would sink into it. Transparent-ground PNG, so
-// it sits straight on the band and the old green logo plate is retired. This is
-// byte-for-byte the URL SidebarMenu uses for its dark-mode twin, so it usually
-// paints from cache. Intrinsic art is 1454x454; the w_520 transform is 520x162,
-// ~3.4x the 48px render height, so it stays crisp on retina. width/height are
-// passed through to reserve the box and avoid CLS.
-const LOGO_SRC =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";
-const LOGO_W = 520;
-const LOGO_H = 162;
+// One wordmark on a transparent ground, so it sits straight on the deep band —
+// the same <Logo> the masthead renders, usually straight from cache. The 48px
+// slot in Footer.module.css decides the rendered height; the width/height <Logo>
+// writes reserve the box and avoid CLS.
+const LOGO_WIDTH = 190;
 
 const EMAIL_INPUT_ID = "footer-newsletter-email";
 const EMAIL_ERROR_ID = "footer-newsletter-error";
 
 // Store-attested promises only. Every line here is written down elsewhere in the
-// storefront — the 7-day window in RefundPolicy and the FAQ, the figure in
-// FREE_SHIPPING_THRESHOLD, the fabrics in the catalogue. No ratings, no
-// subscriber counts, and no "24/7 support" claim (SUPPORT_HOURS contradicts it).
+// storefront — the 7-day window in RefundPolicy and the FAQ, the owner-mandated
+// badge wording in brand.trustBadges. No ratings, no subscriber counts, and no
+// "24/7 support" claim (SUPPORT_HOURS contradicts it).
+//
+// The free-shipping row carries `needsThreshold`: with no threshold set, the
+// row is dropped rather than printed as "above ₹0".
 const TRUST_ITEMS = [
   {
     id: "secure",
@@ -68,13 +68,15 @@ const TRUST_ITEMS = [
     id: "shipping",
     // {amount} is filled in at render in the store's own currency — same idiom
     // and same constant as the AnnouncementBar, so the two figures can never
-    // drift apart.
+    // drift apart. Dropped entirely while the threshold is unknown.
+    needsThreshold: true,
     label: "Free shipping above {amount}",
     path: "M18 18.5a1.5 1.5 0 001.5-1.5 1.5 1.5 0 00-1.5-1.5 1.5 1.5 0 00-1.5 1.5 1.5 1.5 0 001.5 1.5zM19.5 9.5h-3V12h4.46L19.5 9.5zM6 18.5A1.5 1.5 0 007.5 17 1.5 1.5 0 006 15.5 1.5 1.5 0 004.5 17 1.5 1.5 0 006 18.5zM20 8l3 4v5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H9c0 1.66-1.34 3-3 3s-3-1.34-3-3H1V6c0-1.11.89-2 2-2h14v4h3zM3 6v9h.76c.55-.61 1.35-1 2.24-1 .89 0 1.69.39 2.24 1H15V6H3z",
   },
   {
-    id: "authentic",
-    label: "Authentic Assamese silk",
+    id: "farmer-owned",
+    // Owner-mandated wording, configurable in brand.js (BRAND.md 3.9 rule 4).
+    label: brand.trustBadges[0],
     path: "M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-13 5l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z",
   },
 ];
@@ -101,7 +103,26 @@ const Footer = () => {
     formatPrice,
     socialLinks,
   } = useStoreSettings();
-  const freeShippingLabel = formatPrice(FREE_SHIPPING_THRESHOLD, { decimals: 0 });
+  // Unknown threshold → the promise row is not rendered at all. `null` is the
+  // shipped value until the owner sets a `freeAbove` in Admin > Shipping.
+  const hasFreeShipping =
+    Number.isFinite(FREE_SHIPPING_THRESHOLD) && FREE_SHIPPING_THRESHOLD > 0;
+  const freeShippingLabel = hasFreeShipping
+    ? formatPrice(FREE_SHIPPING_THRESHOLD, { decimals: 0 })
+    : "";
+  const trustItems = TRUST_ITEMS.filter(
+    (item) => !item.needsThreshold || hasFreeShipping
+  );
+
+  // Contact fields the owner has not supplied yet are carried as {{TOKENS}}.
+  // A row with nothing publishable behind it is not rendered — never printed
+  // raw, and never left as an empty <dd> under its own label.
+  const contactAddress = resolveOrNull(supportAddress);
+  const contactEmail = resolveOrNull(supportEmail);
+  const contactPhone = resolveOrNull(supportPhone);
+  const contactHours = resolveOrNull(SUPPORT_HOURS);
+  const hasContact =
+    contactAddress || contactEmail || contactPhone || contactHours;
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscribeStatus, setSubscribeStatus] = useState("idle"); // idle | success | error
@@ -195,9 +216,9 @@ const Footer = () => {
           <div className={styles.invitationInner}>
             <div className={styles.invitationCopy}>
               <p className={styles.eyebrow}>Newsletter</p>
-              <p className={styles.invitationTitle}>Letters from the loom</p>
+              <p className={styles.invitationTitle}>Letters from LAMIKAA</p>
               <p className={styles.invitationNote}>
-                New arrivals, weave stories and quiet offers — straight to your
+                New arrivals, rituals and quiet offers — straight to your
                 inbox.
               </p>
             </div>
@@ -260,39 +281,50 @@ const Footer = () => {
         <div className={styles.container}>
           <div className={styles.grid}>
             <div className={styles.brandCol}>
-              <img
+              <Logo
                 className={styles.logo}
-                src={LOGO_SRC}
+                width={LOGO_WIDTH}
                 alt={storeName}
-                width={LOGO_W}
-                height={LOGO_H}
-                loading="lazy"
-                decoding="async"
               />
               <p className={styles.brandLine}>{tagline}</p>
-              <p className={styles.brandNote}>
-                Muga, Eri and Pat silk, handwoven on the looms of Sualkuchi,
-                Assam.
-              </p>
+              <p className={styles.brandNote}>{brand.legalNote}</p>
 
-              <dl className={styles.contact}>
-                <dt className={styles.contactLabel}>Studio</dt>
-                <dd className={styles.contactValue}>{supportAddress}</dd>
-                <dt className={styles.contactLabel}>Write</dt>
-                <dd className={styles.contactValue}>
-                  <a className={styles.contactLink} href={emailHref}>
-                    {supportEmail}
-                  </a>
-                </dd>
-                <dt className={styles.contactLabel}>Call</dt>
-                <dd className={styles.contactValue}>
-                  <a className={styles.contactLink} href={phoneHref}>
-                    {supportPhone}
-                  </a>
-                </dd>
-                <dt className={styles.contactLabel}>Hours</dt>
-                <dd className={styles.contactValue}>{SUPPORT_HOURS}</dd>
-              </dl>
+              {hasContact && (
+                <dl className={styles.contact}>
+                  {contactAddress && (
+                    <>
+                      <dt className={styles.contactLabel}>Address</dt>
+                      <dd className={styles.contactValue}>{contactAddress}</dd>
+                    </>
+                  )}
+                  {contactEmail && (
+                    <>
+                      <dt className={styles.contactLabel}>Write</dt>
+                      <dd className={styles.contactValue}>
+                        <a className={styles.contactLink} href={emailHref}>
+                          {contactEmail}
+                        </a>
+                      </dd>
+                    </>
+                  )}
+                  {contactPhone && (
+                    <>
+                      <dt className={styles.contactLabel}>Call</dt>
+                      <dd className={styles.contactValue}>
+                        <a className={styles.contactLink} href={phoneHref}>
+                          {contactPhone}
+                        </a>
+                      </dd>
+                    </>
+                  )}
+                  {contactHours && (
+                    <>
+                      <dt className={styles.contactLabel}>Hours</dt>
+                      <dd className={styles.contactValue}>{contactHours}</dd>
+                    </>
+                  )}
+                </dl>
+              )}
 
               {socialLinks.length > 0 && (
                 <div className={styles.social}>
@@ -350,7 +382,7 @@ const Footer = () => {
         <div className={styles.container}>
           <div className={styles.trustInner}>
             <ul className={styles.trustList}>
-              {TRUST_ITEMS.map((item) => (
+              {trustItems.map((item) => (
                 <li className={styles.trustItem} key={item.id}>
                   <svg
                     viewBox="0 0 24 24"

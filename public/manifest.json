@@ -1,18 +1,14 @@
 {
-  "short_name": "Meghali's Silk",
-  "name": "Meghali's Silk",
-  "description": "Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts.",
+  "short_name": "LAMIKAA",
+  "name": "LAMIKAA NATURALS",
+  "description": "Farmer-owned skincare rooted in the indigenous wisdom of Assam and Northeast India. The Black Rice range: cleanse, refresh, treat and moisturise — beauty that creates value for farmers.",
   "lang": "en-IN",
   "categories": [
     "shopping",
+    "beauty",
     "lifestyle"
   ],
   "icons": [
-    {
-      "src": "favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
     {
       "src": "android-chrome-192x192.png",
       "sizes": "192x192",
@@ -24,10 +20,16 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#FAF6EC",
-  "background_color": "#FAF6EC"
+  "theme_color": "#0B0B0D",
+  "background_color": "#0B0B0D"
 }

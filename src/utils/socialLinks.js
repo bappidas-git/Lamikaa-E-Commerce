@@ -23,6 +23,7 @@
 // are all generated from this list and pick it up with no further edits.
 // =============================================================================
 import { SOCIAL_LINKS } from "./constants";
+import { isPlaceholder } from "./placeholders";
 
 // The canonical set, in the order they are read on every surface.
 //
@@ -87,6 +88,11 @@ export const getSocialPlatform = (key) =>
 
 // The values the site shipped with, keyed the way `settings.social` keys them.
 // Used only when a settings record has no `social` section at all.
+//
+// For LAMIKAA every one of these is still an unresolved token, so once they are
+// run through normalizeSocialUrl (which blanks placeholders) the seed resolves
+// to an all-blank map and the footer's social row renders nothing at all —
+// until the owner fills the admin in Settings > Social Links.
 export const DEFAULT_SOCIAL_LINKS = {
   facebook: SOCIAL_LINKS.FACEBOOK,
   instagram: SOCIAL_LINKS.INSTAGRAM,
@@ -106,6 +112,13 @@ const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 export const normalizeSocialUrl = (value, key) => {
   const raw = typeof value === "string" ? value.trim() : "";
   if (!raw) return "";
+
+  // A profile the owner has not supplied yet is carried as a {{TOKEN}} in
+  // brand.js and in the seeded settings record. Treated exactly like a blank:
+  // the mark is left off the row rather than published as a dead
+  // "https://{{LAMIKAA_INSTAGRAM_URL}}" link, which is what the "bare host"
+  // repair below would otherwise make of it.
+  if (isPlaceholder(raw)) return "";
 
   // WhatsApp is the one platform whose natural value is a phone number. Accept
   // "+91 98765 43210" and publish the wa.me link the storefront needs.
