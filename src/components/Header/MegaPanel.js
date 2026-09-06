@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
 import { categoryPath, concernPath, ritualPath } from "../../utils/categories";
+import { firstProductForCategory, productsForCategory } from "../../utils/catalogue";
 import { productPath } from "../../utils/helpers";
 import { stageSrc, productAlt, primaryImage } from "../../utils/product";
 import { ROUTES } from "../../utils/constants";
@@ -76,14 +77,6 @@ export const loadMegaPanelData = () => {
   return megaDataPromise;
 };
 
-/** Does a product belong to this category? `categoryIds[]` first, then the
-    primary `categoryId` an older record may be all that carries. */
-const inCategory = (product, categoryId) => {
-  const id = String(categoryId);
-  const ids = Array.isArray(product?.categoryIds) ? product.categoryIds : [];
-  return ids.some((c) => String(c) === id) || String(product?.categoryId) === id;
-};
-
 const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
   const reduce = useReducedMotion();
   const [data, setData] = useState(megaDataCache);
@@ -121,16 +114,19 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
 
   // One pass over the hero-ordered catalogue per category: the first product
   // that belongs to it (which is the lowest heroOrder, since getHeroProducts
-  // returns them in that order) and how many of them there are. Keyed on `data`
-  // itself — the `|| []` fallbacks above are fresh arrays on every render, so
-  // they would defeat the memo they were the dependencies of.
+  // returns them in that order) and how many of them there are. The membership
+  // rule itself lives in utils/catalogue.js — the mobile drawer's Shop
+  // accordion (Prompt 10) draws the same row from the same helper. Keyed on
+  // `data` itself — the `|| []` fallbacks above are fresh arrays on every
+  // render, so they would defeat the memo they were the dependencies of.
   const rows = useMemo(() => {
     const cats = data?.categories || [];
     const catalogue = data?.products || [];
-    return cats.map((cat) => {
-      const members = catalogue.filter((p) => inCategory(p, cat.id));
-      return { cat, firstProduct: members[0] || null, count: members.length };
-    });
+    return cats.map((cat) => ({
+      cat,
+      firstProduct: firstProductForCategory(catalogue, cat),
+      count: productsForCategory(catalogue, cat).length,
+    }));
   }, [data]);
 
   const featured = products[0] || null;

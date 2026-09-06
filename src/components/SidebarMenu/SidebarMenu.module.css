@@ -1,725 +1,377 @@
 /* =============================================================================
- * SidebarMenu — LAMIKAA NATURALS editorial menu (mobile primary navigation)
+ * SidebarMenu — the LAMIKAA mobile navigation drawer
  * =============================================================================
- * Not an app drawer: a full-height boutique menu on the page ivory. Big display
- * serif for the primary links, hairline-separated groups of quiet Manrope meta
- * rows beneath, gold used only as seasoning (a rule, a dot, a focus ring).
+ * REWRITTEN WHOLESALE in Prompt 10. Nothing survives from the pre-rebuild
+ * sheet: no `.dark` branch (there is one theme — Prompt 03), no logo swap, no
+ * theme row, no hand-rolled backdrop or panel (the `ui/Drawer` primitive owns
+ * the surface, the scrim, the shadow and the motion).
  *
- * The panel paints --sf-color-bg, the same ground as the page, so opening it
- * reads as the page turning rather than as a dark slab sliding over it. Every
- * colour, space, radius, shadow and type value comes from
- * src/theme/storefront-tokens.css — no hardcoded hex, no hardcoded fonts — so
- * the single dark theme is re-derived for free.
+ * WHAT THIS FILE OWNS is the CONTENT of a drawer someone else draws: five
+ * custom properties that retune the primitive's chrome to a navigation menu,
+ * and the four row languages the body is made of —
+ *
+ *   Fraunces 22px / 52px      the primary rows: "Shop" and the brand links
+ *   Manrope 16px / 48px       a category row, behind a 32px product plate
+ *   Manrope 15px / 48px       an account or contact row, behind a 20px glyph
+ *   Manrope 12px muted        the legal note under the CTA
+ *
+ * Tokens only — no hex, no raw duration, no font stack of its own. Every
+ * interactive row clears the 44px target and shows --sf-shadow-focus.
  * ========================================================================== */
 
-/* ---- Backdrop ---------------------------------------------------------- */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: var(--sf-z-overlay);
-  background: var(--sf-color-overlay);
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* ---- Panel ------------------------------------------------------------- */
-/* Near full-width on phones — a sliver of scrim is left on purpose so the
-   tap-outside-to-close affordance never disappears. */
+/* ---- The panel ------------------------------------------------------------
+   The primitive's chrome, retuned through the hooks it publishes (see the
+   header comment in ui/Drawer.module.css). A 64px masthead is 10 + a 44px
+   close target + 10; the body is the 8px/20px the design spec asks for; and
+   the footer ADDS the home-indicator inset to its 16px rather than absorbing
+   it, so the CTA never sits under the gesture bar. */
 .panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: var(--sf-z-modal);
-  width: min(94vw, 420px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  outline: none;
-  background: var(--sf-color-bg);
-  color: var(--sf-color-text);
-  border-right: 1px solid var(--sf-color-border);
-  box-shadow: var(--sf-shadow-lg);
-  font-family: var(--sf-font-family);
+  --sf-drawer-header-pad-y: 10px;
+  --sf-drawer-header-pad-b: 10px;
+  --sf-drawer-close-margin: 0 calc(var(--sf-space-2) * -1) 0 0;
+  --sf-drawer-body-pad: var(--sf-space-2) var(--sf-space-5);
+  --sf-drawer-footer-pad-b: calc(var(--sf-space-4) + env(safe-area-inset-bottom));
 }
 
-/* ---- Masthead row ------------------------------------------------------ */
-/* Wordmark straight on the ivory (both PNGs are transparent-ground artwork),
-   with an oversized close mark opposite it. */
-.topBar {
-  flex: none;
+/* ---- Masthead ------------------------------------------------------------
+   The wordmark is a 44px-tall flex row so it centres against the 44px close
+   button without the primitive's header having to change its alignment. */
+.brand {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sf-space-4);
-  padding: var(--sf-space-4) var(--sf-space-5);
-  border-bottom: 1px solid var(--sf-color-border);
+  min-height: var(--sf-tap-target);
 }
 
 .logo {
   display: block;
-  height: 38px;
-  width: auto;
-  max-width: 60%;
-  object-fit: contain;
+  height: auto;
 }
 
-.closeBtn {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  margin-right: calc(var(--sf-space-2) * -1);
-  padding: 0;
-  border: none;
-  border-radius: var(--sf-radius-sm);
-  background: transparent;
+/* ---- The Shop accordion --------------------------------------------------
+   `ui/Accordion` styles its own trigger for long-form content (16px Manrope at
+   20px of vertical padding). Here the trigger is the first PRIMARY row of the
+   menu and has to set in the same key as the brand links under it, so it is
+   restyled through the element+attribute selector rather than by forking the
+   primitive: `button[aria-expanded]` is the trigger and nothing else in this
+   subtree is a button at all. */
+.shopAccordion button[aria-expanded] {
+  min-height: 52px;
+  padding: var(--sf-space-1) 0;
+  font-family: var(--sf-font-display);
+  font-size: 1.375rem;
+  font-weight: var(--sf-font-medium);
+  letter-spacing: var(--sf-tracking-tight);
+  line-height: var(--sf-leading-tight);
   color: var(--sf-color-text);
-  cursor: pointer;
-  transition: color var(--sf-transition-fast),
-    transform var(--sf-transition-fast), opacity var(--sf-transition-fast);
-  -webkit-tap-highlight-color: transparent;
 }
 
-.closeBtn:hover {
-  color: var(--sf-color-accent);
+/* The primitive rules a line above its first item; the drawer header already
+   drew one 8px higher, and two hairlines that close together read as a mistake
+   rather than as structure. */
+.shopAccordion > div:first-child {
+  border-top: 0;
 }
 
-/* The shared icon-button press. */
-.closeBtn:active {
-  transform: scale(0.98);
-  opacity: 0.85;
+.catList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.closeIcon {
-  font-size: 30px !important;
-}
-
-/* ---- Scroll area ------------------------------------------------------- */
-.scrollArea {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* =============================================================================
- * IDENTITY — the signed-in card, or the guest sign-in row
- * ========================================================================== */
-.identity {
-  padding: var(--sf-space-4) var(--sf-space-5);
-  border-bottom: 1px solid var(--sf-color-border);
-}
-
-.userCard,
-.guest {
+.catRow,
+.catRowAll {
   display: flex;
   align-items: center;
   gap: var(--sf-space-3);
-  width: 100%;
-  min-height: var(--sf-tap-target);
-  padding: 0;
-  border: none;
-  background: transparent;
-  text-align: left;
-  color: inherit;
-  font-family: inherit;
+  min-height: 48px;
+  padding: var(--sf-space-1) 0;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
 }
 
-.userCard {
-  cursor: pointer;
+/* A 32px label plate. `.sf-plate` supplies the ground, the hairline and the
+   1:1 box; only the size and a radius proportionate to it are set here —
+   --sf-radius-lg on a 32px square is a circle. */
+.catThumb {
+  flex: none;
+  width: 32px;
   border-radius: var(--sf-radius-sm);
-  transition: opacity var(--sf-transition-fast);
 }
 
-.userCard:hover {
-  opacity: 0.72;
+/* Keeps "All products" on the same x as the seven names above it. */
+.catThumbSpacer {
+  flex: none;
+  width: 32px;
+}
+
+.catName {
+  min-width: 0;
+}
+
+.catRowAll {
+  color: var(--sf-color-gold);
+}
+
+/* A catalogue still in flight says so rather than showing an empty group. */
+.note {
+  margin: 0;
+  padding: var(--sf-space-3) 0;
+  color: var(--sf-color-text-muted);
+  font-size: var(--sf-text-sm);
+}
+
+/* ---- Brand links ---------------------------------------------------------
+   The display-serif spine of the menu. Hairline-separated so they continue the
+   rule the accordion item already drew under "Shop" — one list, not two. */
+.brandNav {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: var(--sf-space-1) 0;
+  border-bottom: 1px solid var(--sf-color-border);
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-display);
+  font-size: 1.375rem;
+  font-weight: var(--sf-font-medium);
+  letter-spacing: var(--sf-tracking-tight);
+  line-height: var(--sf-leading-tight);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+/* ---- Account -------------------------------------------------------------- */
+.accountNav {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--sf-space-6);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  padding-bottom: var(--sf-space-4);
+  margin-bottom: var(--sf-space-2);
+  border-bottom: 1px solid var(--sf-color-border);
 }
 
 .avatar {
   flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface-2);
+  border: 1px solid var(--sf-color-border-strong);
+  color: var(--sf-color-gold);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: 0.02em;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.identityName {
+  color: var(--sf-color-text);
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-semibold);
+  line-height: var(--sf-leading-tight);
+}
+
+.identityMeta,
+.contactText {
+  color: var(--sf-color-text-muted);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountRow,
+.contactRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--sf-space-1) 0;
+  border: 0;
+  background: none;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: 0.9375rem;
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.accountIcon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  color: var(--sf-color-text-muted);
+}
+
+.accountLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The wishlist count. Decorative — the row carries the same number in a
+   visually-hidden sentence, so the visible name stays "My Wishlist" and a
+   voice-control user can say it (WCAG 2.5.3). */
+.count {
+  flex: none;
+  min-width: 20px;
+  padding: 0 var(--sf-space-1);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-primary-soft);
+  color: var(--sf-color-gold);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  line-height: 20px;
+  text-align: center;
+}
+
+.logout {
+  color: var(--sf-color-text-muted);
+}
+
+.guest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+}
+
+.guestBtn {
+  min-height: 48px;
+}
+
+/* ---- Contact and social ---------------------------------------------------
+   Rendered only for facts the owner has actually supplied: an unresolved
+   {{TOKEN}} reaches the component as "" and the row is never built, so `{{`
+   cannot print in this drawer. */
+.contactNav {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--sf-space-6);
+  padding-top: var(--sf-space-4);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-1);
+  list-style: none;
+  margin: var(--sf-space-1) 0 0;
+  padding: 0;
+}
+
+.socialLink {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  overflow: hidden;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
   border-radius: var(--sf-radius-pill);
-  border: 1px solid var(--sf-color-border-strong);
-  background: var(--sf-color-surface-2);
-}
-
-.avatarImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatarInitials {
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  font-weight: var(--sf-font-semibold);
-  line-height: 1;
-  color: var(--sf-color-gold-deep);
-}
-
-.userText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.userName {
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  font-weight: var(--sf-font-semibold);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.userMeta {
-  font-size: var(--sf-text-xs);
-  color: var(--sf-color-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.guestText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.guestEyebrow {
-  font-size: 0.625rem;
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  color: var(--sf-color-text-muted);
-}
-
-.guestSub {
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-tight);
   color: var(--sf-color-text-secondary);
+  transition: color var(--sf-transition-fast),
+    background-color var(--sf-transition-fast);
 }
 
-/* The one filled control in the menu — the ink CTA from the token system. */
-.signInBtn {
-  flex: none;
-  min-height: var(--sf-tap-target);
-  padding: 0 var(--sf-space-5);
-  border: none;
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
-  font-family: inherit;
-  font-size: 0.6875rem;
-  font-weight: var(--sf-font-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  cursor: pointer;
-  transition: background var(--sf-transition-fast);
-}
-
-.signInBtn:hover {
-  background: var(--sf-color-emerald-hover);
-}
-
-/* =============================================================================
- * PRIMARY MENU — display serif, one link per hairline
- * ========================================================================== */
-.primaryNav {
-  display: flex;
-  flex-direction: column;
-  padding: var(--sf-space-3) var(--sf-space-5) var(--sf-space-5);
-}
-
-.primaryLink {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-3);
-  width: 100%;
-  min-height: 60px;
-  padding: var(--sf-space-2) 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text);
-  text-align: left;
-  cursor: pointer;
-  transition: color var(--sf-transition-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.primaryLabel {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-normal);
-  line-height: var(--sf-leading-tight);
-  letter-spacing: var(--sf-tracking-tight);
-  /* Long collection names wrap rather than truncate — a menu entry the customer
-     cannot read in full is worse than one that takes two lines. */
-  overflow-wrap: anywhere;
-}
-
-/* The affordance is a hairline, not a chevron: it lengthens toward the label on
-   hover. Gold is decorative here, so the brand gold is the right token. */
-.primaryRule {
-  flex: none;
+.socialLink svg {
   width: 20px;
-  height: 1px;
-  background: var(--sf-color-gold);
-  transform-origin: right center;
-  transition: transform var(--sf-transition);
+  height: 20px;
+  fill: currentColor;
 }
 
-.primaryLink:hover {
-  color: var(--sf-color-accent);
+/* ---- Footer ---------------------------------------------------------------
+   The CTA is the one place the gold fill appears in the drawer. The legal note
+   under it is the canonical ownership sentence from brand.js, clamped so a
+   long legal name cannot push the button off a 360px screen. */
+.cta {
+  min-height: 52px;
 }
 
-.primaryLink:hover .primaryRule {
-  transform: scaleX(2);
-}
-
-.primaryChevron {
-  flex: none;
-  font-size: 24px !important;
-  color: var(--sf-color-text-muted);
-  transition: transform var(--sf-transition);
-}
-
-.primaryChevronOpen {
-  transform: rotate(180deg);
-}
-
-/* =============================================================================
- * CATEGORY TREE — lazy-loaded under "Collections"
- * ========================================================================== */
-.catPanel {
-  overflow: hidden;
-}
-
-.catInner {
-  display: flex;
-  flex-direction: column;
-  padding: var(--sf-space-2) 0 var(--sf-space-4);
-  /* A single gold hairline down the left edge marks the whole tree as nested. */
-  border-left: 1px solid var(--sf-color-border-strong);
-  padding-left: var(--sf-space-4);
-  margin-left: var(--sf-space-1);
-}
-
-.catNote {
+.legal {
   margin: 0;
-  padding: var(--sf-space-3) var(--sf-space-4);
-  font-size: var(--sf-text-sm);
   color: var(--sf-color-text-muted);
-}
-
-.catGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-.catParent {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-2);
-  width: 100%;
-  min-height: var(--sf-tap-target);
-  padding: var(--sf-space-2) 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text);
-  text-align: left;
-  cursor: pointer;
-  transition: color var(--sf-transition-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.catParent:hover {
-  color: var(--sf-color-accent);
-}
-
-.catParentLabel {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-normal);
-  line-height: var(--sf-leading-tight);
-  overflow-wrap: anywhere;
-}
-
-.catParentChevron,
-.catParentArrow {
-  flex: none;
-  font-size: 20px !important;
-  color: var(--sf-color-text-muted);
-  transition: transform var(--sf-transition);
-}
-
-.catParentChevronOpen {
-  transform: rotate(180deg);
-}
-
-.catChildrenWrap {
-  overflow: hidden;
-}
-
-.catChildren {
-  display: flex;
-  flex-direction: column;
-  padding-bottom: var(--sf-space-2);
-}
-
-/* Sub-collections drop to Manrope — the serif is reserved for the big links. */
-.catChild {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-2);
-  width: 100%;
-  min-height: var(--sf-tap-target);
-  /* --menu-indent is set per level in the recursive renderer. */
-  padding: var(--sf-space-1) 0 var(--sf-space-1) var(--menu-indent, 0px);
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text-secondary);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: color var(--sf-transition-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.catChild:hover {
-  color: var(--sf-color-accent);
-}
-
-.catChildRule {
-  flex: none;
-  width: 12px;
-  height: 1px;
-  background: var(--sf-color-border-strong);
-}
-
-.catChildLabel {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-tight);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.catShopAll,
-.catViewAll {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sf-space-1);
-  width: 100%;
-  min-height: var(--sf-tap-target);
-  padding: var(--sf-space-1) 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-gold-deep);
-  font-family: inherit;
-  font-size: 0.6875rem;
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  text-align: left;
-  cursor: pointer;
-  transition: color var(--sf-transition-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.catShopAll:hover,
-.catViewAll:hover {
-  color: var(--sf-color-text);
-}
-
-.catViewAll {
-  margin-top: var(--sf-space-2);
-  padding-top: var(--sf-space-3);
-  border-top: 1px solid var(--sf-color-border);
-  color: var(--sf-color-text);
-}
-
-.catViewAll svg {
-  font-size: 16px !important;
-}
-
-/* =============================================================================
- * META GROUPS — Discover, Account, Settings
- * ========================================================================== */
-.group {
-  display: flex;
-  flex-direction: column;
-  padding: var(--sf-space-4) var(--sf-space-5);
-  border-top: 1px solid var(--sf-color-border);
-}
-
-.groupLabel {
-  margin: 0 0 var(--sf-space-1);
-  font-family: var(--sf-font-family);
-  font-size: 0.625rem;
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  color: var(--sf-color-text-muted);
-}
-
-.metaRow {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-3);
-  width: 100%;
-  min-height: var(--sf-tap-target);
-  padding: var(--sf-space-1) 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: color var(--sf-transition-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.metaRow:hover {
-  color: var(--sf-color-accent);
-}
-
-.metaRowDanger {
-  color: var(--sf-color-danger);
-}
-
-.metaRowDanger:hover {
-  color: var(--sf-color-danger);
-  opacity: 0.78;
-}
-
-.metaIcon {
-  flex: none;
-  font-size: 20px !important;
-  color: var(--sf-color-text-muted);
-}
-
-.metaRowDanger .metaIcon {
-  color: inherit;
-}
-
-.metaLabel {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.metaArrow {
-  flex: none;
-  font-size: 18px !important;
-  color: var(--sf-color-text-muted);
-}
-
-.metaChevron {
-  flex: none;
-  font-size: 20px !important;
-  color: var(--sf-color-text-muted);
-  transition: transform var(--sf-transition);
-}
-
-.metaChevronOpen {
-  transform: rotate(180deg);
-}
-
-.subPanel {
-  overflow: hidden;
-}
-
-.subInner {
-  display: flex;
-  flex-direction: column;
-  padding-left: var(--sf-space-8);
-}
-
-/* ---- Dark-mode switch -------------------------------------------------- */
-.toggleSwitch {
-  flex: none;
-  position: relative;
-  width: 40px;
-  height: 22px;
-  border-radius: var(--sf-radius-pill);
-  border: 1px solid var(--sf-color-border-strong);
-  background: var(--sf-color-surface-2);
-  transition: background var(--sf-transition-fast),
-    border-color var(--sf-transition-fast);
-}
-
-.toggleKnob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: var(--sf-radius-pill);
-  background: var(--sf-color-text-muted);
-  transition: transform var(--sf-transition-fast),
-    background var(--sf-transition-fast);
-}
-
-/* On-state carries meaning, so it takes the text-safe gold — the brand gold sits
-   at 2.58:1 on the ivory track, under the 3:1 floor for a UI state indicator. */
-.toggleKnobOn {
-  transform: translateX(18px);
-  background: var(--sf-color-gold-deep);
-}
-
-/* =============================================================================
- * PROMISES + LEGAL
- * ========================================================================== */
-/* TrustStrip paints no ground and no border of its own, so the host draws the
-   bounding hairlines and compacts the shared spacing tokens for this subtree.
-   Only --sf-space-3 (the strip's vertical padding and row gap) is tightened —
-   redefining --sf-space-4 as well would collapse the column gap too, since a
-   var() on the same element resolves against the value redefined here. */
-.trust {
-  border-top: 1px solid var(--sf-color-border);
-  border-bottom: 1px solid var(--sf-color-border);
-  --sf-space-3: var(--sf-space-2);
-}
-
-.footer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sf-space-2);
-  padding: var(--sf-space-5) var(--sf-space-5) var(--sf-space-8);
-}
-
-.footerLinks {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-3);
-  flex-wrap: wrap;
-}
-
-.footerLink {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--sf-tap-target);
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text-secondary);
-  font-family: inherit;
   font-size: var(--sf-text-xs);
-  cursor: pointer;
-  transition: color var(--sf-transition-fast);
+  line-height: var(--sf-leading-normal);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
 }
 
-.footerLink:hover {
-  color: var(--sf-color-accent);
+/* ---- States ---------------------------------------------------------------
+   One gold for "you are here" and one for hover, applied to every row language
+   at once so the drawer never disagrees with itself. */
+.catRow[aria-current="page"],
+.brandLink[aria-current="page"],
+.accountRow[aria-current="page"] {
+  color: var(--sf-color-gold);
 }
 
-.footerDot {
-  width: 3px;
-  height: 3px;
-  border-radius: var(--sf-radius-pill);
-  background: var(--sf-color-border-strong);
+@media (hover: hover) {
+  .shopAccordion button[aria-expanded]:hover,
+  .catRow:hover,
+  .brandLink:hover,
+  .accountRow:hover,
+  .contactRow:hover,
+  .socialLink:hover {
+    color: var(--sf-color-gold);
+  }
 }
 
-.copyright {
-  margin: 0;
-  font-size: var(--sf-text-xs);
-  color: var(--sf-color-text-muted);
+.catRow:focus,
+.brandLink:focus,
+.accountRow:focus,
+.contactRow:focus,
+.socialLink:focus {
+  outline: none;
 }
 
-/* =============================================================================
- * FOCUS — one ring, everywhere
- * ========================================================================== */
-.closeBtn:focus-visible,
-.userCard:focus-visible,
-.signInBtn:focus-visible,
-.primaryLink:focus-visible,
-.catParent:focus-visible,
-.catChild:focus-visible,
-.catShopAll:focus-visible,
-.catViewAll:focus-visible,
-.metaRow:focus-visible,
-.footerLink:focus-visible {
+.catRow:focus-visible,
+.brandLink:focus-visible,
+.accountRow:focus-visible,
+.contactRow:focus-visible,
+.socialLink:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow: var(--sf-shadow-focus);
   border-radius: var(--sf-radius-sm);
 }
 
-/* Keyboard focus should extend the same hairline hover affordance. */
-.primaryLink:focus-visible .primaryRule {
-  transform: scaleX(2);
-}
-
-/* =============================================================================
- * RESPONSIVE + REDUCED MOTION
- * ========================================================================== */
-/* Very narrow phones: give the serif a little less to carry. */
-@media (max-width: 360px) {
-  .topBar,
-  .identity,
-  .primaryNav,
-  .group,
-  .footer {
-    padding-left: var(--sf-space-4);
-    padding-right: var(--sf-space-4);
-  }
-
-  .primaryLabel {
-    font-size: var(--sf-text-xl);
-  }
-
-  .catParentLabel {
-    font-size: var(--sf-text-lg);
-  }
-}
-
-/* Tablet and up (the hamburger still shows to 768px): the menu stops growing
-   and reads as a column against the page rather than a takeover. */
-@media (min-width: 480px) {
-  .panel {
-    width: 420px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .primaryRule,
-  .primaryChevron,
-  .catParentChevron,
-  .metaChevron,
-  .toggleKnob {
+  .catRow,
+  .brandLink,
+  .accountRow,
+  .contactRow,
+  .socialLink {
     transition: none;
-  }
-
-  /* The press dims but no longer moves. */
-  .closeBtn:active {
-    transform: none;
   }
 }

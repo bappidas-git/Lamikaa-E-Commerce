@@ -46,7 +46,9 @@ body {
      it by itself — an offset here would double it. The announcement band above
      it is in flow too, and scrolls away. Each page supplies whatever top
      padding its own first section wants.
-     padding-bottom keeps content clear of the fixed mobile BottomNav. */
+     padding-bottom keeps content clear of the fixed mobile BottomNav — the
+     mobile figure is set in the <=768px block below, where the bar exists and
+     the home-indicator inset has to be added to it. */
   padding-bottom: 80px;
   min-height: calc(100vh - 70px);
   background-color: var(--sf-color-bg);
@@ -225,8 +227,13 @@ body.admin-area *::-webkit-scrollbar-thumb:hover {
  * RESPONSIVE UTILITIES
  * ========================================================================== */
 @media (max-width: 768px) {
+  /* The 64px BottomNav plus the hairline and a little air, PLUS the device's
+     home-indicator inset — `calc`, not `max`, because the two are stacked, not
+     alternatives: the bar already sits on top of the inset, so the page has to
+     clear both. This is what keeps the last CTA of a long form (/checkout) off
+     the tab bar when it takes focus. */
   .main-content {
-    padding-bottom: 70px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .container {

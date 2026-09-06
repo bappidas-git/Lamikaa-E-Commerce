@@ -1,631 +1,520 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import {
-  CloseRounded,
-  ExpandMore,
-  ChevronRight,
-  PersonOutline,
-  ShoppingBagOutlined,
-  FavoriteBorder,
-  LogoutOutlined,
-  SettingsOutlined,
-  HelpOutline,
-} from "@mui/icons-material";
-import { useAuth } from "../../hooks/useAuth";
-import { useDealsConfig } from "../../context/DealsConfigContext";
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Icon } from "@iconify/react";
 import apiService from "../../services/api";
-import { categoryPath } from "../../utils/categories";
-import { ROUTES } from "../../utils/constants";
+import brand from "../../config/brand";
+import { useAuth } from "../../hooks/useAuth";
+import { useWishlist } from "../../context/WishlistContext";
+import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import { categoryPath } from "../../utils/categories";
+import { firstProductForCategory } from "../../utils/catalogue";
+import { stageSrc } from "../../utils/product";
+import { ROUTES } from "../../utils/constants";
 import Logo from "../brand/Logo";
-import TrustStrip from "../TrustStrip";
-import {
-  DURATION,
-  RISE,
-  overlay,
-  panel,
-  staggerDelay,
-  t,
-  tween,
-} from "../../theme/motion";
+import { Accordion, Button, Drawer } from "../ui";
 import styles from "./SidebarMenu.module.css";
 
-// One wordmark, on a TRANSPARENT ground, so it sits straight on the panel.
-// Same <Logo> (and therefore the same URL) the masthead and the splash screen
-// use, so opening the menu paints it from cache. The 38px slot in the module
-// still decides the rendered height.
-const LOGO_WIDTH = 148;
+// =============================================================================
+// SidebarMenu — the mobile navigation drawer
+// =============================================================================
+//
+// The whole storefront below 1025px navigates from here, so the drawer is a
+// full-height glass panel rather than a menu: a 64px masthead carrying the
+// wordmark and the close mark, a scrolling body of four labelled navs, and a
+// footer pinned above the home indicator with the one CTA the range is named
+// for.
+//
+// IT IS `ui/Drawer` NOW. The hand-rolled focus trap, the Escape handler, the
+// `body.style.overflow` lock and the close-on-navigate effect this file used to
+// carry are all the primitive's (Prompt 05), which means they behave exactly as
+// the cart tray's and every future drawer's do — including the reference
+// counting that keeps a modal opening over the drawer from unlocking the page
+// early, and the `body[data-drawer-open]` flag the sticky header reads to drop
+// its own backdrop filter (DESIGN_SYSTEM §4: two blurred layers, ever). The
+// PUBLIC PROPS ARE UNCHANGED — Header still mounts
+// `<SidebarMenu open onClose onOpenAuth />`.
+//
+// THE FIVE `--sf-drawer-*` CUSTOM PROPERTIES on `.panel` retune the primitive's
+// chrome to this content (a 64px masthead, an 8px/20px body, a footer that adds
+// the safe area rather than absorbing it). They are declared with the
+// primitive's own values as defaults, so nothing else that uses Drawer moves.
+//
+// FOUR NAVS, four `aria-label`s, none of them clashing with a landmark another
+// surface owns: the masthead's desktop nav is "Shop" and BottomNav is
+// "Primary", so the catalogue group here is "Catalogue". Two navigation
+// landmarks with the same name are indistinguishable in a screen reader's
+// landmark list.
+//
+// WHAT IS DELIBERATELY GONE. The theme row (there is one theme — Prompt 03),
+// the recursive multi-level category tree (the catalogue is one flat level of
+// seven), the "Discover" sort deep links (the shop has no sort — brief §7.3),
+// and `TrustStrip`, which becomes a home page section in Prompt 15.
+// =============================================================================
 
-// The panel's stagger is capped by index rather than by seconds so that the
-// leading 0.08s hand-off (the panel settling before its rows begin) is not
-// counted twice; staggerDelay() in theme/motion.js caps the rest.
-const STAGGER_MAX_ROWS = 8;
+// The wordmark in the masthead slot. Same <Logo> — and therefore the same URL —
+// the header and the splash screen render, so opening the menu paints it from
+// cache. It is decorative here (`alt=""`): the dialog is named "Menu" by the
+// visually-hidden label beside it, and the store's name is already announced by
+// the masthead behind the drawer.
+const LOGO_WIDTH = 132;
 
-// Tab-cycling needs the panel's own focusables; every control in here is a
-// plain <button>, so the standard selector covers the lot.
-const FOCUSABLE_SELECTOR = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])',
-].join(",");
+// The Shop group is one accordion item, not seven: `Accordion` is single-open
+// by default, and a group that can only ever have one panel open is exactly
+// what a single item expresses.
+const SHOP_ITEM_ID = "shop";
 
-// NOTE (Prompt 08): the "Discover" group used to hold three `?sort=` deep links
-// into the old listing — New Arrivals, Bestsellers, Sale. The LAMIKAA shop has
-// no sort (the owner's decision, brief §7.3), so all three now resolve to the
-// "Shop All" link already at the top of this drawer; the duplicate group is gone
-// rather than repeated three times. Prompt 10 rebuilds this drawer.
+/** Initials for the account avatar — first + last, then the email, then "U". */
+const initialsFor = (user) => {
+  if (!user) return "";
+  const parts = String(user.name || "").trim().split(/\s+/).filter(Boolean);
+  const first = user.firstName || parts[0] || "";
+  const last = user.lastName || parts.slice(1).join(" ") || "";
+  const initials = `${first.charAt(0)}${last.charAt(0)}`.toUpperCase().trim();
+  if (initials) return initials;
+  if (user.email) return user.email.charAt(0).toUpperCase();
+  return "U";
+};
+
+/** The name to greet an account by, however little of it the record carries. */
+const displayNameFor = (user) => {
+  if (!user) return "";
+  if (user.firstName) {
+    return `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`;
+  }
+  return user.name || user.email || "User";
+};
 
 const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  // The deals entry disappears when the admin turns the Special Offers page off.
+  const { pathname } = useLocation();
+  const labelId = useId();
+
+  const { user, logout, openAuthModal } = useAuth();
+  const { getWishlistCount } = useWishlist();
+  // The Offers entry disappears when the admin turns the Special Offers page
+  // off — the same gate the masthead's nav applies.
   const { enabled: dealsEnabled } = useDealsConfig();
-  const { storeName } = useStoreSettings();
-  const reduceMotion = useReducedMotion();
-  const panelRef = useRef(null);
+  // Contact rows come from Settings > General, already normalised: an
+  // unresolved `{{LAMIKAA_EMAIL}}` reaches this component as "" (utils/
+  // storeSettings.js runs every field through resolveOrNull), so a falsy check
+  // is the whole placeholder rule and no `{{` can ever print here.
+  const { email, phone, emailHref, phoneHref, socialLinks } = useStoreSettings();
 
-  // Header hands a fresh arrow function down on every one of its renders, so the
-  // focus effect below reads onClose through a ref — depending on the prop
-  // directly would tear the focus trap down and rebuild it mid-interaction.
-  const onCloseRef = useRef(onClose);
+  const wishlistCount = getWishlistCount();
+
+  // ---- Catalogue ---------------------------------------------------------
+  // Categories for the rows, hero products for their thumbnails — the same two
+  // reads the mega panel makes, resolved through the same helper so a product
+  // that gains a second category shows up identically on both surfaces.
+  const [catalogue, setCatalogue] = useState({ categories: [], products: [] });
+  const [loadingCatalogue, setLoadingCatalogue] = useState(false);
+  const loadedRef = useRef(false);
+  const mountedRef = useRef(true);
+
   useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  const [categories, setCategories] = useState([]);
-  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [expandedCat, setExpandedCat] = useState(null); // id of open parent (single-open)
-  // "Settings" groups the theme switch + Help — there is no /settings route.
-  const [settingsExpanded, setSettingsExpanded] = useState(false);
-
-  // Fetch categories the first time the Collections section is opened (lazy).
-  useEffect(() => {
-    if (categoriesExpanded && categories.length === 0) {
-      setCategoriesLoading(true);
-      apiService.categories
-        .getAll()
-        .then((data) => {
-          const list = Array.isArray(data) ? data : data?.data ?? [];
-          setCategories(list);
-        })
-        .catch(() => setCategories([]))
-        .finally(() => setCategoriesLoading(false));
-    }
-  }, [categoriesExpanded, categories.length]);
-
-  // Lock body scroll while the menu is open.
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    mountedRef.current = true;
     return () => {
-      document.body.style.overflow = "";
+      mountedRef.current = false;
     };
-  }, [open]);
+  }, []);
 
-  // Focus management: remember what opened the menu, move focus into the panel,
-  // cycle Tab inside it while it is open, and hand focus back on close.
+  const loadCatalogue = useCallback(() => {
+    setLoadingCatalogue(true);
+    return Promise.all([
+      apiService.categories.getAll(),
+      apiService.products.getHeroProducts(),
+    ])
+      .then(([categories, products]) => {
+        if (!mountedRef.current) return;
+        setCatalogue({
+          categories: Array.isArray(categories)
+            ? categories
+            : categories?.data ?? [],
+          products: Array.isArray(products) ? products : [],
+        });
+      })
+      // A catalogue that will not load leaves the accordion empty and every
+      // other section untouched — the drawer is still the way to the shop.
+      .catch(() => {})
+      .finally(() => {
+        if (mountedRef.current) setLoadingCatalogue(false);
+      });
+  }, []);
+
+  // Fetched on the first open rather than on mount: the drawer is mounted on
+  // every storefront route and most visits never open it.
   useEffect(() => {
-    if (!open) return undefined;
-    const opener = document.activeElement;
-    const focusTimer = setTimeout(() => panelRef.current?.focus(), 60);
+    if (!open || loadedRef.current) return;
+    loadedRef.current = true;
+    loadCatalogue();
+  }, [open, loadCatalogue]);
 
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        onCloseRef.current?.();
-        return;
-      }
-      if (e.key !== "Tab") return;
-      const panel = panelRef.current;
-      if (!panel) return;
-      const nodes = Array.from(panel.querySelectorAll(FOCUSABLE_SELECTOR));
-      if (nodes.length === 0) {
-        e.preventDefault();
-        panel.focus();
-        return;
-      }
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      const active = document.activeElement;
-      // The panel itself is tabIndex={-1} and holds focus on open, so treat it
-      // as "outside" the ring — the first Tab must land on the first control.
-      const outside = active === panel || !panel.contains(active);
-      if (e.shiftKey && (outside || active === first)) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && (outside || active === last)) {
-        e.preventDefault();
-        first.focus();
-      }
+  // Refetched when the tab regains focus, so a category renamed or retired in
+  // the admin in another tab is right the next time the menu is opened —
+  // the same freshness rule StoreSettingsContext applies to settings.
+  useEffect(() => {
+    const onFocus = () => {
+      if (loadedRef.current) loadCatalogue();
     };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadCatalogue]);
 
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      clearTimeout(focusTimer);
-      if (opener && typeof opener.focus === "function") opener.focus();
-    };
-  }, [open]);
+  // ---- Closing -----------------------------------------------------------
+  // The primitive closes on Escape, on the scrim, on its close button and on
+  // any route change. Links call this too: navigating to the route you are
+  // already on does not change `location.pathname`, and without it the drawer
+  // would stay open over the page it just "went" to.
+  const close = useCallback(() => onClose?.(), [onClose]);
 
-  const handleNavigate = useCallback(
-    (path) => {
-      navigate(path);
-      onClose();
-    },
-    [navigate, onClose]
-  );
+  const handleLogin = () => {
+    close();
+    onOpenAuth?.();
+  };
 
-  const handleSignIn = () => {
-    onClose();
-    if (onOpenAuth) onOpenAuth();
+  const handleSignup = () => {
+    close();
+    openAuthModal("signup");
   };
 
   const handleLogout = () => {
-    onClose();
+    close();
     logout();
-    navigate("/");
+    navigate(ROUTES.HOME);
   };
 
-  const getUserInitials = () => {
-    if (!user) return "";
-    const parts = (user.name || "").trim().split(/\s+/).filter(Boolean);
-    const first = user.firstName || parts[0] || "";
-    const last = user.lastName || parts.slice(1).join(" ") || "";
-    const initials = `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
-    if (initials) return initials;
-    if (user.email) return user.email.charAt(0).toUpperCase();
-    return "U";
-  };
-
-  const getUserDisplayName = () => {
-    if (!user) return "";
-    if (user.firstName) {
-      return `${user.firstName}${user.lastName ? " " + user.lastName : ""}`;
-    }
-    return user.name || user.email || "User";
-  };
-
-  // ---------------------------------------------------------------------------
-  // CATEGORY TREE — data handling unchanged; only its dress is new.
-  // ---------------------------------------------------------------------------
-  // Build a parent → children index. The API already returns active categories
-  // sorted by sortOrder, so grouping preserves the intended order per level.
-  // A category is treated as top-level when it has no parent OR its parent isn't
-  // in the (active) list — so an orphan never silently disappears from the menu.
-  const idSet = useMemo(
-    () => new Set(categories.map((c) => String(c.id))),
-    [categories]
-  );
-  const topCategories = useMemo(
-    () => categories.filter((c) => c.parentId == null || !idSet.has(String(c.parentId))),
-    [categories, idSet]
-  );
-  const childrenByParent = useMemo(() => {
-    const map = new Map();
-    categories.forEach((c) => {
-      if (c.parentId != null && idSet.has(String(c.parentId))) {
-        const key = String(c.parentId);
-        if (!map.has(key)) map.set(key, []);
-        map.get(key).push(c);
-      }
-    });
-    return map;
-  }, [categories, idSet]);
-  const getChildren = useCallback(
-    (id) => childrenByParent.get(String(id)) || [],
-    [childrenByParent]
-  );
-
-  const toggleCat = (id) =>
-    setExpandedCat((prev) => (prev === String(id) ? null : String(id)));
-
-  // Render an arbitrarily deep subtree of a parent, indenting by level so the
-  // hierarchy always reads top-down (parent → child → grandchild). The indent
-  // rides a CSS custom property, so the rhythm stays in the stylesheet.
-  const renderDescendants = (parentId, level) =>
-    getChildren(parentId).map((kid) => {
-      const grandKids = getChildren(kid.id);
-      return (
-        <React.Fragment key={kid.id || kid.slug}>
-          <button
-            type="button"
-            className={styles.catChild}
-            style={{ "--menu-indent": `${(level - 1) * 14}px` }}
-            onClick={() => handleNavigate(categoryPath(kid))}
-          >
-            <span className={styles.catChildRule} aria-hidden="true" />
-            <span className={styles.catChildLabel}>{kid.name || kid.title}</span>
-          </button>
-          {grandKids.length > 0 && renderDescendants(kid.id, level + 1)}
-        </React.Fragment>
-      );
-    });
-
-  // ---------------------------------------------------------------------------
-  // MOTION — the shared drawer treatment from theme/motion.js. The panel used
-  // to arrive on a spring (damping 36 / stiffness 220); it is a tween now, in
-  // on the slow tier and out on the base one, which is the same language every
-  // other overlay on the storefront speaks.
-  // ---------------------------------------------------------------------------
-  const drawer = panel(reduceMotion, "left");
-  const panelVariants = {
-    hidden: drawer.initial,
-    visible: drawer.animate,
-    exit: drawer.exit,
-  };
-
-  const scrim = overlay(reduceMotion);
-
-  const collapse = t(reduceMotion, DURATION.base);
-
-  // Rows fade up one after another as the panel settles. Only rows that exist at
-  // open time are staggered — accordion contents are revealed by their own
-  // height animation, so they must not inherit a stale queue position.
-  const reveal = (i) =>
-    reduceMotion
-      ? {}
-      : {
-          initial: { opacity: 0, y: RISE.micro },
-          animate: {
-            opacity: 1,
-            y: 0,
-            transition: {
-              ...tween(DURATION.base),
-              // The panel is still travelling for its first beat; the rows wait
-              // it out, then follow on the shared step.
-              delay: 0.08 + staggerDelay(Math.min(i, STAGGER_MAX_ROWS)),
-            },
-          },
+  // ---- Rows --------------------------------------------------------------
+  const categoryRows = useMemo(
+    () =>
+      (catalogue.categories || []).map((cat) => {
+        const first = firstProductForCategory(catalogue.products, cat);
+        return {
+          cat,
+          // 32px slot, requested at 2x for retina.
+          thumb: first ? stageSrc(first, { w: 64 }) : "",
         };
-
-  let rowIndex = 0;
-  const nextRow = () => reveal(rowIndex++);
-
-  // A serif primary link. Passing `expanded` turns it into an accordion trigger.
-  const renderPrimaryLink = ({ label, to, onClick, expanded }) => (
-    <motion.button
-      key={label}
-      type="button"
-      className={styles.primaryLink}
-      onClick={onClick || (() => handleNavigate(to))}
-      aria-expanded={expanded}
-      {...nextRow()}
-    >
-      <span className={styles.primaryLabel}>{label}</span>
-      {expanded === undefined ? (
-        <span className={styles.primaryRule} aria-hidden="true" />
-      ) : (
-        <ExpandMore
-          className={`${styles.primaryChevron} ${
-            expanded ? styles.primaryChevronOpen : ""
-          }`}
-        />
-      )}
-    </motion.button>
+      }),
+    [catalogue]
   );
 
-  // A quiet Manrope meta row — Discover, Account and Settings all set in this key.
-  const renderMetaRow = ({ key, label, to, onClick, Icon, tone }, staggered = true) => (
-    <motion.button
-      key={key || label}
-      type="button"
-      className={`${styles.metaRow} ${tone ? styles[tone] : ""}`}
-      onClick={onClick || (() => handleNavigate(to))}
-      {...(staggered ? nextRow() : {})}
-    >
-      {Icon ? <Icon className={styles.metaIcon} aria-hidden="true" /> : null}
-      <span className={styles.metaLabel}>{label}</span>
-      <ChevronRight className={styles.metaArrow} aria-hidden="true" />
-    </motion.button>
+  const shopActive =
+    pathname === ROUTES.SHOP || pathname.startsWith("/category/");
+
+  const brandLinks = [
+    {
+      key: "rituals",
+      label: "Rituals",
+      to: ROUTES.RITUALS,
+      active: pathname === ROUTES.RITUALS || pathname.startsWith("/rituals/"),
+    },
+    {
+      key: "about",
+      label: "Our Story",
+      to: ROUTES.ABOUT,
+      active: pathname === ROUTES.ABOUT,
+    },
+    {
+      key: "why",
+      label: "Why LAMIKAA",
+      to: ROUTES.WHY,
+      active: pathname === ROUTES.WHY,
+    },
+    ...(dealsEnabled
+      ? [
+          {
+            key: "offers",
+            label: "Offers",
+            to: ROUTES.SPECIAL_OFFERS,
+            active: pathname === ROUTES.SPECIAL_OFFERS,
+          },
+        ]
+      : []),
+    {
+      key: "faq",
+      label: "FAQ",
+      to: ROUTES.FAQ,
+      active: pathname === ROUTES.FAQ,
+    },
+    {
+      key: "contact",
+      label: "Contact",
+      to: ROUTES.CONTACT,
+      active: pathname === ROUTES.CONTACT,
+    },
+  ];
+
+  const accountLinks = [
+    {
+      key: "profile",
+      label: "My Profile",
+      to: ROUTES.PROFILE,
+      icon: "mdi:account-outline",
+    },
+    {
+      key: "orders",
+      label: "My Orders",
+      to: ROUTES.ORDERS,
+      icon: "mdi:package-variant-closed",
+    },
+    {
+      key: "wishlist",
+      label: "My Wishlist",
+      to: ROUTES.WISHLIST,
+      icon: "mdi:heart-outline",
+      count: wishlistCount,
+    },
+  ];
+
+  // ---- The Shop accordion ------------------------------------------------
+  const shopPanel = (
+    <ul className={styles.catList}>
+      {categoryRows.map(({ cat, thumb }) => {
+        const to = categoryPath(cat);
+        return (
+          <li key={cat.id ?? cat.slug}>
+            <Link
+              to={to}
+              className={styles.catRow}
+              onClick={close}
+              aria-current={pathname === to ? "page" : undefined}
+            >
+              <span className={`sf-plate ${styles.catThumb}`} aria-hidden="true">
+                {thumb ? (
+                  <img
+                    src={thumb}
+                    alt=""
+                    width="32"
+                    height="32"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : null}
+              </span>
+              <span className={styles.catName}>
+                {cat.displayName || cat.name}
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+      <li>
+        <Link
+          to={ROUTES.SHOP}
+          className={`${styles.catRow} ${styles.catRowAll}`}
+          onClick={close}
+          aria-current={pathname === ROUTES.SHOP ? "page" : undefined}
+        >
+          {/* The empty plate keeps this label on the same x as the names
+              above it. */}
+          <span className={styles.catThumbSpacer} aria-hidden="true" />
+          <span className={styles.catName}>All products</span>
+        </Link>
+      </li>
+    </ul>
   );
 
   return (
-    <AnimatePresence>
-      {open && (
+    <Drawer
+      open={open}
+      onClose={onClose}
+      side="left"
+      width="min(100vw, 420px)"
+      labelledBy={labelId}
+      className={styles.panel}
+      title={
+        <span className={styles.brand}>
+          {/* The dialog's accessible name and the drawer's heading in one
+              node: read as "Menu", seen as the wordmark. */}
+          <span id={labelId} className="sf-visually-hidden">
+            Menu
+          </span>
+          <Logo width={LOGO_WIDTH} alt="" className={styles.logo} />
+        </span>
+      }
+      footer={
         <>
-          {/* ===== Backdrop — the token scrim, nothing more ===== */}
-          <motion.div
-            className={styles.backdrop}
-            {...scrim}
-            onClick={onClose}
-          />
-
-          {/* ===== Panel ===== */}
-          <motion.div
-            ref={panelRef}
-            className={styles.panel}
-            variants={panelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${storeName} menu`}
-            tabIndex={-1}
+          <Button
+            variant="primary"
+            block
+            to={ROUTES.SHOP}
+            onClick={close}
+            className={styles.cta}
           >
-            {/* ---- Masthead: wordmark straight on the ivory + the close mark ---- */}
-            <div className={styles.topBar}>
-              <Logo
-                className={styles.logo}
-                width={LOGO_WIDTH}
-                alt={storeName}
-              />
-              <button
-                type="button"
-                className={styles.closeBtn}
-                onClick={onClose}
-                aria-label="Close menu"
-              >
-                <CloseRounded className={styles.closeIcon} />
-              </button>
-            </div>
-
-            <div className={styles.scrollArea}>
-              {/* ---- Identity ---- */}
-              <div className={styles.identity}>
-                {user ? (
-                  <motion.button
-                    type="button"
-                    className={styles.userCard}
-                    onClick={() => handleNavigate("/profile")}
-                    {...nextRow()}
-                  >
-                    <span className={styles.avatar}>
-                      {user.avatar || user.profileImage ? (
-                        <img
-                          src={user.avatar || user.profileImage}
-                          alt=""
-                          className={styles.avatarImg}
-                        />
-                      ) : (
-                        <span className={styles.avatarInitials}>
-                          {getUserInitials()}
-                        </span>
-                      )}
-                    </span>
-                    <span className={styles.userText}>
-                      <span className={styles.userName}>{getUserDisplayName()}</span>
-                      <span className={styles.userMeta}>
-                        {user.email || "View your profile"}
-                      </span>
-                    </span>
-                    <ChevronRight className={styles.metaArrow} aria-hidden="true" />
-                  </motion.button>
-                ) : (
-                  <motion.div className={styles.guest} {...nextRow()}>
-                    <span className={styles.guestText}>
-                      <span className={styles.guestEyebrow}>Welcome</span>
-                      <span className={styles.guestSub}>
-                        Sign in for orders, offers &amp; more
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      className={styles.signInBtn}
-                      onClick={handleSignIn}
-                    >
-                      Sign in
-                    </button>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* ---- Primary menu, set in the display serif ----
-                  Labelled "Menu", not "Primary"/"Shop": BottomNav and the header
-                  nav already claim those, and identically-named landmarks are
-                  indistinguishable in a screen reader's landmark list. */}
-              <nav className={styles.primaryNav} aria-label="Menu">
-                {renderPrimaryLink({ label: "Shop All", to: ROUTES.SHOP })}
-
-                {/* Collections — the lazy category tree lives under here. */}
-                {renderPrimaryLink({
-                  label: "Collections",
-                  expanded: categoriesExpanded,
-                  onClick: () => setCategoriesExpanded((prev) => !prev),
-                })}
-
-                <AnimatePresence initial={false}>
-                  {categoriesExpanded && (
-                    <motion.div
-                      className={styles.catPanel}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={collapse}
-                    >
-                      {categoriesLoading ? (
-                        <p className={styles.catNote}>Loading collections…</p>
-                      ) : topCategories.length === 0 ? (
-                        <p className={styles.catNote}>No collections found</p>
-                      ) : (
-                        <div className={styles.catInner}>
-                          {topCategories.map((cat) => {
-                            const kids = getChildren(cat.id);
-                            const hasKids = kids.length > 0;
-                            const isOpen = expandedCat === String(cat.id);
-                            return (
-                              <div className={styles.catGroup} key={cat.id || cat.slug}>
-                                <button
-                                  type="button"
-                                  className={styles.catParent}
-                                  onClick={() =>
-                                    hasKids
-                                      ? toggleCat(cat.id)
-                                      : handleNavigate(
-                                          categoryPath(cat)
-                                        )
-                                  }
-                                  aria-expanded={hasKids ? isOpen : undefined}
-                                >
-                                  <span className={styles.catParentLabel}>
-                                    {cat.name || cat.title}
-                                  </span>
-                                  {hasKids ? (
-                                    <ExpandMore
-                                      className={`${styles.catParentChevron} ${
-                                        isOpen ? styles.catParentChevronOpen : ""
-                                      }`}
-                                    />
-                                  ) : (
-                                    <ChevronRight className={styles.catParentArrow} />
-                                  )}
-                                </button>
-
-                                <AnimatePresence initial={false}>
-                                  {hasKids && isOpen && (
-                                    <motion.div
-                                      className={styles.catChildrenWrap}
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: "auto", opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      transition={collapse}
-                                    >
-                                      <div className={styles.catChildren}>
-                                        <button
-                                          type="button"
-                                          className={styles.catShopAll}
-                                          onClick={() =>
-                                            handleNavigate(
-                                              categoryPath(cat)
-                                            )
-                                          }
-                                        >
-                                          Shop all {cat.name || cat.title}
-                                        </button>
-                                        {renderDescendants(cat.id, 1)}
-                                      </div>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </div>
-                            );
-                          })}
-
-                          <button
-                            type="button"
-                            className={styles.catViewAll}
-                            onClick={() => handleNavigate(ROUTES.SHOP)}
-                          >
-                            View all products
-                            <ChevronRight />
-                          </button>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {dealsEnabled &&
-                  renderPrimaryLink({
-                    label: "Today's Deals",
-                    to: "/special-offers",
-                  })}
-                {renderPrimaryLink({ label: "Our Story", to: "/about" })}
-                {renderPrimaryLink({ label: "Support", to: ROUTES.CONTACT })}
-              </nav>
-
-              {/* ---- Account ---- */}
-              <section className={styles.group} aria-labelledby="menu-account">
-                <h2 className={styles.groupLabel} id="menu-account">
-                  Account
-                </h2>
-                {renderMetaRow({
-                  label: "Profile",
-                  to: "/profile",
-                  Icon: PersonOutline,
-                })}
-                {renderMetaRow({
-                  label: "Orders",
-                  to: "/orders",
-                  Icon: ShoppingBagOutlined,
-                })}
-                {renderMetaRow({
-                  label: "Wishlist",
-                  to: "/wishlist",
-                  Icon: FavoriteBorder,
-                })}
-                {user &&
-                  renderMetaRow({
-                    label: "Sign out",
-                    Icon: LogoutOutlined,
-                    tone: "metaRowDanger",
-                    onClick: handleLogout,
-                  })}
-              </section>
-
-              {/* ---- Settings ---- */}
-              <section className={styles.group}>
-                <motion.button
-                  type="button"
-                  className={styles.metaRow}
-                  onClick={() => setSettingsExpanded((prev) => !prev)}
-                  aria-expanded={settingsExpanded}
-                  {...nextRow()}
-                >
-                  <SettingsOutlined className={styles.metaIcon} aria-hidden="true" />
-                  <span className={styles.metaLabel}>Settings</span>
-                  <ExpandMore
-                    className={`${styles.metaChevron} ${
-                      settingsExpanded ? styles.metaChevronOpen : ""
-                    }`}
-                    aria-hidden="true"
-                  />
-                </motion.button>
-
-                <AnimatePresence initial={false}>
-                  {settingsExpanded && (
-                    <motion.div
-                      className={styles.subPanel}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={collapse}
-                    >
-                      <div className={styles.subInner}>
-                        {renderMetaRow(
-                          { label: "Help centre", to: ROUTES.FAQ, Icon: HelpOutline },
-                          false
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </section>
-
-              {/* ---- Promises: store-attested policies, kept in the menu ---- */}
-              <TrustStrip className={styles.trust} />
-
-              {/* ---- Legal ---- */}
-              <div className={styles.footer}>
-                <div className={styles.footerLinks}>
-                  <button
-                    type="button"
-                    className={styles.footerLink}
-                    onClick={() => handleNavigate(ROUTES.POLICY_TERMS)}
-                  >
-                    Terms of Service
-                  </button>
-                  <span className={styles.footerDot} aria-hidden="true" />
-                  <button
-                    type="button"
-                    className={styles.footerLink}
-                    onClick={() => handleNavigate(ROUTES.POLICY_PRIVACY)}
-                  >
-                    Privacy Policy
-                  </button>
-                </div>
-                <p className={styles.copyright}>
-                  © {new Date().getFullYear()} {storeName}
-                </p>
-              </div>
-            </div>
-          </motion.div>
+            Shop the Black Rice Range
+          </Button>
+          <p className={styles.legal}>{brand.legalNote}</p>
         </>
-      )}
-    </AnimatePresence>
+      }
+    >
+      {/* ---- Catalogue --------------------------------------------------- */}
+      <nav aria-label="Catalogue">
+        <Accordion
+          className={styles.shopAccordion}
+          headingLevel="h2"
+          items={[{ id: SHOP_ITEM_ID, title: "Shop", content: shopPanel }]}
+          // Open where the visitor already is: arriving at the menu from the
+          // shop or a category page, the categories are the thing they came
+          // back for. Everywhere else the menu opens as one short list.
+          defaultOpen={shopActive ? SHOP_ITEM_ID : undefined}
+        />
+        {loadingCatalogue && categoryRows.length === 0 ? (
+          <p className={styles.note}>Loading the catalogue…</p>
+        ) : null}
+      </nav>
+
+      {/* ---- Brand ------------------------------------------------------- */}
+      <nav aria-label="Brand" className={styles.brandNav}>
+        {brandLinks.map((item) => (
+          <Link
+            key={item.key}
+            to={item.to}
+            className={styles.brandLink}
+            onClick={close}
+            aria-current={item.active ? "page" : undefined}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
+      {/* ---- Account ----------------------------------------------------- */}
+      <nav aria-label="Account" className={styles.accountNav}>
+        {user ? (
+          <>
+            <div className={styles.identity}>
+              <span className={styles.avatar} aria-hidden="true">
+                {initialsFor(user)}
+              </span>
+              <span className={styles.identityText}>
+                <span className={styles.identityName}>
+                  {displayNameFor(user)}
+                </span>
+                {user.email ? (
+                  <span className={styles.identityMeta}>{user.email}</span>
+                ) : null}
+              </span>
+            </div>
+
+            {accountLinks.map((item) => (
+              <Link
+                key={item.key}
+                to={item.to}
+                className={styles.accountRow}
+                onClick={close}
+                aria-current={pathname === item.to ? "page" : undefined}
+              >
+                <Icon
+                  icon={item.icon}
+                  className={styles.accountIcon}
+                  aria-hidden="true"
+                />
+                <span className={styles.accountLabel}>{item.label}</span>
+                {/* The count is decorative — the row's own text carries it for
+                    assistive tech, so the label is never read as "3My
+                    Wishlist" (WCAG 2.5.3 needs the visible name to be
+                    speakable). */}
+                {item.count > 0 ? (
+                  <span className={styles.count} aria-hidden="true">
+                    {item.count > 99 ? "99+" : item.count}
+                  </span>
+                ) : null}
+                {item.count > 0 ? (
+                  <span className="sf-visually-hidden">
+                    {`, ${item.count} ${item.count === 1 ? "item" : "items"}`}
+                  </span>
+                ) : null}
+              </Link>
+            ))}
+
+            <button
+              type="button"
+              className={`${styles.accountRow} ${styles.logout}`}
+              onClick={handleLogout}
+            >
+              <Icon
+                icon="mdi:logout"
+                className={styles.accountIcon}
+                aria-hidden="true"
+              />
+              <span className={styles.accountLabel}>Log out</span>
+            </button>
+          </>
+        ) : (
+          <div className={styles.guest}>
+            <Button
+              variant="secondary"
+              block
+              onClick={handleLogin}
+              className={styles.guestBtn}
+            >
+              Log in
+            </Button>
+            <Button
+              variant="ghost"
+              block
+              onClick={handleSignup}
+              className={styles.guestBtn}
+            >
+              Create account
+            </Button>
+          </div>
+        )}
+      </nav>
+
+      {/* ---- Contact and social ------------------------------------------ */}
+      {email || phone || socialLinks.length > 0 ? (
+        <nav aria-label="Contact" className={styles.contactNav}>
+          {email ? (
+            <a href={emailHref} className={styles.contactRow}>
+              <Icon
+                icon="mdi:email-outline"
+                className={styles.accountIcon}
+                aria-hidden="true"
+              />
+              <span className={styles.contactText}>{email}</span>
+            </a>
+          ) : null}
+          {phone ? (
+            <a href={phoneHref} className={styles.contactRow}>
+              <Icon
+                icon="mdi:phone-outline"
+                className={styles.accountIcon}
+                aria-hidden="true"
+              />
+              <span className={styles.contactText}>{phone}</span>
+            </a>
+          ) : null}
+
+          {socialLinks.length > 0 ? (
+            <ul className={styles.social}>
+              {socialLinks.map((link) => (
+                <li key={link.key}>
+                  <a
+                    href={link.url}
+                    className={styles.socialLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={link.label}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d={link.path} />
+                    </svg>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </nav>
+      ) : null}
+    </Drawer>
   );
 };
 

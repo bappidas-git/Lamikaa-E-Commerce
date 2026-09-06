@@ -16,7 +16,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: var(--sf-z-stickybar); /* raised inside the phone query below */
+  /* The reserved order (Prompt 10): --sf-z-sticky (40) BottomNav <
+     --sf-z-stickybar (60) this bar < --sf-z-overlay (1000) < --sf-z-modal
+     (1100) drawers and dialogs. One token, at every width. */
+  z-index: var(--sf-z-stickybar);
   display: none;
   align-items: center;
   justify-content: space-between;
@@ -167,13 +170,20 @@
   cursor: not-allowed;
 }
 
-/* Mobile-first: the bar only exists on phones/large phones. It intentionally
-   sits ABOVE the global BottomNav (z 1200) so the PDP's primary CTA is never
-   hidden while a shopper is deciding. */
+/* Mobile-first: the bar only exists on phones/large phones. It sits ABOVE the
+   global BottomNav so the PDP's primary CTA is never hidden while a shopper is
+   deciding — which the base `z-index: var(--sf-z-stickybar)` (60 against the
+   bar's 40) already says.
+
+   The raw `z-index: 1300` this query used to add is gone (Prompt 10). It dated
+   from a BottomNav the comment described as "z 1200" and no longer is, and at
+   1300 the bar painted over --sf-z-modal (1100): opening the navigation drawer
+   or the cart on a product page left "Buy now" floating on top of the dialog.
+   Prompt 25 rebuilds this bar; the stacking order is settled here so it
+   inherits a correct one. */
 @media (max-width: 768px) {
   .bar {
     display: flex;
-    z-index: 1300;
   }
 }
 
