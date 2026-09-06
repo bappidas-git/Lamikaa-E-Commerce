@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { overlay, panel as panelMotion } from "../../theme/motion";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useScrollLock from "../../hooks/useScrollLock";
+import useOverlayFlag from "../../hooks/useOverlayFlag";
 import Button from "./Button";
 import styles from "./Drawer.module.css";
 
@@ -26,21 +27,11 @@ import styles from "./Drawer.module.css";
 //             sticky header reads that attribute and drops its own backdrop
 //             filter while a drawer is up, which is how the two-blurred-layers
 //             budget (DESIGN_SYSTEM §4) is kept without either component
-//             knowing about the other. Reference-counted, so a drawer opening
-//             over a drawer cannot clear the flag early.
+//             knowing about the other. The reference-counted flag moved to
+//             `useOverlayFlag` in Prompt 11, when `Modal` became the second
+//             component that raises it — one counter, or a modal closing over
+//             an open drawer un-blurs the header while the drawer is still up.
 // =============================================================================
-
-let drawerCount = 0;
-
-const markDrawerOpen = () => {
-  drawerCount += 1;
-  if (drawerCount === 1) document.body.dataset.drawerOpen = "1";
-};
-
-const markDrawerClosed = () => {
-  drawerCount = Math.max(0, drawerCount - 1);
-  if (drawerCount === 0) delete document.body.dataset.drawerOpen;
-};
 
 const Drawer = ({
   open = false,
@@ -68,13 +59,8 @@ const Drawer = ({
   const close = useCallback(() => onCloseRef.current?.(), []);
 
   useScrollLock(open);
+  useOverlayFlag(open);
   useFocusTrap(panelRef, { active: open, onEscape: close });
-
-  useEffect(() => {
-    if (!open || typeof document === "undefined") return undefined;
-    markDrawerOpen();
-    return markDrawerClosed;
-  }, [open]);
 
   const pathAtOpen = useRef(null);
   useEffect(() => {

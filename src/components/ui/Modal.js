@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { overlay, sheet } from "../../theme/motion";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useScrollLock from "../../hooks/useScrollLock";
+import useOverlayFlag from "../../hooks/useOverlayFlag";
 import Button from "./Button";
 import styles from "./Modal.module.css";
 
@@ -24,9 +25,19 @@ import styles from "./Modal.module.css";
 //   a route change closes it — a dialog that survives navigation is a dialog
 //   nobody can dismiss
 //
-// SIZES are sm 420 / md 640 / lg 880. At 480px and below every size becomes the
-// same full-screen sheet: a centred 640px card on a 390px phone is a card with
-// no margins pretending to be a dialog.
+// SIZES are sm 420 / md 640 / lg 880, plus `full` — the whole viewport, no
+// radius, no scrim showing (Prompt 11's search overlay). At 480px and below
+// every size becomes the same full-screen sheet anyway: a centred 640px card on
+// a 390px phone is a card with no margins pretending to be a dialog. A `full`
+// modal also hands its body's padding and scrolling to its child, because a
+// full-screen overlay wants a fixed head and one scrolling region under it, not
+// one scrollport around everything.
+//
+// THE HEADER'S BLUR. An open modal raises `body[data-drawer-open]` through
+// `useOverlayFlag`, the same reference-counted flag `Drawer` raises — a glass
+// panel over a glass masthead is two blurred layers, and DESIGN_SYSTEM §4
+// allows two in view at most, so the header withdraws its own while a dialog
+// is up (Prompt 11).
 //
 // Motion is `overlay()` for the scrim and `sheet()` for the panel, both from
 // theme/motion.js, both taking `useReducedMotion()` — so reduced motion is one
@@ -40,6 +51,7 @@ const Modal = ({
   labelledBy,
   describedBy,
   size = "md",
+  initialFocus,
   closeOnBackdrop = true,
   showClose = true,
   footer,
@@ -61,7 +73,8 @@ const Modal = ({
   const close = useCallback(() => onCloseRef.current?.(), []);
 
   useScrollLock(open);
-  useFocusTrap(panelRef, { active: open, onEscape: close });
+  useOverlayFlag(open);
+  useFocusTrap(panelRef, { active: open, onEscape: close, initialFocus });
 
   // Close on navigation. The path is captured when the dialog opens, so opening
   // one does not immediately close it, and a query-string or hash change (a
@@ -84,7 +97,11 @@ const Modal = ({
   return createPortal(
     <AnimatePresence>
       {open ? (
-        <div className={styles.root}>
+        <div
+          className={[styles.root, size === "full" ? styles.rootFull : ""]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <motion.div
             className={styles.backdrop}
             {...overlay(reduce)}
