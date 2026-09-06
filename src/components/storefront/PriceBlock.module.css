@@ -98,7 +98,7 @@
   font-size: var(--sf-text-xs);
 }
 
-/* ---- sm — the card: Inter, because small serif numerals lose their edge ---- */
+/* ---- sm — the card: Manrope, because small serif numerals lose their edge -- */
 .sm .row {
   gap: var(--sf-space-2);
 }

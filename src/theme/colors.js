@@ -59,7 +59,3 @@ export const PALETTE = {
   // public/index.html paints, so there is nothing to reconcile at mount.
   bodyBackground: "#0B0B0D",
 };
-
-// Compatibility alias for the one prompt it takes the remaining importers to
-// move onto PALETTE. Prompt 04 drops it.
-export const DARK = PALETTE;

@@ -308,7 +308,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
     </motion.button>
   );
 
-  // A quiet Inter meta row — Discover, Account and Settings all set in this key.
+  // A quiet Manrope meta row — Discover, Account and Settings all set in this key.
   const renderMetaRow = ({ key, label, to, onClick, Icon, tone }, staggered = true) => (
     <motion.button
       key={key || label}

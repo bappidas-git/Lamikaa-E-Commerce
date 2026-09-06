@@ -218,7 +218,7 @@
 
 .countdownSep {
   color: var(--sf-color-text-muted);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
 }
 
 /* The same line, shrunk into a hairline chip for the Deal of the Day head. */

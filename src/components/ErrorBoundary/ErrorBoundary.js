@@ -75,9 +75,11 @@ class ErrorBoundary extends React.Component {
           justifyContent: "center",
           padding: "24px",
           background: palette.bg,
-          // --sf-font-family
+          // --sf-font-family. Spelled out, not var(): this boundary has to
+          // render when the app has failed, and a failure early enough to take
+          // the stylesheet with it would leave a var() unresolved.
           fontFamily:
-            '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+            '"Manrope", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
         }}
       >
         <div
@@ -102,10 +104,10 @@ class ErrorBoundary extends React.Component {
               margin: "0 0 12px",
               // --sf-font-display / --sf-leading-display
               fontFamily:
-                '"Cormorant Garamond", "Playfair Display", Georgia, serif',
+                '"Fraunces", "Playfair Display", Georgia, "Times New Roman", serif',
               fontSize: "2.25rem",
-              fontWeight: 600,
-              lineHeight: 1.1,
+              fontWeight: 500,
+              lineHeight: 1.12,
               color: palette.heading,
             }}
           >

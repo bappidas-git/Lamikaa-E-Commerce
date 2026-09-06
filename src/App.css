@@ -20,10 +20,10 @@
   box-sizing: border-box;
 }
 
+/* The reading defaults (family, size, leading, colour, smoothing) are the base
+   layer's — src/index.css. All that is left here is the one page-level guard:
+   nothing may scroll the document sideways, at any width. */
 body {
-  font-family: var(--sf-font-family);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
@@ -56,38 +56,51 @@ body {
  * item nav before the page begins — about twenty stops to tab past on every
  * route. This is the way out, and it is the first thing in the DOM. Off-canvas
  * until focused (never display:none, which would take it out of the tab order
- * and defeat the point), then it arrives as a gold chip in the top-left.
+ * and defeat the point), then it arrives as a gold pill in the top-left — the
+ * same fill/label pair, radius, height and sentence case as every other primary
+ * action on the storefront, because that is what it is.
  * ========================================================================== */
 .skip-link {
   position: absolute;
   top: var(--sf-space-2);
   left: var(--sf-space-2);
   z-index: calc(var(--sf-z-modal) + 1);
-  padding: var(--sf-space-3) var(--sf-space-5);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-3) var(--sf-space-6);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-gold);
+  color: var(--sf-color-primary-contrast);
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: 0.02em;
   text-decoration: none;
   transform: translateY(-200%);
   transition: transform var(--sf-transition-fast);
 }
 
+/* TWO rings, not one. The skip link arrives in the top-left corner, which is
+   where the announcement bar sits — and that bar is filled with
+   --sf-color-primary, the same champagne gold as this pill. On that ground a
+   gold pill under a gold focus ring is invisible. The inset near-black hairline
+   draws the pill's own edge there (13.4:1 on gold); the outer gold ring is what
+   reads once the bar has been dismissed and the pill lands on the page ground.
+   One of the two is always doing the work. */
 .skip-link:focus-visible {
   transform: translateY(0);
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
+  box-shadow: inset 0 0 0 2px var(--sf-color-primary-contrast),
+    var(--sf-shadow-focus);
 }
 
 /* =============================================================================
  * SCROLLBARS
- * Quiet: 8px, the page ground as the track, a hairline thumb that settles to
- * muted text on hover. One theme, one rule set. The admin overrides follow.
+ * Quiet: 8px, the page ground as the track, a hover-surface thumb that lifts to
+ * muted text under the cursor — the scrollbar is chrome, not an accent, so no
+ * gold goes anywhere near it. One theme, one rule set; the admin follows.
  * ========================================================================== */
 ::-webkit-scrollbar {
   width: 8px;
@@ -99,7 +112,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--sf-color-border-strong);
+  background: var(--sf-color-surface-hover);
   border-radius: var(--sf-radius-pill);
 }
 
@@ -111,7 +124,7 @@ body {
    every scroll container. Storefront only — admin keeps the UA default. */
 body:not(.admin-area) {
   scrollbar-width: thin;
-  scrollbar-color: var(--sf-color-border-strong) var(--sf-color-bg);
+  scrollbar-color: var(--sf-color-surface-hover) var(--sf-color-bg);
 }
 
 /* Pin the page background to the admin palette while an admin screen is
@@ -167,7 +180,10 @@ body.admin-area *::-webkit-scrollbar-thumb:hover {
   padding: 0 var(--sf-space-5);
 }
 
-/* Gold display type — the one sanctioned gradient, straight from the tokens. */
+/* Gold display type. Superseded by the `.sf-gradient-text` primitive (which
+   clips the SIGNATURE gradient and carries a fallback for browsers without
+   `background-clip: text`); kept here unrenamed because the class name is part
+   of the global contract. New work uses the primitive. */
 .gradient-text {
   background: var(--sf-gradient-gold);
   -webkit-background-clip: text;
@@ -247,14 +263,19 @@ body.admin-area *::-webkit-scrollbar-thumb:hover {
    slate values verbatim.
    ===================================================================== */
 body:not(.admin-area) .swal2-popup {
-  --swal2-background: var(--sf-color-surface);
+  /* Glass, like every other floating surface on the storefront. The ground is
+     --sf-color-surface (#141416) at 94%, written as a color-mix so the value
+     still comes from the token and follows it if the palette moves — a literal
+     rgba() here would be the one hardcoded colour in the file. */
+  --swal2-background: color-mix(in srgb, var(--sf-color-surface) 94%, transparent);
   --swal2-color: var(--sf-color-text);
-  --swal2-border: 1px solid var(--sf-color-border);
-  --swal2-border-radius: var(--sf-radius-md);
-  /* Champagne gold under a near-black label — the storefront CTA pair. */
-  --swal2-confirm-button-background-color: var(--sf-color-emerald);
-  --swal2-confirm-button-color: var(--sf-color-emerald-contrast);
-  --swal2-cancel-button-background-color: var(--sf-color-surface-2);
+  --swal2-border: 1px solid var(--sf-glass-border);
+  --swal2-border-radius: var(--sf-radius-lg);
+  /* Champagne gold under a near-black label — the storefront CTA pair — as a
+     pill, and a glass pill beside it for the way out. */
+  --swal2-confirm-button-background-color: var(--sf-color-gold);
+  --swal2-confirm-button-color: var(--sf-color-primary-contrast);
+  --swal2-cancel-button-background-color: var(--sf-glass-bg);
   --swal2-cancel-button-color: var(--sf-color-text);
   --swal2-confirm-button-border-radius: var(--sf-radius-pill);
   --swal2-cancel-button-border-radius: var(--sf-radius-pill);
@@ -262,21 +283,61 @@ body:not(.admin-area) .swal2-popup {
   --swal2-action-button-focus-box-shadow: 0 0 0 3px
     color-mix(in srgb, var(--sf-color-focus-ring) 40%, transparent);
   --swal2-timer-progress-bar-background: var(--sf-color-gold);
-  --swal2-toast-border: 1px solid var(--sf-color-border);
-  --swal2-toast-box-shadow: var(--sf-shadow-md);
+  --swal2-toast-border: 1px solid var(--sf-glass-border);
+  --swal2-toast-box-shadow: var(--sf-shadow-1);
+}
+
+/* The blur itself has to be a property, not a SweetAlert2 variable — Swal
+   exposes no hook for it. 16px rather than the --sf-glass-blur 20px: a popup
+   sits on its own backdrop scrim, so it needs less blur than a header sitting
+   directly on page content, and the pair (scrim + popup) stays inside the
+   two-blurred-layers budget. */
+body:not(.admin-area) .swal2-popup {
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+/* Without backdrop-filter the 94% ground would let the page read through the
+   dialog; fall back to the opaque glass ground. */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  body:not(.admin-area) .swal2-popup {
+    --swal2-background: var(--sf-glass-fallback);
+  }
 }
 
 body:not(.admin-area) .swal2-popup:not(.swal2-toast) {
-  box-shadow: var(--sf-shadow-lg);
+  box-shadow: var(--sf-shadow-2);
 }
 
-/* Secondary text tone for the message body (the title inherits popup color). */
+/* Titles are display type like every other heading; the message body drops to
+   the secondary tone and the UI family. */
+body:not(.admin-area) .swal2-title {
+  font-family: var(--sf-font-display);
+  font-weight: var(--sf-font-medium);
+  letter-spacing: var(--sf-tracking-tight);
+}
+
 body:not(.admin-area) .swal2-html-container {
   color: var(--sf-color-text-secondary);
 }
 
+/* Actions are buttons: Manrope 600, sentence case, no shouting. */
+body:not(.admin-area) .swal2-styled {
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  min-height: var(--sf-tap-target);
+}
+
+/* A toast is a smaller pane of the same glass — one step down in radius, and
+   the gold left rule that marks every toast on the storefront (.sf-toast). */
 body:not(.admin-area) .swal2-popup.swal2-toast {
-  --swal2-border-radius: var(--sf-radius-sm);
+  --swal2-border-radius: var(--sf-radius-md);
+  border-left: 2px solid var(--sf-color-gold);
 }
 
 /* Admin area: flat surfaces, 6-8px radii, slate palette. Prompt 32 recolours
@@ -305,4 +366,21 @@ body.admin-area .swal2-popup:not(.swal2-toast) {
 
 body.admin-area .swal2-html-container {
   color: #94a3b8;
+}
+
+/* -----------------------------------------------------------------------------
+ * SweetAlert2 stacking — storefront AND admin, hence unscoped.
+ *
+ * Swal renders at z-index 1060, which sits BELOW MUI's modal layer (Dialog =
+ * 1300). Without this, a confirm or validation popup fired while a dialog is
+ * open — the Admin → Payments refund confirm, a Coupons form validation toast —
+ * renders hidden behind the dialog and can be neither seen nor clicked.
+ *
+ * The storefront's own toast tier is --sf-z-toast (1200); MUI's stack (modal,
+ * snackbar, tooltip; ≤ 1500) is the higher floor here, so the rule takes
+ * whichever is greater. The token stays in the expression rather than in a
+ * comment, so raising the toast tier later carries this rule with it.
+ * -------------------------------------------------------------------------- */
+.swal2-container {
+  z-index: max(var(--sf-z-toast), 2000) !important;
 }

@@ -58,34 +58,54 @@ const theme = createTheme({
     },
   },
   typography: {
-    // Families are Prompt 04's job (Fraunces + Manrope); they mirror
-    // --sf-font-family / --sf-font-display as those tokens stand today.
-    fontFamily:
-      '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+    // Manrope for UI, Fraunces for the display tier — the same two families the
+    // CSS Modules get from --sf-font-family / --sf-font-display.
+    //
+    // The SIZES are read straight from the token layer rather than mirrored as
+    // numbers: `src/index.css` (and with it storefront-tokens.css) is imported
+    // by src/index.js before React mounts, so the custom properties are always
+    // resolved by the time MUI paints, and the fluid clamps stay defined in one
+    // place. MUI passes a typography fontSize through to CSS untouched, so a
+    // var() is as valid here as a rem — this is not true of `palette`, which
+    // has to compute alpha variants and therefore still mirrors colors.js.
+    fontFamily: "var(--sf-font-family)",
+    // Fraunces at 500 — the display weight. 1.12 is --sf-leading-display.
     h1: {
-      fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-      fontSize: "3.5rem",
-      fontWeight: 600,
-      lineHeight: 1.1,
+      fontFamily: "var(--sf-font-display)",
+      fontSize: "var(--sf-text-5xl)",
+      fontWeight: 500,
+      lineHeight: 1.12,
+      letterSpacing: "-0.01em",
     },
     h2: {
-      fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-      fontSize: "2.75rem",
-      fontWeight: 600,
-      lineHeight: 1.15,
+      fontFamily: "var(--sf-font-display)",
+      fontSize: "var(--sf-text-4xl)",
+      fontWeight: 500,
+      lineHeight: 1.12,
+      letterSpacing: "-0.01em",
     },
     h3: {
-      fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-      fontSize: "2.25rem",
-      fontWeight: 600,
-      lineHeight: 1.2,
+      fontFamily: "var(--sf-font-display)",
+      fontSize: "var(--sf-text-3xl)",
+      fontWeight: 500,
+      lineHeight: 1.12,
     },
-    h4: { fontSize: "1.5rem", fontWeight: 500, lineHeight: 1.4 },
-    h5: { fontSize: "1.25rem", fontWeight: 500, lineHeight: 1.5 },
-    h6: { fontSize: "1rem", fontWeight: 500, lineHeight: 1.6 },
+    h4: {
+      fontFamily: "var(--sf-font-display)",
+      fontSize: "var(--sf-text-2xl)",
+      fontWeight: 500,
+      lineHeight: 1.25,
+    },
+    h5: { fontSize: "var(--sf-text-lg)", fontWeight: 600, lineHeight: 1.5 },
+    h6: { fontSize: "var(--sf-text-base)", fontWeight: 600, lineHeight: 1.6 },
+    body1: { fontSize: "var(--sf-text-base)", lineHeight: 1.5 },
+    body2: { fontSize: "var(--sf-text-sm)", lineHeight: 1.5 },
+    // Sentence case, system-wide: the tracked uppercase label lives on the gold
+    // eyebrow now, not on the controls.
     button: {
       textTransform: "none",
       fontWeight: 600,
+      letterSpacing: "0.02em",
     },
   },
   shape: {
@@ -101,7 +121,7 @@ const theme = createTheme({
           minHeight: 44, // --sf-tap-target
           padding: "12px 28px",
           fontSize: "0.9375rem",
-          letterSpacing: "0.01em",
+          letterSpacing: "0.02em",
           boxShadow: "none",
           transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
           "&:hover": {

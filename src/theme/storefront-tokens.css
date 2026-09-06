@@ -225,34 +225,57 @@
   --sf-shadow-focus: 0 0 0 3px rgba(245, 215, 110, 0.55);
 
   /* ---- Typography ------------------------------------------------------- */
-  /* Families and the type scale are Prompt 04's job (Fraunces + Manrope);
-     they are carried over unchanged here so this prompt changes colour and
-     structure only. */
-  --sf-font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
-  --sf-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Roboto", sans-serif;
-  --sf-text-xs: 0.75rem;
-  --sf-text-sm: 0.875rem;
-  --sf-text-base: 1rem;
-  --sf-text-md: 1.0625rem;
-  --sf-text-lg: 1.25rem;
-  --sf-text-xl: 1.5rem;
-  --sf-text-2xl: 1.875rem;
-  --sf-text-3xl: 2.25rem;
-  /* Display tier — hero headlines, set in --sf-font-display. Fluid by design. */
-  --sf-text-4xl: clamp(2.5rem, 5vw, 3.5rem);
-  --sf-text-5xl: clamp(3rem, 7vw, 4.5rem);
-  --sf-font-light: 300;
+  /* Two families carry the whole storefront: FRAUNCES for display (the warm,
+     high-contrast serif that echoes the swash wordmark) and MANROPE for every
+     piece of UI and body copy. Both are loaded ONCE, by the single Google
+     Fonts <link> in public/index.html — never @imported from a stylesheet.
+     Fraunces ships as a variable face; `font-optical-sizing: auto` is applied
+     to headings in src/index.css, not here, because it is a property and not a
+     value. (The SOFT axis DESIGN_SYSTEM.md §6 asks for is not in the subset the
+     font link requests — see the note in src/index.css.)
+     Source of truth for every value below: DESIGN_SYSTEM.md §6. */
+  --sf-font-display: "Fraunces", "Playfair Display", Georgia, "Times New Roman",
+    serif;
+  --sf-font-family: "Manrope", "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+
+  /* TEXT TIER — fixed rem on purpose. Body copy must not shrink on a phone, so
+     --sf-text-base is a hard 16px floor and nothing below --sf-text-sm (14px)
+     is ever allowed to carry a sentence. */
+  --sf-text-xs: 0.75rem;    /* 12px — eyebrows, chips, badges. Never body. */
+  --sf-text-sm: 0.875rem;   /* 14px — the smallest UI label, weight ≥ 500 */
+  --sf-text-base: 1rem;     /* 16px — the body floor */
+  --sf-text-md: 1.0625rem;  /* 17px — ledes and long-form prose */
+  --sf-text-lg: 1.25rem;    /* 20px — card names, small headings */
+
+  /* DISPLAY TIER — fluid, and normally set in --sf-font-display. Each clamp's
+     floor is its 360px value and its ceiling its ~1440px one, so a component
+     never has to restate the scale in a media query. Fraunces sets wider than
+     the serif it replaces, so the floors are deliberately conservative: the
+     display sizes stay flat from 360px to about 400px and only then grow. */
+  --sf-text-xl: clamp(1.375rem, 1.1rem + 1vw, 1.75rem);
+  --sf-text-2xl: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  --sf-text-3xl: clamp(2.25rem, 1.6rem + 2.6vw, 3.25rem);
+  --sf-text-4xl: clamp(2.75rem, 1.8rem + 4vw, 4.5rem);
+  --sf-text-5xl: clamp(3.25rem, 2rem + 6vw, 6rem);
+
+  /* WEIGHTS. Every one named here has a real face in the loaded subsets —
+     Fraunces 400/500/600, Manrope 400/500/600/700 — so nothing is ever
+     synthesised. There is deliberately NO 300 tier: hairline type is
+     unreadable on this ground at UI sizes, so Prompt 04 deleted the light
+     weight token outright and moved its 29 consumers onto the normal one. */
   --sf-font-normal: 400;
-  --sf-font-medium: 500;
-  --sf-font-semibold: 600;
+  --sf-font-medium: 500;   /* the display weight: Fraunces headlines */
+  --sf-font-semibold: 600; /* the UI weight: buttons, labels, chips */
   --sf-font-bold: 700;
-  --sf-leading-display: 1.1;            /* headlines set tight */
+
+  --sf-leading-display: 1.12;   /* headlines set tight */
   --sf-leading-tight: 1.25;
   --sf-leading-normal: 1.5;
-  --sf-leading-relaxed: 1.7;            /* long-form body */
+  --sf-leading-relaxed: 1.65;   /* long-form body */
   /* Tracking — --sf-tracking-wide/-wider drive the uppercase "eyebrow" label
-     that sits above section headings throughout the storefront. */
+     that sits above section headings throughout the storefront, and
+     --sf-tracking-tight pulls Fraunces back together at display sizes. */
   --sf-tracking-tight: -0.01em;
   --sf-tracking-normal: 0;
   --sf-tracking-wide: 0.14em;

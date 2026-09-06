@@ -1,23 +1,131 @@
-/* Storefront design tokens (CSS custom properties) — one dark theme, declared
-   once in `:root`. Re-skin by editing src/theme/storefront-tokens.css.
-   NB: the webfonts are loaded by the <link> in public/index.html. Do NOT
-   @import them here — a second request for the same families only delays first
-   paint. */
+/* =============================================================================
+ * BASE LAYER  —  LAMIKAA NATURALS storefront
+ * =============================================================================
+ * The document defaults: the ground, the two families, the reading rhythm and
+ * the element resets everything else is composed on. Three stylesheets load
+ * app-wide and the order is load-bearing:
+ *
+ *   1. theme/storefront-tokens.css      the --sf-* custom properties
+ *   2. theme/storefront-primitives.css  the .sf-* classes built on them
+ *   3. this file                        the element defaults built on both
+ *
+ * NB: the webfonts (Fraunces + Manrope) are loaded by the single <link> in
+ * public/index.html. Do NOT @import them here and do NOT declare an @font-face
+ * — a second request for the same faces only delays first paint.
+ * ========================================================================== */
 @import "./theme/storefront-tokens.css";
-/* Shared, reusable brand primitives (buttons, chips, cards, skeleton, toast)
-   built on the tokens above. Loaded once, app-wide. Order is load-bearing:
-   tokens must be defined before the primitives that consume them. */
 @import "./theme/storefront-primitives.css";
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* -----------------------------------------------------------------------------
+ * DOCUMENT
+ * `color-scheme` restates the token layer's declaration on purpose: it is the
+ * one property the UA needs before any custom property is resolved (form
+ * controls, the canvas under an overscroll, the native scrollbar), so the base
+ * layer says it out loud rather than inheriting it by accident of import order.
+ * -------------------------------------------------------------------------- */
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+/* Smooth scrolling is the one motion a visitor cannot opt out of per-element,
+   because it is the UA that animates it — so it is switched off wholesale
+   here. In-page anchors then jump, which is exactly what was asked for. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+ * BODY — the reading defaults
+ * Manrope 400 at a hard 16px floor over 1.5 leading, warm white on the near-
+ * black ground. Every page inherits this and overrides only what it must.
+ * -------------------------------------------------------------------------- */
 body {
   margin: 0;
-  font-family: var(--sf-font-family);
+  background: var(--sf-color-bg);
   color: var(--sf-color-text);
-  background-color: var(--sf-color-bg);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-normal);
+  line-height: var(--sf-leading-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* -----------------------------------------------------------------------------
+ * HEADINGS — the display serif, by default
+ * Fraunces carries every heading unless a component says otherwise, so a new
+ * section is in the right voice before anyone styles it.
+ *
+ *   font-optical-sizing: auto   lets the browser drive Fraunces' `opsz` axis
+ *                               from the computed size — the 9..144 range is
+ *                               why the font link asks for it. Stated rather
+ *                               than left to the UA default, so a reset that
+ *                               sets `none` cannot flatten the display tier.
+ *
+ *   NO font-variation-settings. DESIGN_SYSTEM.md §6 asks for `"SOFT" 30` on the
+ *   two display levels (it rounds Fraunces' terminals, which read brittle on a
+ *   dark ground). The font link one directory up requests `opsz,wght` only, and
+ *   the file Google serves for that request carries exactly those two axes — so
+ *   a SOFT declaration here would be inert, and inert CSS that looks like a
+ *   promise is worse than none. Delivering it means asking for the axis:
+ *
+ *     family=Fraunces:opsz,wght,SOFT@9..144,400,30;9..144,500,30;9..144,600,30
+ *
+ *   which returns a genuine three-axis file — and takes the latin subset from
+ *   67KB to 121KB, +54KB on the largest font asset the storefront loads, for a
+ *   rounding visible only at h1/h2 sizes. On a mobile-first storefront that is
+ *   the wrong trade, so it is deliberately not taken here. Flip the URL in
+ *   public/index.html and add `font-variation-settings: "SOFT" 30` below to
+ *   reverse the decision; nothing else has to change. (Logged in PROGRESS.md.)
+ *
+ *   overflow-wrap: anywhere     the legibility guard: Fraunces sets wider than
+ *                               the serif it replaces, and a long unbroken
+ *                               product or ingredient name at --sf-text-4xl on
+ *                               a 360px screen would otherwise push the page
+ *                               sideways. `anywhere` (not `break-word`) is
+ *                               deliberate — it also shrinks the min-content
+ *                               width, so a heading inside a flex or grid
+ *                               track can no longer force the track wider than
+ *                               the viewport.
+ * -------------------------------------------------------------------------- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  font-optical-sizing: auto;
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2 {
+  letter-spacing: var(--sf-tracking-tight);
+}
+
+/* The same guard for the other two places a single long token can overflow:
+   an unbroken word in body copy, and a pasted URL or order id in a table. */
+p,
+li,
+dd,
+figcaption,
+blockquote {
+  overflow-wrap: break-word;
 }
 
 code {
@@ -25,29 +133,26 @@ code {
     monospace;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* Champagne selection — the gold highlight stop under near-black type.
-   Storefront only; the admin panel keeps the browser default. */
+/* -----------------------------------------------------------------------------
+ * SELECTION
+ * Champagne gold under near-black type — the storefront's fill/label pair, so
+ * a selected run reads like a highlighter rather than a system default.
+ * Storefront only; the admin panel keeps the browser default.
+ * -------------------------------------------------------------------------- */
 body:not(.admin-area)::selection,
 body:not(.admin-area) ::selection {
-  background: var(--sf-color-gold-light);
-  color: var(--sf-color-primary-contrast);
+  background: var(--sf-color-gold);
+  color: var(--sf-color-bg);
 }
 
-/*
- * SweetAlert2 defaults to z-index 1060, which sits *below* MUI's modal layer
- * (Dialog = 1300). Without this, a confirm/validation popup fired while a
- * dialog is open — e.g. the Admin → Payments refund confirmation or a Coupons
- * form validation toast — renders hidden behind the dialog and can't be seen or
- * clicked. Lift it above MUI's modal/snackbar/tooltip stack (≤1500).
- */
-.swal2-container {
-  z-index: 2000 !important;
+/* -----------------------------------------------------------------------------
+ * SCROLL LOCK
+ * The shared hook every overlay uses to stop the page scrolling behind it
+ * (cart drawer, mobile nav, search overlay, modals). A data attribute rather
+ * than a class, so a component can set and clear it without racing whatever
+ * else is writing to className. Components that also need to compensate for
+ * the scrollbar width keep doing that on the element itself.
+ * -------------------------------------------------------------------------- */
+body[data-scroll-lock] {
+  overflow: hidden;
 }

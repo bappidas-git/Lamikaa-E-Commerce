@@ -68,7 +68,7 @@
   margin: 0 0 var(--sf-space-5);
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-4xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
   color: var(--sf-color-text);
@@ -197,7 +197,7 @@
   border-bottom: 1px solid var(--sf-color-border);
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text);
 }
@@ -438,7 +438,7 @@
   margin: 0 0 var(--sf-space-3);
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text);
 }

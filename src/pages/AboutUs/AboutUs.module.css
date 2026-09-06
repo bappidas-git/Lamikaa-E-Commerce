@@ -11,8 +11,8 @@
         1024px the label falls above the chapter and the grid linearizes.
      2. THE MEASURE — prose is capped at 68ch and never runs the container's
         width, no matter how wide the viewport gets.
-     3. THE SERIF — Cormorant carries every headline, the lead paragraph, the
-        silk names, the years and the figures. Inter carries the body and the
+     3. THE SERIF — Fraunces carries every headline, the lead paragraph, the
+        product names, the years and the figures. Manrope carries the body and the
         tracked capitals. Nothing else changes size for emphasis.
      4. THE HAIRLINE — lists are rules with content hanging under them. There
         is not one card, one lozenge or one filled icon on the page.
@@ -158,7 +158,7 @@
   max-width: 18ch;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-5xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
   color: var(--sf-color-text);
@@ -169,7 +169,7 @@
   max-width: 60ch;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text-secondary);
 }
@@ -250,7 +250,7 @@
   max-width: 22ch;
   font-family: var(--sf-font-display);
   font-size: clamp(2rem, 3.6vw, 3rem);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
   color: var(--sf-color-text);
@@ -293,7 +293,7 @@
 .prose .proseLead {
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text);
 }
@@ -487,7 +487,7 @@
   grid-row: span 2;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   font-variant-numeric: lining-nums tabular-nums;
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-gold-deep);
@@ -550,7 +550,7 @@
 .stepYear {
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   font-variant-numeric: lining-nums tabular-nums;
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-gold-deep);
@@ -595,7 +595,7 @@
   margin: 0;
   font-family: var(--sf-font-display);
   font-size: clamp(2rem, 4.4vw, 3.5rem);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
   color: var(--sf-color-text);
@@ -646,7 +646,7 @@
 .markValue {
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-4xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   font-variant-numeric: lining-nums tabular-nums;
   line-height: 1;
   color: var(--sf-color-text);
@@ -675,7 +675,7 @@
   margin: 0;
   font-family: var(--sf-font-display);
   font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
   color: var(--sf-color-text);
