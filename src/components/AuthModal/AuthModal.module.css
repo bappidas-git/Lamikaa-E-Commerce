@@ -229,31 +229,31 @@
 }
 
 /* =============================================================================
- * 5. BANNERS + TOAST
+ * 5. NOTES + TOAST
  * A rule in the margin, not a coloured slab.
  * ========================================================================== */
 
-.errorBanner,
-.infoBanner {
+.errorNote,
+.infoNote {
   overflow: hidden;
   margin-bottom: var(--sf-space-5);
   font-size: var(--sf-text-sm);
   line-height: var(--sf-leading-normal);
 }
 
-.bannerInner {
+.noteInner {
   padding: var(--sf-space-3) var(--sf-space-4);
   border-left: 2px solid var(--sf-color-danger);
   background: var(--sf-color-danger-bg);
   color: var(--sf-color-text);
 }
 
-.infoBanner .bannerInner {
+.infoNote .noteInner {
   border-left-color: var(--sf-color-info);
   background: var(--sf-color-info-bg);
 }
 
-.infoBannerLink {
+.infoNoteLink {
   color: var(--sf-color-accent);
   font-weight: var(--sf-font-medium);
   text-decoration: underline;
@@ -262,11 +262,11 @@
   white-space: nowrap;
 }
 
-.infoBannerLink:hover {
+.infoNoteLink:hover {
   text-decoration-thickness: 2px;
 }
 
-.infoBannerLink:focus-visible {
+.infoNoteLink:focus-visible {
   outline: 2px solid transparent;
   border-radius: var(--sf-radius-sm);
   box-shadow: var(--sf-shadow-focus);

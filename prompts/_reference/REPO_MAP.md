@@ -59,19 +59,35 @@
 
 ## 3. `src/services/api.js` — dual-mode contract
 
+> **Final contract — rewritten by Prompt 07.** This section is the whole of it: every namespace, every function, its mock path and its live endpoint. §3.4 is the hand-off list for the backend team — the routes Laravel must implement for the live branch to work.
+
+### 3.1 Mode selection, transport and named exports
+
 **Mode selection** (`src/services/baseURL.js`): `IS_MOCK_API = BASE_URL === "http://localhost:3001" || REACT_APP_USE_MOCK_API === "true"`; `BASE_URL` = mock URL when the flag is on, else `REACT_APP_API_URL`, else mock in development. Logged to the console in development. **Mode A = JSON Server over `db.json` on :3001 (via `server.js`). Mode B = live Laravel API (`/api/v1`) on Cloudways — response envelope `{ success, data, meta }` unwrapped by `extractData()`; pagination meta via `extractMeta()`.** There is no in-memory mock: "mock mode" *is* JSON Server. (Adaptation to the brief recorded in `00_INDEX.md`.)
 
 **Axios instance** `api`: `baseURL`, JSON headers, 30 s timeout. Request interceptor attaches `Authorization: Bearer` — admin token from `sessionStorage.adminToken` when the URL contains `/admin/`, else the customer token from `authStorage.get("token")`. Response interceptor: on 401 (not on `/auth/login`) clears the matching session (`admin`+`adminToken` or `user`+`token`).
 
-**Named exports:** `extractData`, `extractMeta`, `isVisibleProduct` (`isActive !== false`), `visibleProducts`, `getErrorMessage`, `api`. Default export `apiService` with these namespaces:
+**Named exports:** `extractData`, `extractMeta`, `isVisibleProduct` (`isActive !== false`), `visibleProducts`, `getErrorMessage`, `resolveRitualSteps` *(new — Prompt 07)*, `api`. Default export `apiService`, whose namespaces are §3.2 and §3.3.
+
+**Every product is normalised on the way out.** `products.*` and `admin.getProducts/getProduct` run each record through `normalizeProduct()` (`src/utils/product.js`) in **both** modes, so every consumer is handed `media[]`, `images[]` (the derived mirror, primary first), `image`, `categoryIds[]`, `concerns[]`, `benefits[]`, `howToUse[]`, `keyIngredients[]`, `faqs[]`, `packClaims[]`, `suitableFor[]`, `badges[]`, `priceTBA`, `heroOrder` and `shortName`, whatever shape the backend stored. The write side is its twin: `admin.createProduct/updateProduct` run `syncProductMedia()` **before** sending, so `images[]`/`image` are rebuilt from the admin's edited `media[]` in both branches (Laravel derives them server-side as well; sending both is harmless).
+
+### 3.2 Storefront namespaces
 
 | Namespace | Functions (signature → returns) | Mock-mode path | Live path |
 |---|---|---|---|
 | `auth` | `login({email,password,remember})` → safe user (stores token via `authStorage`) · `register(userData)` (mock checks duplicate email, code `EMAIL_TAKEN`) · `logout()` · `getUser()` · `updateUser(updates)` · `changePassword({currentPassword,newPassword,confirmPassword})` | `GET /users?email&password`, `POST /users`, `PATCH /users/:id` | `POST /auth/login`, `/auth/register`, `/auth/logout`, `GET/PUT /auth/user`, `PUT /auth/password` |
-| `products` | `getAll(params)` (visible only) · `getById(id)` (null if hidden) · `getBySlug(slug)` · `getFeatured(limit=10)` · `getTrending(limit=10)` · `getByCategory(categoryId)` · `search(query)` · `getReviews(productId)` (approved) · `getRelated(product, limit=10)` (curated `relatedProductIds` → same `categoryId` → shared `tags`/`brand`) · `getFrequentlyBoughtTogether(product, limit=3)` (only `frequentlyBoughtTogetherIds`) | `GET /products`, `/products?slug=`, `?featured=true`, `?trending=true`, `?categoryId=`, `?q=` (json-server full-text), `GET /reviews?productId&status=approved` | `GET /products`, `/products/:id`, `/products/slug/:slug`, `/products/featured`, `/products/trending`, `/products/category/:id`, `/products?search=`, `/products/:id/reviews` |
+| `products` | `getAll(params)` (visible only) · `getById(id)` (null if hidden) · `getBySlug(slug)` · `getFeatured(limit=10)` · `getTrending(limit=10)` · `getByCategory(categoryId)` · `search(query)` · `getFrequentlyBoughtTogether(product, limit=3)` (only `frequentlyBoughtTogetherIds`) — **all normalised** | `GET /products`, `?slug=`, `?featured=true`, `?trending=true`, `?categoryId=`, `?q=` (json-server full text) | `GET /products`, `/products/:id`, `/products/slug/:slug`, `/products/featured`, `/products/trending`, `/products/category/:id`, `/products?search=` |
+| `products` *(new — 07)* | `getHeroProducts()` → visible products with a `heroOrder`, ascending. The hero is product-driven; there is no slide collection. | `GET /products` → filter `isActive !== false && heroOrder != null` → sort `heroOrder` | `GET /products/hero` (sorted client-side too, so order cannot depend on the backend) |
+| `products` *(new — 07)* | `getByCategorySlug(slug)` → `{ category, products }`. Membership is `categoryIds[].includes(id) \|\| categoryId === id`; visible only; ordered by `heroOrder` then `name`. Unknown slug → `{ category: null, products: [] }`. | `categories.getBySlug(slug)` then `GET /products` | `GET /products/category/slug/:slug` → `{ category, products }` |
+| `products` *(new — 07)* | `getByConcern(slug)` → `{ concern, products }`. `product.concerns[]` holds **slugs**, so no join; the concern record is resolved through `concerns.getAll()` for its display name and that lookup is tolerant (a missing collection costs the name, never the products). Same ordering as above. | `GET /products` → filter `concerns.includes(slug)` | `GET /products?concern=:slug` |
+| `products` *(changed — 07)* | `getRelated(product, limit=10)` — tier 1 curated `relatedProductIds` (merchant's order), tier 2 **any shared `categoryIds[]`** (falls back to `categoryId`), tier 3 shared `tags`/`brand`. Never the product itself; deduped; then **stable-partitioned known-price first** so a rail never opens on "Price on launch"; then sliced to `limit`. Never throws (`[]`). | one `products.getAll()` | one `products.getAll()` |
+| `products` *(changed — 07)* | `getReviews(productId, { includeSample = brand.flags.showSampleReviews } = {})` — approved rows; `isSample` rows dropped unless asked for. Backward compatible: the second argument is optional. | `GET /reviews?productId&status=approved` then filter | `GET /products/:id/reviews?includeSample=0\|1` |
 | `categories` | `getAll()` (active, sorted by `sortOrder`) · `getById(id)` · `getBySlug(slug)` | `GET /categories`, `?slug=` | `GET /categories`, `/categories/:id`, `/categories/slug/:slug` |
-| `banners` | `getAll()` (never throws) | `GET /banners` | `GET /banners` |
-| `hero` | `getConfig()` (never throws, `{}` fallback) | `GET /heroConfig` | `GET /hero/config` |
+| `concerns` *(new — 07)* | `getAll()` → sorted by `order` **in both modes** | `GET /concerns` | `GET /concerns` |
+| `rituals` *(new — 07)* | `getAll()` → active only, by `sortOrder`, **in both modes** · `getBySlug(slug)` → row or `null` · `resolveSteps(ritual, products)` — **pure**, also exported as `resolveRitualSteps`: returns the steps in `order` with `product` / `alternativeProduct` attached (`null` when the id resolves to nothing) | `GET /rituals`, `GET /rituals?slug=` | `GET /rituals`, `GET /rituals/slug/:slug` |
+| `siteContent` *(new — 07)* | `get(key?)` → the section, or the whole record when `key` is omitted. **Never throws:** `{}` for the record, `null` for an unknown section. | `GET /siteContent` (singleton), `[key]` picked client-side | `GET /content`, `GET /content/:key` |
+| `announcements` *(new — 07)* | `getAll()` → `isActive !== false` **and** inside the optional `startsAt`/`endsAt` window, sorted by `sortOrder` — filtered **in both modes** so the two backends cannot disagree about what is showing. **Never throws** (`[]`). Replaces the removed `banners` namespace. | `GET /announcements` | `GET /announcements` |
+| `hero` | `getConfig()` (never throws, `{}` fallback). Behaviour only — the slides are `products.getHeroProducts()`. | `GET /heroConfig` | `GET /hero/config` |
 | `cart` | `getCart(userId)` · `addToCart(item)` · `updateCartItem(id, updates)` · `removeFromCart(id)` · `clearCart()` | `/cart` (+`?userId`) | `/cart` |
 | `orders` | `create(orderData)` (mock: seeds `statusHistory`, creates the payment row, bumps coupon `usedCount`, debits wallet) · `getByUserId(userId)` · `getById(id)` · `getByOrderNumber(orderNumber)` · `cancel(id, reason)` (shared `performCancel` cascade) | `/orders` | `/orders`, `/orders/number/:n`, `POST /orders/:id/cancel` |
 | `wallet` | `getBalance(userId)` · `getTransactions(userId)` | `/walletTransactions` ledger | `/wallet/balance`, `/wallet/transactions` |
@@ -81,12 +97,74 @@
 | `wishlist` | `get(userId)` · `add(item)` · `remove(id)` | `/wishlist` | `/wishlist` |
 | `shipping` | `getMethods()` (active) | `/shipping_methods?isActive=true` | `/shipping/methods` |
 | `settings` | `get()` | `/settings` (singleton) | `/settings` |
-| `faqs` | `getAll()` (never throws) | `/faqs` | `/faqs` |
+| `faqs` | `getAll()` (never throws). Rows are shaped by `src/utils/faqs.js`, which gained `group` (default `"general"`) and `faqsForGroup(faqs, group)` in Prompt 07 — `placements[]` is *which surface*, `group` is *which heading on the FAQ page*, keyed to `siteContent.faqPage.groups[].key`. | `/faqs` | `/faqs` |
 | `deals` | `getConfig()` (`{enabled:true}` fallback) | `/dealsConfig` | `/deals/config` |
 | `leads` | `createContact(leadData)` · `createNewsletter(email)` (+ aliases `createContactLead`, `createNewsletterLead`) | `POST /leads` | `POST /leads/contact`, `/leads/newsletter` |
-| `admin` | `login`, `logout`, `getDashboardStats`, `getProducts/getProduct/createProduct/updateProduct(PUT)/deleteProduct`, `getCategories/create/update/deleteCategory` (refuses when children/products reference it, code `CATEGORY_IN_USE`), `getOrders` (joins users → `customerEmail/customerName`), `getOrder`, `updateOrder(id, updates, event)`, `updateOrderStatus`, `cancelOrder(id, options)`, `initiateOrderRefund`, `completeOrderRefund`, `failOrderRefund`, `getReturns/getReturn/createReturn/updateReturn(id, updates, {event, restock})`, `scheduleReturnPickup`, `markReturnInTransit`, `getPayments/getPayment/getRefunds/issueRefund`, `getShippingMethods/create/update/delete`, `shiprocketCreateOrder/shiprocketTrack` (live only), `getCoupons/create/update(PATCH)/delete`, `getReviews/createReview/updateReview/deleteReview`, `getUsers/getUser/updateUser`, `getLeads/getLead/updateLead/deleteLead`, `getSettings`, `updateSettings(section, data)` (mock: PUT whole singleton), `getDealsConfig/updateDealsConfig`, `getHeroConfig/updateHeroConfig`, `getBanners/create/update/delete/reorderBanners(orderedIds, current)`, `getFaqs/create/update/delete/reorderFaqs` | plain collections | `/admin/...` prefixed endpoints |
 
-**Conventions:** ids are json-server auto-increment numbers (products, categories, users…) — string ids only for variants (`v1`, `v-<ts>-<rand>`) and local wishlist rows (`local-…`); timestamps are ISO strings written client-side in mock mode; deletes use `deleteWithVerify` (tolerates json-server's delete-then-500); there is **no pagination** in mock mode (lists are fetched whole; pages/filters are client-side); search in mock mode is json-server `?q=` full text across all fields; images are **URL strings only** (`product.images: string[]`, `category.image`, `banner.image/videoUrl/videoPoster`, review `photos[]`) — there is no upload endpoint in either mode.
+### 3.3 `admin` namespace
+
+Admin reads return **drafts too** (no visibility gate) but are normalised exactly like the storefront's.
+
+| Area | Functions | Mock-mode path | Live path |
+|---|---|---|---|
+| Auth / dashboard | `login`, `logout`, `getDashboardStats` | `/admins`, derived counts | `/admin/auth/login`, `/admin/dashboard/stats` |
+| Products | `getProducts(params)` · `getProduct(id)` — **normalised** · `createProduct(data)` · `updateProduct(id, data)` (PUT) — both run `syncProductMedia(data)` first · `deleteProduct(id)` | `/products` | `/admin/products` |
+| Categories | `getCategories` · `createCategory` · `updateCategory` (PUT) · `deleteCategory` (refuses while children/products reference it, code `CATEGORY_IN_USE`). `data` passes through untouched, which is how the new `displayName`, `heroImage` and `kind` fields reach both backends. | `/categories` | `/admin/categories` |
+| Concerns *(new — 07)* | `getConcerns` · `createConcern` · `updateConcern` (PUT) · `deleteConcern` | `/concerns` | `/admin/concerns` |
+| Rituals *(new — 07)* | `getRituals` (inactive included) · `createRitual` · `updateRitual` (PUT) · `deleteRitual` · `reorderRituals(orderedIds, current)` | `/rituals`; reorder PATCHes only the rows whose `sortOrder` changes | `/admin/rituals`, `PUT /admin/rituals/reorder` |
+| Site content *(new — 07)* | `getSiteContent()` · `updateSiteContent(key, data)` — `data` is **merged** into the stored section, so a partial editor cannot delete the rest of it | `GET /siteContent`, then `PUT /siteContent` with the merged object (json-server singleton, mirrors `updateSettings`) | `GET /admin/content`, `PATCH /admin/content/:key` |
+| Announcements *(new — 07)* | `getAnnouncements` (inactive included) · `createAnnouncement` · `updateAnnouncement` (PUT) · `deleteAnnouncement` · `reorderAnnouncements(orderedIds, current)` — replaces the five removed banner functions one-for-one | `/announcements`; reorder PATCHes only moved rows | `/admin/announcements`, `PUT /admin/announcements/reorder` |
+| Hero | `getHeroConfig` · `updateHeroConfig` (whole object replaced) · **`setHeroOrder(orderedProductIds)`** *(new — 07)*: each product's `heroOrder` becomes its 1-based position and **every product not in the list has `heroOrder` cleared to `null`**, so dropping a product out of the carousel is the same gesture as reordering it | `GET/PUT /heroConfig`; `setHeroOrder` PATCHes only the products whose value changes | `GET/PUT /admin/hero/config`, `PUT /admin/hero/order` |
+| Orders | `getOrders` (joins users → `customerEmail/customerName`), `getOrder`, `updateOrder(id, updates, event)`, `updateOrderStatus`, `cancelOrder(id, options)`, `initiateOrderRefund`, `completeOrderRefund`, `failOrderRefund` | `/orders` + the payment/refund/wallet cascade | `/admin/orders/...` |
+| Returns | `getReturns/getReturn/createReturn/updateReturn(id, updates, {event, restock})`, `scheduleReturnPickup`, `markReturnInTransit` | `/returns` | `/admin/returns/...` |
+| Payments | `getPayments/getPayment/getRefunds/issueRefund` | `/payments`, `/refunds` | `/admin/payments`, `/admin/refunds` |
+| Shipping | `getShippingMethods/create/update/delete`; `shiprocketCreateOrder/shiprocketTrack` (live only) | `/shipping_methods` | `/admin/shipping/methods`, `/admin/shiprocket/...` |
+| Coupons | `getCoupons/create/update(PATCH)/delete` | `/coupons` | `/admin/coupons` |
+| Reviews | `getReviews/createReview/updateReview/deleteReview` | `/reviews` | `/admin/reviews` |
+| Users / leads | `getUsers/getUser/updateUser`, `getLeads/getLead/updateLead/deleteLead` | `/users`, `/leads` | `/admin/users`, `/admin/leads` |
+| Settings / deals | `getSettings`, `updateSettings(section, data)` (mock: PUT whole singleton), `getDealsConfig/updateDealsConfig` | `/settings`, `/dealsConfig` | `/admin/settings/:section`, `/admin/deals/config` |
+| FAQs | `getFaqs/createFaq/updateFaq/deleteFaq/reorderFaqs(orderedIds, current)` | `/faqs` | `/admin/faqs`, `PUT /admin/faqs/reorder` |
+
+**Conventions:** ids are json-server auto-increment numbers (products, categories, users…) — string ids only for variants (`v1`, `v-<ts>-<rand>`) and local wishlist rows (`local-…`); timestamps are ISO strings written client-side in mock mode; deletes use `deleteWithVerify` (tolerates json-server's delete-then-500); there is **no pagination** in mock mode (lists are fetched whole; pages/filters are client-side); search in mock mode is json-server `?q=` full text across all fields; images and videos are **URL strings only** (`product.media[].url`, the derived `product.images: string[]`, `category.image/heroImage`, `ritual.image`, review `photos[]`) — there is **no upload endpoint in either mode**, and the admin manages media as links. The three `reorder*` functions and `setHeroOrder` share one contract: the argument is the **full** id list, top first, and mock mode PATCHes only the rows whose stored value actually changes. Rejections that are *expected outcomes* rather than faults carry an `err.code` (`ACCOUNT_DISABLED`, `EMAIL_TAKEN`, `COUPON_INVALID`, `CATEGORY_IN_USE`) and are kept out of the console; everything else is logged with a labelled `console.error` and rethrown, except the four reads that must never take a page down — `siteContent.get`, `announcements.getAll`, `faqs.getAll`, `hero.getConfig` (and `deals.getConfig`) — which log and return their empty shape.
+
+### 3.4 Laravel endpoints to implement
+
+Everything below is what the **live branch of `api.js` already calls**. Mock mode is complete and exercised; these are the routes the backend must add for Mode B to match it. Response envelope is the existing `{ success, data, meta }` — the shapes below are the contents of `data`. Admin routes sit behind the admin bearer token; the rest are public.
+
+| # | Method & path | Params | `data` response | Notes |
+|---|---|---|---|---|
+| 1 | `GET /products/hero` | — | `Product[]` | Visible products with `heroOrder != null`, ascending. Each must carry `heroHeadline`, `heroSubtext`, `heroOrder`, `shortName` and `media[]`. |
+| 2 | `GET /products/category/slug/{slug}` | — | `{ category: Category, products: Product[] }` | Membership: `categoryIds[]` contains the id **or** `categoryId` equals it. Visible only. 404 for an unknown slug. |
+| 3 | `GET /products` | `concern=<slug>` | `Product[]` | Products whose `concerns[]` contains the slug. Visible only. |
+| 4 | `GET /products` | `search=<q>` | `Product[]` | Must search at least `name`, `shortName`, `tags[]`, `concerns[]`, `keyIngredients[].name`, `benefits[]`, `description`. |
+| 5 | `GET /products/{id}/reviews` | `includeSample=0\|1` | `Review[]` | Approved only. `includeSample=0` (the storefront default) must drop rows flagged `isSample`. |
+| 6 | `GET /concerns` | — | `Concern[]` | `{ id, slug, name, order }`. |
+| 7 | `GET /rituals` | — | `Ritual[]` | Active only (the client re-filters and re-sorts regardless). |
+| 8 | `GET /rituals/slug/{slug}` | — | `Ritual` | 404 for an unknown slug. `steps[]` = `{ order, productId, alternativeProductId?, note, frequency }`. |
+| 9 | `GET /content` | — | `SiteContent` | The whole keyed record (`about`, `whyLamikaa`, `impact`, `home`, `contact`, `policies`, `faqPage`). |
+| 10 | `GET /content/{key}` | — | `object` | One section. |
+| 11 | `GET /announcements` | — | `Announcement[]` | `{ id, text, link, isActive, sortOrder, startsAt, endsAt }`. Serve the live, in-window rows; the client applies the same gate. |
+| 12 | `GET /hero/config` | — | `HeroConfig` | `{ enabled, source: "products", autoplay, intervalMs, transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, updatedAt }`. |
+| 13 | `GET/POST /admin/concerns`, `PUT/DELETE /admin/concerns/{id}` | — | `Concern` / `Concern[]` | Full CRUD. `slug` is the key products point at — renaming a concern must not change it. |
+| 14 | `GET/POST /admin/rituals`, `PUT/DELETE /admin/rituals/{id}` | — | `Ritual` / `Ritual[]` | `GET` returns inactive rituals too. |
+| 15 | `PUT /admin/rituals/reorder` | body `{ order: id[] }` | `true` | Full list, first first; `sortOrder` = index. |
+| 16 | `GET /admin/content` | — | `SiteContent` | The whole record, for the content editor. |
+| 17 | `PATCH /admin/content/{key}` | body = the section | `object` | **Merge**, do not replace: the editor may hold only part of a section. |
+| 18 | `GET/POST /admin/announcements`, `PUT/DELETE /admin/announcements/{id}` | — | `Announcement` / `Announcement[]` | `GET` returns hidden rows too. |
+| 19 | `PUT /admin/announcements/reorder` | body `{ order: id[] }` | `true` | As #15. |
+| 20 | `PUT /admin/hero/order` | body `{ order: productId[] }` | `true` | Set `heroOrder` = index + 1 for the listed products and **`null` for every product not listed**. |
+
+**Product payload (both directions).** A product carries its gallery in `media[]`:
+
+```
+media: [{ type: "image"|"video", url, alt?, primary?: true, crop?: {x,y,w,h}, poster?, title?, placeholder?: true }]
+```
+
+Exactly one **image** row is `primary`; videos never carry the flag; the authored order of `media[]` is preserved (the gallery is authored, not sorted). `images: string[]` and `image: string` are the **derived mirrors** — the image URLs with the primary first — and must be stored and returned alongside `media[]`, because cart lines, wishlist snapshots and order items keep a copy of `images[0]` that cannot be re-derived later. The client sends all three on write (`syncProductMedia`) and rebuilds them on read (`normalizeProduct`), so a server that derives them itself will simply agree.
+
+The other new product fields the live API must round-trip: `shortName`, `categoryIds[]`, `concerns[]` (slugs), `ritualStep{order,label,frequency}`, `heroHeadline`, `heroSubtext`, `heroOrder` (int|null), `promise`, `benefits[]`, `keyIngredients[{name,benefit}]`, `howToUse[]`, `ingredientsList`, `packClaims[]`, `fragranceNote`, `caution`, `suitableFor[]`, `size`, `price` (**nullable**), `priceTBA`, `priceSource`, `currency`, `badges[]`, `faqs[{q,a}]`, `isNew`. A FAQ row additionally carries `group` (a `siteContent.faqPage.groups[].key`), and a category carries `displayName`, `heroImage` and `kind` (`"products"|"rituals"`).
+
+**Removed:** the `banners` namespace and `admin.getBanners/createBanner/updateBanner/deleteBanner/reorderBanners`, together with `GET /banners` and `/admin/banners*`. The collection became `announcements`; the hero's slides became the products. No reference to it remains in `src/`.
 
 ## 4. `db.json` schema (as seeded — Prompt 06)
 
@@ -121,13 +199,13 @@ Rewritten for LAMIKAA NATURALS. **23 collections in this order**; `banners` is g
 
 Relationships: `products.categoryId → categories.id`; `products.categoryIds[] → categories.id`; `products.concerns[] → concerns.slug`; `products.{relatedProductIds,frequentlyBoughtTogetherIds}[] → products.id`; `rituals.steps[].{productId,alternativeProductId} → products.id`; `faqs.group → siteContent.faqPage.groups[].key`; `faqs.productIds[] → products.id`; `orders.userId → users.id`; `orders.items[].productId → products.id`; `payments.orderId → orders.id`; `refunds.{orderId,returnId,paymentId}`; `walletTransactions.{userId,orderId,refundId}` (and its ledger sum → `users[].storeCredit`); `reviews.{productId,userId,orderId}`; `wishlist/cart.{userId,productId}`; `dealsConfig.*Ids[] → coupons/products`. `categories.parentId → categories.id` is kept in the schema but every seeded category is top-level.
 
-**Not yet wired (Prompt 07):** `api.js` still calls `GET /banners`, which now 404s — the storefront hero falls back and the admin Hero screen errors until the api contract is extended. `concerns`, `rituals` and `siteContent` have no api methods yet either.
+**Wired by Prompt 07.** Every collection above is now reachable from `api.js` in both modes — see §3 for the final contract. `announcements`, `concerns`, `rituals` and `siteContent` have storefront readers and admin CRUD; the hero reads `products.getHeroProducts()`; the `banners` namespace and its five admin functions are gone. The `db.json` seed itself is unchanged by Prompt 07.
 
 ## 5. Storefront components (`src/components/*`) — see the verdict table in §11
 
 Highlights that shape the prompts:
 - `Header.js` (709): sticky masthead + measured **priority nav** (category links from `getMainMenuCategories`, editorial links `?sort=newest|popular|discount`, "Today's Deals"), hover/focus **collection panels**, MUI user menu, hosts `AnnouncementBar`, `TrustStrip`, `CartDrawer`, `SidebarMenu`, `AuthModal`, `SearchModal`, `CategoriesDrawer`. Theme toggle at 466-477. Logo constant `LOGO_SRC` (old wordmark).
-- `HeroSection.js` (557): fully admin-driven slides from `banners` + `heroConfig` (gradient/image/video backgrounds, banked-time autoplay, ←/→ keys, `aria-roledescription="carousel"`, reduced-motion aware, "openers" category row).
+- `HeroSection.js` (Prompt 07: ~575): the pre-rebuild carousel (gradient/image/video backgrounds, banked-time autoplay, ←/→ keys, `aria-roledescription="carousel"`, reduced-motion aware, "openers" category row). **Its slides now come from `products.getHeroProducts()`** through a temporary `productSlide()` adapter — headline `heroHeadline`, subtitle `heroSubtext`, CTA "Explore the {shortName}" → `productPath(p)`, background `stageSrc(p, { w: 1600, ar: "16:9" })`. Prompt 14 deletes the file.
 - `SearchModal.js` (848): module-level catalogue cache, `scoreProduct()` relevance, category chips, recent searches (localStorage-free? it uses its own storage helpers), trending rail; hard-coded silk terms at 20-34, 633, 688.
 - `CartDrawer.js` (659): dialog with focus trap, qty steppers, free-shipping meter (`FREE_SHIPPING_THRESHOLD=999`, `FLAT_SHIPPING=99`), coupon apply/remove via `apiService.coupons.validate`, summary, Checkout CTA.
 - `SidebarMenu.js` (682): mobile drawer with recursive category accordion, account links, **theme switch** at 609-636, TrustStrip, legal links.
@@ -159,7 +237,7 @@ Highlights that shape the prompts:
 - `AdminDashboard.js`: stats cards (`getDashboardStats`), recent orders, low-stock list, quick actions; 13 hex literals.
 - `AdminProducts.js` (569): table (Product/SKU/Category/Price/Stock/Flags/Status/Actions), search by name/SKU/brand, category select, **no sort/pagination**; form `emptyProduct` = `{ name, slug, sku, shortDescription, description, categoryId, brand, images: [], price, comparePrice, costPrice, stock, lowStockThreshold: 10, weight, dimensions{length,width,height}, variants: [], tags: [], featured, trending, hot, isActive: true, metaTitle, metaDescription }`; **images = one multiline textarea "Image URLs (one per line)" → `images[]`** (unlimited, no preview, no primary picker, no alt text); tags comma-separated; variants rows `{id,name,price,stock,sku}`; validation: name, unique slug (`makeUniqueSlug`), price > 0 unless variants; save = `admin.createProduct` / `admin.updateProduct(id, {...editingProduct, ...editable})`; **no `relatedProductIds`/`frequentlyBoughtTogetherIds` UI**; placeholders "16GB / 512GB", "laptop, gaming, ultrabook".
 - `AdminCategories.js`: name/slug/description/image URL/parent/sortOrder/isActive/showInMainMenu/menuOrder; cycle guard; delete blocked by children (client) or products (`CATEGORY_IN_USE`).
-- `AdminHeroSection.js` (1590): Slides tab (banners CRUD, duplicate, up/down reorder, live preview, gradient presets "Heritage/Bridal Muga/Sualkuchi/Bihu Night/Eri Warmth") + Section settings tab (`heroConfig`).
+- `AdminHeroSection.js` (Prompt 07: ~1610): "Announcements (temporary)" tab + Section settings tab (`heroConfig`). Prompt 07 repointed the first tab at the `announcements` collection (CRUD, duplicate, up/down reorder, live preview) through `rowToSlide`/`slideToRow` adapters that preserve each row's `text` and its `startsAt`/`endsAt` window across a PUT, and replaced the Meghali gradient presets with the four design-system gradient tokens. Prompt 34 replaces the screen with a hero product-ordering editor plus a real announcements manager.
 - `AdminFaqs.js` (1018): question/answer (+ token chips `{freeShipping}`, `{codSentence}`, `{taxNote}`), placements product/help/home, product Autocomplete, filters, reorder, `notifyFaqsUpdated()`.
 - `AdminSettings.js` (920): General (store name/tagline/email/phone/address, currency + symbol, tax rate/included, COD) → `updateSettings("store")` + `("payment")` + `notifyStoreSettingsUpdated()`; Categories/Hero/FAQs pointer cards; Social Links → `updateSettings("social")`. **No logo/favicon field.**
 - Orders/Returns/Payments/Users/Shipping/Coupons/SpecialOffers/Reviews/Leads: full CRUD/status flows as listed in the api table (refund lifecycle initiate/complete/fail, cancel with restock/refund/void/recall, returns approve/reject/pickup/in-transit/received/refund, payments issue refund, coupons with duplicate-code guard, reviews approve/reject/create with `MOCK_REVIEWERS` names, leads with `TablePagination`).
@@ -213,9 +291,9 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/context/ThemeContext.js` | R | Single dark MUI theme, no toggle (Prompt 03). |
 | `src/context/{Auth,Admin,Cart,Wishlist,Order,DealsConfig,Faq,StoreSettings}Context.js` | K | Untouched logic; Cart gains `addMany` for rituals (Prompt 07/24). |
 | `src/services/api.js`, `baseURL.js` | K + extend | New namespaces (Prompt 07); comments/URLs cleaned (36). |
-| `src/services/api.live.test.js` | K | Update BASE_URL assertion, banners→announcements, product fields (Prompt 36/39). |
+| `src/services/api.live.test.js` | K | Prompt 07 did the BASE_URL assertion (now a pattern, so a staging host passes), announcements/concerns/rituals/content coverage, `setHeroOrder`, the nullable-price + `media[]`/`categoryIds[]` product assertions and the new product reads. Remaining: whatever Prompts 36/39 add. |
 | `src/utils/constants.js` | K (gutted) | Brand values move to `src/config/brand.js`; keep enums/routes. |
-| `src/utils/{helpers,categories,faqs,heroConfig,dealsConfig,storeSettings,socialLinks,documentTitle,authStorage}.js` | K | `heroConfig.js` loses banner slide helpers when hero becomes product-driven (Prompt 14/34); `productPath` → `/product/`. |
+| `src/utils/{helpers,categories,faqs,heroConfig,dealsConfig,storeSettings,socialLinks,documentTitle,authStorage}.js` | K | Prompt 07: `faqs.js` gained `group` + `faqsForGroup()`; `heroConfig.js` gained `source` and lost its Meghali fallback slide. `heroConfig.js` loses the remaining slide helpers when the hero is rebuilt (Prompt 14/34); `productPath` → `/product/`. |
 | `src/hooks/useSound.js`, `src/assets/click-sound-1.wav` | X | Dead code, wrong path. |
 | `src/components/Header/*` | R (layout) / K (overflow + menus logic) | Glass header, mega panel (Prompt 09). |
 | `src/components/SidebarMenu/*` | R | Glass mobile drawer (Prompt 10). |

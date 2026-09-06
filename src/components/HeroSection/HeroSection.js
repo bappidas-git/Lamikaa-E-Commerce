@@ -9,7 +9,8 @@ import { Link } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
 import { categoryParam, resolveCategory } from "../../utils/categories";
-import { onImageError } from "../../utils/helpers";
+import { onImageError, productPath } from "../../utils/helpers";
+import { stageSrc } from "../../utils/product";
 import {
   DEFAULT_HERO_EYEBROW,
   HERO_FALLBACK_SLIDES,
@@ -36,11 +37,20 @@ import styles from "./HeroSection.module.css";
  *   Admin → Storefront → Hero Section and read back here.
  *
  * DATA
- *   • apiService.hero.getConfig()    → the `heroConfig` singleton
- *   • apiService.banners.getAll()    → the slides, falling back to
- *     HERO_FALLBACK_SLIDES only if the API is unreachable
- *   • apiService.categories.getAll() → the collection openers (top-level,
+ *   • apiService.hero.getConfig()          → the `heroConfig` singleton
+ *   • apiService.products.getHeroProducts() → the slides: one per product
+ *     carrying a `heroOrder`, mapped to the slide shape by productSlide()
+ *     below. Falls back to HERO_FALLBACK_SLIDES only if the API is unreachable.
+ *   • apiService.categories.getAll()       → the collection openers (top-level,
  *     active, in the admin's sortOrder) and the category-derived eyebrow
+ *
+ * TEMPORARY — PROMPT 14 REPLACES THIS COMPONENT
+ *   The hero is product-driven now: there is no slide store to edit, and the
+ *   copy, imagery and CTA of every slide come from the product itself. This
+ *   file is the pre-rebuild carousel kept alive on the new data through the
+ *   productSlide() adapter, so the home page keeps working between the api
+ *   contract landing (Prompt 07) and the rebuilt hero (Prompt 14). Nothing new
+ *   should be built on the adapter.
  *
  * MOTION
  *   The transition is CSS (opacity or transform), not a JS animation, so the
@@ -57,6 +67,20 @@ const categorySlugFromLink = (link) => {
   if (!link || !link.includes("?")) return "";
   return new URLSearchParams(link.split("?")[1]).get("category") || "";
 };
+
+// TEMPORARY ADAPTER (Prompt 07 → Prompt 14). One hero product in the slide
+// shape this carousel was written against. The stage is 16:9 at 1600px wide:
+// stageSrc() applies the product's own Cloudinary crop and pads the pack onto a
+// ground sampled from its edges, so a bottle is letterboxed rather than sliced.
+const productSlide = (product) => ({
+  id: product.id,
+  title: product.heroHeadline || product.name || "",
+  subtitle: product.heroSubtext || product.shortDescription || "",
+  cta: `Explore the ${product.shortName || product.name || ""}`.trim(),
+  link: productPath(product),
+  backgroundType: "image",
+  image: stageSrc(product, { w: 1600, ar: "16:9" }),
+});
 
 const HeroSection = () => {
   const prefersReducedMotion = useReducedMotion();
@@ -86,13 +110,16 @@ const HeroSection = () => {
     };
   }, []);
 
-  // Fetch the slides, falling back to the branded default if the API is down.
+  // Fetch the hero products and adapt them to slides, falling back to the
+  // branded default if the catalogue is unreachable.
   useEffect(() => {
     let alive = true;
     const fetchSlides = async () => {
       try {
-        const data = await apiService.banners.getAll();
-        if (alive && Array.isArray(data) && data.length > 0) setRawSlides(data);
+        const data = await apiService.products.getHeroProducts();
+        if (alive && Array.isArray(data) && data.length > 0) {
+          setRawSlides(data.map(productSlide));
+        }
       } catch {
         // Use the fallback slide silently.
       }

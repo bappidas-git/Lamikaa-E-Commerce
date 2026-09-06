@@ -15,6 +15,18 @@
 // need not turn up in the Help Centre, and a policy answer need not be repeated
 // on every listing.
 //
+// PLACEMENT IS WHERE, GROUP IS WHICH HEADING
+//   `placements[]` decides which SURFACES a row appears on; `group` decides
+//   which HEADING it sits under once it is there, on the FAQ page that renders
+//   the collection in sections ("The farmer-owned brand", "Products &
+//   ingredients", "Orders, shipping & returns", "Account"). The two are
+//   independent: a row can be on the help centre and the shared block and still
+//   belong to exactly one group. The vocabulary is data, not code — it lives in
+//   `siteContent.faqPage.groups[].key` so the owner can rename or reorder the
+//   headings without a deploy — so `group` is normalised as a free string with
+//   one guaranteed member, DEFAULT_FAQ_GROUP, which every ungrouped row falls
+//   into rather than disappearing off the page.
+//
 // FALLING BACK TO THE CONSTANTS IS DELIBERATE
 //   DEFAULT_FAQS is FAQ_ITEMS — the set the site shipped with. An unreachable
 //   API therefore degrades to the same answers the visitor read yesterday
@@ -68,9 +80,15 @@ export const FAQ_COPY_TOKENS = [
   { token: "{taxNote}", hint: "Whether prices include tax, and at what rate" },
 ];
 
+// Where a row with no group of its own belongs. Not one of the seeded headings
+// on purpose: an answer that has never been filed must be visible somewhere,
+// but it must not silently claim to be part of a curated section.
+export const DEFAULT_FAQ_GROUP = "general";
+
 export const DEFAULT_FAQ = {
   question: "",
   answer: "",
+  group: DEFAULT_FAQ_GROUP,
   placements: [...FAQ_PLACEMENT_VALUES],
   productIds: [],
   isActive: true,
@@ -112,6 +130,9 @@ export const normalizeFaq = (raw, index = 0) => {
     // `q`/`a` are accepted because product-inline FAQs have always allowed them.
     question: text(source.question || source.q),
     answer: text(source.answer || source.a),
+    // A row written before groups existed, or filed under a heading the owner
+    // has since deleted, still renders — under the general heading.
+    group: text(source.group) || DEFAULT_FAQ_GROUP,
     placements,
     productIds: idList(source.productIds),
     isActive: source.isActive !== false,
@@ -178,6 +199,25 @@ export const faqsForPlacement = (faqs, placement) =>
       .filter((faq) => faqHasPlacement(faq, placement))
       .filter((faq) => !faqIsTargeted(faq))
   );
+
+// The FAQ page's sections: the live, untargeted rows filed under one heading,
+// in the admin's order. `group` is compared as a trimmed string, so a heading
+// key and a row's group agree exactly or not at all — there is no fuzzy match
+// that could file an answer under the wrong section.
+//
+// Rows are NOT filtered by placement here: a heading on the FAQ page shows what
+// was filed under it. Pass `faqsForPlacement(faqs, "help")` in if a caller
+// wants both gates.
+export const faqsForGroup = (faqs, group) => {
+  const key = typeof group === "string" ? group.trim() : "";
+  if (!key) return [];
+  return dedupe(
+    (Array.isArray(faqs) ? faqs : [])
+      .filter(isFaqLive)
+      .filter((faq) => !faqIsTargeted(faq))
+      .filter((faq) => (faq.group || DEFAULT_FAQ_GROUP) === key)
+  );
+};
 
 // A product page: the product's own inline FAQs first (a legacy `product.faqs`
 // array still works), then the rows aimed at this product, then the general

@@ -1,7 +1,9 @@
 import axios from "axios";
 import BASE_URL, { IS_MOCK_API } from "./baseURL";
+import brand from "../config/brand";
 import authStorage from "../utils/authStorage";
 import { formatCurrency } from "../utils/helpers";
+import { normalizeProduct, syncProductMedia } from "../utils/product";
 
 // Money inside a timeline entry or an error message, in whole units and in the
 // store's own currency (Settings > General) rather than a baked-in rupee sign.
@@ -95,6 +97,102 @@ export const isVisibleProduct = (product) => !!product && product.isActive !== f
 /** Same gate over a list; non-array input passes through untouched. */
 export const visibleProducts = (list) =>
   Array.isArray(list) ? list.filter(isVisibleProduct) : list;
+
+// ----- Product normalisation (see utils/product.js) -----
+// EVERY product this service hands out has been through normalizeProduct(), in
+// BOTH api modes, so no component ever has to ask which shape the backend
+// stored: `media[]`, `images[]`, `image`, `categoryIds[]`, `priceTBA`,
+// `heroOrder`, `shortName` and the editorial lists are always present and
+// always the type the component expects. The write side is the twin of this:
+// admin.createProduct/updateProduct run syncProductMedia() before sending.
+
+/** normalizeProduct over a list; a non-array passes through untouched. */
+const normalizeProducts = (list) =>
+  Array.isArray(list) ? list.map(normalizeProduct) : list;
+
+/** The storefront read: hide drafts, then normalise what is left. */
+const visibleNormalized = (list) => normalizeProducts(visibleProducts(list));
+
+/**
+ * Catalogue order for a product list: the merchant's `heroOrder` first (it is
+ * the one hand-arranged sequence in the data), then alphabetically. Products
+ * with no heroOrder sort after every product that has one rather than to the
+ * top, so an unordered row can never displace the arranged ones.
+ */
+const byHeroOrderThenName = (a, b) => {
+  const ao = a?.heroOrder == null ? Number.POSITIVE_INFINITY : a.heroOrder;
+  const bo = b?.heroOrder == null ? Number.POSITIVE_INFINITY : b.heroOrder;
+  if (ao !== bo) return ao - bo;
+  return String(a?.name || "").localeCompare(String(b?.name || ""), undefined, {
+    numeric: true,
+  });
+};
+
+/**
+ * Stable partition: everything with a real price, then everything waiting on
+ * one. Five of the eight launch products ship `priceTBA`, and a rail that opens
+ * on three "Price on launch" cards reads as a broken shop — this keeps a
+ * buyable product first without re-ranking within either group.
+ */
+const knownPriceFirst = (list) =>
+  Array.isArray(list)
+    ? [
+        ...list.filter((p) => p?.priceTBA !== true),
+        ...list.filter((p) => p?.priceTBA === true),
+      ]
+    : list;
+
+/**
+ * Is this announcement showing right now? `isActive` is the switch; `startsAt`
+ * and `endsAt` are the optional window around it. An unparseable date is
+ * ignored rather than hiding the row — a typo in the admin must not silently
+ * empty the bar.
+ */
+const isLiveAnnouncement = (row, now = Date.now()) => {
+  if (!row || row.isActive === false) return false;
+  const starts = row.startsAt ? Date.parse(row.startsAt) : NaN;
+  const ends = row.endsAt ? Date.parse(row.endsAt) : NaN;
+  if (Number.isFinite(starts) && now < starts) return false;
+  if (Number.isFinite(ends) && now > ends) return false;
+  return true;
+};
+
+const bySortOrder = (a, b) => (a?.sortOrder ?? 0) - (b?.sortOrder ?? 0);
+
+/**
+ * A ritual's steps with the products they name attached — pure, so the pages,
+ * the admin preview and the tests can all resolve a ritual against a product
+ * list they already hold instead of each re-fetching the catalogue.
+ *
+ * A step whose product is missing (deleted, or a draft the storefront filtered
+ * out) keeps `product: null`; the caller decides whether to skip the step or
+ * show it without a card, and neither has to guard against undefined.
+ *
+ * @param {object} ritual              a ritual row (`steps[]` may be absent)
+ * @param {Array}  products            any product list — normalised or raw
+ * @returns {Array} steps in `order`, each with `product`/`alternativeProduct`
+ */
+export const resolveRitualSteps = (ritual, products = []) => {
+  const steps = Array.isArray(ritual?.steps) ? ritual.steps : [];
+  const byId = new Map(
+    (Array.isArray(products) ? products : [])
+      .filter(Boolean)
+      .map((p) => [String(p.id), p])
+  );
+  const find = (id) => (id == null || id === "" ? null : byId.get(String(id)) || null);
+
+  return steps
+    .map((step, index) => {
+      const order = Number(step?.order);
+      return {
+        ...step,
+        order: Number.isFinite(order) ? order : index + 1,
+        product: find(step?.productId),
+        alternativeProduct: find(step?.alternativeProductId),
+      };
+    })
+    .sort((a, b) => a.order - b.order);
+};
 
 /**
  * Rejection thrown when a deactivated account tries to sign in — the mock-mode
@@ -966,7 +1064,7 @@ const apiService = {
     getAll: async (params = {}) => {
       try {
         const response = await api.get("/products", { params });
-        return visibleProducts(extractData(response));
+        return visibleNormalized(extractData(response));
       } catch (error) { console.error("Get products error:", error); throw error; }
     },
 
@@ -976,7 +1074,7 @@ const apiService = {
         const product = extractData(response);
         // A draft reached by its direct URL must 404 like any hidden page, not
         // render a buyable PDP. ProductDetails treats null as "not found".
-        return isVisibleProduct(product) ? product : null;
+        return isVisibleProduct(product) ? normalizeProduct(product) : null;
       } catch (error) { console.error("Get product error:", error); throw error; }
     },
 
@@ -990,7 +1088,7 @@ const apiService = {
           const response = await api.get(`/products/slug/${slug}`);
           product = extractData(response);
         }
-        return isVisibleProduct(product) ? product : null;
+        return isVisibleProduct(product) ? normalizeProduct(product) : null;
       } catch (error) { console.error("Get product by slug error:", error); throw error; }
     },
 
@@ -998,10 +1096,10 @@ const apiService = {
       try {
         if (IS_MOCK_API) {
           const response = await api.get("/products", { params: { featured: true } });
-          return visibleProducts(response.data).slice(0, limit);
+          return visibleNormalized(response.data).slice(0, limit);
         }
         const response = await api.get("/products/featured", { params: { limit } });
-        return visibleProducts(extractData(response));
+        return visibleNormalized(extractData(response));
       } catch (error) { console.error("Get featured products error:", error); throw error; }
     },
 
@@ -1009,10 +1107,10 @@ const apiService = {
       try {
         if (IS_MOCK_API) {
           const response = await api.get("/products", { params: { trending: true } });
-          return visibleProducts(response.data).slice(0, limit);
+          return visibleNormalized(response.data).slice(0, limit);
         }
         const response = await api.get("/products/trending", { params: { limit } });
-        return visibleProducts(extractData(response));
+        return visibleNormalized(extractData(response));
       } catch (error) { console.error("Get trending products error:", error); throw error; }
     },
 
@@ -1020,45 +1118,174 @@ const apiService = {
       try {
         if (IS_MOCK_API) {
           const response = await api.get("/products", { params: { categoryId } });
-          return visibleProducts(response.data);
+          return visibleNormalized(response.data);
         }
         const response = await api.get(`/products/category/${categoryId}`);
-        return visibleProducts(extractData(response));
+        return visibleNormalized(extractData(response));
       } catch (error) { console.error("Get products by category error:", error); throw error; }
     },
 
+    /**
+     * The eight hero products, in the order the merchant arranged them.
+     *
+     * The LAMIKAA hero is PRODUCT-DRIVEN: a product opts into the carousel by
+     * carrying a `heroOrder` (and the `heroHeadline`/`heroSubtext` the slide
+     * prints), which is what replaced the old admin-managed slide collection.
+     * Admin → Hero writes the order through admin.setHeroOrder().
+     *
+     * Mock mode reads the catalogue and filters; the Laravel endpoint does the
+     * same server-side. Both are sorted here, so the carousel's order can never
+     * depend on which backend answered.
+     */
+    getHeroProducts: async () => {
+      try {
+        const rows = IS_MOCK_API
+          ? visibleNormalized((await api.get("/products")).data)
+          : visibleNormalized(extractData(await api.get("/products/hero")));
+        return (Array.isArray(rows) ? rows : [])
+          .filter((p) => p.heroOrder != null)
+          .sort((a, b) => a.heroOrder - b.heroOrder);
+      } catch (error) { console.error("Get hero products error:", error); throw error; }
+    },
+
+    /**
+     * A category page in one round trip: the category record and the products
+     * that belong to it.
+     *
+     * A LAMIKAA product lives in SEVERAL categories (`categoryIds[]` — the face
+     * wash is both "Face care" and "Cleansers"), while `categoryId` stays the
+     * primary home every older consumer reads. Membership is therefore "listed
+     * in categoryIds, OR primary category" — a record that predates the array
+     * still resolves through its single id.
+     *
+     * @returns {Promise<{category: object|null, products: Array}>}
+     *          An unknown slug resolves to `{ category: null, products: [] }`
+     *          so the page can render its own 404 rather than catch.
+     */
+    getByCategorySlug: async (slug) => {
+      try {
+        if (IS_MOCK_API) {
+          const category = await apiService.categories.getBySlug(slug);
+          if (!category) return { category: null, products: [] };
+          const id = String(category.id);
+          const response = await api.get("/products");
+          const products = visibleNormalized(response.data)
+            .filter(
+              (p) =>
+                p.categoryIds.some((c) => String(c) === id) ||
+                String(p.categoryId) === id
+            )
+            .sort(byHeroOrderThenName);
+          return { category, products };
+        }
+        const response = await api.get(`/products/category/slug/${slug}`);
+        const data = extractData(response) || {};
+        return {
+          category: data.category ?? null,
+          products: visibleNormalized(data.products ?? []).sort(byHeroOrderThenName),
+        };
+      } catch (error) { console.error("Get products by category slug error:", error); throw error; }
+    },
+
+    /**
+     * "Shop by concern": every product that names this concern slug.
+     *
+     * `concerns[]` on a product holds slugs, not ids, so the filter needs no
+     * join — the concern RECORD is resolved separately only to give the page a
+     * display name. That lookup is deliberately tolerant: a missing /concerns
+     * collection must not cost the shopper the product list.
+     *
+     * @returns {Promise<{concern: object|null, products: Array}>}
+     */
+    getByConcern: async (slug) => {
+      try {
+        const all = await apiService.concerns.getAll().catch(() => []);
+        const concern =
+          (Array.isArray(all) ? all : []).find((c) => String(c?.slug) === String(slug)) ||
+          null;
+        const rows = IS_MOCK_API
+          ? visibleNormalized((await api.get("/products")).data).filter((p) =>
+              p.concerns.some((c) => String(c) === String(slug))
+            )
+          : visibleNormalized(
+              extractData(await api.get("/products", { params: { concern: slug } }))
+            );
+        return {
+          concern,
+          products: (Array.isArray(rows) ? rows : []).sort(byHeroOrderThenName),
+        };
+      } catch (error) { console.error("Get products by concern error:", error); throw error; }
+    },
+
+    /**
+     * Full-text product search.
+     *
+     * Mock mode uses json-server's `?q=`, which searches every field of every
+     * record — broad, and good enough for eight products. Ranking is the
+     * caller's job (src/utils/search.js), not the transport's.
+     *
+     * LIVE CONTRACT: `GET /products?search=` must search, at minimum,
+     * `name`, `shortName`, `tags[]`, `concerns[]`, `keyIngredients[].name`,
+     * `benefits[]` and `description` — those are the fields a shopper types at
+     * ("black rice", "serum", "hydration", "brightening", "kaji nemu").
+     */
     search: async (query) => {
       try {
         if (IS_MOCK_API) {
           const response = await api.get("/products", { params: { q: query } });
-          return visibleProducts(response.data);
+          return visibleNormalized(response.data);
         }
         const response = await api.get("/products", { params: { search: query } });
-        return visibleProducts(extractData(response));
+        return visibleNormalized(extractData(response));
       } catch (error) { console.error("Search products error:", error); throw error; }
     },
 
-    getReviews: async (productId) => {
+    /**
+     * Approved reviews for one product.
+     *
+     * SAMPLE REVIEWS ARE GATED HERE, once, for every surface. The seed carries
+     * two rows flagged `isSample: true` so the admin Reviews screen has
+     * something to show; nothing fabricated may reach a shopper, so they are
+     * dropped unless the caller asks for them or the owner flips
+     * `brand.flags.showSampleReviews` (BRAND.md §3.9 rule 6).
+     *
+     * @param {string|number} productId
+     * @param {{includeSample?: boolean}} [options]  admin surfaces pass true
+     */
+    getReviews: async (
+      productId,
+      { includeSample = brand.flags.showSampleReviews } = {}
+    ) => {
       try {
         if (IS_MOCK_API) {
           const response = await api.get("/reviews", { params: { productId, status: "approved" } });
-          return response.data;
+          const rows = Array.isArray(response.data) ? response.data : [];
+          return includeSample ? rows : rows.filter((row) => row?.isSample !== true);
         }
-        const response = await api.get(`/products/${productId}/reviews`);
+        const response = await api.get(`/products/${productId}/reviews`, {
+          params: { includeSample: includeSample ? 1 : 0 },
+        });
         return extractData(response);
       } catch (error) { console.error("Get reviews error:", error); throw error; }
     },
 
     // Related / "you may also like" — resolved from REAL catalogue data only, in
     // priority order: (1) the merchant's curated `relatedProductIds`, then
-    // (2) the same category, then (3) shared tags/brand to top up. Never returns
-    // the product itself; deduped; capped at `limit`. Drives the AOV carousel.
+    // (2) any SHARED category (`categoryIds[]`, falling back to the primary
+    // `categoryId` for a record that predates the array), then (3) shared
+    // tags/brand to top up. Never returns the product itself; deduped; capped
+    // at `limit`. Drives the AOV carousel.
+    //
+    // The finished list is partitioned known-price-first, so a rail can never
+    // open on three "Price on launch" cards while priced products sit below the
+    // fold. The partition is stable: curation order survives inside each group.
     getRelated: async (product, limit = 10) => {
       if (!product) return [];
       try {
+        const self = normalizeProduct(product);
         const all = await apiService.products.getAll();
         const list = Array.isArray(all) ? all : [];
-        const selfId = String(product.id);
+        const selfId = String(self.id);
         const active = (p) => p && p.isActive !== false && String(p.id) !== selfId;
         const out = [];
         const seen = new Set([selfId]);
@@ -1069,27 +1296,36 @@ const apiService = {
           }
         };
         // 1. curated, in the merchant's order
-        (product.relatedProductIds || []).forEach((id) =>
+        (self.relatedProductIds || []).forEach((id) =>
           push(list.find((x) => String(x.id) === String(id)))
         );
-        // 2. same category
+        // 2. any shared category
         if (out.length < limit) {
+          const homes = new Set(
+            (self.categoryIds.length ? self.categoryIds : [self.categoryId])
+              .filter((id) => id != null && id !== "")
+              .map(String)
+          );
           list
-            .filter((p) => String(p.categoryId) === String(product.categoryId))
+            .filter((p) =>
+              (p.categoryIds?.length ? p.categoryIds : [p.categoryId]).some((id) =>
+                homes.has(String(id))
+              )
+            )
             .forEach(push);
         }
         // 3. shared tags / same brand
         if (out.length < limit) {
-          const tags = new Set((product.tags || []).map((t) => String(t).toLowerCase()));
+          const tags = new Set((self.tags || []).map((t) => String(t).toLowerCase()));
           list
             .filter(
               (p) =>
-                p.brand === product.brand ||
+                p.brand === self.brand ||
                 (p.tags || []).some((t) => tags.has(String(t).toLowerCase()))
             )
             .forEach(push);
         }
-        return out.slice(0, limit);
+        return knownPriceFirst(out).slice(0, limit);
       } catch (error) {
         console.error("Get related products error:", error);
         return [];
@@ -1158,23 +1394,116 @@ const apiService = {
   },
 
   // ===========================================================================
-  // Banners
+  // Concerns (Storefront)
   // ===========================================================================
-  banners: {
+  // "Shop by concern" — hydration, brightening, exfoliation … A product names
+  // its concerns by SLUG (`product.concerns[]`), so this collection exists to
+  // give those slugs a display name and an order; it is never a join key.
+  concerns: {
     getAll: async () => {
       try {
+        const response = await api.get("/concerns");
+        const data = IS_MOCK_API ? response.data : extractData(response);
+        if (!Array.isArray(data)) return [];
+        // Sorted in both modes: the row order of a "shop by concern" rail is
+        // editorial, and must not depend on which backend answered.
+        return [...data].sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0));
+      } catch (error) { console.error("Get concerns error:", error); throw error; }
+    },
+  },
+
+  // ===========================================================================
+  // Rituals (Storefront)
+  // ===========================================================================
+  // A ritual is an ordered routine over real catalogue products — morning glow,
+  // evening renewal, the black-rice body ritual. Each step names a `productId`
+  // (and sometimes an `alternativeProductId`, where the bar and the wash do the
+  // same job), which resolveSteps() attaches to the step for rendering.
+  //
+  // Only live rituals come back, in the admin's order, in BOTH modes.
+  rituals: {
+    getAll: async () => {
+      try {
+        const response = await api.get("/rituals");
+        const data = IS_MOCK_API ? response.data : extractData(response);
+        if (!Array.isArray(data)) return [];
+        return data.filter((r) => r?.isActive !== false).sort(bySortOrder);
+      } catch (error) { console.error("Get rituals error:", error); throw error; }
+    },
+
+    getBySlug: async (slug) => {
+      try {
         if (IS_MOCK_API) {
-          try {
-            const response = await api.get("/banners");
-            if (response.data && response.data.length > 0) return response.data;
-          } catch {
-            // banners endpoint may not exist in db.json – return empty to use defaults
-          }
-          return [];
+          const response = await api.get("/rituals", { params: { slug } });
+          const row = Array.isArray(response.data) ? response.data[0] : response.data;
+          return row || null;
         }
-        const response = await api.get("/banners");
-        return extractData(response);
-      } catch (error) { console.error("Get banners error:", error); return []; }
+        const response = await api.get(`/rituals/slug/${slug}`);
+        return extractData(response) || null;
+      } catch (error) { console.error("Get ritual by slug error:", error); throw error; }
+    },
+
+    // Pure — no fetching, no mode branch. Also exported as resolveRitualSteps.
+    resolveSteps: resolveRitualSteps,
+  },
+
+  // ===========================================================================
+  // Site content (Storefront)
+  // ===========================================================================
+  // The editorial copy behind /about, /why-lamikaa, /contact, the policies and
+  // the home page's narrative blocks: one singleton keyed by section, written
+  // in the markdown-lite grammar src/utils/contentBlocks.js parses.
+  //
+  // Never throws. A page whose copy cannot be fetched renders its own empty
+  // state; it must not take the route down with it.
+  siteContent: {
+    /**
+     * @param {string} [key]  a section key ("about", "policies", …). Omitted,
+     *                        the whole record comes back.
+     * @returns {Promise<object|null>} `{}` for the whole record, `null` for a
+     *                        section that does not exist — never a rejection.
+     */
+    get: async (key) => {
+      try {
+        if (IS_MOCK_API) {
+          const response = await api.get("/siteContent");
+          const data =
+            response.data && typeof response.data === "object" ? response.data : {};
+          return key ? data[key] ?? null : data;
+        }
+        const response = await api.get(key ? `/content/${key}` : "/content");
+        const data = extractData(response);
+        return data ?? (key ? null : {});
+      } catch (error) {
+        console.error("Get site content error:", error);
+        return key ? null : {};
+      }
+    },
+  },
+
+  // ===========================================================================
+  // Announcements (Storefront)
+  // ===========================================================================
+  // The rotating line in the announcement bar. This collection replaced the
+  // slide store the hero used to read: the hero is product-driven now, so the
+  // only thing left for a merchant to schedule above the masthead is a sentence.
+  //
+  // Only rows that are switched on AND inside their optional start/end window
+  // come back, in the admin's order — filtered in BOTH modes so a live backend
+  // and json-server cannot disagree about what is showing. Never throws: the
+  // bar hides rather than breaking the header.
+  announcements: {
+    getAll: async () => {
+      try {
+        const response = await api.get("/announcements");
+        const data = IS_MOCK_API ? response.data : extractData(response);
+        if (!Array.isArray(data)) return [];
+        const now = Date.now();
+        return data.filter((row) => isLiveAnnouncement(row, now)).sort(bySortOrder);
+      } catch (error) {
+        console.error("Get announcements error:", error);
+        return [];
+      }
     },
   },
 
@@ -1182,9 +1511,10 @@ const apiService = {
   // Hero Section (Storefront)
   // ===========================================================================
   // Public read of the admin-managed config that drives the home hero: the
-  // master toggle, autoplay + default timer, transition, visible chrome, scrim
-  // strength, per-device stage height, shared secondary CTA and the collection
-  // openers row. The slides themselves come from `banners` (above).
+  // master toggle, autoplay + default timer, transition and the visible chrome.
+  // The SLIDES are the products themselves — products.getHeroProducts(), one
+  // slide per product carrying `heroHeadline`/`heroSubtext`, ordered by
+  // `heroOrder` — so this record holds behaviour only (`source: "products"`).
   //
   // Never throws: a missing/unreachable record returns {} and the caller
   // normalizes it to the designed defaults, so the hero degrades to exactly
@@ -1788,14 +2118,18 @@ const apiService = {
     },
 
     // --- Products ---
+    // Admin reads return DRAFTS TOO (no visibility gate) but are normalised the
+    // same way the storefront's are, so the product form, the media manager and
+    // the table all open on `media[]`/`images[]`/`categoryIds[]` whatever shape
+    // the record was saved in.
     getProducts: async (params = {}) => {
       try {
         if (IS_MOCK_API) {
           const response = await api.get("/products", { params });
-          return response.data;
+          return normalizeProducts(response.data);
         }
         const response = await api.get("/admin/products", { params });
-        return extractData(response);
+        return normalizeProducts(extractData(response));
       } catch (error) { console.error("Admin get products error:", error); throw error; }
     },
 
@@ -1803,38 +2137,45 @@ const apiService = {
       try {
         if (IS_MOCK_API) {
           const response = await api.get(`/products/${id}`);
-          return response.data;
+          return normalizeProduct(response.data);
         }
         const response = await api.get(`/admin/products/${id}`);
-        return extractData(response);
+        return normalizeProduct(extractData(response));
       } catch (error) { console.error("Admin get product error:", error); throw error; }
     },
 
+    // WRITE SIDE. syncProductMedia() rebuilds `images[]`/`image` from the
+    // `media[]` the form hands back BEFORE the request, in both modes — so a
+    // gallery edit reaches json-server already consistent, and the Laravel
+    // branch (which derives the same mirrors server-side) is simply told twice.
+    // Cart lines, wishlist snapshots and order items keep reading `images[0]`.
     createProduct: async (productData) => {
       try {
+        const payload = syncProductMedia(productData);
         if (IS_MOCK_API) {
           const response = await api.post("/products", {
-            ...productData,
+            ...payload,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           });
           return response.data;
         }
-        const response = await api.post("/admin/products", productData);
+        const response = await api.post("/admin/products", payload);
         return extractData(response);
       } catch (error) { console.error("Admin create product error:", error); throw error; }
     },
 
     updateProduct: async (id, productData) => {
       try {
+        const payload = syncProductMedia(productData);
         if (IS_MOCK_API) {
           const response = await api.put(`/products/${id}`, {
-            ...productData,
+            ...payload,
             updatedAt: new Date().toISOString(),
           });
           return response.data;
         }
-        const response = await api.put(`/admin/products/${id}`, productData);
+        const response = await api.put(`/admin/products/${id}`, payload);
         return extractData(response);
       } catch (error) { console.error("Admin update product error:", error); throw error; }
     },
@@ -1860,6 +2201,9 @@ const apiService = {
       } catch (error) { console.error("Admin get categories error:", error); throw error; }
     },
 
+    // `data` is passed through untouched, which is what lets the new LAMIKAA
+    // fields (`displayName`, `heroImage`, `kind`) reach both backends without
+    // this layer knowing about them.
     createCategory: async (data) => {
       try {
         const response = await api.post(IS_MOCK_API ? "/categories" : "/admin/categories", {
@@ -2630,11 +2974,11 @@ const apiService = {
       } catch (error) { console.error("Admin update deals config error:", error); throw error; }
     },
 
-    // --- Hero section: config + slides ---
-    // The hero is two records: the `heroConfig` singleton (section-wide
-    // behaviour) and the `banners` collection (one row per slide). Both are
-    // managed from the Hero Section admin screen and read by the storefront —
-    // no hero copy, media or timing is hardcoded anywhere.
+    // --- Hero section: config + product order ---
+    // The hero is the `heroConfig` singleton (section-wide behaviour) plus the
+    // PRODUCTS themselves: a product is a slide when it carries a `heroOrder`,
+    // and it prints its own `heroHeadline`/`heroSubtext`. Nothing about the
+    // hero is hardcoded on the storefront — it reads exactly what is saved here.
     getHeroConfig: async () => {
       try {
         if (IS_MOCK_API) {
@@ -2660,58 +3004,99 @@ const apiService = {
       } catch (error) { console.error("Admin update hero config error:", error); throw error; }
     },
 
-    // Every slide, inactive ones included — the admin table needs the full list
-    // (the storefront filters to active rows itself).
-    getBanners: async () => {
+    /**
+     * Persist the hero carousel's order.
+     *
+     * `orderedProductIds` is the full slide list, first slide first: each
+     * product's `heroOrder` becomes its 1-based position, and EVERY product not
+     * in the list has its `heroOrder` cleared — dropping a product out of the
+     * carousel is the same gesture as reordering it, so it cannot be forgotten.
+     *
+     * json-server has no bulk endpoint, so mock mode PATCHes only the rows
+     * whose value actually changes (same contract as reorderFaqs); Laravel
+     * takes the whole order in one request.
+     *
+     * @param {Array<string|number>} orderedProductIds
+     */
+    setHeroOrder: async (orderedProductIds = []) => {
       try {
-        const response = await api.get(IS_MOCK_API ? "/banners" : "/admin/banners");
-        return IS_MOCK_API ? response.data : extractData(response);
-      } catch (error) { console.error("Admin get banners error:", error); throw error; }
+        if (IS_MOCK_API) {
+          const response = await api.get("/products");
+          const rows = Array.isArray(response.data) ? response.data : [];
+          const position = new Map(
+            orderedProductIds.map((id, index) => [String(id), index + 1])
+          );
+          const changed = rows
+            .map((row) => ({ row, heroOrder: position.get(String(row.id)) ?? null }))
+            .filter(({ row, heroOrder }) => (row.heroOrder ?? null) !== heroOrder);
+          await Promise.all(
+            changed.map(({ row, heroOrder }) =>
+              api.patch(`/products/${row.id}`, {
+                heroOrder,
+                updatedAt: new Date().toISOString(),
+              })
+            )
+          );
+          return true;
+        }
+        const response = await api.put("/admin/hero/order", { order: orderedProductIds });
+        return extractData(response);
+      } catch (error) { console.error("Admin set hero order error:", error); throw error; }
     },
 
-    createBanner: async (data) => {
+    // --- Announcements ---
+    // The rotating line above the masthead. Every row, hidden ones included —
+    // the admin table needs the full list; the storefront's
+    // announcements.getAll() applies the active/scheduling gate itself.
+    getAnnouncements: async () => {
       try {
-        const response = await api.post(IS_MOCK_API ? "/banners" : "/admin/banners", {
-          ...data,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
+        const response = await api.get(IS_MOCK_API ? "/announcements" : "/admin/announcements");
         return IS_MOCK_API ? response.data : extractData(response);
-      } catch (error) { console.error("Admin create banner error:", error); throw error; }
+      } catch (error) { console.error("Admin get announcements error:", error); throw error; }
     },
 
-    updateBanner: async (id, data) => {
+    createAnnouncement: async (data) => {
+      try {
+        const response = await api.post(
+          IS_MOCK_API ? "/announcements" : "/admin/announcements",
+          { ...data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+        );
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin create announcement error:", error); throw error; }
+    },
+
+    updateAnnouncement: async (id, data) => {
       try {
         const response = await api.put(
-          IS_MOCK_API ? `/banners/${id}` : `/admin/banners/${id}`,
+          IS_MOCK_API ? `/announcements/${id}` : `/admin/announcements/${id}`,
           { ...data, updatedAt: new Date().toISOString() }
         );
         return IS_MOCK_API ? response.data : extractData(response);
-      } catch (error) { console.error("Admin update banner error:", error); throw error; }
+      } catch (error) { console.error("Admin update announcement error:", error); throw error; }
     },
 
-    deleteBanner: async (id) => {
+    deleteAnnouncement: async (id) => {
       try {
         const response = await api.delete(
-          IS_MOCK_API ? `/banners/${id}` : `/admin/banners/${id}`
+          IS_MOCK_API ? `/announcements/${id}` : `/admin/announcements/${id}`
         );
         return IS_MOCK_API ? response.data : extractData(response);
-      } catch (error) { console.error("Admin delete banner error:", error); throw error; }
+      } catch (error) { console.error("Admin delete announcement error:", error); throw error; }
     },
 
-    // Persist a new slide order. `orderedIds` is the full id list, top first;
-    // each row's sortOrder becomes its index. json-server has no bulk endpoint,
-    // so mock mode PATCHes the rows whose position actually changed.
-    reorderBanners: async (orderedIds, current = []) => {
+    // Same contract as reorderFaqs: `orderedIds` is the full id list, top
+    // first, and each row's sortOrder becomes its index. Mock mode PATCHes only
+    // the rows whose position actually moved.
+    reorderAnnouncements: async (orderedIds, current = []) => {
       try {
         if (IS_MOCK_API) {
-          const byId = new Map(current.map((b) => [String(b.id), b]));
+          const byId = new Map(current.map((row) => [String(row.id), row]));
           const changed = orderedIds
             .map((id, index) => ({ row: byId.get(String(id)), index }))
             .filter(({ row, index }) => row && (row.sortOrder ?? -1) !== index);
           await Promise.all(
             changed.map(({ row, index }) =>
-              api.patch(`/banners/${row.id}`, {
+              api.patch(`/announcements/${row.id}`, {
                 sortOrder: index,
                 updatedAt: new Date().toISOString(),
               })
@@ -2719,9 +3104,149 @@ const apiService = {
           );
           return true;
         }
-        const response = await api.put("/admin/banners/reorder", { order: orderedIds });
+        const response = await api.put("/admin/announcements/reorder", { order: orderedIds });
         return extractData(response);
-      } catch (error) { console.error("Admin reorder banners error:", error); throw error; }
+      } catch (error) { console.error("Admin reorder announcements error:", error); throw error; }
+    },
+
+    // --- Concerns ---
+    // The "shop by concern" vocabulary. Small, flat and ordered; products point
+    // at it by slug, so renaming a concern must never change its slug.
+    getConcerns: async () => {
+      try {
+        const response = await api.get(IS_MOCK_API ? "/concerns" : "/admin/concerns");
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin get concerns error:", error); throw error; }
+    },
+
+    createConcern: async (data) => {
+      try {
+        const response = await api.post(IS_MOCK_API ? "/concerns" : "/admin/concerns", data);
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin create concern error:", error); throw error; }
+    },
+
+    updateConcern: async (id, data) => {
+      try {
+        const response = await api.put(
+          IS_MOCK_API ? `/concerns/${id}` : `/admin/concerns/${id}`,
+          data
+        );
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin update concern error:", error); throw error; }
+    },
+
+    deleteConcern: async (id) => {
+      try {
+        const response = await api.delete(
+          IS_MOCK_API ? `/concerns/${id}` : `/admin/concerns/${id}`
+        );
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin delete concern error:", error); throw error; }
+    },
+
+    // --- Rituals ---
+    // Every ritual, inactive ones included — the storefront's rituals.getAll()
+    // applies the active gate itself.
+    getRituals: async () => {
+      try {
+        const response = await api.get(IS_MOCK_API ? "/rituals" : "/admin/rituals");
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin get rituals error:", error); throw error; }
+    },
+
+    createRitual: async (data) => {
+      try {
+        const response = await api.post(IS_MOCK_API ? "/rituals" : "/admin/rituals", {
+          ...data,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin create ritual error:", error); throw error; }
+    },
+
+    updateRitual: async (id, data) => {
+      try {
+        const response = await api.put(
+          IS_MOCK_API ? `/rituals/${id}` : `/admin/rituals/${id}`,
+          { ...data, updatedAt: new Date().toISOString() }
+        );
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin update ritual error:", error); throw error; }
+    },
+
+    deleteRitual: async (id) => {
+      try {
+        const response = await api.delete(
+          IS_MOCK_API ? `/rituals/${id}` : `/admin/rituals/${id}`
+        );
+        return IS_MOCK_API ? response.data : extractData(response);
+      } catch (error) { console.error("Admin delete ritual error:", error); throw error; }
+    },
+
+    // Same contract as reorderFaqs / reorderAnnouncements.
+    reorderRituals: async (orderedIds, current = []) => {
+      try {
+        if (IS_MOCK_API) {
+          const byId = new Map(current.map((row) => [String(row.id), row]));
+          const changed = orderedIds
+            .map((id, index) => ({ row: byId.get(String(id)), index }))
+            .filter(({ row, index }) => row && (row.sortOrder ?? -1) !== index);
+          await Promise.all(
+            changed.map(({ row, index }) =>
+              api.patch(`/rituals/${row.id}`, {
+                sortOrder: index,
+                updatedAt: new Date().toISOString(),
+              })
+            )
+          );
+          return true;
+        }
+        const response = await api.put("/admin/rituals/reorder", { order: orderedIds });
+        return extractData(response);
+      } catch (error) { console.error("Admin reorder rituals error:", error); throw error; }
+    },
+
+    // --- Site content ---
+    // The editorial copy behind the content pages, one singleton keyed by
+    // section. Mock mode mirrors updateSettings: read the whole record, merge
+    // the one section, PUT it back (json-server has no PATCH-a-key on an object
+    // route). Laravel patches the section directly.
+    getSiteContent: async () => {
+      try {
+        if (IS_MOCK_API) {
+          const response = await api.get("/siteContent");
+          return response.data && typeof response.data === "object" ? response.data : {};
+        }
+        const response = await api.get("/admin/content");
+        return extractData(response);
+      } catch (error) { console.error("Admin get site content error:", error); throw error; }
+    },
+
+    /**
+     * @param {string} key   the section being edited ("about", "policies", …)
+     * @param {object} data  the section's new value — MERGED into the stored
+     *                       one, so an editor that holds half a section cannot
+     *                       delete the other half by saving.
+     */
+    updateSiteContent: async (key, data) => {
+      try {
+        if (IS_MOCK_API) {
+          const current = await api.get("/siteContent");
+          const base =
+            current.data && typeof current.data === "object" ? current.data : {};
+          const previous =
+            base[key] && typeof base[key] === "object" && !Array.isArray(base[key])
+              ? base[key]
+              : {};
+          const merged = { ...base, [key]: { ...previous, ...data } };
+          const response = await api.put("/siteContent", merged);
+          return response.data;
+        }
+        const response = await api.patch(`/admin/content/${key}`, data);
+        return extractData(response);
+      } catch (error) { console.error("Admin update site content error:", error); throw error; }
     },
 
     // --- FAQs ---
@@ -2765,10 +3290,10 @@ const apiService = {
       } catch (error) { console.error("Admin delete FAQ error:", error); throw error; }
     },
 
-    // Persist a new answer order — same contract as reorderBanners: `orderedIds`
-    // is the full id list, top first, and each row's sortOrder becomes its
-    // index. json-server has no bulk endpoint, so mock mode PATCHes only the
-    // rows whose position actually moved.
+    // Persist a new answer order — same contract as reorderAnnouncements:
+    // `orderedIds` is the full id list, top first, and each row's sortOrder
+    // becomes its index. json-server has no bulk endpoint, so mock mode PATCHes
+    // only the rows whose position actually moved.
     reorderFaqs: async (orderedIds, current = []) => {
       try {
         if (IS_MOCK_API) {

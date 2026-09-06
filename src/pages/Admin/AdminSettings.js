@@ -131,11 +131,11 @@ const AdminSettings = () => {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const [settings, cats, heroConfig, heroSlides, faqRows] = await Promise.all([
+      const [settings, cats, heroConfig, announcementRows, faqRows] = await Promise.all([
         apiService.admin.getSettings(),
         apiService.admin.getCategories().catch(() => []),
         apiService.admin.getHeroConfig().catch(() => null),
-        apiService.admin.getBanners().catch(() => []),
+        apiService.admin.getAnnouncements().catch(() => []),
         apiService.admin.getFaqs().catch(() => []),
       ]);
       const store = settings?.store || {};
@@ -167,7 +167,10 @@ const AdminSettings = () => {
         )
       );
       setCategoryCount(Array.isArray(cats) ? cats.length : 0);
-      const slides = normalizeHeroSlides(heroSlides);
+      // Temporary (Prompt 07 → Prompt 34): the Hero screen manages announcements
+      // until the hero product-ordering editor exists, so the summary counts
+      // those rows. normalizeHeroSlides only needs isActive/sortOrder here.
+      const slides = normalizeHeroSlides(announcementRows);
       setHeroSummary({
         enabled: normalizeHeroConfig(heroConfig).enabled,
         total: slides.length,
@@ -600,10 +603,11 @@ const AdminSettings = () => {
               Manage the home page hero
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 2 }}>
-              Every slide and every behaviour of the opening band lives in the dedicated{" "}
-              <strong>Hero Section</strong> manager — slide copy and buttons, background gradient,
-              image or video, per-slide timers, transition, overlay, the visible controls and the
-              stage height for desktop, tablet and mobile.
+              Every behaviour of the opening band lives in the dedicated{" "}
+              <strong>Hero Section</strong> manager — autoplay and its timer, the transition, the
+              visible controls and the stage height for desktop, tablet and mobile. The slides
+              themselves are the products carrying a hero position. The same screen currently
+              manages the announcement bar above the masthead.
             </Typography>
             {heroSummary && (
               <Box sx={{ display: "flex", gap: 1, justifyContent: "center", flexWrap: "wrap", mb: 3 }}>
@@ -613,9 +617,9 @@ const AdminSettings = () => {
                   label={heroSummary.enabled ? "Hero is showing" : "Hero is switched off"}
                 />
                 <Chip
-                  icon={<Icon icon="mdi:image-multiple-outline" />}
+                  icon={<Icon icon="mdi:bullhorn-outline" />}
                   label={`${heroSummary.live} live of ${heroSummary.total} ${
-                    heroSummary.total === 1 ? "slide" : "slides"
+                    heroSummary.total === 1 ? "announcement" : "announcements"
                   }`}
                 />
               </Box>
