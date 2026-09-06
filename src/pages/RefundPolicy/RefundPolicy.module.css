@@ -53,7 +53,7 @@
 }
 
 /* ── The measure ───────────────────────────────────────────────────────────
-   64ch counted against this element's 1rem Inter, which sets the 1.0625rem
+   64ch counted against this element's 1rem Manrope, which sets the 1.0625rem
    body inside it at roughly 70 characters a line — the long-form reading
    band. Everything hangs off this column, breadcrumb included, so the left
    edge never moves as you read down. */
@@ -159,7 +159,7 @@
   border-bottom: 1px solid var(--sf-color-border-strong);
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-4xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
   color: var(--sf-color-text);
@@ -179,7 +179,7 @@
   margin: var(--sf-space-6) 0 0;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text-secondary);
 }
@@ -464,7 +464,7 @@
   margin: 0;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text);
 }
@@ -510,7 +510,7 @@
 .stepNum {
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   font-variant-numeric: lining-nums tabular-nums;
   line-height: 1.15;
   color: var(--sf-color-gold-deep);

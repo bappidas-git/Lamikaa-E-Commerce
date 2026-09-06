@@ -116,15 +116,26 @@
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
     <!--
-      Google Fonts — Cormorant Garamond (display) + Inter (body/UI).
-      THIS IS THE ONLY LOAD PATH for the two families: src/index.css deliberately
-      does not @import them (a second request for the same faces only delays
-      first paint). Keep the weight lists in step with --sf-font-* usage.
+      Google Fonts — Fraunces (display) + Manrope (body/UI).
+
+      THIS IS THE ONLY LOAD PATH for the two families, and it is deliberately
+      ONE request: src/index.css does not @import them and no stylesheet
+      declares an @font-face, because a second request for the same faces only
+      delays first paint. Keep the weight lists in step with the weight tokens
+      in src/theme/storefront-tokens.css (--sf-font-normal…-bold): Fraunces is
+      requested at 400/500/600 across its full optical-size axis (opsz 9..144,
+      driven by `font-optical-sizing: auto` on headings) and Manrope at
+      400/500/600/700. `display=swap` is what keeps a slow font from blanking
+      the page — the fallback stacks in the tokens paint first.
+
+      The preconnects must stay: the CSS comes from fonts.googleapis.com and
+      the woff2 files from fonts.gstatic.com (crossorigin, because fonts are
+      always fetched in CORS mode), so both origins are warmed in parallel.
     -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
@@ -164,14 +175,20 @@
         #F5D76E  --sf-color-gold            (champagne gold)
         rgba(255, 255, 255, 0.08)           --sf-color-border (hairline)
         cubic-bezier(0.2, 0.7, 0.2, 1)      --sf-ease
+        "Manrope", "Inter", …               --sf-font-family (splash body)
+        "Fraunces", "Playfair Display", …   --sf-font-display (splash tagline)
+
+      The two families come from the single Google Fonts <link> above, which
+      the browser has already started fetching by the time this block is
+      parsed; `display=swap` means the tagline paints in the fallback serif and
+      re-renders in Fraunces, rather than holding the splash blank.
     -->
     <style>
       body {
         margin: 0;
         padding: 0;
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-          "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-          "Helvetica Neue", sans-serif;
+        font-family: "Manrope", "Inter", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         /* One theme, one ground, declared statically. Nothing reads a stored
@@ -238,7 +255,8 @@
       .loader-tagline {
         margin: 28px 0 0;
         max-width: 24em;
-        font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+        font-family: "Fraunces", "Playfair Display", Georgia, "Times New Roman",
+          serif;
         font-size: 17px;
         font-weight: 500;
         line-height: 1.5;

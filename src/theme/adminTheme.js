@@ -83,8 +83,13 @@ const buildAdminTheme = (mode) => {
     palette,
     shape: { borderRadius: 6 },
     typography: {
+      // Manrope, the same UI family as the storefront — the admin is a quieter
+      // sibling, not a different product. The PALETTE stays slate until Prompt
+      // 32; this is the font family and nothing else. Spelled out rather than
+      // read from --sf-font-family on purpose: the admin never reads storefront
+      // tokens, so its theme has to name its own stack.
       fontFamily:
-        '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+        '"Manrope", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
       button: { textTransform: "none", fontWeight: 600 },
       // Match the compact heading scale the admin pages were laid out against
       // (the storefront theme used the same sizes).

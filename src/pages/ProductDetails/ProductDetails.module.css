@@ -695,7 +695,7 @@
   max-width: 30em;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-lg);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-relaxed);
   color: var(--sf-color-text);
   white-space: pre-line;

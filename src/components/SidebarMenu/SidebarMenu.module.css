@@ -2,7 +2,7 @@
  * SidebarMenu — LAMIKAA NATURALS editorial menu (mobile primary navigation)
  * =============================================================================
  * Not an app drawer: a full-height boutique menu on the page ivory. Big display
- * serif for the primary links, hairline-separated groups of quiet Inter meta
+ * serif for the primary links, hairline-separated groups of quiet Manrope meta
  * rows beneath, gold used only as seasoning (a rule, a dot, a focus ring).
  *
  * The panel paints --sf-color-bg, the same ground as the page, so opening it
@@ -387,7 +387,7 @@
   padding-bottom: var(--sf-space-2);
 }
 
-/* Sub-collections drop to Inter — the serif is reserved for the big links. */
+/* Sub-collections drop to Manrope — the serif is reserved for the big links. */
 .catChild {
   display: flex;
   align-items: center;

@@ -355,8 +355,8 @@
   flex: none;
 }
 
-/* The headline moment. Cormorant is loaded at 500/600/700, so the display
-   weight is the medium — never 400, which the browser would synthesise. */
+/* The headline moment. Fraunces is loaded at 400/500/600; the display weight
+   is the medium, and every weight named here has a real face to land on. */
 .headline {
   margin: 0;
   font-family: var(--sf-font-display);
@@ -372,7 +372,7 @@
   margin: var(--sf-space-5) 0 0;
   max-width: 46ch;
   font-size: var(--sf-text-md);
-  font-weight: var(--sf-font-light);
+  font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-relaxed);
   color: var(--sf-hero-ink-soft);
 }

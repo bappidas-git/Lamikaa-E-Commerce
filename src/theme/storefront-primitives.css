@@ -6,19 +6,23 @@
  * storefront. Every class is prefixed with `sf-` to avoid collisions. Loaded
  * app-wide exactly once via `src/index.css` (right after storefront-tokens.css).
  *
- * THE LOOK: warm-minimalist editorial. Near-rectangular (2–4px), hairlines over
- * heavy borders, flat surfaces, uppercase Inter with generous tracking for
- * actions, gold used as seasoning — never as a large fill. Motion is slow and
- * decelerating (--sf-transition), never bouncy, never glowing.
+ * THE LOOK: "Luxury Skincare After Dark". Near-black grounds, warm-white type,
+ * champagne gold as the one accent that may fill a control. Pills everywhere —
+ * every button, chip, badge and ribbon on the storefront is a pill from
+ * Prompt 04 onward. Labels are SENTENCE CASE in Manrope 600; the only uppercase
+ * left in the system is the tracked gold eyebrow above a section heading.
+ * Glass, glow and the signature gradient are supporting devices with hard
+ * budgets (DESIGN_SYSTEM.md §4–§5), never the subject.
  *
  * THE HOVER / PRESS VOCABULARY — three treatments, storefront-wide:
  *
- *   CARDS         the photograph breathes: `transform: scale(1.03)` on the
- *                 image over --sf-transition-slow, plus a hairline underline
- *                 under the caption. The card itself never moves.
- *   TEXT BUTTONS  colour and underline only — background, border, text,
- *                 underline-colour on --sf-transition. On press, `opacity:
- *                 0.9`. They never translate and never lift.
+ *   BUTTONS       lift 1px and warm one step (`translateY(-1px)`); the gold
+ *                 primary also casts a champagne shadow. On press they settle
+ *                 back to `translateY(0)` at 92% opacity — the control returns
+ *                 under the finger rather than sinking past it.
+ *   CARDS         lift 4px, the hairline firms to --sf-color-border-strong, an
+ *                 ambient glow fades in behind the content, and the photograph
+ *                 breathes to `scale(1.03)`.
  *   ICON BUTTONS  colour on hover; on press `transform: scale(0.98)` with
  *                 `opacity: 0.85` over --sf-transition-fast — the mark settles
  *                 a hair under the finger and springs back.
@@ -27,17 +31,351 @@
  * button is local to its component), but the VALUES are these — 0.98 / 0.85 /
  * --sf-transition-fast — and nothing on the storefront presses differently.
  *
+ * -----------------------------------------------------------------------------
+ * THE CLASS LIST  (the contract — names are stable, looks are not)
+ * -----------------------------------------------------------------------------
+ *   B1 LAYOUT      .sf-section  .sf-section--tight
+ *                  .sf-container  .sf-container--wide
+ *   B2 SURFACE     .sf-glass  .sf-glass--strong  .sf-glass--scrim
+ *                  .sf-plate  .sf-hairline  .sf-hairline--gradient
+ *   B3 GLOW        .sf-glow  .sf-glow--violet  .sf-glow--gold  .sf-glow--duo
+ *                  .sf-glow--breathe
+ *   B4 TYPE        .sf-gradient-text  .sf-eyebrow  .sf-eyebrow--rule
+ *                  .sf-numeral  .sf-visually-hidden
+ *   B5 MEDIA       .sf-placeholder-media
+ *   A1 BUTTONS     .sf-btn  --emerald  --gold  --outline-gold  --ghost
+ *                          --sm  --lg  --block
+ *   A2 CHIPS       .sf-chip  .sf-chip--active  .sf-badge-discount
+ *                  .sf-pill-save  .sf-ribbon-premium
+ *                  .sf-flag  .sf-flag-trending  .sf-flag-hot
+ *   A3 CARD        .sf-card  .sf-card--hover
+ *   A4 SKELETON    .sf-skeleton  .sf-skeleton--text  .sf-skeleton--block
+ *   A5 TOAST       .sf-toast  --success  --error  --info
+ *                  .sf-toast__title  .sf-toast__body
+ *
  * RULES
  *   • Consume design tokens by name only (var(--sf-*) / var(--brand-*)). Never
- *     hardcode hex, gradients, shadows, radius, or spacing here.
- *   • Do NOT redefine tokens and do NOT @import fonts (fonts load elsewhere).
+ *     hardcode hex, gradients, shadows, radius, or spacing here. Where a spec
+ *     names a literal colour, express it as a color-mix() of the token that
+ *     produces it, so the palette stays the single source.
+ *   • Do NOT redefine tokens and do NOT @import fonts (fonts load in
+ *     public/index.html, once).
  *   • These are the brand PRIMITIVES that later prompts (Header, ProductCard,
  *     pages) compose on top of — the class names are a contract; keep them
  *     stable. Restyle in place; never rename.
  * ========================================================================== */
 
 /* =============================================================================
+ * B1. LAYOUT RHYTHM
+ * The two measurements every page agrees on: how much air a section gets, and
+ * how wide the reading column may be.
+ * ========================================================================== */
+
+/* One section of vertical rhythm. --sf-section-y is fluid (64px → 140px), so a
+   section breathes on a desktop and stays economical on a phone without a
+   single media query. */
+.sf-section {
+  padding-block: var(--sf-section-y);
+}
+
+/* 60% of the rhythm — for a section that continues the one above it rather
+   than starting a new thought. */
+.sf-section--tight {
+  padding-block: calc(var(--sf-section-y) * 0.6);
+}
+
+.sf-container {
+  width: 100%;
+  max-width: var(--sf-container-max);
+  margin-inline: auto;
+  padding-inline: var(--sf-space-5);
+}
+
+/* The wide track — full-bleed editorial rows and the hero stage. */
+.sf-container--wide {
+  max-width: var(--sf-container-wide);
+}
+
+@media (max-width: 768px) {
+  .sf-container {
+    padding-inline: var(--sf-space-4);
+  }
+}
+
+/* =============================================================================
+ * B2. SURFACES — glass, plates and hairlines
+ * ========================================================================== */
+
+/* The glassmorphism recipe (DESIGN_SYSTEM.md §4): 6% white at 20px blur behind
+   an 8% white hairline. BUDGET: at most two blurred layers in view at once, and
+   never on a full-page scrolling background. Inside a long list (shop chapters)
+   use --sf-color-surface with a hairline instead — a hundred blurred cards is a
+   scroll-jank machine.
+   The ≤768px blur reduction is NOT restated here: --sf-glass-blur itself drops
+   to 12px under that breakpoint in storefront-tokens.css, which reaches every
+   consumer of the token at once. */
+.sf-glass {
+  background: var(--sf-glass-bg);
+  -webkit-backdrop-filter: blur(var(--sf-glass-blur));
+  backdrop-filter: blur(var(--sf-glass-blur));
+  border: 1px solid var(--sf-glass-border);
+  box-shadow: var(--sf-shadow-1);
+}
+
+/* One step more opaque — the header once it has left the hero, and modals. */
+.sf-glass--strong {
+  background: var(--sf-glass-bg-strong);
+}
+
+/* A darker inner scrim, for text sitting on glass over a photograph. Needs a
+   positioned parent; the scrim is inert and never eats a click. */
+.sf-glass--scrim {
+  position: relative;
+}
+
+.sf-glass--scrim::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--sf-color-bg) 35%, transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Without backdrop-filter the 6% white would be a barely-there wash over live
+   content and the text on it would be unreadable — so those browsers get an
+   opaque ground instead of a transparent one. */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .sf-glass,
+  .sf-glass--strong {
+    background: var(--sf-glass-fallback);
+  }
+}
+
+/* The image plate: a 1:1 surface a product photograph is CENTRED on, never
+   cropped to. Packaging is the product — a bottle whose cap has been sliced off
+   by an `object-fit: cover` is a defect, so everything inside a plate contains. */
+.sf-plate {
+  background: var(--sf-color-surface);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-lg);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.sf-plate img,
+.sf-plate video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* A rule. Not a border on something else — a rule in its own right, so it can
+   sit in a flex column and take a gap like any other child. */
+.sf-hairline {
+  height: 1px;
+  border: 0;
+  background: var(--sf-color-border);
+}
+
+/* The signature gradient as a rule, held back to 60% so it reads as a seam
+   rather than a stripe. One per section, at most. */
+.sf-hairline--gradient {
+  background-image: var(--sf-gradient-signature);
+  opacity: 0.6;
+}
+
+/* =============================================================================
+ * B3. AMBIENT GLOW  (DESIGN_SYSTEM.md §5)
+ * A small blurred element placed BEHIND products, cards and CTA containers —
+ * never another backdrop filter, and never over the top of content. `isolation`
+ * keeps the negative z-index inside the element's own stacking context, so the
+ * glow paints above the element's background and below everything in it.
+ *
+ * Intensity is a variable so `GlowWrap` (Prompt 05) can set 0.15–0.30 per use
+ * without a new class; the offsets are variables so the breathe keyframe can
+ * scale a glow without discarding wherever it was placed.
+ * ========================================================================== */
+.sf-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.sf-glow::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -12% -8%;
+  --sf-glow-x: 6%;
+  --sf-glow-y: -8%;
+  border-radius: 50%;
+  background: var(--sf-glow-pink);
+  filter: blur(60px);
+  opacity: var(--sf-glow-opacity, 0.22);
+  transform: translate(var(--sf-glow-x), var(--sf-glow-y));
+  pointer-events: none;
+}
+
+.sf-glow--violet::before {
+  background: var(--sf-glow-violet);
+  --sf-glow-x: -8%;
+  --sf-glow-y: 10%;
+}
+
+.sf-glow--gold::before {
+  background: var(--sf-glow-gold);
+}
+
+/* Two lamps: pink off the top-right shoulder, violet off the bottom-left. The
+   pair is for hero-scale moments only — a card gets one. */
+.sf-glow--duo::before {
+  background: var(--sf-glow-pink);
+  --sf-glow-x: 12%;
+  --sf-glow-y: -12%;
+}
+
+.sf-glow--duo::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -12% -8%;
+  --sf-glow-x: -12%;
+  --sf-glow-y: 12%;
+  border-radius: 50%;
+  background: var(--sf-glow-violet);
+  filter: blur(60px);
+  opacity: var(--sf-glow-opacity, 0.22);
+  transform: translate(var(--sf-glow-x), var(--sf-glow-y));
+  pointer-events: none;
+}
+
+/* At most ONE breathing glow per viewport — the hero owns it at the top of the
+   home page, the full-page CTA owns it further down. Ten seconds is slow
+   enough to be felt rather than watched. */
+.sf-glow--breathe::before {
+  animation: sf-breathe 10s var(--sf-ease) infinite alternate;
+}
+
+.sf-glow--duo.sf-glow--breathe::after {
+  animation: sf-breathe 10s var(--sf-ease) 2s infinite alternate;
+}
+
+@keyframes sf-breathe {
+  from {
+    transform: translate(var(--sf-glow-x), var(--sf-glow-y)) scale(1);
+  }
+  to {
+    transform: translate(var(--sf-glow-x), var(--sf-glow-y)) scale(1.06);
+  }
+}
+
+/* =============================================================================
+ * B4. TYPE UTILITIES
+ * ========================================================================== */
+
+/* The signature gradient clipped to the glyphs. ONE keyword per section — a
+   whole headline in gradient is a screensaver, not a brand.
+   The bare rule is the FALLBACK (solid champagne gold); the gradient is layered
+   on only where the browser can actually clip a background to text, because
+   `-webkit-text-fill-color: transparent` without the clip paints invisible
+   text. */
+.sf-gradient-text {
+  color: var(--sf-color-gold);
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .sf-gradient-text {
+    background-image: var(--sf-gradient-signature);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
+/* The gold eyebrow above a section heading — the one uppercase, tracked label
+   left in the system. 12px is allowed here precisely because it is not a
+   sentence: it is a two- or three-word signpost at weight 600. */
+.sf-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  color: var(--sf-color-gold);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  line-height: var(--sf-leading-tight);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+/* …with a 24px gradient hairline leading into it. Decorative, so it is hidden
+   from assistive tech by being a pseudo-element with no content. */
+.sf-eyebrow--rule::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  flex: none;
+  background-image: var(--sf-gradient-signature);
+}
+
+/* Chapter numerals — "01 — Cleanse". Fraunces with tabular figures so a column
+   of them lines up on the digit, not on the letterform. */
+.sf-numeral {
+  font-family: var(--sf-font-display);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Available to a screen reader, invisible to everyone else. Not `display:none`
+   and not `visibility:hidden` — both remove it from the accessibility tree. */
+.sf-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =============================================================================
+ * B5. PLACEHOLDER MEDIA
+ * Stock imagery standing in for photography the brand has not shot yet
+ * (inventoried in PLACEHOLDER_ASSETS.md). Desaturated and darkened under a
+ * bottom-weighted wash so it reads as a placeholder — present, but never
+ * competing with a real product photograph on the same page.
+ * ========================================================================== */
+.sf-placeholder-media {
+  position: relative;
+  overflow: hidden;
+  filter: saturate(0.6) brightness(0.85);
+}
+
+.sf-placeholder-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sf-color-bg) 15%, transparent),
+    color-mix(in srgb, var(--sf-color-bg) 50%, transparent)
+  );
+  pointer-events: none;
+}
+
+/* =============================================================================
  * A1. BUTTONS
+ * Pills, system-wide. Sentence case in Manrope 600 with a breath of tracking —
+ * the uppercase tracked label the old storefront used has moved to the eyebrow,
+ * where a signpost belongs, and off the controls, where it slowed reading.
  * ========================================================================== */
 .sf-btn {
   display: inline-flex;
@@ -47,81 +385,94 @@
   min-height: var(--sf-tap-target);
   padding: var(--sf-space-3) var(--sf-space-6);
   border: 1px solid transparent;
-  border-radius: var(--sf-radius-sm);
+  border-radius: var(--sf-radius-pill);
   background: transparent;
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
   line-height: var(--sf-leading-tight);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
+  letter-spacing: 0.02em;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   transition: background-color var(--sf-transition),
-    border-color var(--sf-transition), color var(--sf-transition),
-    opacity var(--sf-transition);
+    background-size var(--sf-transition), border-color var(--sf-transition),
+    color var(--sf-transition), box-shadow var(--sf-transition),
+    transform var(--sf-transition-fast), opacity var(--sf-transition);
 }
 
-/* Primary — the gold button. Legacy class name (`--emerald`, 188 usages) kept
-   until Prompt 35 renames it: in this palette the primary CTA is the champagne
-   gold under a near-black label, and it lifts to gold-light on hover. */
-.sf-btn--emerald {
+/* Every button lifts a single pixel. One pixel is the whole gesture: enough to
+   register as an answer, not enough to reflow anything around it. */
+.sf-btn:hover:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(-1px);
+}
+
+/* Primary — the gold button, and the only solid accent fill the palette allows.
+   Legacy class name (`--emerald`, 188 usages) kept until Prompt 35 renames it;
+   in this palette it is champagne gold under a near-black label at 13.4:1,
+   lifting to gold-light with a champagne shadow under it. */
+.sf-btn--emerald,
+.sf-btn--gold {
   background-color: var(--sf-color-emerald);
   color: var(--sf-color-emerald-contrast);
   border-color: var(--sf-color-emerald);
 }
-.sf-btn--emerald:hover {
-  background-color: var(--sf-color-gold-deep);
-  border-color: var(--sf-color-gold-deep);
-}
 
-/* Gold fill — reserved for rare hero moments (one per page, at most). */
-.sf-btn--gold {
-  background-image: var(--sf-gradient-gold);
-  color: var(--sf-color-primary-contrast);
-  border-color: transparent;
-}
+.sf-btn--emerald:hover,
 .sf-btn--gold:hover {
-  background-image: none;
-  background-color: var(--sf-color-gold);
+  background-color: var(--sf-color-gold-light);
+  border-color: var(--sf-color-gold-light);
+  box-shadow: 0 8px 24px
+    color-mix(in srgb, var(--sf-color-gold) 25%, transparent);
 }
 
-/* Outline gold — hairline brand action. */
+/* Secondary — glass with an emphasised hairline and a warm-white label. No
+   backdrop blur: a row of blurred buttons would spend the whole glass budget
+   on chrome. */
 .sf-btn--outline-gold {
-  color: var(--sf-color-accent);
-  border-color: color-mix(in srgb, var(--sf-color-accent) 55%, transparent);
-}
-.sf-btn--outline-gold:hover {
-  border-color: var(--sf-color-accent);
-  background-color: color-mix(in srgb, var(--sf-color-accent) 8%, transparent);
+  background-color: var(--sf-glass-bg);
+  color: var(--sf-color-text);
+  border-color: var(--sf-color-border-strong);
 }
 
-/* Ghost — the quiet text button. No chrome until you reach for it. */
+.sf-btn--outline-gold:hover {
+  border-color: var(--sf-color-gold);
+  background-color: var(--sf-color-primary-soft);
+}
+
+/* Ghost — the quiet text button. No chrome until you reach for it, and then a
+   signature-gradient rule draws itself in from the left under the label
+   (`background-size` from 0 to full width; the underline is the background, so
+   nothing is added to the box and nothing shifts). */
 .sf-btn--ghost {
   color: var(--sf-color-text);
   border-color: transparent;
+  background-image: var(--sf-gradient-signature);
+  background-repeat: no-repeat;
+  background-position: 0 calc(100% - var(--sf-space-2));
+  background-size: 0 1px;
 }
-.sf-btn--ghost:hover {
-  color: var(--sf-color-accent);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 6px;
+
+.sf-btn--ghost:hover,
+.sf-btn--ghost:focus-visible {
+  color: var(--sf-color-gold);
+  background-size: 100% 1px;
 }
 
 /* Sizes */
 .sf-btn--sm {
   min-height: 36px;
   padding: var(--sf-space-2) var(--sf-space-4);
-  font-size: var(--sf-text-xs);
 }
+
 .sf-btn--lg {
   min-height: 52px;
   padding: var(--sf-space-4) var(--sf-space-10);
-  font-size: var(--sf-text-sm);
+  font-size: var(--sf-text-base);
 }
+
 .sf-btn--block {
   display: flex;
   width: 100%;
@@ -134,10 +485,12 @@
   }
 }
 
-/* Press — the button settles, it does not sink. No transform: a text button
-   that moves under the cursor is the lift dressed up as feedback. */
+/* Press — the button returns to the page and dims. The lift is cancelled
+   explicitly rather than left to specificity: this rule and the hover rule can
+   both match at once (a pointer is over it while it is down). */
 .sf-btn:active:not(:disabled):not([aria-disabled="true"]) {
-  opacity: 0.9;
+  transform: translateY(0);
+  opacity: 0.92;
 }
 
 /* Disabled */
@@ -148,9 +501,9 @@
   pointer-events: none;
 }
 
-/* Focus — never remove the ring. The token is a two-layer ring (a ground-
-   coloured gap, then the gold), so it reads on every surface. The transparent
-   outline is what Windows High Contrast mode paints instead. */
+/* Focus — never remove the ring. The token is a three-pixel champagne ring, so
+   it reads on every surface the storefront has. The transparent outline is what
+   Windows High Contrast mode paints instead. */
 .sf-btn:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -159,35 +512,56 @@
 
 /* =============================================================================
  * A2. BADGES / CHIPS / PILLS
- * Small caps, hairlines and soft tints. These are labels, not stickers.
+ * Soft tints and hairlines, all of them pills. These are labels, not stickers.
  * ========================================================================== */
 
-/* Top-left "-NN%" discount badge on cards */
+/* Top-left "-NN%" discount badge on cards. --sf-color-discount IS the success
+   mint (#7ED9A6) — money saved is good news, and it reads at 5.7:1 on its own
+   12% tint. */
 .sf-badge-discount {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--sf-space-1) var(--sf-space-2);
+  padding: var(--sf-space-1) var(--sf-space-3);
   background: var(--sf-color-discount-bg);
   color: var(--sf-color-discount);
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-xs);
   font-weight: var(--sf-font-semibold);
   line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-radius: var(--sf-radius-sm);
+  letter-spacing: 0.02em;
+  border-radius: var(--sf-radius-pill);
 }
 
-/* Gold "PREMIUM" mark — PDP / hero. Hairline outline over a breath of
-   champagne; the gradient fill would shout beside the product. */
+/* "Save ₹X" — the same news, stated rather than stamped: a hairline pill. */
+.sf-pill-save {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-1);
+  padding: var(--sf-space-1) var(--sf-space-3);
+  background: var(--sf-color-discount-bg);
+  color: var(--sf-color-discount);
+  border: 1px solid
+    color-mix(in srgb, var(--sf-color-discount) 40%, transparent);
+  border-radius: var(--sf-radius-pill);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+/* Gold "PREMIUM" mark — PDP / hero. A hairline pill over a breath of champagne;
+   the gradient fill would shout beside the product. The label is the bright
+   gold, not the deep one: on a near-black ground the deep gold is a 4.7:1
+   squeak where the champagne is 10.5:1. */
 .sf-ribbon-premium {
   display: inline-flex;
   align-items: center;
   gap: var(--sf-space-1);
   padding: var(--sf-space-1) var(--sf-space-3);
-  background: color-mix(in srgb, var(--sf-color-gold) 10%, transparent);
-  color: var(--sf-color-gold-deep);
+  background: var(--sf-color-primary-soft);
+  color: var(--sf-color-gold);
   border: 1px solid color-mix(in srgb, var(--sf-color-gold) 45%, transparent);
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-xs);
@@ -195,7 +569,7 @@
   text-transform: uppercase;
   letter-spacing: var(--sf-tracking-wide);
   line-height: 1;
-  border-radius: var(--sf-radius-sm);
+  border-radius: var(--sf-radius-pill);
 }
 
 /* Merchant flag marks — TRENDING / HOT.
@@ -213,12 +587,12 @@
 
    Geometry follows the ribbon (line-height 1 at --sf-text-xs) so a row of marks
    stays optically level whatever mix of them a product carries. Colour comes
-   from the storefront's own accent family, which inverts with the theme — and
-   never from --sf-color-danger: HOT is a merchandising note, not an error. */
+   from the concern accents — neon pink for trending, violet for hot — and never
+   from --sf-color-danger: HOT is a merchandising note, not an error. */
 .sf-flag {
   display: inline-flex;
   align-items: center;
-  padding: var(--sf-space-1) var(--sf-space-2);
+  padding: var(--sf-space-1) var(--sf-space-3);
   background: transparent;
   border: 1px solid transparent;
   font-family: var(--sf-font-family);
@@ -228,34 +602,42 @@
   letter-spacing: var(--sf-tracking-wide);
   line-height: 1;
   white-space: nowrap;
-  border-radius: var(--sf-radius-sm);
+  border-radius: var(--sf-radius-pill);
 }
 
 .sf-flag-trending {
-  background: color-mix(in srgb, var(--sf-cat-blue) 10%, transparent);
-  color: var(--sf-cat-blue);
-  border-color: color-mix(in srgb, var(--sf-cat-blue) 40%, transparent);
+  background: color-mix(in srgb, var(--sf-concern-pink) 10%, transparent);
+  color: var(--sf-concern-pink);
+  border-color: color-mix(in srgb, var(--sf-concern-pink) 40%, transparent);
 }
 
+/* Violet is the one concern accent that does NOT clear 4.5:1 as 12px text on
+   its own 10% tint (4.1:1 measured on a card surface), so the label is mixed a
+   fifth of the way toward the warm white — same hue, 5.9:1. The tint and the
+   hairline stay pure violet. */
 .sf-flag-hot {
-  background: color-mix(in srgb, var(--sf-cat-red) 10%, transparent);
-  color: var(--sf-cat-red);
-  border-color: color-mix(in srgb, var(--sf-cat-red) 40%, transparent);
+  background: color-mix(in srgb, var(--sf-concern-violet) 10%, transparent);
+  color: color-mix(in srgb, var(--sf-concern-violet) 78%, var(--sf-color-text));
+  border-color: color-mix(in srgb, var(--sf-concern-violet) 40%, transparent);
 }
 
-/* Category chip — a filter tab, not a bubble. Sits on the page ground. */
+/* Category / concern chip — a glass pill. 13px sits deliberately between the
+   12px eyebrow and the 14px UI label: a chip is a control, so it needs to read
+   as one, but a row of them at 14px crowds a phone. Weight 500 keeps it legible
+   at that size. */
 .sf-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--sf-space-2);
+  min-height: 36px;
   padding: var(--sf-space-2) var(--sf-space-4);
-  background: transparent;
+  background: var(--sf-glass-bg);
   color: var(--sf-color-text-secondary);
-  border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-sm);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-pill);
   font-family: var(--sf-font-family);
-  font-size: var(--sf-text-sm);
+  font-size: 0.8125rem;
   font-weight: var(--sf-font-medium);
   letter-spacing: 0.02em;
   line-height: 1;
@@ -263,75 +645,88 @@
   transition: background-color var(--sf-transition-fast),
     border-color var(--sf-transition-fast), color var(--sf-transition-fast);
 }
-/* When used as an interactive control, meet the touch-target minimum. */
+
+/* When used as an interactive control, meet the touch-target minimum — which
+   is taller than the chip's own resting height, and deliberately so. */
 button.sf-chip,
 a.sf-chip {
   min-height: var(--sf-tap-target);
 }
+
 .sf-chip:hover {
   color: var(--sf-color-text);
   border-color: var(--sf-color-border-strong);
   background: var(--sf-color-surface-hover);
 }
+
 .sf-chip:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow: var(--sf-shadow-focus);
 }
+
 /* Active = the gold fill under its near-black label (a fill/label pair). */
 .sf-chip--active {
   background: var(--sf-color-emerald);
   border-color: var(--sf-color-emerald);
   color: var(--sf-color-emerald-contrast);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
 }
+
 .sf-chip--active:hover {
   background: var(--sf-color-emerald-hover);
   border-color: var(--sf-color-emerald-hover);
   color: var(--sf-color-emerald-contrast);
 }
 
-/* "Save ₹X" mark — hairline, so it reads as a note rather than a sticker. */
-.sf-pill-save {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sf-space-1);
-  padding: var(--sf-space-1) var(--sf-space-3);
-  background: transparent;
-  color: var(--sf-color-discount);
-  border: 1px solid color-mix(in srgb, var(--sf-color-discount) 40%, transparent);
-  border-radius: var(--sf-radius-sm);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
 /* =============================================================================
  * A3. CARD SURFACE
- * Flat by default — editorial pages sit on the page, they don't float above it.
- * On hover the surface answers in place: the hairline firms, a soft shadow
- * arrives. It does NOT lift; the motion on a card belongs to its photograph
- * (`.sf-card--hover:hover img` below, and the same rule in ProductCard).
+ * Glass, with the whole hover vocabulary: the card lifts 4px, its hairline
+ * firms, an ambient glow fades in behind the content, and the photograph
+ * breathes. Four things, one gesture — nothing arrives on its own.
  * ========================================================================== */
 .sf-card {
-  background: var(--sf-color-surface);
-  border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-md);
+  position: relative;
+  isolation: isolate;
+  background: var(--sf-glass-bg);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-lg);
   overflow: hidden;
-  transition: box-shadow var(--sf-transition),
-    border-color var(--sf-transition);
-}
-.sf-card--hover:hover {
-  border-color: var(--sf-color-border-strong);
-  box-shadow: var(--sf-shadow-sm);
+  transition: transform var(--sf-transition),
+    box-shadow var(--sf-transition), border-color var(--sf-transition);
 }
 
-/* The card's one piece of motion: the image breathing, slowly. */
+/* The glow, pre-placed and held at zero so only its opacity has to animate —
+   a repaint, not a relayout. Negative z-index inside the card's own stacking
+   context: above the card's background, below everything in it. */
+.sf-card--hover::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -20%;
+  border-radius: 50%;
+  background: var(--sf-glow-gold);
+  filter: blur(60px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--sf-transition);
+}
+
+.sf-card--hover:hover {
+  transform: translateY(-4px);
+  border-color: var(--sf-color-border-strong);
+  box-shadow: var(--sf-shadow-1);
+}
+
+.sf-card--hover:hover::before {
+  opacity: 0.22;
+}
+
+/* The card's other piece of motion: the image breathing, slowly. */
 .sf-card img {
   transition: transform var(--sf-transition-slow);
 }
+
 .sf-card--hover:hover img {
   transform: scale(1.03);
 }
@@ -345,7 +740,7 @@ a.sf-chip {
   background-image: linear-gradient(
     90deg,
     var(--sf-color-surface-2) 0%,
-    var(--sf-color-border) 50%,
+    var(--sf-color-surface-hover) 50%,
     var(--sf-color-surface-2) 100%
   );
   background-size: 200% 100%;
@@ -353,11 +748,13 @@ a.sf-chip {
   border-radius: var(--sf-radius-sm);
   animation: sf-skeleton-shimmer 1.6s ease-in-out infinite;
 }
+
 .sf-skeleton--text {
   height: 0.75em;
   margin: var(--sf-space-1) 0;
   border-radius: var(--sf-radius-sm);
 }
+
 .sf-skeleton--block {
   width: 100%;
   height: 100%;
@@ -373,23 +770,11 @@ a.sf-chip {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sf-skeleton {
-    animation: none;
-    background-image: none;
-    background-color: var(--sf-color-surface-2);
-  }
-  /* The token layer zeroes the durations; this animates a transform, so the
-     end state has to be cancelled outright rather than merely hurried. The
-     press states stay: they dim rather than move, and feedback under the
-     finger is not decoration. */
-  .sf-card--hover:hover img {
-    transform: none;
-  }
-}
-
 /* =============================================================================
  * A5. TOAST  (style hooks only — no JS engine here)
+ * The same glass as everything else that floats, with a gold rule down its
+ * leading edge. The SweetAlert2 skin in App.css is the same look, applied to
+ * Swal's own markup.
  * ========================================================================== */
 .sf-toast {
   position: relative;
@@ -398,14 +783,25 @@ a.sf-chip {
   gap: var(--sf-space-1);
   padding: var(--sf-space-4) var(--sf-space-5);
   padding-left: var(--sf-space-6);
-  background: var(--sf-color-surface);
-  border: 1px solid var(--sf-color-border);
+  background: var(--sf-glass-bg);
+  -webkit-backdrop-filter: blur(var(--sf-glass-blur));
+  backdrop-filter: blur(var(--sf-glass-blur));
+  border: 1px solid var(--sf-glass-border);
   border-radius: var(--sf-radius-md);
-  box-shadow: var(--sf-shadow-md);
+  box-shadow: var(--sf-shadow-1);
   font-family: var(--sf-font-family);
   color: var(--sf-color-text);
   overflow: hidden;
 }
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .sf-toast {
+    background: var(--sf-glass-fallback);
+  }
+}
+
 /* Left accent rule — a hairline of meaning, 2px wide. */
 .sf-toast::before {
   content: "";
@@ -414,24 +810,71 @@ a.sf-chip {
   left: 0;
   bottom: 0;
   width: 2px;
-  background: var(--sf-color-gold-deep);
+  background: var(--sf-color-gold);
 }
+
 .sf-toast--success::before {
   background: var(--sf-color-success);
 }
+
 .sf-toast--error::before {
   background: var(--sf-color-danger);
 }
+
 .sf-toast--info::before {
-  background: var(--sf-color-accent);
+  background: var(--sf-color-info);
 }
+
 .sf-toast__title {
   font-size: var(--sf-text-sm);
   font-weight: var(--sf-font-semibold);
   line-height: var(--sf-leading-tight);
 }
+
 .sf-toast__body {
   font-size: var(--sf-text-sm);
-  color: var(--sf-color-text-muted);
+  color: var(--sf-color-text-secondary);
   line-height: var(--sf-leading-normal);
+}
+
+/* =============================================================================
+ * REDUCED MOTION
+ * The token layer already zeroes every duration, which flattens the composite
+ * transitions built on them. What it cannot do is cancel an END STATE that is a
+ * transform, or stop a loop — a hover that lands instantly on `translateY(-4px)`
+ * is still a card that jumps. So the transforms are cancelled outright and the
+ * loops are switched off.
+ *
+ * The press states deliberately survive: they dim rather than move, and
+ * feedback under the finger is not decoration.
+ * ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .sf-btn,
+  .sf-card,
+  .sf-chip {
+    transition: none;
+  }
+
+  .sf-btn:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: none;
+  }
+
+  .sf-card--hover:hover {
+    transform: none;
+  }
+
+  .sf-card--hover:hover img {
+    transform: none;
+  }
+
+  .sf-glow--breathe::before,
+  .sf-glow--breathe::after {
+    animation: none;
+  }
+
+  .sf-skeleton {
+    animation: none;
+    background-image: none;
+    background-color: var(--sf-color-surface-2);
+  }
 }
