@@ -5,13 +5,14 @@
 // its own palette in `adminTheme.js` and is NOT affected by this file.
 //
 // This is the MUI mirror of `storefront-tokens.css`. That file is the
-// source of truth (and documents where every hex was sampled from —
-// the Meghali's Silk logo artwork); keep the two in sync.
+// source of truth (and documents the role of every hex — see
+// prompts/_reference/DESIGN_SYSTEM.md §2); keep the two in sync.
 //
-// The system is IVORY ground + INK type + GOLD seasoning. Note that
-// `primary` is the ink, not a colour: in this editorial palette the CTA
-// and the body copy are the same warm near-black, and gold accents.
-// In dark mode that inverts — ivory becomes the fill, ink the label.
+// There is ONE palette: "Luxury Skincare After Dark". Deep near-black
+// grounds, warm-white type, champagne gold as the single accent that may
+// fill a button — `primary` IS the gold, and `primary.contrastText` is the
+// near-black label that sits on it (13.4:1). There is no light mode, no
+// stored preference and no toggle.
 //
 // HOW TO USE:
 //   1. Change the hex values below.
@@ -19,76 +20,46 @@
 //   3. Rebuild for production: `npm run build`.
 // =====================================================================
 
-// ---------------------
-// LIGHT MODE PALETTE  (opt-in; dark is the default, see ThemeContext)
-// ---------------------
-export const LIGHT = {
-  // Primary — warm near-black ink. Carries type and the primary CTA fill.
+export const PALETTE = {
+  // Primary — champagne gold. Fills the contained button; its label is the
+  // page ground, which is why `contrastText` is near-black rather than white.
   primary: {
-    main:  "#1D1A16",
-    light: "#322C25",
-    dark:  "#0F0D0A",
+    main: "#F5D76E", // --sf-color-primary / --sf-color-gold
+    light: "#FFEFA6", // --sf-color-gold-light — hover
+    dark: "#B88924", // --sf-color-gold-deep — pressed
+    contrastText: "#0B0B0D", // --sf-color-primary-contrast
   },
-  // Secondary accent — antique gold, sampled from the logo and deepened
-  // until it is safe as text on ivory (5.12:1).
+  // Secondary accent — neon pink. Ambient only (glows, gradient stops, the
+  // rare micro-label); never a large fill and never under gold text.
   secondary: {
-    main:  "#8A6118",
-    light: "#C8912A",
-    dark:  "#6B4A12",
+    main: "#FF4FD8", // --sf-color-pink
+    light: "#FF8AE6",
+    dark: "#C21FA4",
   },
   // Page and component backgrounds
   background: {
-    default: "#FAF6EC", // warm ivory — the logo's own halo tone
-    paper:   "#FFFFFF",
+    default: "#0B0B0D", // --sf-color-bg — never pure black
+    paper: "#141416", // --sf-color-surface
   },
   // Text colors
   text: {
-    primary:   "#1D1A16",
-    secondary: "#5C554A",
+    primary: "#F7F5F0", // --sf-color-text — warm white, 18.9:1
+    secondary: "#B8B5B0", // --sf-color-text-secondary — 10.5:1
   },
-  // Gradients. `primary` fills contained buttons, so it stays ink (an ivory
-  // label needs a dark ground); the gold gradient is decorative and lives in
-  // storefront-tokens.css as --sf-gradient-gold.
+  // Gradients. `primary` fills contained buttons and stays gold (a near-black
+  // label needs a light ground); `hero` mirrors --sf-gradient-brand, the deep
+  // wash behind the hero and the heritage bands.
   gradient: {
-    primary:        "linear-gradient(135deg, #1D1A16 0%, #322C25 100%)",
-    primaryReverse: "linear-gradient(135deg, #322C25 0%, #1D1A16 100%)",
-    // Hero background gradient — warm ink, matching --sf-gradient-heritage
-    hero: "linear-gradient(135deg, #1D1A16 0%, #33261E 55%, #4A3F31 100%)",
+    primary: "linear-gradient(135deg, #FFEFA6 0%, #F5D76E 50%, #B88924 100%)",
+    primaryReverse:
+      "linear-gradient(135deg, #B88924 0%, #F5D76E 50%, #FFEFA6 100%)",
+    hero: "linear-gradient(135deg, #0B0B0D 0%, #1C1C20 55%, #2A2330 100%)",
   },
-  // Body background applied on initial HTML load (before React mounts).
-  // Must match the pre-mount script in public/index.html.
-  bodyBackground: "linear-gradient(135deg, #FAF6EC 0%, #FFFFFF 100%)",
+  // Body background. Static — the same ground the pre-mount markup in
+  // public/index.html paints, so there is nothing to reconcile at mount.
+  bodyBackground: "#0B0B0D",
 };
 
-// ---------------------
-// DARK MODE PALETTE  ("evening gallery")
-// ---------------------
-export const DARK = {
-  // Primary stays a DARK band with ivory type in both modes — see the
-  // INVARIANT note in storefront-tokens.css. The ivory-fill CTA for dark mode
-  // is --sf-color-emerald, not primary.
-  primary: {
-    main:  "#2B241C",
-    light: "#3A3128",
-    dark:  "#1E1913",
-  },
-  secondary: {
-    main:  "#E3B95E",
-    light: "#F3DDA4",
-    dark:  "#C99B3D",
-  },
-  background: {
-    default: "#14120F", // deep warm charcoal
-    paper:   "#1B1815",
-  },
-  text: {
-    primary:   "#F4EFE6",
-    secondary: "#C4BCAE",
-  },
-  gradient: {
-    primary:        "linear-gradient(135deg, #2B241C 0%, #3A3128 100%)",
-    primaryReverse: "linear-gradient(135deg, #3A3128 0%, #2B241C 100%)",
-    hero: "linear-gradient(135deg, #14120F 0%, #241C15 55%, #3A2F24 100%)",
-  },
-  bodyBackground: "linear-gradient(135deg, #14120F 0%, #1B1815 100%)",
-};
+// Compatibility alias for the one prompt it takes the remaining importers to
+// move onto PALETTE. Prompt 04 drops it.
+export const DARK = PALETTE;

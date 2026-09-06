@@ -65,10 +65,9 @@
     opacity var(--sf-transition);
 }
 
-/* Primary — the ink button. Legacy class name (`--emerald`, 188 usages) kept:
-   in this palette the primary CTA is the same near-black as the type, and it
-   warms to deep gold on hover rather than lifting off the page. Both tokens
-   invert under body.dark, so this single pair covers light and dark. */
+/* Primary — the gold button. Legacy class name (`--emerald`, 188 usages) kept
+   until Prompt 35 renames it: in this palette the primary CTA is the champagne
+   gold under a near-black label, and it lifts to gold-light on hover. */
 .sf-btn--emerald {
   background-color: var(--sf-color-emerald);
   color: var(--sf-color-emerald-contrast);
@@ -82,7 +81,7 @@
 /* Gold fill — reserved for rare hero moments (one per page, at most). */
 .sf-btn--gold {
   background-image: var(--sf-gradient-gold);
-  color: var(--sf-color-primary-dark);
+  color: var(--sf-color-primary-contrast);
   border-color: transparent;
 }
 .sf-btn--gold:hover {
@@ -181,7 +180,7 @@
 }
 
 /* Gold "PREMIUM" mark — PDP / hero. Hairline outline over a breath of
-   champagne; the gradient fill would shout on an ivory page. */
+   champagne; the gradient fill would shout beside the product. */
 .sf-ribbon-premium {
   display: inline-flex;
   align-items: center;
@@ -279,7 +278,7 @@ a.sf-chip {
   outline-offset: 2px;
   box-shadow: var(--sf-shadow-focus);
 }
-/* Active = ink fill (ivory fill in dark mode — both tokens invert). */
+/* Active = the gold fill under its near-black label (a fill/label pair). */
 .sf-chip--active {
   background: var(--sf-color-emerald);
   border-color: var(--sf-color-emerald);
@@ -339,7 +338,7 @@ a.sf-chip {
 
 /* =============================================================================
  * A4. SKELETON LOADER
- * Warm sand sweep — the ivory ground breathing, not a grey placeholder.
+ * A sweep across the sunken panel — the surface breathing, not a grey block.
  * ========================================================================== */
 .sf-skeleton {
   background-color: var(--sf-color-surface-2);

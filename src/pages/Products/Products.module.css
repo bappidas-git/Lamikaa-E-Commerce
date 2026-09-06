@@ -21,8 +21,8 @@
    storefront-tokens.css, and the buttons, chips and skeletons are the global
    primitives from storefront-primitives.css. The only local variables are the
    three that colour the inline empty-state artwork, and they are aliases onto
-   tokens — there is no hex in this file, and dark mode needs no rules of its
-   own because the tokens flip under `body.dark`.
+   tokens — there is no hex in this file, and there is one theme, declared
+   once in `:root`.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .page {

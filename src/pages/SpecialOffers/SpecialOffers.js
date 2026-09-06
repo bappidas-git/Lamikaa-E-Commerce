@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { useTheme } from "../../context/ThemeContext";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
@@ -583,7 +582,6 @@ const HeadSkeleton = () => (
 
 const SpecialOffers = () => {
   const navigate = useNavigate();
-  const { isDarkMode } = useTheme();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const reduceMotion = useReducedMotion();
@@ -731,7 +729,7 @@ const SpecialOffers = () => {
   // disabled page never flashes its content first.
   if (configLoading) {
     return (
-      <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+      <div className={styles.page}>
         <div className={styles.container}>
           <HeadSkeleton />
         </div>
@@ -741,7 +739,7 @@ const SpecialOffers = () => {
 
   if (!enabled) {
     return (
-      <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+      <div className={styles.page}>
         <div className={styles.container}>
           <section className={styles.state}>
             <TagMark />
@@ -767,7 +765,7 @@ const SpecialOffers = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       {/* One polite region, for the copy confirmations. The countdown is
           deliberately NOT live — a per-second announcement is unusable. */}
       <p className={styles.srOnly} role="status" aria-live="polite">

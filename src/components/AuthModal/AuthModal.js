@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { isEmailValid } from "../../utils/helpers";
 import Logo from "../brand/Logo";
@@ -128,7 +127,6 @@ const describedBy = (...ids) => ids.filter(Boolean).join(" ") || undefined;
 
 const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
   const { login, register, isLoading: authLoading } = useAuth();
-  const { isDarkMode } = useTheme();
   const { storeName } = useStoreSettings();
   const reduceMotion = useReducedMotion();
 
@@ -432,7 +430,6 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
   /* ---- Derived ---- */
 
   const loading = isSubmitting || authLoading;
-  const themeClass = isDarkMode ? styles.dark : styles.light;
   const isLogin = activeTab === "login";
 
   /* ---------------------------------------------------------------------
@@ -489,7 +486,7 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
     <AnimatePresence>
       {open && (
         <motion.div
-          className={`${styles.overlay} ${themeClass}`}
+          className={styles.overlay}
           {...scrim}
           onClick={handleOverlayClick}
         >

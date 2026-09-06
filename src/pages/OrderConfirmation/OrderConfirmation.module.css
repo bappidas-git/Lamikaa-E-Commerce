@@ -21,9 +21,9 @@
    come straight from the placed order.
 
    TOKENS ONLY
-   Every colour, space, radius and type value resolves through `--sf-*`, which
-   flips under `body.dark` — so light and dark are one stylesheet and there is
-   no hex in this file. The one local variable is the monospace stack for the
+   Every colour, space, radius and type value resolves through `--sf-*`,
+   declared once in `:root` — one theme, one stylesheet and no hex in this
+   file. The one local variable is the monospace stack for the
    order number: the token layer has no `--sf-font-mono`, and a font stack is
    not a colour. (The confetti's three gold literals live in the JS, where they
    are sync-commented against storefront-tokens.css.)
@@ -40,12 +40,6 @@
   background: var(--sf-color-bg);
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
-}
-
-/* The only thing ThemeContext is consumed for: a native color-scheme hint so
-   scrollbars and native controls render for the active theme. */
-.dark {
-  color-scheme: dark;
 }
 
 /* Narrower than --sf-container-max on purpose. A receipt is read, not browsed,

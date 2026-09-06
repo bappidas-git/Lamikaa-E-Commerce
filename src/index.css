@@ -1,8 +1,8 @@
-/* Storefront design tokens (CSS custom properties). Re-skin a client by editing
-   src/theme/storefront-tokens.css — see STOREFRONT_UX_GUIDELINES.md.
-   NB: the webfonts (Cormorant Garamond for display, Inter for UI) are loaded by
-   the <link> in public/index.html. Do NOT @import them here — a second request
-   for the same families only delays first paint. */
+/* Storefront design tokens (CSS custom properties) — one dark theme, declared
+   once in `:root`. Re-skin by editing src/theme/storefront-tokens.css.
+   NB: the webfonts are loaded by the <link> in public/index.html. Do NOT
+   @import them here — a second request for the same families only delays first
+   paint. */
 @import "./theme/storefront-tokens.css";
 /* Shared, reusable brand primitives (buttons, chips, cards, skeleton, toast)
    built on the tokens above. Loaded once, app-wide. Order is load-bearing:
@@ -33,12 +33,12 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Champagne selection — the logo's highlight stop over ink. Storefront only;
-   the admin panel keeps the browser default. */
+/* Champagne selection — the gold highlight stop under near-black type.
+   Storefront only; the admin panel keeps the browser default. */
 body:not(.admin-area)::selection,
 body:not(.admin-area) ::selection {
   background: var(--sf-color-gold-light);
-  color: var(--sf-color-primary-dark);
+  color: var(--sf-color-primary-contrast);
 }
 
 /*

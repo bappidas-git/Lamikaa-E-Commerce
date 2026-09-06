@@ -23,9 +23,9 @@
    change what the Deals grid can do later.
 
    TOKENS ONLY
-   Every colour, space, radius and type value resolves through `--sf-*`, which
-   flips under `body.dark` — light and dark are one stylesheet and there is no
-   hex in this file. The only local variables are the two aliases that colour
+   Every colour, space, radius and type value resolves through `--sf-*`,
+   declared once in `:root` — one theme, one stylesheet and no hex in this
+   file. The only local variables are the two aliases that colour
    the inline tag artwork, and both are aliases onto tokens, never values.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -39,12 +39,6 @@
   background: var(--sf-color-bg);
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
-}
-
-/* The only thing ThemeContext is consumed for here: a native color-scheme hint
-   so scrollbars and native controls render for the active theme. */
-.dark {
-  color-scheme: dark;
 }
 
 .container {
@@ -547,7 +541,7 @@
   z-index: 2;
   padding: var(--sf-space-3);
   background: var(--sf-color-overlay);
-  color: var(--sf-color-primary-contrast);
+  color: var(--sf-color-text);
   font-size: var(--sf-text-xs);
   font-weight: var(--sf-font-medium);
   letter-spacing: var(--sf-tracking-wide);

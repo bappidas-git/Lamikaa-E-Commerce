@@ -2,14 +2,13 @@
  * AuthModal — the boutique welcome
  * =============================================================================
  * Not a sign-in form: the front desk of the shop. The dialog paints
- * --sf-color-bg, the same warm ivory as the page, and the wordmark sits
- * straight on it — the old deep-green logo plate is retired (both logo PNGs
- * are transparent-ground artwork, so a plate was never needed). Light art on
- * the ivory day room, white art on the evening one.
+ * --sf-color-bg, the same ground as the page, and the wordmark sits straight
+ * on it — no logo plate (both logo PNGs are transparent-ground artwork, so a
+ * plate was never needed).
  *
  * THE ONE SERIF MOMENT
  *   Only the greeting is set in the display serif ("Welcome back" / "Join
- *   Meghali's Silk"). Everything else is quiet Inter: tracked uppercase for
+ *   LAMIKAA"). Everything else is quiet UI type: tracked uppercase for
  *   labels, tabs and actions; sentence case for help text.
  *
  * EVERY FIELD IS A HAIRLINE
@@ -19,22 +18,12 @@
  *
  * TOKENS ONLY
  *   Colour, spacing, radius, shadow, type and motion all come from
- *   src/theme/storefront-tokens.css, so dark mode ("evening gallery") and the
- *   reduced-motion pass are re-derived for free. The five social-brand hexes
- *   live in the SVGs in AuthModal.js — the documented exception — and there is
- *   no hardcoded colour in this file.
+ *   src/theme/storefront-tokens.css, so the reduced-motion pass is re-derived
+ *   for free. The five social-brand hexes live in the SVGs in AuthModal.js —
+ *   the documented exception — and there is no hardcoded colour in this file.
+ *   The native color-scheme hint is global (`:root` in storefront-tokens.css),
+ *   so this sheet carries no theme markers.
  * ========================================================================== */
-
-/* Colours come from the storefront tokens (which flip on body.dark); these
-   marker classes only hint the native color-scheme so form controls, the
-   caret and scrollbars render correctly for the active theme. */
-.light {
-  color-scheme: light;
-}
-
-.dark {
-  color-scheme: dark;
-}
 
 /* The strength meter is coloured from inline styles in JS that reference these
    --auth-strength-* vars, so map them to the brand palette here. They live on

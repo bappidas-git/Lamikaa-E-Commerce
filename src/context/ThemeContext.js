@@ -1,6 +1,21 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { LIGHT, DARK } from "../theme/colors";
+import { PALETTE } from "../theme/colors";
+
+// =============================================================================
+// THEME CONTEXT — one theme, built once
+// =============================================================================
+// The storefront has a SINGLE dark theme ("Luxury Skincare After Dark"). There
+// is no mode state, no toggle, no stored preference and no pre-mount branching:
+// `storefront-tokens.css` declares one `:root` token set with
+// `color-scheme: dark`, `public/index.html` paints the same ground before any
+// bundle arrives, and `meta[name=theme-color]` is static in the markup. This
+// provider exists only to build the MUI theme for the handful of MUI-based
+// storefront bits (the Header controls, CssBaseline) and hand it down.
+//
+// MUI consumes `src/theme/colors.js`; the CSS Modules consume the `--sf-*`
+// tokens. The two are mirrors of each other — retune them together.
+// =============================================================================
 
 const ThemeContext = createContext();
 
@@ -12,18 +27,9 @@ export const useTheme = () => {
   return context;
 };
 
-// Alias for useTheme to match naming convention
-export const useThemeContext = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useThemeContext must be used within a ThemeContextProvider");
-  }
-  return { mode: context.isDarkMode ? "dark" : "light", toggleTheme: context.toggleTheme };
-};
-
 // Small icon buttons (admin table actions, input adornments, dialog controls)
 // keep their compact desktop density but get a padded ≥40px hit area on
-// touch-sized screens. Shared by the light and dark themes.
+// touch-sized screens.
 const iconButtonTouchOverrides = {
   styleOverrides: {
     sizeSmall: {
@@ -34,347 +40,188 @@ const iconButtonTouchOverrides = {
   },
 };
 
+// --sf-color-border — the hairline every dark surface is drawn with.
+const HAIRLINE = "rgba(255, 255, 255, 0.08)";
+// --sf-ease / --sf-duration-fast, spelled out because MUI takes strings.
+const TRANSITION = "0.16s cubic-bezier(0.2, 0.7, 0.2, 1)";
+
+const theme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: PALETTE.primary,
+    secondary: PALETTE.secondary,
+    background: PALETTE.background,
+    text: PALETTE.text,
+    divider: HAIRLINE,
+    action: {
+      hover: "rgba(245, 215, 110, 0.10)", // --sf-color-primary-soft
+    },
+  },
+  typography: {
+    // Families are Prompt 04's job (Fraunces + Manrope); they mirror
+    // --sf-font-family / --sf-font-display as those tokens stand today.
+    fontFamily:
+      '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+    h1: {
+      fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
+      fontSize: "3.5rem",
+      fontWeight: 600,
+      lineHeight: 1.1,
+    },
+    h2: {
+      fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
+      fontSize: "2.75rem",
+      fontWeight: 600,
+      lineHeight: 1.15,
+    },
+    h3: {
+      fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
+      fontSize: "2.25rem",
+      fontWeight: 600,
+      lineHeight: 1.2,
+    },
+    h4: { fontSize: "1.5rem", fontWeight: 500, lineHeight: 1.4 },
+    h5: { fontSize: "1.25rem", fontWeight: 500, lineHeight: 1.5 },
+    h6: { fontSize: "1rem", fontWeight: 500, lineHeight: 1.6 },
+    button: {
+      textTransform: "none",
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 14, // --sf-radius-md
+  },
+  components: {
+    // Pills everywhere, and the one solid accent is gold under a near-black
+    // label. Surfaces stay flat: no elevation tint, no coloured glow.
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 999, // --sf-radius-pill
+          minHeight: 44, // --sf-tap-target
+          padding: "12px 28px",
+          fontSize: "0.9375rem",
+          letterSpacing: "0.01em",
+          boxShadow: "none",
+          transition: `background ${TRANSITION}, color ${TRANSITION}, border-color ${TRANSITION}`,
+          "&:hover": {
+            boxShadow: "none",
+          },
+        },
+        contained: {
+          backgroundColor: PALETTE.primary.main,
+          color: PALETTE.primary.contrastText, // near-black on gold — 13.4:1
+          boxShadow: "none",
+          "&:hover": {
+            backgroundColor: PALETTE.primary.light,
+            boxShadow: "none",
+          },
+        },
+        outlined: {
+          borderColor: "rgba(245, 215, 110, 0.35)", // --sf-color-border-strong
+          color: PALETTE.text.primary,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 20, // --sf-radius-lg
+          backgroundColor: PALETTE.background.paper,
+          backgroundImage: "none",
+          border: `1px solid ${HAIRLINE}`,
+          boxShadow: "none",
+          transition: `border-color ${TRANSITION}`,
+          "&:hover": {
+            borderColor: "rgba(245, 215, 110, 0.35)", // --sf-color-border-strong
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 14, // --sf-radius-md
+            backgroundColor: "#1C1C20", // --sf-color-surface-2
+            "& fieldset": {
+              borderColor: HAIRLINE,
+            },
+            "&:hover fieldset": {
+              borderColor: "rgba(245, 215, 110, 0.35)",
+            },
+            "&.Mui-focused fieldset": {
+              borderColor: PALETTE.primary.main, // gold focus
+              borderWidth: "2px",
+            },
+          },
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: PALETTE.background.paper,
+          backgroundImage: "none",
+          borderColor: HAIRLINE,
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: PALETTE.background.paper,
+          backgroundImage: "none",
+          color: PALETTE.text.primary,
+          borderBottom: `1px solid ${HAIRLINE}`,
+          boxShadow: "none",
+        },
+      },
+    },
+    // MUI tints dark Paper by elevation; these surfaces stay flat and are
+    // separated by hairlines instead.
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+          backgroundColor: PALETTE.background.paper,
+        },
+      },
+    },
+    // The header account menu reads as glass: the same surface, a hairline,
+    // and the shadow that lifts it off the page.
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: PALETTE.background.paper,
+          backgroundImage: "none",
+          border: `1px solid ${HAIRLINE}`,
+          borderRadius: 14, // --sf-radius-md
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2
+        },
+      },
+    },
+    MuiIconButton: iconButtonTouchOverrides,
+  },
+});
+
 export const ThemeContextProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Dark — the "evening gallery" palette — is the default experience for
-    // Meghali's Silk. With no saved choice we default to dark; only an explicit
-    // "light" selection opts into the warm ivory ground.
-    // NB: the pre-mount script at the bottom of public/index.html and the
-    // fallback in ErrorBoundary.js MUST apply the same rule, or the first paint
-    // flashes the wrong theme.
-    let savedTheme = null;
-    try {
-      savedTheme = localStorage.getItem("theme");
-    } catch {
-      savedTheme = null;
-    }
-    return savedTheme !== "light";
-  });
-
   useEffect(() => {
+    // Migration: the storefront used to persist a light/dark choice here. The
+    // key is meaningless now, so a returning visitor gets it cleared once and
+    // sees the one theme either way.
     try {
-      localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+      localStorage.removeItem("theme");
     } catch {
-      // Storage can be unavailable (private mode, blocked); the choice then
-      // simply lives for the session.
+      // Storage can be unavailable (private mode, blocked) — nothing to clear.
     }
-    document.body.style.backgroundColor = isDarkMode ? DARK.background.default : LIGHT.background.default;
+  }, []);
 
-    // Keep the browser chrome colour in step with the active ground (mirrors
-    // --sf-color-bg in storefront-tokens.css and the meta in public/index.html).
-    const themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) {
-      themeMeta.setAttribute("content", isDarkMode ? "#14120F" : "#FAF6EC");
-    }
-
-    // Add/remove .dark class on body for CSS selectors
-    if (isDarkMode) {
-      document.body.classList.add('dark');
-      document.body.classList.remove('light');
-    } else {
-      document.body.classList.remove('dark');
-      document.body.classList.add('light');
-    }
-  }, [isDarkMode]);
-
-  const lightTheme = createTheme({
-    palette: {
-      mode: "light",
-      primary: LIGHT.primary,
-      secondary: LIGHT.secondary,
-      background: LIGHT.background,
-      text: LIGHT.text,
-      action: {
-        hover: "rgba(29, 26, 22, 0.06)", // --sf-color-primary-soft
-      },
-    },
-    typography: {
-      fontFamily:
-        '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-      // Display tier is set in Cormorant Garamond, tight, to match
-      // --sf-font-display / --sf-leading-display in storefront-tokens.css.
-      h1: {
-        fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-        fontSize: "3.5rem",
-        fontWeight: 600,
-        lineHeight: 1.1,
-      },
-      h2: {
-        fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-        fontSize: "2.75rem",
-        fontWeight: 600,
-        lineHeight: 1.15,
-      },
-      h3: {
-        fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-        fontSize: "2.25rem",
-        fontWeight: 600,
-        lineHeight: 1.2,
-      },
-      h4: {
-        fontSize: "1.5rem",
-        fontWeight: 500,
-        lineHeight: 1.4,
-      },
-      h5: {
-        fontSize: "1.25rem",
-        fontWeight: 500,
-        lineHeight: 1.5,
-      },
-      h6: {
-        fontSize: "1rem",
-        fontWeight: 500,
-        lineHeight: 1.6,
-      },
-      button: {
-        textTransform: "none",
-        fontWeight: 500,
-      },
-    },
-    shape: {
-      borderRadius: 4, // --sf-radius-md — classic, near-square
-    },
-    components: {
-      // Editorial surfaces sit FLAT: no translateY lifts, no coloured glows.
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: "4px",
-            padding: "12px 28px",
-            fontSize: "0.9375rem",
-            letterSpacing: "0.02em",
-            boxShadow: "none",
-            transition: "background 0.2s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-            "&:hover": {
-              boxShadow: "none",
-            },
-          },
-          contained: {
-            background: LIGHT.gradient.primary,
-            color: LIGHT.background.default,
-            boxShadow: "none",
-            "&:hover": {
-              background: LIGHT.gradient.primaryReverse,
-              boxShadow: "none",
-            },
-          },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: "8px",
-            border: "1px solid #E8DFCD", // --sf-color-border hairline
-            boxShadow: "none",
-            transition: "border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-            "&:hover": {
-              borderColor: "#D6C9B2", // --sf-color-border-strong
-            },
-          },
-        },
-      },
-      MuiTextField: {
-        styleOverrides: {
-          root: {
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "4px",
-              "&:hover fieldset": {
-                borderColor: LIGHT.primary.main,
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: LIGHT.primary.main,
-                borderWidth: "2px",
-              },
-            },
-          },
-        },
-      },
-      MuiDrawer: {
-        styleOverrides: {
-          paper: {
-            backgroundColor: LIGHT.background.default,
-            borderColor: "#E8DFCD",
-            backgroundImage: "none",
-            boxShadow: "0 20px 48px rgba(29, 26, 22, 0.12)", // --sf-shadow-lg
-          },
-        },
-      },
-      MuiAppBar: {
-        styleOverrides: {
-          root: {
-            backgroundColor: LIGHT.background.default,
-            backgroundImage: "none",
-            color: LIGHT.text.primary,
-            borderBottom: "1px solid #E8DFCD",
-            boxShadow: "none",
-          },
-        },
-      },
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: "none",
-          },
-        },
-      },
-      MuiIconButton: iconButtonTouchOverrides,
-    },
-  });
-
-  const darkTheme = createTheme({
-    palette: {
-      mode: "dark",
-      primary: DARK.primary,
-      secondary: DARK.secondary,
-      background: DARK.background,
-      text: DARK.text,
-      action: {
-        hover: "rgba(244, 239, 230, 0.08)", // --sf-color-primary-soft (dark)
-      },
-    },
-    typography: {
-      fontFamily:
-        '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-      // Display tier is set in Cormorant Garamond, tight, to match
-      // --sf-font-display / --sf-leading-display in storefront-tokens.css.
-      h1: {
-        fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-        fontSize: "3.5rem",
-        fontWeight: 600,
-        lineHeight: 1.1,
-      },
-      h2: {
-        fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-        fontSize: "2.75rem",
-        fontWeight: 600,
-        lineHeight: 1.15,
-      },
-      h3: {
-        fontFamily: '"Cormorant Garamond", "Playfair Display", Georgia, serif',
-        fontSize: "2.25rem",
-        fontWeight: 600,
-        lineHeight: 1.2,
-      },
-      h4: {
-        fontSize: "1.5rem",
-        fontWeight: 500,
-        lineHeight: 1.4,
-      },
-      h5: {
-        fontSize: "1.25rem",
-        fontWeight: 500,
-        lineHeight: 1.5,
-      },
-      h6: {
-        fontSize: "1rem",
-        fontWeight: 500,
-        lineHeight: 1.6,
-      },
-      button: {
-        textTransform: "none",
-        fontWeight: 500,
-      },
-    },
-    shape: {
-      borderRadius: 4, // --sf-radius-md — classic, near-square
-    },
-    components: {
-      // Same flat editorial treatment, re-derived for the evening palette.
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: "4px",
-            padding: "12px 28px",
-            fontSize: "0.9375rem",
-            letterSpacing: "0.02em",
-            boxShadow: "none",
-            transition: "background 0.2s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-            "&:hover": {
-              boxShadow: "none",
-            },
-          },
-          contained: {
-            background: DARK.gradient.primary,
-            color: DARK.text.primary, // ivory label on the dark primary band
-            boxShadow: "none",
-            "&:hover": {
-              background: DARK.gradient.primaryReverse,
-              boxShadow: "none",
-            },
-          },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: "8px",
-            background: DARK.background.paper,
-            border: "1px solid rgba(244, 239, 230, 0.10)", // --sf-color-border
-            boxShadow: "none",
-            transition: "border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
-            "&:hover": {
-              borderColor: "rgba(227, 185, 94, 0.30)", // --sf-color-border-strong
-            },
-          },
-        },
-      },
-      MuiTextField: {
-        styleOverrides: {
-          root: {
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "4px",
-              "&:hover fieldset": {
-                borderColor: DARK.primary.main,
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: DARK.primary.main,
-                borderWidth: "2px",
-              },
-            },
-          },
-        },
-      },
-      MuiDrawer: {
-        styleOverrides: {
-          paper: {
-            backgroundColor: DARK.background.default,
-            borderColor: "rgba(244, 239, 230, 0.10)",
-            backgroundImage: "none",
-            boxShadow: "0 20px 48px rgba(0, 0, 0, 0.65)", // --sf-shadow-lg (dark)
-          },
-        },
-      },
-      MuiAppBar: {
-        styleOverrides: {
-          root: {
-            backgroundColor: DARK.background.default,
-            backgroundImage: "none",
-            color: DARK.text.primary,
-            borderBottom: "1px solid rgba(244, 239, 230, 0.10)",
-            boxShadow: "none",
-          },
-        },
-      },
-      // MUI tints dark Paper by elevation; the editorial surfaces stay flat.
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: "none",
-          },
-        },
-      },
-      MuiIconButton: iconButtonTouchOverrides,
-    },
-  });
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  const theme = isDarkMode ? darkTheme : lightTheme;
+  const value = useMemo(() => ({ theme }), []);
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, theme }}>
+    <ThemeContext.Provider value={value}>
       <ThemeProvider theme={theme}>{children}</ThemeProvider>
     </ThemeContext.Provider>
   );

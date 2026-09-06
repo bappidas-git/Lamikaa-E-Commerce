@@ -39,9 +39,9 @@ import styles from "./Wishlist.module.css";
 //     exactly as the catalogue uses it — `{...item, id: item.productId}`.
 //
 // THEMING
-//   Tokens only. This page deliberately does not consume ThemeContext: every
-//   colour resolves through `--sf-*`, which flips under `body.dark`, so light
-//   and dark are one stylesheet.
+//   Tokens only. This page does not consume ThemeContext: every colour
+//   resolves through `--sf-*`, declared once in `:root`. One theme, one
+//   stylesheet.
 // =============================================================================
 
 // ---------------------------------------------------------------------------

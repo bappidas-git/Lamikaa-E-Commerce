@@ -1,5 +1,5 @@
 /* =============================================================================
- * HeroSection — Meghali's Silk cinematic opening
+ * HeroSection — LAMIKAA NATURALS cinematic opening
  * =============================================================================
  * Two strips, top to bottom:
  *   1. the STAGE     — full-bleed dark media, transitioning, with the editorial
@@ -15,12 +15,12 @@
  *   is missing, and re-skins itself the moment an admin saves.
  *
  * WHY THE STAGE IS PINNED
- *   Like the footer, the hero band is a dark room that must NOT flip with the
- *   app theme — the seeded slide gradients are ink→gold in both modes, and an
- *   ivory stage would strand them. --sf-color-brand-green-deep is declared once
- *   in :root and never re-declared under body.dark, so pointing the ground at
- *   it gives an identical stage in light and dark. The mode-flipping surface
- *   and text tokens are therefore unusable in here, so the stage re-derives a
+ *   Like the footer, the hero band is its own room rather than a tint of the
+ *   page — the seeded slide gradients need the deepest ground in the palette
+ *   under them. --sf-color-brand-green-deep is declared once in :root, so
+ *   pointing the stage at it pins the band whatever surrounds it. The general
+ *   surface and text tokens are therefore not what this band wants, so it
+ *   re-derives a
  *   small scoped palette from tokens that are identical in both modes (the
  *   ivory --sf-color-primary-contrast, mixed down for the quieter tiers) and
  *   pins --sf-shadow-focus so the shared .sf-btn ring reads on the dark ground.
@@ -55,10 +55,10 @@
 
   /* ---- Scoped stage palette (see header note) --------------------------- */
   --sf-hero-ground: var(--sf-color-brand-green-deep);
-  --sf-hero-ink: var(--sf-color-primary-contrast);
-  --sf-hero-ink-soft: color-mix(in srgb, var(--sf-color-primary-contrast) 78%, transparent);
-  --sf-hero-ink-faint: color-mix(in srgb, var(--sf-color-primary-contrast) 45%, transparent);
-  --sf-hero-rule: color-mix(in srgb, var(--sf-color-primary-contrast) 26%, transparent);
+  --sf-hero-ink: var(--sf-color-text);
+  --sf-hero-ink-soft: color-mix(in srgb, var(--sf-color-text) 78%, transparent);
+  --sf-hero-ink-faint: color-mix(in srgb, var(--sf-color-text) 45%, transparent);
+  --sf-hero-rule: color-mix(in srgb, var(--sf-color-text) 26%, transparent);
   --sf-hero-gold: var(--sf-color-gold-light);
   /* The transition. Slow and decelerating — the shared slow tier, so the stage
      speaks the same motion language as the rest of the storefront. */
@@ -401,7 +401,7 @@
 .ctaGhost:hover {
   color: var(--sf-hero-gold);
   border-color: var(--sf-hero-gold);
-  background: color-mix(in srgb, var(--sf-color-primary-contrast) 8%, transparent);
+  background: color-mix(in srgb, var(--sf-color-text) 8%, transparent);
 }
 
 /* ---- Prev / next arrows (optional) ------------------------------------- */

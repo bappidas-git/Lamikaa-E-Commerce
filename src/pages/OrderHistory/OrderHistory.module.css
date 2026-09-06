@@ -22,8 +22,8 @@
    is no invented progress here — an order with no tracking number says so.
 
    TOKENS ONLY
-   Colour, space, radius and type all resolve through `--sf-*`, which flips
-   under `body.dark`, so light and dark are one stylesheet and there is no hex
+   Colour, space, radius and type all resolve through `--sf-*`, declared once
+   in `:root`, so there is one theme, one stylesheet and no hex
    in this file. The single local variable is the monospace stack for order and
    tracking numbers: the token layer has no `--sf-font-mono`, and a font stack
    is not a colour.
@@ -43,12 +43,6 @@
   background: var(--sf-color-bg);
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
-}
-
-/* The only thing ThemeContext is consumed for: a native color-scheme hint so
-   scrollbars and native controls render for the active theme. */
-.dark {
-  color-scheme: dark;
 }
 
 .container {

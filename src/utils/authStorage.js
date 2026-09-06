@@ -6,8 +6,9 @@
 //   - Auth is SESSION-SCOPED by default (sessionStorage: per-tab, cleared when
 //     the browser closes). Checking "Remember me" at login opts the session
 //     into localStorage so it survives browser restarts.
-//   - Cart / wishlist / theme intentionally use localStorage instead: they are
-//     device-level preferences that must work for guests too.
+//   - Cart / wishlist intentionally use localStorage instead: they are
+//     device-level state that must work for guests too. (There is no stored
+//     theme preference — the storefront has one theme.)
 //   - The admin session ("admin" + "adminToken") stays sessionStorage-only and
 //     is NOT managed here.
 //

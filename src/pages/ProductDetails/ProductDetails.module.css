@@ -25,8 +25,8 @@
    a piece of tracked type, or air.
 
    TOKENS ONLY — every colour, space, radius and type value comes from
-   storefront-tokens.css, and the buttons are the global primitives. Dark mode
-   needs no rules of its own: the tokens flip under `body.dark`.
+   storefront-tokens.css, and the buttons are the global primitives. There is
+   one theme, declared once in `:root`.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .page {

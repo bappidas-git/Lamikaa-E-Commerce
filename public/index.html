@@ -148,8 +148,8 @@
     <title>LAMIKAA NATURALS — Black Rice Skincare, Farmer-Owned</title>
 
     <!--
-      Pre-mount shell styles: the loading screen ("quiet editorial arrival") and
-      the body ground it fades into.
+      Pre-mount shell styles: the loading screen and the body ground it
+      fades into.
 
       TOKEN DISCIPLINE — this stylesheet is inlined into public/index.html and is
       parsed long before the app bundle (and therefore before
@@ -163,7 +163,7 @@
         #B8B5B0  --sf-color-text-secondary
         #F5D76E  --sf-color-gold            (champagne gold)
         rgba(255, 255, 255, 0.08)           --sf-color-border (hairline)
-        cubic-bezier(0.22, 1, 0.36, 1)      --sf-ease
+        cubic-bezier(0.2, 0.7, 0.2, 1)      --sf-ease
     -->
     <style>
       body {
@@ -174,10 +174,10 @@
           "Helvetica Neue", sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        /* One theme. This static rule paints before the pre-mount script runs,
-           and the script sets exactly the same gradient, so no other ground can
-           ever flash. */
-        background: linear-gradient(135deg, #0b0b0d 0%, #141416 100%);
+        /* One theme, one ground, declared statically. Nothing reads a stored
+           preference and nothing repaints this at mount, so no other colour
+           can ever flash. Mirrors --sf-color-bg. */
+        background: #0b0b0d;
         min-height: 100vh;
       }
 
@@ -197,12 +197,12 @@
         height: 100%;
         /* Identical to the body ground above, so the fade-out reveals the page
            with no colour step. */
-        background: linear-gradient(135deg, #0b0b0d 0%, #141416 100%);
+        background: #0b0b0d;
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 9999;
-        transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        transition: opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
         overflow: hidden;
       }
 
@@ -231,7 +231,7 @@
         display: block;
         width: clamp(190px, 46vw, 260px);
         height: auto;
-        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
+        animation: loaderRise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.05s
           backwards;
       }
 
@@ -243,7 +243,7 @@
         font-weight: 500;
         line-height: 1.5;
         color: #b8b5b0;
-        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
+        animation: loaderRise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s backwards;
       }
 
       /* A single gold hairline. Decorative only — it does not report real load
@@ -256,7 +256,7 @@
         margin-top: 44px;
         background: rgba(255, 255, 255, 0.08);
         overflow: hidden;
-        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s
+        animation: loaderRise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s
           backwards;
       }
 
@@ -272,7 +272,7 @@
           #f5d76e 50%,
           rgba(245, 215, 110, 0) 100%
         );
-        animation: loaderSweep 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+        animation: loaderSweep 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
       }
 
       @keyframes loaderRise {
@@ -400,27 +400,9 @@
     -->
 
     <script>
-      // Theme detection and initial setup — applied BEFORE React mounts so the
-      // first paint already has the correct theme (matches src/context/ThemeContext.js,
-      // which keys CSS off body.dark / body.light). Avoids a flash of the wrong theme.
-      (function () {
-        // LAMIKAA has ONE theme. The body.dark/body.light class is still
-        // written because src/context/ThemeContext.js and a handful of CSS
-        // modules still read it — Prompt 03 removes both, and this whole block
-        // with them. Until then BOTH branches paint the same dark ground, so a
-        // stale localStorage.theme === "light" cannot flash an ivory page.
-        var savedTheme = null;
-        try {
-          savedTheme = localStorage.getItem("theme");
-        } catch (e) {
-          savedTheme = null;
-        }
-        var isDark = savedTheme !== "light";
-
-        document.body.classList.add(isDark ? "dark" : "light");
-        document.body.style.background =
-          "linear-gradient(135deg, #0B0B0D 0%, #141416 100%)";
-      })();
+      // LAMIKAA has ONE theme, so there is no pre-mount theme script: the body
+      // ground is painted by the static rule in the <style> block above and
+      // never repainted, and nothing here reads a stored preference.
 
       // Hide the loading screen once React has mounted. React signals readiness
       // by adding the "react-loaded" class to <body> (see src/index.js). We watch

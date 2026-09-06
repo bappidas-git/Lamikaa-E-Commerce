@@ -26,9 +26,11 @@
 //                 Fade + a short rise, optionally staggered.
 //   collapse()    a height/height-auto swap, a tab panel, a microstate.
 //
-// Nothing springs, nothing bounces, nothing lifts, nothing loops. The curve is
-// decelerating (ease-out quint), so every arrival covers most of its distance
-// immediately and then settles — slow to the eye without ever feeling slow.
+// Nothing springs, nothing bounces, nothing loops. The curve is decelerating,
+// so every arrival covers most of its distance immediately and then settles —
+// unhurried to the eye without ever feeling slow. Scroll-triggered entrances
+// are a fade plus a 16-24px rise, once; the hero crossfades and scales 1.02 -> 1
+// over the slow tier; parallax never exceeds 8px.
 //
 // REDUCED MOTION. Every factory here takes `reduce` (pass framer-motion's
 // `useReducedMotion()`), and returns the same shape with zero duration and no
@@ -37,12 +39,12 @@
 // =============================================================================
 
 /** --sf-ease, as the cubic-bézier control points framer-motion wants. */
-export const EASE = [0.22, 1, 0.36, 1];
+export const EASE = [0.2, 0.7, 0.2, 1];
 
 /** --sf-duration-fast / --sf-duration / --sf-duration-slow, in seconds. */
 export const DURATION = {
-  fast: 0.2,
-  base: 0.35,
+  fast: 0.16,
+  base: 0.32,
   slow: 0.6,
 };
 

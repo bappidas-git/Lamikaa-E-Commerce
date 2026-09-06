@@ -9,19 +9,19 @@ import {
 //
 // The ground is DELIBERATELY transparent. A <canvas>-free data URI cannot read
 // --sf-* custom properties, so any colour baked in here is stuck in one mode:
-// the previous slate-grey fill (#e2e8f0) was both off-palette and a white plate
-// punched into the evening room. Every image well on the storefront already
-// paints --sf-color-surface-2 behind its <img> (ProductCard .mediaWrap, the PDP
+// the previous slate-grey fill (#e2e8f0) was an off-palette white plate punched
+// into a dark page. Every image well on the storefront already paints
+// --sf-color-surface-2 behind its <img> (ProductCard .mediaWrap, the PDP
 // gallery, the cart and order thumbnails), so letting that show through is what
-// keeps a failed image warm in light mode and dark in dark mode, for free.
+// keeps a failed image on-palette for free.
 //
-// #807867 is the one colour left to choose, and it is the balance point: 3.7:1
-// on the light panel (#F2ECE1) and 3.8:1 on the dark one (#221E1A). No single
-// value can clear 4.5:1 against both grounds — the best possible is ~3.75 — and
-// the word here only ever restates the <img alt>, which assistive tech reads
-// instead, so this is redundant labelling rather than content.
+// #8E8B86 is the one colour left to choose: 5.0:1 on the sunken panel (#1C1C20)
+// and 5.4:1 on a surface plate (#141416), clear of the 3:1 the non-text
+// guidance asks for. The word here only ever restates the <img alt>, which
+// assistive tech reads instead, so this is redundant labelling rather than
+// content.
 export const PLACEHOLDER_IMG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Ctext x='50%25' y='50%25' font-family='system-ui,sans-serif' font-size='22' fill='%23807867' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Ctext x='50%25' y='50%25' font-family='system-ui,sans-serif' font-size='22' fill='%238E8B86' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 // <img onError> handler: swap to the placeholder once (guarded against loops).
 export const onImageError = (e) => {

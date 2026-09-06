@@ -1,14 +1,26 @@
 import React from "react";
 
-// Resolve the active theme without depending on React context (this component
-// must work even if the provider tree above it failed to render). Mirrors
-// src/context/ThemeContext.js: dark unless the user explicitly chose light.
-const isDarkTheme = () => {
-  try {
-    return localStorage.getItem("theme") !== "light";
-  } catch {
-    return true;
-  }
+// The LAMIKAA palette mirrored here as literals on purpose: this boundary must
+// render even when the provider tree (and the stylesheet that declares the
+// --sf-* tokens) failed to mount, so it cannot rely on var(--sf-*). There is
+// one theme, so there is one palette and nothing to resolve at runtime.
+//
+// SYNC SOURCE: src/theme/storefront-tokens.css — each literal below is the
+// resolved value of the --sf-* token named in its comment. Re-copy them
+// whenever that file's palette changes; nothing here updates automatically.
+const palette = {
+  bg: "#0B0B0D", // --sf-color-bg
+  card: "#141416", // --sf-color-surface
+  border: "rgba(255, 255, 255, 0.08)", // --sf-color-border
+  heading: "#F7F5F0", // --sf-color-text
+  text: "#B8B5B0", // --sf-color-text-secondary
+  detailsBg: "#1C1C20", // --sf-color-surface-2
+  detailsText: "#FF8A80", // --sf-color-danger
+  primaryBg: "#F5D76E", // --sf-color-emerald (the gold CTA fill)
+  primaryText: "#0B0B0D", // --sf-color-emerald-contrast
+  ghostBorder: "#B88924", // --sf-color-gold-deep
+  ghostText: "#F7F5F0", // --sf-color-text
+  shadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2
 };
 
 class ErrorBoundary extends React.Component {
@@ -38,54 +50,18 @@ class ErrorBoundary extends React.Component {
   render() {
     if (!this.state.hasError) return this.props.children;
 
-    const dark = isDarkTheme();
-    // Meghali's Silk brand palette mirrored here as literals on purpose: this
-    // boundary must render even when the provider tree (and the body.dark class
-    // the CSS tokens key off) failed to mount, so it cannot rely on var(--sf-*).
-    // SYNC SOURCE: src/theme/storefront-tokens.css — each literal below is the
-    // resolved value of the --sf-* token named in its comment. Re-copy them
-    // whenever that file's palette changes; nothing here updates automatically.
-    const palette = dark
-      ? {
-          bg: "#14120F", // --sf-color-bg
-          card: "#1B1815", // --sf-color-surface
-          border: "rgba(244, 239, 230, 0.10)", // --sf-color-border
-          heading: "#F4EFE6", // --sf-color-text
-          text: "#C4BCAE", // --sf-color-text-secondary
-          detailsBg: "#221E1A", // --sf-color-surface-2
-          detailsText: "#E08472", // --sf-color-danger
-          primaryBg: "#F4EFE6", // --sf-color-emerald (inverted ink CTA)
-          primaryText: "#14120F", // --sf-color-emerald-contrast
-          ghostBorder: "rgba(227, 185, 94, 0.30)", // --sf-color-border-strong
-          ghostText: "#F4EFE6", // --sf-color-text
-          shadow: "0 20px 48px rgba(0, 0, 0, 0.65)", // --sf-shadow-lg
-        }
-      : {
-          bg: "#FAF6EC", // --sf-color-bg
-          card: "#FFFFFF", // --sf-color-surface
-          border: "#E8DFCD", // --sf-color-border
-          heading: "#1D1A16", // --sf-color-text
-          text: "#5C554A", // --sf-color-text-secondary
-          detailsBg: "#F2ECE1", // --sf-color-surface-2
-          detailsText: "#9E3B2E", // --sf-color-danger
-          primaryBg: "#1D1A16", // --sf-color-emerald (the ink CTA)
-          primaryText: "#FAF6EC", // --sf-color-emerald-contrast
-          ghostBorder: "#D6C9B2", // --sf-color-border-strong
-          ghostText: "#1D1A16", // --sf-color-text
-          shadow: "0 20px 48px rgba(29, 26, 22, 0.12)", // --sf-shadow-lg
-        };
-
-    // Editorial button: near-rectangular, uppercase Inter, wide tracking —
-    // the inline twin of `.sf-btn` in storefront-primitives.css.
+    // Pill button, uppercase, wide tracking — the inline twin of `.sf-btn`
+    // in storefront-primitives.css.
     const btnBase = {
       padding: "14px 28px",
-      borderRadius: "2px", // --sf-radius-sm
+      minHeight: "44px", // --sf-tap-target
+      borderRadius: "999px", // --sf-radius-pill
       fontSize: "0.75rem", // --sf-text-xs
       fontWeight: 500, // --sf-font-medium
       textTransform: "uppercase",
       letterSpacing: "0.14em", // --sf-tracking-wide
       cursor: "pointer",
-      transition: "background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
+      transition: "background-color 0.32s cubic-bezier(0.2, 0.7, 0.2, 1)",
       fontFamily: "inherit",
     };
 
@@ -110,7 +86,7 @@ class ErrorBoundary extends React.Component {
             maxWidth: "520px",
             background: palette.card,
             border: `1px solid ${palette.border}`,
-            borderRadius: "4px", // --sf-radius-md
+            borderRadius: "14px", // --sf-radius-md
             padding: "48px 32px",
             textAlign: "center",
             boxShadow: palette.shadow,
@@ -203,7 +179,7 @@ class ErrorBoundary extends React.Component {
                 style={{
                   marginTop: "12px",
                   padding: "16px",
-                  borderRadius: "2px", // --sf-radius-sm
+                  borderRadius: "8px", // --sf-radius-sm
                   background: palette.detailsBg,
                   color: palette.detailsText,
                   fontSize: "0.8rem",

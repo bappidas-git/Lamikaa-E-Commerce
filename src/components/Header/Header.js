@@ -7,7 +7,6 @@ import React, {
   useRef,
 } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../context/WishlistContext";
@@ -39,8 +38,6 @@ import {
   ShoppingBagOutlined,
   FavoriteBorder,
   PersonOutline,
-  DarkModeOutlined,
-  LightModeOutlined,
   ListAltOutlined,
   LogoutOutlined,
   LoginOutlined,
@@ -58,7 +55,6 @@ const LOGO_WIDTH = 168;
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDarkMode, toggleTheme } = useTheme();
   const {
     user,
     isAuthenticated,
@@ -449,19 +445,6 @@ const Header = () => {
                     <span className={styles.searchTriggerLabel}>Search</span>
                   )}
                 </button>
-              )}
-
-              {/* Theme toggle (desktop/tablet) */}
-              {!isMobile && (
-                <IconButton
-                  onClick={toggleTheme}
-                  className={styles.actionIcon}
-                  aria-label={
-                    isDarkMode ? "Switch to light theme" : "Switch to dark theme"
-                  }
-                >
-                  {isDarkMode ? <LightModeOutlined /> : <DarkModeOutlined />}
-                </IconButton>
               )}
 
               {/* Wishlist (desktop/tablet) */}

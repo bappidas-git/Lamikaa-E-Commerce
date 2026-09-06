@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   TERMS OF SERVICE  —  Meghali's Silk, route `/terms`
+   TERMS OF SERVICE  —  LAMIKAA NATURALS, route `/terms`
    ═══════════════════════════════════════════════════════════════════════════
    One of four policy pages that share a single document treatment: serif
    masthead over a hairline, nine clauses down a ~70-character measure, their
@@ -21,8 +21,8 @@
    convention the rest of the storefront follows.
 
    TOKENS ONLY — every colour, space, radius and type value resolves through
-   `--sf-*`, which flips under `body.dark`. Light and dark are one stylesheet
-   and there is no hex in this file.
+   `--sf-*`, declared once in `:root`. There is one theme, one stylesheet and
+   no hex in this file.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .page {
@@ -31,13 +31,6 @@
   background: var(--sf-color-bg);
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
-}
-
-/* The only thing ThemeContext is consumed for: a native color-scheme hint so
-   the scrollbars — including the ones inside the table wrappers — render for
-   the active theme. */
-.dark {
-  color-scheme: dark;
 }
 
 .container {

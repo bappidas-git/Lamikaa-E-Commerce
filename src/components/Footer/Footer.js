@@ -23,13 +23,12 @@ import styles from "./Footer.module.css";
  *   3. the promises    — store-attested policy + accepted payment marks
  *   4. the colophon    — copyright and legal links in tiny tracked type
  *
- * The band is deep in BOTH app modes — a dark close is the classic editorial
- * device, and it keeps the page's ivory reading as paper. Its ground is pinned
- * to --sf-color-brand-green-deep, which storefront-tokens.css declares once in
- * :root and never re-declares under body.dark, so dark mode cannot double-darken
- * it into mud. Everything inside paints from footer-scoped aliases (see
- * Footer.module.css) built on mode-agnostic tokens, so legibility is identical
- * in both modes. No hardcoded hex and no hardcoded type in here — the only
+ * The band is its own room rather than a tint of the page: its ground is
+ * pinned to --sf-color-brand-green-deep, the deepest ground in the palette,
+ * which storefront-tokens.css declares once in :root. Everything inside paints
+ * from footer-scoped aliases (see Footer.module.css) built on that ground, so
+ * legibility does not depend on what surrounds the band. No hardcoded hex and
+ * no hardcoded type in here — the only
  * literal colours are the payment networks' own brand hexes, which are mandated
  * marks and must not be re-skinned.
  *

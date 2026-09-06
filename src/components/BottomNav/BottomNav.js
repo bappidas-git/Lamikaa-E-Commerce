@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useWishlist } from "../../context/WishlistContext";
-import { useTheme } from "../../context/ThemeContext";
 import {
   HomeOutlined,
   GridViewOutlined,
@@ -39,7 +38,6 @@ const NAV_ITEMS = [
 ];
 
 const BottomNav = () => {
-  const { isDarkMode } = useTheme();
   const { getWishlistCount } = useWishlist();
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -74,8 +72,6 @@ const BottomNav = () => {
     pathname === "/categories";
   const isAccountActive = (pathname) =>
     pathname === "/profile" || pathname === "/account";
-
-  const themeClass = isDarkMode ? styles.dark : styles.light;
 
   // Resolve active state honouring the alias rules above. Reads the router's
   // location (not window.location) so the class can never lag a navigation.
@@ -114,7 +110,7 @@ const BottomNav = () => {
   return (
     <>
       <nav
-        className={`${styles.bottomNav} ${themeClass} ${
+        className={`${styles.bottomNav} ${
           visible ? styles.visible : styles.hidden
         }`}
         aria-label="Primary"

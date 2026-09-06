@@ -13,7 +13,7 @@
    implying an instant publish.
 
    TOKENS ONLY — every colour, space, radius and type value resolves through
-   `--sf-*`, which flips under `body.dark`, so light and dark are one sheet.
+   `--sf-*`, declared once in `:root`; there is one theme and one sheet.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .overlay {

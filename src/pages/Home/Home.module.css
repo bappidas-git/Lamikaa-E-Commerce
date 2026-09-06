@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   HOME PAGE  —  Meghali's Silk, read as a magazine (below the Prompt 12 hero)
+   HOME PAGE  —  LAMIKAA NATURALS, read as a magazine (below the Prompt 12 hero)
    ═══════════════════════════════════════════════════════════════════════════
    Few sections, each large, each given air. The rhythm alternates a CONTAINED
    spread (.section) against a FULL-BLEED band (.band), and a hairline top rule
@@ -491,7 +491,7 @@
 .heritage {
   overflow: hidden;
   background: var(--sf-gradient-heritage);
-  color: var(--sf-color-primary-contrast);
+  color: var(--sf-color-text);
   padding: var(--sf-space-32) 0;
 }
 
@@ -501,12 +501,12 @@
   pointer-events: none;
   background-image: repeating-linear-gradient(
       90deg,
-      color-mix(in srgb, var(--sf-color-primary-contrast) 5%, transparent) 0 1px,
+      color-mix(in srgb, var(--sf-color-text) 5%, transparent) 0 1px,
       transparent 1px 7px
     ),
     repeating-linear-gradient(
       0deg,
-      color-mix(in srgb, var(--sf-color-primary-contrast) 4%, transparent) 0 1px,
+      color-mix(in srgb, var(--sf-color-text) 4%, transparent) 0 1px,
       transparent 1px 7px
     );
 }
@@ -536,7 +536,7 @@
   font-weight: var(--sf-font-medium);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
-  color: var(--sf-color-primary-contrast);
+  color: var(--sf-color-text);
   max-width: 20ch;
 }
 
@@ -553,18 +553,14 @@
   max-width: 46ch;
   font-size: var(--sf-text-md);
   line-height: var(--sf-leading-relaxed);
-  color: color-mix(in srgb, var(--sf-color-primary-contrast) 82%, transparent);
+  color: color-mix(in srgb, var(--sf-color-text) 82%, transparent);
 }
 
 /* Hairline CTA — the band already carries the page's gold moment in its
    eyebrow; a gold fill here would shout. */
 .heritageCta {
-  color: var(--sf-color-primary-contrast);
-  border-color: color-mix(
-    in srgb,
-    var(--sf-color-primary-contrast) 45%,
-    transparent
-  );
+  color: var(--sf-color-text);
+  border-color: color-mix(in srgb, var(--sf-color-text) 45%, transparent);
 }
 
 .heritageCta:hover {
@@ -574,7 +570,7 @@
 
 .heritageCta:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--sf-color-primary-dark),
+  box-shadow: 0 0 0 2px var(--sf-color-bg),
     0 0 0 4px var(--sf-color-gold-light);
 }
 

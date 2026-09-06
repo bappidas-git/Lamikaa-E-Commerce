@@ -23,8 +23,8 @@
 
    TOKENS ONLY
    Every colour, space, radius, shadow and type value resolves through `--sf-*`,
-   which flips under `body.dark` — light and dark are one stylesheet and there
-   is no hex in this file. (The three image URLs in the component carry hex as
+   declared once in `:root` — one theme, one stylesheet and no hex in this
+   file. (The three image URLs in the component carry hex as
    query parameters for the placeholder service; that is not CSS.)
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -583,7 +583,7 @@
 .quoteBand {
   padding: var(--sf-space-32) 0;
   background: var(--sf-gradient-heritage);
-  color: var(--sf-color-primary-contrast);
+  color: var(--sf-color-text);
 }
 
 .quote {
@@ -598,7 +598,7 @@
   font-weight: var(--sf-font-light);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
-  color: var(--sf-color-primary-contrast);
+  color: var(--sf-color-text);
 }
 
 .quoteCite {

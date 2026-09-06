@@ -1,5 +1,5 @@
 // =============================================================================
-// RETURN & REFUND POLICY  —  Meghali's Silk, route `/refund`
+// RETURN & REFUND POLICY  —  LAMIKAA NATURALS, route `/refund`
 // =============================================================================
 // The last of the four policy pages (/privacy, /terms, /cookies, /refund) that
 // share one typeset "document" treatment: a tracked gold kicker, a serif title
@@ -32,14 +32,13 @@
 //   other three policy pages so they can never disagree about their date.
 //
 // THEMING
-//   Tokens only; ThemeContext is consumed for nothing but the `color-scheme`
-//   hint that themes native scrollbars, the table's included.
+//   Tokens only, and nothing is read from ThemeContext — the `color-scheme`
+//   hint that themes native scrollbars, the table's included, is global.
 // =============================================================================
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { reveal as sharedReveal } from "../../theme/motion";
-import { useTheme } from "../../context/ThemeContext";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import {
   POLICY_LAST_UPDATED,
@@ -100,7 +99,6 @@ const RefundPolicy = () => {
   // Store name and contact details are whatever the admin last saved in
   // Settings > General, so the policy never names a store that no longer exists.
   const { email: supportEmail, emailHref } = useStoreSettings();
-  const { isDarkMode } = useTheme();
   const prefersReducedMotion = useReducedMotion();
 
   // The shared reveal from theme/motion.js: one gentle fade and rise, stepped
@@ -109,7 +107,7 @@ const RefundPolicy = () => {
   const reveal = (i) => sharedReveal(prefersReducedMotion, { index: i });
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.doc}>
           {/* ── Breadcrumb ───────────────────────────────────────────────── */}

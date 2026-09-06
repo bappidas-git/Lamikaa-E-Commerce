@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import apiService from "../../services/api";
 import { isEmailValid } from "../../utils/helpers";
 import styles from "./Newsletter.module.css";
 
 const Newsletter = () => {
-  const { isDarkMode } = useTheme();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(null); // "success" | "error"
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +32,7 @@ const Newsletter = () => {
   };
 
   return (
-    <section className={`${styles.newsletter} ${isDarkMode ? styles.dark : ""}`}>
+    <section className={styles.newsletter}>
       <div className={styles.content}>
         <h2>Stay in the Loop</h2>
         <p>Subscribe for exclusive deals, new arrivals, and special offers.</p>

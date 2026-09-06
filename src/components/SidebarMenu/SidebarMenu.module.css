@@ -1,5 +1,5 @@
 /* =============================================================================
- * SidebarMenu — Meghali's Silk editorial menu (mobile primary navigation)
+ * SidebarMenu — LAMIKAA NATURALS editorial menu (mobile primary navigation)
  * =============================================================================
  * Not an app drawer: a full-height boutique menu on the page ivory. Big display
  * serif for the primary links, hairline-separated groups of quiet Inter meta
@@ -9,7 +9,7 @@
  * reads as the page turning rather than as a dark slab sliding over it. Every
  * colour, space, radius, shadow and type value comes from
  * src/theme/storefront-tokens.css — no hardcoded hex, no hardcoded fonts — so
- * dark mode ("evening gallery") is re-derived for free by the body.dark block.
+ * the single dark theme is re-derived for free.
  * ========================================================================== */
 
 /* ---- Backdrop ---------------------------------------------------------- */

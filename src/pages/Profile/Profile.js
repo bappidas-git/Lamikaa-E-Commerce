@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Swal from "sweetalert2";
-import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../context/WishlistContext";
 import apiService from "../../services/api";
@@ -50,7 +49,7 @@ const getStatusInfo = (order) =>
 // tree, and a per-call confirmButtonColor is set as an inline variable on the
 // button (see the Swal block in App.css). This mirrors --sf-color-danger from
 // storefront-tokens.css; keep the two in sync if that token is ever retuned.
-const DANGER_HEX = "#9E3B2E";
+const DANGER_HEX = "#FF8A80";
 
 // Only render a membership badge when it's real or derivable from the user
 // object. The seeded user shape carries no membership/tier field, so we never
@@ -158,7 +157,6 @@ const Profile = () => {
   // surface that never asked. Every motion prop below now goes through the
   // shared factories in theme/motion.js with this boolean.
   const shouldReduceMotion = useReducedMotion();
-  const { isDarkMode, toggleTheme } = useTheme();
   const { user, isAuthenticated, isLoading: authLoading, logout, updateUser, openAuthModal } = useAuth();
   const { wishlistItems } = useWishlist();
 
@@ -600,7 +598,7 @@ const Profile = () => {
   // a navigation fallback if the customer dismisses it.
   if (!isAuthenticated || !user) {
     return (
-      <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+      <div className={styles.page}>
         <div className={styles.container}>
           <motion.div
             className={styles.gate}
@@ -696,7 +694,7 @@ const Profile = () => {
       id: "settings",
       icon: "settings",
       label: "Settings",
-      sub: "Password, appearance & privacy",
+      sub: "Password & privacy",
       onClick: () => openSection("settings"),
     },
   ];
@@ -1063,26 +1061,6 @@ const Profile = () => {
 
   const renderSettingsSection = () => (
     <div className={styles.section}>
-      {/* Appearance */}
-      <div className={styles.settingRow}>
-        <span className={styles.settingText}>
-          <span className={styles.settingLabel}>Appearance</span>
-          <span className={styles.settingSub}>
-            {isDarkMode ? "Dark mode is on" : "Light mode is on"}
-          </span>
-        </span>
-        <button
-          type="button"
-          className={`${styles.switch} ${isDarkMode ? styles.switchOn : ""}`}
-          onClick={toggleTheme}
-          role="switch"
-          aria-checked={isDarkMode}
-          aria-label="Toggle dark mode"
-        >
-          <span className={styles.switchKnob} />
-        </button>
-      </div>
-
       {/* Change Password */}
       <h3 className={styles.subHead}>
         <Icon name="lock" size={16} />
@@ -1229,7 +1207,7 @@ const Profile = () => {
   };
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         {/* Feedback toast (fixed-position; see .feedback in the stylesheet) */}
         <AnimatePresence>

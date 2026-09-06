@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { useTheme } from "../../context/ThemeContext";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
@@ -292,7 +291,6 @@ const ProductDetails = () => {
   // Route is /products/:slug (slug canonical; legacy numeric id still resolves).
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { isDarkMode } = useTheme();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   // Currency and the tax note come from the admin's Settings > General; the
@@ -716,9 +714,7 @@ const ProductDetails = () => {
     // No page-level fade here: the route transition is applied once, to the
     // keyed wrapper around <Routes> in App.js, so every storefront route —
     // and every one of this page's own branches — arrives the same way.
-    // This sheet has no `.dark` rule — the tokens flip on their own — so
-    // styles.dark is undefined and used to render class="page undefined".
-    <div className={`${styles.page} ${(isDarkMode && styles.dark) || ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         {/* ── Breadcrumb (orientation) ──────────────────────────────────── */}
         <nav className={styles.breadcrumb} aria-label="Breadcrumb">

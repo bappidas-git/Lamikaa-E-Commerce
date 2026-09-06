@@ -1,5 +1,5 @@
 /* =============================================================================
- * BottomNav — Meghali's Silk mobile bar
+ * BottomNav — LAMIKAA NATURALS mobile bar
  * =============================================================================
  * A thin editorial bar, not a floating dock: edge to edge on the page ivory,
  * separated from the content by a single 1px hairline, thin-stroke glyphs, and
@@ -7,7 +7,7 @@
  * the label — the only colour in the bar.
  *
  * Token-driven only (storefront-tokens.css) — no hardcoded hex, no hardcoded
- * type — so dark mode is re-derived by the body.dark block for free.
+ * type — so the single dark theme is re-derived for free.
  * ========================================================================== */
 .bottomNav {
   position: fixed;
@@ -21,14 +21,6 @@
   font-family: var(--sf-font-family);
   padding-bottom: env(safe-area-inset-bottom);
   transition: transform var(--sf-transition);
-}
-
-/* Both themes read from tokens; dark mode resolves the same vars to dark values.
-   Keep explicit hooks for any future per-theme tweaks. */
-.bottomNav.light,
-.bottomNav.dark {
-  background: var(--sf-color-bg);
-  border-top-color: var(--sf-color-border);
 }
 
 /* Mobile-only — hidden on desktop via media query (matches existing breakpoint). */

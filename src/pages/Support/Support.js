@@ -1,5 +1,5 @@
 // =============================================================================
-// CONTACT  —  Meghali's Silk, route `/support`
+// CONTACT  —  LAMIKAA NATURALS, route `/support`
 // =============================================================================
 // The care desk, written as a page. The old screen opened with a fabricated
 // scoreboard — "4.9 Rating · 10K+ Customers · 500+ Designs · 15+ Years" — none
@@ -37,7 +37,6 @@
 // =============================================================================
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
@@ -192,7 +191,6 @@ const EMPTY_LEAD = {
 };
 
 const Support = () => {
-  const { isDarkMode } = useTheme();
   const { user } = useAuth();
   // Phone, email, the showroom address and the social marks are whatever the
   // admin last saved. `socialLinks` arrives filtered to the platforms that have
@@ -302,7 +300,7 @@ const Support = () => {
     undefined;
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         {/* ── 1. THE INVITATION ─────────────────────────────────────────── */}
         <header className={styles.head}>

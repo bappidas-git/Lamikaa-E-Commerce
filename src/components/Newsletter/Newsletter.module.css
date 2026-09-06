@@ -1,5 +1,4 @@
 .newsletter { padding: 48px 16px; background: var(--sf-color-primary); text-align: center; color: var(--sf-color-primary-contrast); }
-.dark.newsletter { background: var(--sf-color-primary-dark); }
 .content { max-width: 560px; margin: 0 auto; }
 .content h2 { font-family: var(--sf-font-display); font-size: 1.75rem; font-weight: 700; margin-bottom: 8px; }
 .content p { opacity: 0.9; margin-bottom: 24px; }

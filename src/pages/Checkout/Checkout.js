@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { useTheme } from "../../context/ThemeContext";
 import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
 import { useOrder } from "../../context/OrderContext";
@@ -57,10 +56,10 @@ import styles from "./Checkout.module.css";
 //   bound); the rule that decides availability is untouched.
 //
 // THEMING
-//   Tokens only — every colour resolves through `--sf-*`, which flips under
-//   body.dark, so light and dark are one stylesheet. ThemeContext is consumed
-//   for exactly one thing: the `color-scheme` hint that makes native number
-//   spinners, selects and scrollbars render for the active theme.
+//   Tokens only — every colour resolves through `--sf-*`, declared once in
+//   `:root`. One theme, one stylesheet, and nothing to read from
+//   ThemeContext: the `color-scheme` hint that themes native number spinners,
+//   selects and scrollbars is global.
 // =============================================================================
 
 const STEPS = ["Cart", "Shipping", "Payment", "Review"];
@@ -237,7 +236,6 @@ const QuietCartIllustration = () => (
 );
 
 const Checkout = () => {
-  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
   const { cartItems, getCartTotal, getCartItemCount, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -506,7 +504,7 @@ const Checkout = () => {
   // ═══════════════════════════════════════════════════════════════════════════
   if (cartItems.length === 0 && !orderPlaced) {
     return (
-      <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+      <div className={styles.page}>
         <div className={styles.container}>
           <header className={styles.head}>
             <p className={styles.eyebrow}>Checkout</p>
@@ -648,7 +646,7 @@ const Checkout = () => {
   ].filter(Boolean);
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         {/* ═══════════════════════════════════════════════════════════════════
             SHELL — head, step line, layout, nav row, summary rail (Prompt 18)
