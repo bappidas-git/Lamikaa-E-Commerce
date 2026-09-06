@@ -9,7 +9,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 03 | Design tokens and single dark theme | complete | 2026-09-06 | (this commit) | Token layer rewritten to the LAMIKAA "Luxury Skincare After Dark" set — **one** `:root` block with `color-scheme: dark`; `body.dark` deleted. All **21** mode consumers + `ThemeContext` cleaned: `grep -rn "isDarkMode\|toggleTheme\|useThemeContext\|localStorage.getItem(\"theme\")\|setItem(\"theme\"" src public` → **0**. **27** CSS modules lost their `.dark` rules/comments; `grep -rn "\.dark\b\|body\.light" src --include=*.css` → **0**. Pre-mount theme IIFE deleted from `index.html` (static `#0b0b0d` ground, `theme-color` `#0B0B0D`); `ErrorBoundary` down to one literal palette. A scripted contrast audit (`scratchpad/contrast2.py`, 4 950 CSS rule blocks) found **4** fill/label pairs below 4.5:1 after the palette flip — all fixed in the token layer, all re-verified. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (1 suite / 45 tests skipped — unchanged baseline). Browser QA in mock mode with `prefers-color-scheme: light` emulated throughout: body ground `rgb(11,11,13)` and `color-scheme: dark` on every page, `body.className === "react-loaded"`, a seeded `theme=light` is **gone after one reload**, no toggle in header / mobile drawer / profile settings / admin header, **no horizontal scroll** at 360/390/414/768/1024/1280/1440 across six routes (42 combinations), `--sf-duration` → `0s` under reduced motion, and **zero non-network console errors** on home, PDP, cart drawer, checkout, profile → Settings, `/admin/dashboard` and `/admin/orders`. See "Prompt 03 record" below. |
 | 04 | Typography and global styles | complete | 2026-09-06 | (this commit) | Fraunces (display) + Manrope (UI) installed through **one** Google Fonts `<link>` — no `@import`, no `@font-face`, no self-hosting; `grep -rn "Cormorant\|Inter" src public --include=*.css --include=*.html --include=*.js` leaves only the four Manrope fallback-stack entries (plus `isIntersecting`, an unrelated identifier). Type scale, leading and tracking are DESIGN_SYSTEM §6 verbatim; `--sf-font-light` deleted and its **29** consumers moved to `--sf-font-normal` (`grep -rn "sf-font-light" src | wc -l` → 0). New base layer in `index.css` (document, body, all six heading levels on Fraunces, selection, `body[data-scroll-lock]`); `storefront-primitives.css` 437 → 880 lines with **16 new classes** and every existing name kept. SweetAlert2 re-skinned to glass. MUI typography now reads the tokens directly. Browser-verified at 360/390/768/1280 with the real faces loaded: **zero horizontal overflow, every `h1`/`h2` fits, no scale token needed adjusting**; 14 focus stops walked, all visibly ringed; reduced motion confirmed dead (glow animation `none`, all transitions 0s, `scroll-behavior: auto`). `CI=true npm run build` exit 0 with no warnings; `npm test -- --watchAll=false` exit 0 (1 suite / 45 tests skipped). One departure from the brief — the `"SOFT" 30` axis — recorded in Decisions. See "Prompt 04 record" below. |
 | 05 | Shared UI primitives and media helpers | complete | 2026-09-06 | (this commit) | 13 components in `src/components/ui` (+12 CSS modules), 3 hooks, `utils/{product,contentBlocks}.js` with 2 test suites. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` = **2 suites passed / 1 skipped** (20 passed, 45 skipped). `grep -rn "dangerouslySetInnerHTML" src` → **0** (whole tree). `normalizeProduct` verified against **all 6 current db.json products** (images-only shape: `images[]` identical round-trip, one primary, `image === images[0]`) and against the seeded `media[]` shape. Browser QA on `/_playground` at **360 / 390 / 414 / 768 / 1024 / 1280 / 1440**: no horizontal overflow, **zero React console warnings** (no `fetchPriority` warning). Focus traps, Escape, focus restore, `body[data-scroll-lock]` and `body[data-drawer-open]` all verified in Chromium; accordion ↑/↓/Home/End verified; VideoPlayer Space/K/M/←/→ verified against a range-serving host. Reduced motion measured: every transition 0s, `sf-breathe` and the skeleton shimmer `animation-name: none`. One real defect found and fixed on the way (`.sf-card--hover` and `.sf-glow` fighting over one `::before`) — see the record below. `/_playground` is **temporary**; Prompt 35 deletes it. |
-| 06 | Data model and seed (db.json) | pending | | | |
+| 06 | Data model and seed (db.json) | complete | 2026-09-06 | (this commit) | `db.json` rewritten from 20 Meghali collections to **23 LAMIKAA collections** (96 KB → 118 KB): 8 products with `media[]`, 7 categories, 11 concerns, 3 rituals, 8 grouped FAQs, `siteContent` (7 blocks), 3 `announcements` (ex-`banners`), a product-driven `heroConfig`, tokenised `settings`, and neutral fixtures for every commerce collection. All **8 cover URLs verified character-exact** against `PRODUCTS.md` §2 by parsing that table. `grep -c "meghali\|Meghali\|silk\|Silk\|mekhela\|saree\|Sualkuchi\|Kolkata, West Bengal" db.json` → **0** (the single `Asia/Kolkata` is the timezone). A 150-assertion validation script passed every check, and **all 48 distinct URLs in the seed returned 206** — **no host swap was needed**. JSON Server starts clean; all 24 collection endpoints answer 200; `DELETE /reviews/2` → **200** (not the old 500) and a re-`POST` restored the file byte-identical, on a `JSON_SERVER_DB` copy so the committed seed stayed untouched. `CI=true npm run build` exit 0, no warnings; `npm test` exit 0 (2 suites / 20 passed, the live suite skipped as in every prior baseline). Browser QA over 16 routes: **no runtime crashes**, the only 404 is the expected `GET /banners` (Prompt 07). `server.js` unchanged. See "Prompt 06 record" below. |
 | 07 | api.js contract extension in both modes | pending | | | |
 | 08 | Routing, IA, lazy loading and SEO hook | pending | | | |
 | 09 | Header, mega panel and announcement bar | pending | | | |
@@ -94,6 +94,18 @@ Record every decision a prompt had to make that the reference files did not sett
 - `05 · 2026-09-06 · `Price.js` is the one component with no CSS module of its own · Task 5 asks for "one CSS module per component". Price is a thin adapter over PriceBlock and renders no markup of its own, so every style it could own — the "Price on launch" chip included — belongs in `PriceBlock.module.css`, beside the markup that uses it. A module holding one unused class is worse than no module.`
 - `05 · 2026-09-06 · `Chip variant="concern"` HASHES an unrecognised tone onto the six concern accents · The six values exist (`--sf-concern-*`) but no slug→colour table does, and concerns are owner-editable data (Prompt 06). A hard-coded table here would either invent facts about concerns nobody has defined or silently drop new ones; the hash is stable, so a concern keeps its colour across pages and reloads, and Prompt 15 can pass an explicit `tone` to override.`
 - `05 · 2026-09-06 · `VideoPlayer`'s progress hairline is decorative (`aria-hidden`), and the error path turns the NATIVE controls on · The prompt asks for both "a progress hairline" and "falls back to native controls if HTMLMediaElement errors (onError → show poster + 'Video unavailable')". A `role="progressbar"` updating four times a second is noise, not information, so the bar is decorative and the keyboard set is the real interface. On error the poster stays up under the notice AND `controls` is set, so the browser can still offer whatever it can do with the source.`
+- `06 · 2026-09-06 · frequentlyBoughtTogetherIds for product 1 is [5, 8] — the PRODUCTS.md §6 example verbatim — while the other seven use "the next two steps of the product's primary ritual" · The prompt says "2 ids: the next ritual steps", which for the Face Wash would be [5, 7] (mist, serum), but the §6 JSON example the prompt calls the template for every row prints [5, 8]. The example is the more specific instruction, so product 1 keeps it and the rule is applied consistently everywhere else. Where a product is the LAST step of its ritual (8) or its ritual has fewer than two later steps (2, 3, 7), the list is topped up with the immediately PRECEDING step, and for the two-step body ritual with the range's step-1 cleanse (1).`
+- `06 · 2026-09-06 · relatedProductIds is "the other steps of the product's primary ritual, in ritual order, first three" · PRODUCTS.md gives no explicit list. The rule reproduces the §6 example for product 1 ([5, 7, 8]) exactly. The Body Ritual has only two other members, so products 2 and 3 are topped up with the Face Wash (1) — the nearest cleansing step — rather than padded with an unrelated product.`
+- `06 · 2026-09-06 · No heroEyebrow field was seeded · PRODUCTS.md §4 gives an eyebrow per slide ("Black Rice Ritual · 01 / 08") but §6's field list does not include it, and the string is fully derivable from heroOrder plus the slide count. Prompt 14 composes it; seeding a denormalised copy would have to be re-edited every time a product is added or deactivated.`
+- `06 · 2026-09-06 · The scrub (product 6) carries fragranceNote: "" rather than the key being absent · PRODUCTS.md §5 says the field is "omitted" for this product because its pack does not print the sandalwood line. An empty string is falsy for every consumer (so nothing renders) AND keeps all eight records the same shape, which is what the admin product form and normalizeProduct expect. The distinction "no sandalwood line on this pack" is preserved either way.`
+- `06 · 2026-09-06 · siteContent.about.body opens at BRAND.md §3.1 paragraph 2, not paragraph 1 · Paragraph 1 is already the `lede` field, and the prompt asks for both. Repeating it would print the same sentence twice on the page.`
+- `06 · 2026-09-06 · The §3.2 closing line ("LAMIKAA is where the wisdom of nature meets the science of modern beauty…") was placed at the end of whyLamikaa.difference, not of whyLamikaa.body · In the brief it follows the four pillars, and the pillars render from the `pillars` ARRAY between `body` and `difference`. Leaving it in `body` would have printed the summary before the thing it summarises.`
+- `06 · 2026-09-06 · impact.intro keeps the value chain as BRAND.md's verbatim bold run ("The journey is: **Farmer → FPC → …**") while about.body renders the same chain as a ::steps stepper · The prompt asks about.body for "the value chain as a ::steps block" and impact.intro for "3.3 paragraphs". Verbatim wins where verbatim was asked for; the stepper is used where a component was specified.`
+- `06 · 2026-09-06 · siteContent.policies bodies use headings, lists and paragraphs but NO tables · The cookie policy's four cookie families were a real <table> in CookiePolicy.js, and contentBlocks.js has no table production (adding one would mean adding a nesting level to a grammar that deliberately has none). Each family became an h3 with its purpose and lifetime in prose. The light/dark line was dropped with it — the storefront has one theme.`
+- `06 · 2026-09-06 · The seeded order timeline uses the action "Delivered", as the prompt lists, although AdminOrders.js writes "Marked delivered" for that transition · Both are display strings in the same statusHistory feed and neither is matched on anywhere. The prompt names the exact set of strings to seed, so it wins; the divergence is recorded here in case a later prompt starts keying off the action text.`
+- `06 · 2026-09-06 · In every siteContent prose field, the FIRST sentence after a heading and the LAST sentence of a paragraph are token-free · Not a style preference — a correctness constraint the two transforms impose together, found by testing rather than by reading (see "The defect found on the way"). Token sentences are placed in the middle of a paragraph, or paired with a token-free sentence that carries the structure. The validation script now checks it.`
+- `06 · 2026-09-06 · No host swap was made and no alternate URL was seeded · The pre-flight and the full 48-URL post-seed pass both returned 206 for every host (Picsum answers 302 → 206 once followed, which is normal for that service). The gtv-videos-bucket / w3schools alternates in PLACEHOLDER_ASSETS.md remain unverified from this environment and unseeded.`
+- `06 · 2026-09-06 · The DELETE/POST exercise was run against a JSON_SERVER_DB copy of the seed rather than the tracked file · The prompt allows either; a copy means the committed db.json is provably byte-identical to what the generator wrote (md5 checked before and after), instead of relying on a round-trip restoring it. The round-trip was verified anyway: the copy came back deep-equal to the seed after the re-POST.`
 
 ## Open TODOs
 
@@ -124,6 +136,12 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `05 · The three storefront `@iconify/react` icon sets used by the new primitives (`mdi:close`, `mdi:chevron-down`, `mdi:play`, `mdi:pause`, `mdi:volume-off`, `mdi:volume-high`, `mdi:fullscreen`, `mdi:check`) are fetched from the Iconify API at runtime, like every existing consumer. In an offline or restricted network the icon simply does not paint — every icon-only control already carries an `srLabel`/`aria-label`, so nothing loses its accessible name, but the audit prompt should decide whether to bundle the set. · Prompt 38 · 38`
 - `05 · `Modal`/`Drawer` release the scroll lock the instant `open` goes false, so the page can move for the ~320ms of the exit animation. Imperceptible in QA; revisit only if it shows up on a long page. · Prompt 37 · 37`
 - `05 · `GlassCard`'s tone glow is clipped by `.sf-card`'s `overflow: hidden` (a card wants light INSIDE it). A section that wants a halo AROUND a card wraps it in `GlowWrap` and clips at the section — see the DESIGN_SYSTEM §7 note. · Prompts 14–19 · 14`
+- `06 · api.js still calls GET /banners, which now 404s: the storefront hero falls back to HERO_FALLBACK_SLIDES and Admin → Content → Hero Section errors. Known and accepted for exactly one commit — the api contract extension is the next prompt. · Prompt 07 · 07`
+- `06 · concerns, rituals and siteContent are seeded but have no api.js methods and no admin screen in either mode. · Prompt 07 (api) / Prompt 34 (admin) · 07`
+- `06 · The three trust badges are seeded per product in products[].badges as a copy of brand.trustBadges. If the owner edits the wording in brand.js, the eight seeded copies do not follow. Components should read brand.trustBadges and treat the field as an optional per-product override. · Prompt 16/25 · 25`
+- `06 · settings.shipping.defaultWeight (0.5 kg) and defaultDimensions (15x12x8 cm) are carried over unchanged as generic parcel defaults; every product carries weight: 0 and dimensions: null. Real shipping weights are an owner input. · Owner · 39`
+- `06 · Five of the eight products are priceTBA, so the cart, checkout, coupon and free-shipping paths can only be exercised with products 1, 2 and 6. Any later QA that needs a multi-product cart has to use those three. · Prompt 29/31 · 29`
+- `06 · Prompt 01's TODO about product 1's corrupted prices (price 41 / comparePrice 380000000000) and Prompt 02's about db.json seeding the old identity are both CLOSED by this rewrite. Prompt 01's "no user has a delivered order" is closed too — order ORD-20260901-0001 is delivered. · (closed) · 06`
 
 ## Placeholders introduced / resolved
 
@@ -140,6 +158,21 @@ Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token 
 - `02 · {{SHELF_LIFE}} · introduced · brand.js → productDefaults.shelfLife. Rendered by the PDP "Good to know" row in Prompt 25.`
 - `02 · {{CERTIFICATIONS}} · introduced · marker comment above brand.js → packBadges[].`
 - `02 · {{RETURN_WINDOW_DAYS}} · introduced · constants.js FAQ_ITEMS[6].answer, resolved by fillStoreCopy from STOREFRONT_CONFIG.returnsWindowDays (7). Verified rendering as "within 7 days of delivery".`
+- `06 · {{JURISDICTION}} · introduced · db.json → siteContent.policies.terms §09: "The courts of {{JURISDICTION}} have exclusive jurisdiction over any dispute arising from them." stripPlaceholderSentences drops that one sentence; the "governed by the laws of India" sentence before it stands on its own.`
+- `06 · {{REFUND_TIMELINE}} · introduced · db.json → siteContent.policies.shippingReturns §05: "Refunds are processed {{REFUND_TIMELINE}}." No number was seeded — "5–7 business days after inspection" stays a candidate for the owner, not a fact. The following sentence ("Your bank may take a few days more…") survives the strip.`
+- `06 · {{DISPATCH_SLA}} · introduced · db.json → shipping_methods[0].estimatedDays ("") and siteContent.policies.shippingReturns §01 ("Our dispatch time is {{DISPATCH_SLA}}.").`
+- `06 · {{TAX_RATE_PERCENT}} · introduced · db.json → settings.store.taxRate = 0 with taxIncluded: true, and taxAmount: 0 on all three seeded orders. No token string is stored — the 0/true pair IS the unresolved state, and fillStoreCopy's {taxNote} already prints "inclusive of all taxes" for it.`
+- `06 · {{LAMIKAA_EMAIL}} / {{LAMIKAA_PHONE}} / {{LAMIKAA_ADDRESS}} · carried into data · settings.store.{email,phone,address} plus settings.notifications.{adminEmail,lowStockEmail} and the contact clause of all four policies. normalizeStoreSettings blanks the first three; the policy sentences are dropped by stripPlaceholderSentences.`
+- `06 · {{LAMIKAA_FACEBOOK_URL}} / {{LAMIKAA_INSTAGRAM_URL}} / {{LAMIKAA_YOUTUBE_URL}} / {{LAMIKAA_WHATSAPP_URL}} · carried into data · settings.social.*. twitter is "" (deliberately absent, not unknown).`
+- `06 · {{SUPPORT_HOURS}} · carried into data · siteContent.contact.hoursNote.`
+- `06 · {{GSTIN}} / {{CIN}} · carried into data · siteContent.policies.terms §01, one per sentence so each is dropped independently.`
+- `06 · {{FREE_SHIPPING_THRESHOLD}} · carried into data · announcements[1].text and shipping_methods[0].freeAbove = null (the null is what makes {freeShipping} unresolvable in FAQ 6).`
+- `06 · {{LAUNCH_OFFER_TEXT}} · carried into data · announcements[2].text, seeded isActive: true — the bar hides a row whose text is unresolved rather than the owner having to remember to switch it on.`
+- `06 · {{RETURN_WINDOW_DAYS}} · carried into data · faqs[6].answer and siteContent.policies.shippingReturns §04. Still resolved by fillStoreCopy from STOREFRONT_CONFIG.returnsWindowDays (7).`
+- `06 · {{PRICE_FACE_WASH}} / {{PRICE_GOAT_MILK_SOAP}} / {{PRICE_FACE_SCRUB}} · resolved · Seeded as 390 / 90 / 349 with priceSource: "packaging-mrp". Owner to confirm before launch.`
+- `06 · {{PRICE_BODY_WASH}} / {{PRICE_FACE_MASK}} / {{PRICE_FACE_MIST}} / {{PRICE_FACE_SERUM}} / {{PRICE_MOISTURIZER_GEL}} · introduced · price: null + priceTBA: true on products 3, 4, 5, 7, 8 — the MRP is masked on those packs. Renders "Price on launch" with Add to Cart disabled.`
+- `06 · {{SIZE_FACE_WASH}} … {{SIZE_MOISTURIZER_GEL}} (8) · resolved · products[*].size, all eight from the packs: 200 ml · 100 g · 250 ml · 100 g · 100 ml · 100 g · 30 ml · 100 ml.`
+- `06 · {{INCI_FACE_WASH}} … {{INCI_MOISTURIZER_GEL}} (8) · resolved · products[*].ingredientsList, verbatim from PRODUCTS.md §5. Owner to proof-read against final artwork.`
 
 ---
 
@@ -451,3 +484,92 @@ Widths **360 / 390 / 768 / 1280** × home, `/products`, PDP, `/checkout`, `/abou
 ### The defect found on the way
 
 `GlassCard` originally put `.sf-glow` on the same node as `.sf-card--hover`. Both rules style that node's single `::before`, and `.sf-card--hover::before` is declared later in `storefront-primitives.css`, so it won on `opacity` (0 until hover), `inset` and `background`: the `glow` prop was silently inert and the QA screenshot showed four identical cards. The tone lamp now has its own inert `z-index: -1` child, so an interactive card can carry both its hover lamp and a resting tone. Confirmed in the browser: `opacity: 0.22` with the correct per-tone `background-image` on all four cards.
+
+---
+
+## Prompt 06 record (2026-09-06)
+
+### What the seed now is
+
+`db.json` went from **20 collections / 96 KB of Meghali's Silk** to **23 collections / 118 KB of LAMIKAA NATURALS**, written in the order Prompt 06 specifies:
+
+`products · categories · concerns · rituals · faqs · siteContent · announcements · heroConfig · settings · dealsConfig · admins · users · shipping_methods · coupons · orders · payments · refunds · walletTransactions · returns · reviews · wishlist · cart · leads`
+
+`banners` is gone — renamed `announcements` (3 rows) with the hero itself now driven by `heroConfig.source: "products"` + `products[].heroOrder`. `concerns`, `rituals` and `siteContent` are new. Every other collection name `api.js` reads survives, `shipping_methods` underscore included. `server.js` is untouched.
+
+| Collection | Rows | Notes |
+|---|---|---|
+| `products` | 8 | ids 1–8 in `PRODUCTS.md` §2 order, `media[]` 4 or 5 rows each (5 for the Face Wash, Face Mask and Face Serum, which carry a second video) |
+| `categories` | 7 | six `kind: "products"` + `rituals`; `image` seeded equal to `heroImage` so the existing admin category manager keeps working |
+| `concerns` | 11 | `{id, slug, name, order}` |
+| `rituals` | 3 | morning-glow (4 steps) · evening-renewal (5) · black-rice-body (2, with `alternativeProductId: 3` on step 1) |
+| `faqs` | 8 | `FAQ_ITEMS` verbatim, same ids, plus `group` (2 brand / 3 products / 3 orders) |
+| `siteContent` | 7 blocks | about · whyLamikaa · impact · home · contact · policies · faqPage |
+| `announcements` | 3 | rows 2–3 carry tokens and stay `isActive: true` |
+| commerce fixtures | 3 orders · 3 payments · 1 refund · 1 wallet row · 0 returns · 2 reviews · 2 leads · 1 coupon · 1 shipping method · 1 admin · 1 user | |
+
+### The eight covers
+
+Verified **character-exact** by parsing the `PRODUCTS.md` §2 table with a regex and comparing each captured URL against `products[n].media[0].url` **and** `products[n].images[0]` — 8/8 identical, slugs matched too. Nothing about them was normalised, re-hosted or transformed; `cld()` applies transformations at render time.
+
+### The validation script (task 18, run, not committed)
+
+**257 assertions, all passing.** Run from the repo root against the finished file:
+
+- JSON parses; the 23 collections are present **in the specified order**.
+- Per product: `media[0].primary === true`, exactly one primary, the primary is an image, `images[0] === media[0].url`, `images[]` mirrors the media images in order, 3–5 media rows, every video has a `poster` and a `title`, `categoryId` + every `categoryIds` id exists, every `concerns` slug exists, `relatedProductIds`/`frequentlyBoughtTogetherIds` resolve and never point at the product itself, 4–6 lowercase tags, `price`/`priceTBA` consistent, `metaTitle` and `metaDescription` match their specified patterns.
+- 5 `priceTBA` / 3 priced; 8 distinct `heroOrder` values; 8 distinct SKUs.
+- Every `rituals[].steps[].productId` **and** `alternativeProductId` exists; every `faqs[].group` is a `faqPage` group key; faq ids are 1–8 in order.
+- Money agrees across the fixtures: items sum to `subtotal`, `total = subtotal − discount + shipping + tax`, `amountPayable === total`, each payment's `amount` equals its order's `amountPayable`, the refund's `amount` equals the order's `refundedAmount` and the payment's `refundAmount`, and the wallet ledger sums to `users[0].storeCredit` (₹390) with `balanceAfter === balanceBefore + amount`.
+- `grep`-equivalent brand check inside the script (`meghali|silk|mekhela|saree|sari|Sualkuchi|Kolkata, West Bengal|muga|tussar`) → no match, and exactly one `Kolkata`, inside `Asia/Kolkata`.
+- **Content transforms**: all 17 `siteContent` prose fields are parsed through the real `parseBlocks` (lifted out of `src/utils/contentBlocks.js`, which is pure) and through the real `stripPlaceholderSentences`, and must come back with the same h2/h3 list, no empty block, no heading left with an empty body, and no surviving token. This is the check that caught the defect below.
+
+### URL reachability — 48/48, no swaps
+
+Every distinct URL in the finished `db.json` was walked out of the parsed object and fetched with a ranged GET following redirects: **48 URLs, all 206**. That is 8 real covers (each appearing as `media[0].url`, `images[0]`, 11 video posters and 4 order-item images), 16 product gallery placeholders, 5 distinct video files, 7 category heroes, 3 ritual images and 9 story/impact images. **No host failed, so no alternate from `PLACEHOLDER_ASSETS.md` was substituted and no swap was recorded.** Picsum's `302 → 206` redirect is normal for that service and was verified with `curl -L`.
+
+### JSON Server (task 19)
+
+Started clean on :3001 against the tracked file (`npm run server`, no `--watch` warnings, no errors in the log). All **24 collection endpoints answered 200**, including the ten the prompt names:
+
+```
+200 /products/1            200 /products?slug=black-rice-face-serum   200 /categories?slug=serums
+200 /rituals?slug=morning-glow   200 /announcements   200 /siteContent (22.5 KB)   200 /heroConfig
+200 /settings             200 /faqs?group=orders     200 /concerns
+```
+
+`GET /rituals` → `[ 'morning-glow', 'evening-renewal', 'black-rice-body' ]`.
+
+**Safe-delete proof.** Run on a `JSON_SERVER_DB=<scratchpad>/db.copy.json` copy at :3002 so the tracked seed could not be dirtied: `DELETE /reviews/2` → **200** (the stock json-server handler returns 500 here, because `reviews[].userId` is `null` and the `getRemovable` cascade calls `null.toString()` — the new seed hits that path on purpose), the row disappeared from `GET /reviews`, `GET /reviews/2` → 404, and a `POST /reviews` of the same object → **201** restored it. The copy then compared **deep-equal to the committed seed**. `md5sum db.json` was identical before and after the whole exercise, so `git checkout db.json` was never needed.
+
+### Build, tests and browser QA
+
+- `CI=true npm run build` — **exit 0, no warnings**. 465.86 kB JS / 65.67 kB CSS gzipped.
+- `npm test -- --watchAll=false` — **exit 0**, 2 suites / 20 tests passed, `api.live.test.js` skipped (45 tests) exactly as in the 01/02/05 baselines: it targets the Laravel backend and writes to a real database.
+- **Chromium 1194, mock mode, 16 routes** (`/`, `/products`, `/products/black-rice-face-wash`, `/checkout`, `/admin` and 11 admin screens): **zero `pageerror`s, zero crashed routes**. The only 4xx anywhere is `GET /banners 404`, which is the documented one-commit gap Prompt 07 closes. `ERR_CONNECTION_RESET` lines in the console are the sandbox's egress proxy refusing browser-initiated requests to the placeholder image hosts and Google Fonts — the same URLs return 206 over curl, and they are not application errors.
+
+### Manual QA against the admin
+
+| Screen | Result |
+|---|---|
+| `/admin/products` | 8 products listed; **11 cover thumbnails** rendering from `res.cloudinary.com/v8vrixwq`; SKU `LK-BR-FW-001` visible |
+| `/admin/orders` | `ORD-20260901-0001`, `ORD-20260904-0002`, `ORD-20260903-0003` all listed |
+| `/admin/payments` | toggle reads **Transactions (3)** / **Refunds (1)**; `pay_SEED0001`/`pay_SEED0003` in the ledger, `REF-20260903-C001` in the Refunds view, linked to `ORD-20260903-0003` |
+| `/admin/reviews` | both sample rows, "Sample review — replace before launch" |
+| `/admin/faqs` | 8 rows, "Who owns LAMIKAA Naturals?" first. The raw `{{RETURN_WINDOW_DAYS}}` shows here **by design** — the admin edits the stored answer, `fillStoreCopy` resolves it on the storefront |
+| `/admin/settings` | inputs read `LAMIKAA NATURALS`, the tagline, `{{LAMIKAA_EMAIL}}`, `{{LAMIKAA_PHONE}}`, `{{LAMIKAA_ADDRESS}}`, `INR`, `₹` — the tokens are expected, and the values live in inputs rather than in text |
+| `/admin/categories` · `/admin/users` · `/admin/coupons` · `/admin/leads` · `/admin/returns` | all load with their seeded rows (returns is legitimately empty) |
+
+### The defect found on the way
+
+The first draft of `siteContent.policies` lost four headings the moment the placeholders were stripped — a defect no amount of reading the copy would have found, because it only exists in the interaction of the two transforms the text is read through.
+
+`stripPlaceholderSentences()` is **sentence-based and knows nothing about the block grammar**: it splits the whole field into sentences with their trailing separators and drops the ones carrying a token, separator included. `splitSentences` ends a sentence at a `.` followed by whitespace — and `## 09. Contact` contains exactly that. So a numbered heading is split into `## 09.` and a sentence that begins `Contact\n\n` and **runs on into the first sentence of the body**. Put a token in that first body sentence and the strip takes the heading's own title with it; `parseBlocks` is then handed a bare `## 09.` and the section loses its name. The same mechanism, one paragraph later, means a token sentence that ENDS a paragraph carries away the blank line that separated it from the next heading, so that heading stops being a heading at all (this is how `## 10. Changes and contact` disappeared out of Terms).
+
+Four sections were affected: Privacy → Contact, Shipping & Returns → Returns and → Contact, Cookies → Contact, plus the Terms → Governing law paragraph that swallowed `## 10.`. All five were rewritten so that the first sentence after a heading and the last sentence of a paragraph are token-free, with the tokens moved into the middle or paired with a sentence that carries the structure — for example Shipping & Returns → Returns now opens "A return is requested from My Orders." and only then says "You have {{RETURN_WINDOW_DAYS}} days from delivery to ask for one."
+
+The check is now part of the validation script, over all 17 prose fields: parse each field, parse it again after `stripPlaceholderSentences`, and require that the h2/h3 list is **identical**, that no heading is left with an empty body, and that no token survives the strip. Reading the four policies in their degraded (nothing-resolved) state confirms they still read as complete documents — every clause keeps a sentence, and the Terms still say they are governed by the laws of India even with the jurisdiction unnamed.
+
+### Copy discipline
+
+Every sentence in `siteContent` traces to `BRAND.md` §3 or to packaging text. The legal qualifiers survive intact wherever profits or dividends appear ("can", "subject to applicable laws and the company's dividend declaration"). No testimonial, count, award, founding year, percentage or named farmer appears anywhere in the file; `rating` and `totalReviews` are 0 on all eight products, and the two seeded reviews are `isSample: true`. Product copy quotes the pack: `packClaims`, `ingredientsList`, `howToUse` and `caution` are verbatim, and every product FAQ answer is drawn from the pack's own directions or claims — the Face Mask's "how often" question was dropped for that reason, because its pack prints no frequency (the weekly cadence lives in `ritualStep`, which is our editorial framing, not a pack claim).
