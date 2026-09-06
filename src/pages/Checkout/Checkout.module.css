@@ -1,0 +1,2112 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHECKOUT  —  the editorial counter
+   ═══════════════════════════════════════════════════════════════════════════
+   A focused, low-noise flow. Five moves and nothing else:
+
+     1. A HEAD given air — a tracked eyebrow carrying the step count, then the
+        page's one serif word.
+     2. THE STEP LINE — four tracked labels joined by hairlines. Gold and a
+        check behind you, ink where you stand, a hairline ahead. No bubbles.
+     3. THE CONTENT COLUMN — line rows, radio cards and underline fields, all
+        drawn in hairlines on the ivory ground.
+     4. THE RAIL — a quiet summary, sticky beside the content on desktop, a
+        collapsible band directly above the CTA on phones.
+     5. THE NAV ROW — Back as a text button, one ink CTA.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   TWO PROMPTS, ONE STYLESHEET
+   Sections 1–8 are the SHELL plus step 0 (Cart) and step 1 (Shipping) — Prompt
+   18. Section 9 is step 2 (Payment) and step 3 (Review), which Prompt 19 owns:
+   it can be rewritten wholesale without touching a single shell class. The one
+   deliberate overlap is the shared field atoms (.sectionTitle, .formRow,
+   .formGroup, .inputError, .fieldError, .readOnly) defined in section 5 — the
+   payment forms consume them as-is.
+
+   TOKENS ONLY
+   Every colour, space, radius and type value resolves through `--sf-*`, which
+   flips under `body.dark` — so light and dark are one stylesheet and there is
+   no hex in this file. The only local variables are the two aliases colouring
+   the inline empty-state artwork and the measured header height, and all three
+   are aliases onto tokens or measurements, never colours.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.page {
+  /* Aliases, so a single inline SVG can be re-coloured from the token layer. */
+  --empty-line: var(--sf-color-border-strong);
+  --empty-gold: var(--sf-color-gold-deep);
+
+  /* Measured height of the sticky masthead + nav band at desktop widths; the
+     rail clears it by --sf-space-6. Matches the PDP's own measurement. */
+  --checkout-header-h: 118px;
+
+  min-height: 100vh;
+  padding-bottom: var(--sf-space-24);
+  background: var(--sf-color-bg);
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+}
+
+/* Header.js drops the nav band at 1024px, leaving the masthead alone — so the
+   rail's clearance follows it. */
+@media (max-width: 1024px) {
+  .page {
+    --checkout-header-h: 69px;
+  }
+}
+
+/* The only thing ThemeContext is consumed for: a native color-scheme hint so
+   number spinners, selects and scrollbars render for the active theme. */
+.dark {
+  color-scheme: dark;
+}
+
+.container {
+  max-width: var(--sf-container-max);
+  margin: 0 auto;
+  padding: 0 var(--sf-space-6);
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 var(--sf-space-4);
+  }
+}
+
+/* Visually hidden, still announced. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. HEAD  —  the prompt-12/14/17 convention: eyebrow, then the serif title
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.head {
+  max-width: 60ch;
+  padding: var(--sf-space-10) 0 var(--sf-space-6);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  margin: 0 0 var(--sf-space-4);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-gold-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow::before {
+  content: "";
+  flex: none;
+  width: var(--sf-space-8);
+  height: 1px;
+  background: currentColor;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: clamp(2.25rem, 4.4vw, 3.25rem);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. THE STEP LINE
+   Four tracked labels threaded on one hairline. The mark is a 16px near-square:
+   gold with a check once passed, ink where you stand, an empty hairline ahead.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.stepline {
+  padding: var(--sf-space-2) 0 var(--sf-space-8);
+  border-bottom: 1px solid var(--sf-color-border);
+  margin-bottom: var(--sf-space-8);
+}
+
+.steplineList {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sf-space-1) 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-space-8);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+/* The thread between two labels. It is a pseudo-element of the FOLLOWING step,
+   so its colour states with the step it leads into. */
+.stepItem + .stepItem::before {
+  content: "";
+  flex: none;
+  width: clamp(16px, 4vw, 56px);
+  height: 1px;
+  margin: 0 var(--sf-space-3);
+  background: var(--sf-color-border-strong);
+  transition: background-color var(--sf-transition);
+}
+
+/* Both selectors are written at the same specificity as the base rule above
+   (0,2,1) and sit after it, so the gold actually lands. */
+.stepItem + .stepDone::before,
+.stepDone + .stepItem::before {
+  background: var(--sf-color-gold);
+}
+
+.stepMark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: transparent;
+  transition: background-color var(--sf-transition),
+    border-color var(--sf-transition), color var(--sf-transition);
+}
+
+/* Passed — gold fill, ink check. */
+.stepDone .stepMark {
+  background: var(--sf-color-gold);
+  border-color: var(--sf-color-gold);
+  color: var(--sf-color-primary-dark);
+}
+
+.stepDone {
+  color: var(--sf-color-gold-deep);
+}
+
+/* Here — the ink mark (ivory under body.dark; both tokens invert together). */
+.stepCurrent .stepMark {
+  background: var(--sf-color-emerald);
+  border-color: var(--sf-color-emerald);
+}
+
+.stepCurrent {
+  color: var(--sf-color-text);
+}
+
+/* Narrow plates carry only the current label; the rest stay in the a11y tree
+   rather than being dropped by `display: none`. */
+@media (max-width: 620px) {
+  .stepItem:not(.stepCurrent) .stepName {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .stepItem + .stepItem::before {
+    margin: 0 var(--sf-space-2);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. LAYOUT
+   Content column + summary rail on desktop; on phones the rail slides between
+   the step content and the CTA, which is why the nav row is its own grid item
+   rather than a child of the column.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-areas:
+    "steps rail"
+    "nav   rail";
+  column-gap: var(--sf-space-12);
+  align-items: start;
+}
+
+.steps {
+  grid-area: steps;
+  min-width: 0;
+}
+
+.rail {
+  grid-area: rail;
+  min-width: 0;
+  position: sticky;
+  top: calc(var(--checkout-header-h) + var(--sf-space-6));
+  align-self: start;
+}
+
+.nav {
+  grid-area: nav;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    column-gap: var(--sf-space-8);
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "steps"
+      "rail"
+      "nav";
+  }
+
+  .rail {
+    position: static;
+    margin-top: var(--sf-space-8);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. SECTION TYPE  —  shared by every step, including Prompt 19's
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sectionTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-2xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.sectionNote {
+  margin: var(--sf-space-2) 0 var(--sf-space-6);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tracked caption that opens a block inside a step. */
+.blockTitle {
+  margin: 0 0 var(--sf-space-4);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. STEP 0  —  CART REVIEW
+   The prompt-10 drawer language at page scale: a 3:4 crop, a serif name, the
+   hairline stepper and a quiet Remove. No frames — hairlines between rows.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lines {
+  margin: 0 0 var(--sf-space-10);
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.line {
+  display: flex;
+  gap: var(--sf-space-5);
+  padding: var(--sf-space-5) 0;
+  border-top: 1px solid var(--sf-color-border);
+}
+
+/* `align-self` is load-bearing: the row is a flex container, so without it the
+   default `stretch` gives the thumbnail the row's full height and the crop
+   silently stops being 3:4. */
+.thumb {
+  flex: none;
+  align-self: flex-start;
+  display: block;
+  width: 84px;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface-2);
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lineBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-1);
+}
+
+.lineName {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lineVariant {
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+  letter-spacing: 0.02em;
+  line-height: var(--sf-leading-normal);
+}
+
+.linePrice {
+  margin: var(--sf-space-1) 0 var(--sf-space-3);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-price);
+  font-variant-numeric: tabular-nums;
+}
+
+.lineFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-5);
+  width: 100%;
+  margin-top: auto;
+}
+
+/* The QuantityStepper look (prompt 09), inlined: a near-square hairline frame
+   with two internal rules, not a pill of buttons. Kept visually identical to
+   the shared control so the PDP, the tray and this page never disagree. */
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface);
+  transition: border-color var(--sf-transition-fast);
+}
+
+.stepper:focus-within {
+  border-color: var(--sf-color-text-secondary);
+}
+
+.stepperBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--sf-transition-fast),
+    color var(--sf-transition-fast);
+}
+
+.stepperBtn:hover:not(:disabled) {
+  background: var(--sf-color-primary-soft);
+  color: var(--sf-color-text);
+}
+
+.stepperBtn:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+  color: var(--sf-color-text);
+}
+
+/* On touch the stepper's edges have to clear the 44px target (WCAG 2.5.5) —
+   the same bump the shared `sf-btn--sm` primitive makes. */
+@media (pointer: coarse) {
+  .stepperBtn {
+    min-width: var(--sf-tap-target);
+    min-height: var(--sf-tap-target);
+  }
+}
+
+.stepperValue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 0 var(--sf-space-2);
+  border-left: 1px solid var(--sf-color-border);
+  border-right: 1px solid var(--sf-color-border);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--sf-color-text);
+  user-select: none;
+}
+
+/* Quiet remove — a tracked label that only reddens when you reach for it. */
+.removeBtn {
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-2) 0;
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text-muted);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  transition: color var(--sf-transition-fast),
+    text-decoration-color var(--sf-transition-fast);
+}
+
+.removeBtn:hover {
+  color: var(--sf-color-danger);
+  text-decoration-color: currentColor;
+}
+
+.removeBtn:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+/* The line's own money, held on the right margin. */
+.lineTotal {
+  flex: none;
+  align-self: flex-start;
+  margin: 0;
+  min-width: 7ch;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  text-align: right;
+  color: var(--sf-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .line {
+    gap: var(--sf-space-4);
+    flex-wrap: wrap;
+  }
+
+  .thumb {
+    width: 64px;
+  }
+
+  /* The money drops under the row rather than squeezing the name column. */
+  .lineTotal {
+    order: 3;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    padding-left: calc(64px + var(--sf-space-4));
+    font-size: var(--sf-text-lg);
+  }
+
+  .lineFoot {
+    gap: var(--sf-space-4);
+  }
+}
+
+/* ── Promo code — the drawer's underline field ───────────────────────────── */
+
+.promo {
+  padding-bottom: var(--sf-space-8);
+  border-bottom: 1px solid var(--sf-color-border);
+  margin-bottom: var(--sf-space-8);
+}
+
+.promoField {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  max-width: 34rem;
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  transition: border-color var(--sf-transition-fast);
+}
+
+.promoField:focus-within {
+  border-bottom-color: var(--sf-color-focus-ring);
+  box-shadow: 0 1px 0 0 var(--sf-color-focus-ring);
+}
+
+.promoInput {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  caret-color: var(--sf-color-gold);
+}
+
+.promoInput::placeholder {
+  color: var(--sf-color-text-muted);
+  font-weight: var(--sf-font-normal);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.promoApply {
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-1);
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.promoApply:hover {
+  color: var(--sf-color-accent);
+}
+
+.promoApply:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+/* Applied: a small ink chip. */
+.couponChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  max-width: 100%;
+  padding: var(--sf-space-2) var(--sf-space-3) var(--sf-space-2) var(--sf-space-4);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-emerald);
+  color: var(--sf-color-emerald-contrast);
+}
+
+.couponCode {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.couponValue {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.couponRemove {
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-1);
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.75;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: opacity var(--sf-transition-fast);
+}
+
+.couponRemove:hover {
+  opacity: 1;
+}
+
+.couponRemove:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+  opacity: 1;
+}
+
+/* Calm inline text, no icons and no boxes. Only a true error takes colour. */
+.promoMsg {
+  margin: var(--sf-space-3) 0 0;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-muted);
+}
+
+.promoError {
+  color: var(--sf-color-danger);
+}
+
+/* ── The auth gate, said kindly ──────────────────────────────────────────── */
+
+.gate {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-6);
+  padding: var(--sf-space-5) 0;
+  border-top: 1px solid var(--sf-color-border);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.gateText {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.gateLead {
+  display: block;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.gateNote {
+  display: block;
+  margin-top: var(--sf-space-1);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.gateBtn {
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-2);
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+  text-decoration-color: var(--sf-color-border-strong);
+  transition: color var(--sf-transition-fast),
+    text-decoration-color var(--sf-transition-fast);
+}
+
+.gateBtn:hover {
+  color: var(--sf-color-accent);
+  text-decoration-color: currentColor;
+}
+
+.gateBtn:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+@media (max-width: 560px) {
+  .gate {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sf-space-3);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. STEP 1  —  SHIPPING
+   Hairline radio cards for the saved addresses, underline fields for the new
+   one, hairline rows for the methods. The radio mark is the house control
+   (prompt 14): the native input is hidden but focusable, the drawn box beside
+   it carries every visual state.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.addrBlock {
+  margin-bottom: var(--sf-space-8);
+}
+
+.addrList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  margin-bottom: var(--sf-space-4);
+}
+
+.addrCard {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-4) var(--sf-space-5);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface);
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast),
+    background-color var(--sf-transition-fast);
+}
+
+.addrCard:hover {
+  border-color: var(--sf-color-border-strong);
+}
+
+/* Selected — a hairline that has firmed up, not a coloured wash. */
+.addrCardSelected {
+  border-color: var(--sf-color-text);
+  background: var(--sf-color-surface);
+}
+
+/* The native control: present, focusable, invisible. */
+.control {
+  position: absolute;
+  left: var(--sf-space-5);
+  top: var(--sf-space-5);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface);
+  color: transparent;
+  transition: background-color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast), color var(--sf-transition-fast);
+}
+
+.boxRound {
+  border-radius: var(--sf-radius-pill);
+}
+
+.addrCard:hover .box,
+.method:hover .box {
+  border-color: var(--sf-color-text-secondary);
+}
+
+.control:checked + .box {
+  background: var(--sf-color-emerald);
+  border-color: var(--sf-color-emerald);
+  color: var(--sf-color-emerald-contrast);
+}
+
+/* The radio's dot, drawn on the mark rather than shipped as an icon. */
+.control:checked + .boxRound::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--sf-radius-pill);
+  background: currentColor;
+}
+
+.control:focus-visible + .box {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.addrCopy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-1);
+}
+
+.addrHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  margin-bottom: var(--sf-space-1);
+}
+
+.addrLabel {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+/* The default mark — a hairline chip in gold, the house "note" treatment. */
+.addrDefault {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sf-space-1) var(--sf-space-2);
+  border: 1px solid color-mix(in srgb, var(--sf-color-gold) 45%, transparent);
+  border-radius: var(--sf-radius-sm);
+  color: var(--sf-color-gold-deep);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+}
+
+.addrName {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.addrLines,
+.addrPhone {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+.addrPhone {
+  color: var(--sf-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.newAddressBtn {
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-1);
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+  text-decoration-color: var(--sf-color-border-strong);
+  transition: color var(--sf-transition-fast),
+    text-decoration-color var(--sf-transition-fast);
+}
+
+.newAddressBtn:hover {
+  color: var(--sf-color-accent);
+  text-decoration-color: currentColor;
+}
+
+.newAddressBtn:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+/* ── The form ────────────────────────────────────────────────────────────── */
+/* SHARED WITH PROMPT 19: the payment step's card / UPI / bank forms use these
+   same three classes, so they pick up the underline language for free. */
+
+.addressForm {
+  margin-bottom: var(--sf-space-8);
+  max-width: 40rem;
+}
+
+.formRow {
+  display: grid;
+  /* minmax(0,…) lets the columns shrink below the inputs' intrinsic width —
+     plain 1fr floors at min-content and overflows the column. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sf-space-5);
+}
+
+@media (max-width: 480px) {
+  .formRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--sf-space-5);
+  min-width: 0;
+}
+
+/* Small, tracked, quiet — a caption above the rule. */
+.formGroup label {
+  margin-bottom: var(--sf-space-1);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+/* The field IS the hairline. Focus deepens it to the gold ring rather than
+   drawing a box; the box-shadow doubles the rule to 2px without shifting
+   anything below it. */
+.formGroup input,
+.formGroup select {
+  min-width: 0;
+  height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  color: var(--sf-color-text);
+  caret-color: var(--sf-color-gold);
+  transition: border-color var(--sf-transition-fast),
+    box-shadow var(--sf-transition-fast);
+}
+
+.formGroup input::placeholder {
+  color: var(--sf-color-text-muted);
+  opacity: 1;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-bottom-color: var(--sf-color-focus-ring);
+  box-shadow: 0 1px 0 0 var(--sf-color-focus-ring);
+}
+
+/* Chrome paints autofilled inputs a hard blue; hold the ivory ground and the
+   ink type with a long inset shadow (the only way to override it). */
+.formGroup input:-webkit-autofill,
+.formGroup input:-webkit-autofill:hover,
+.formGroup input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--sf-color-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--sf-color-bg) inset;
+  caret-color: var(--sf-color-text);
+}
+
+.inputError {
+  border-bottom-color: var(--sf-color-danger) !important;
+  box-shadow: 0 1px 0 0 var(--sf-color-danger);
+}
+
+.fieldError {
+  display: block;
+  margin-top: var(--sf-space-2);
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-danger);
+}
+
+.readOnly {
+  color: var(--sf-color-text-muted) !important;
+  cursor: default;
+}
+
+/* ── Shipping methods ────────────────────────────────────────────────────── */
+
+.methodsBlock {
+  margin-bottom: var(--sf-space-4);
+}
+
+.methods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+}
+
+.method {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-4) var(--sf-space-5);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface);
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast);
+}
+
+.method:hover {
+  border-color: var(--sf-color-border-strong);
+}
+
+.methodSelected {
+  border-color: var(--sf-color-text);
+}
+
+.methodCopy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-1);
+}
+
+.methodName {
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.methodDesc {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+.methodMeta {
+  font-size: var(--sf-text-xs);
+  letter-spacing: 0.02em;
+  color: var(--sf-color-text-muted);
+}
+
+.methodCost {
+  flex: none;
+  margin-top: 2px;
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  white-space: nowrap;
+  color: var(--sf-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.methodFree {
+  color: var(--sf-color-discount);
+  text-transform: uppercase;
+  font-size: var(--sf-text-xs);
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+.methodsEmpty {
+  margin: 0;
+  padding: var(--sf-space-5) 0;
+  border-top: 1px solid var(--sf-color-border);
+  border-bottom: 1px solid var(--sf-color-border);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* Calm inline text — the same voice as a field error, no box, no icon. */
+.shippingError {
+  margin: var(--sf-space-3) 0 0;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-danger);
+}
+
+@media (max-width: 480px) {
+  .method {
+    flex-wrap: wrap;
+  }
+
+  .methodCost {
+    width: 100%;
+    padding-left: calc(16px + var(--sf-space-4));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. THE NAV ROW
+   Back is a quiet text button; the CTA is the one ink fill on the page.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-5);
+  margin-top: var(--sf-space-10);
+  padding-top: var(--sf-space-6);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.backBtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-1);
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.backBtn:hover:not(:disabled) {
+  color: var(--sf-color-text);
+}
+
+.backBtn:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+.backBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* The one ink button. Warms to deep gold on hover, exactly as sf-btn--emerald
+   does — this page's CTA is wider than the primitive's padding allows, so the
+   look is reproduced rather than composed. */
+.primaryBtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  min-width: 15rem;
+  padding: var(--sf-space-4) var(--sf-space-10);
+  border: 1px solid var(--sf-color-emerald);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-emerald);
+  color: var(--sf-color-emerald-contrast);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--sf-transition),
+    border-color var(--sf-transition), color var(--sf-transition),
+    opacity var(--sf-transition);
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: var(--sf-color-gold-deep);
+  border-color: var(--sf-color-gold-deep);
+}
+
+.primaryBtn:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  .nav {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: var(--sf-space-3);
+  }
+
+  .primaryBtn {
+    margin-left: 0;
+    width: 100%;
+    min-width: 0;
+    padding: var(--sf-space-4) var(--sf-space-5);
+  }
+
+  .backBtn {
+    justify-content: center;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   8. THE SUMMARY RAIL
+   Desktop: a hairline panel that pins beside the content. Phones: a collapsed
+   band whose header already carries the number that matters, opening onto the
+   full breakdown directly above the CTA.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.railCard {
+  padding: var(--sf-space-6);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface);
+}
+
+/* The mobile header. Hidden on desktop, where the rail is simply open. */
+.railToggle {
+  display: none;
+  align-items: center;
+  gap: var(--sf-space-3);
+  width: 100%;
+  min-height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  cursor: pointer;
+  text-align: left;
+}
+
+.railToggle:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+.railToggleLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+.railToggleValue {
+  flex: none;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-price);
+  font-variant-numeric: tabular-nums;
+}
+
+.railChevron {
+  flex: none;
+  display: inline-flex;
+  color: var(--sf-color-text-muted);
+  transition: transform var(--sf-transition);
+}
+
+.railChevronOpen {
+  transform: rotate(180deg);
+}
+
+.railTitle {
+  margin: 0 0 var(--sf-space-5);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+.railItems {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.railItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-1) 0;
+}
+
+.railItemName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+.railItemQty {
+  color: var(--sf-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.railItemValue {
+  flex: none;
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.railMore {
+  margin: var(--sf-space-2) 0 0;
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.railRule {
+  height: 1px;
+  margin: var(--sf-space-4) 0;
+  background: var(--sf-color-border);
+}
+
+/* Rows are spaced by their own padding rather than a bottom margin, so the
+   hairlines above and below a run of rows sit an equal distance from it
+   whichever rows the order happens to have. */
+.railRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-1) 0;
+}
+
+.railLabel {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+.railValue {
+  flex: none;
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  text-align: right;
+  color: var(--sf-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.railDiscount {
+  color: var(--sf-color-discount);
+}
+
+/* The single strong serif moment in the rail. */
+.railTotalRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+}
+
+.railTotalLabel {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+}
+
+.railTotalValue {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-2xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  text-align: right;
+  color: var(--sf-color-price);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The assurance line. Store-attested facts only — see the JS, which assembles
+   it from the returns window, the live COD setting and the store's own care
+   address, and renders nothing it cannot source. */
+.assurance {
+  margin: var(--sf-space-5) 0 0;
+  padding-top: var(--sf-space-4);
+  border-top: 1px solid var(--sf-color-border);
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-muted);
+}
+
+/* A separator glyph is TYPE, not a hairline: --sf-color-border-strong read at
+   1.5:1 on ivory and 2:1 in the dark room. */
+.assuranceSep {
+  color: var(--sf-color-text-muted);
+}
+
+/* Below the two-column breakpoint the rail becomes a band with a header. */
+@media (max-width: 900px) {
+  .railToggle {
+    display: flex;
+  }
+
+  .railTitle {
+    display: none;
+  }
+
+  .railBody {
+    padding-top: var(--sf-space-5);
+    margin-top: var(--sf-space-4);
+    border-top: 1px solid var(--sf-color-border);
+  }
+
+  .railBodyCollapsed {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. EMPTY STATE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--sf-space-8) var(--sf-space-4) var(--sf-space-20);
+}
+
+.stateArt {
+  display: block;
+  margin-bottom: var(--sf-space-6);
+}
+
+.stateText {
+  max-width: 46ch;
+  margin: 0 0 var(--sf-space-8);
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.stateBtn {
+  min-width: 16rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   10. STEPS 2 & 3  —  PAYMENT AND REVIEW
+   ═══════════════════════════════════════════════════════════════════════════
+   The same five moves as the shell, applied to the two steps where a customer
+   is most likely to hesitate:
+
+     • STORE CREDIT is a block, not a card — two hairlines, a serif balance and
+       one checkbox drawn with the shell's own .control/.box pair. When it
+       covers the order outright, the method list is replaced by a sentence.
+     • THE METHOD LIST is a stack of hairline rows. Selecting one opens its
+       form directly beneath, indented to the row's copy so the eye stays on
+       one column. The marks are line art at the shell's stroke weight; there
+       is no emoji and no brand logo anywhere on the step.
+     • THE REVIEW is three hairline-topped blocks, each with the Edit that
+       jumps to the step that owns it, then the pieces themselves. It has no
+       button of its own — the shell's nav CTA is the page's one Place Order.
+
+   Every colour resolves through `--sf-*`, so both themes come from this one
+   pass. The single local variable, --pay-indent, is a measurement (the width
+   of the radio + mark gutter), never a colour.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Store credit ────────────────────────────────────────────────────────── */
+
+.credit {
+  padding: var(--sf-space-5) 0 var(--sf-space-6);
+  border-top: 1px solid var(--sf-color-border);
+  border-bottom: 1px solid var(--sf-color-border);
+  margin-bottom: var(--sf-space-8);
+}
+
+.creditHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+}
+
+.creditMark {
+  flex: none;
+  display: inline-flex;
+  margin-top: 2px;
+  color: var(--sf-color-gold-deep);
+}
+
+.creditIntro {
+  min-width: 0;
+}
+
+.creditTitle {
+  margin: 0;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+/* The balance said in the page's serif — the one number on this step that is
+   the customer's rather than the order's. */
+.creditBalance {
+  margin: var(--sf-space-2) 0 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-price);
+  font-variant-numeric: tabular-nums;
+}
+
+.creditToggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  min-height: var(--sf-tap-target);
+  margin-top: var(--sf-space-1);
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text);
+  cursor: pointer;
+}
+
+/* The shell's hidden control is anchored to a card's top-left; here the row is
+   a single line, so it rides the centre instead. */
+.creditToggle .control {
+  left: 0;
+  top: 50%;
+}
+
+.creditToggle .box {
+  margin-top: 0;
+}
+
+.creditToggle:hover .box {
+  border-color: var(--sf-color-text-secondary);
+}
+
+.creditToggleLabel {
+  font-weight: var(--sf-font-medium);
+}
+
+.creditApply {
+  max-width: 34rem;
+  margin-top: var(--sf-space-4);
+  padding-top: var(--sf-space-5);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.creditField {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.creditFieldLabel {
+  margin-bottom: var(--sf-space-1);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+/* The same underline field as the shell's inputs, sharing its rule with the
+   currency mark and the Use Max button so the three read as one control. */
+.creditInputRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  max-width: 22rem;
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  transition: border-color var(--sf-transition-fast),
+    box-shadow var(--sf-transition-fast);
+}
+
+.creditInputRow:focus-within {
+  border-bottom-color: var(--sf-color-focus-ring);
+  box-shadow: 0 1px 0 0 var(--sf-color-focus-ring);
+}
+
+.creditCurrency {
+  flex: none;
+  font-size: var(--sf-text-base);
+  color: var(--sf-color-text-muted);
+}
+
+.creditInput {
+  flex: 1;
+  min-width: 0;
+  height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  color: var(--sf-color-text);
+  caret-color: var(--sf-color-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.creditMax {
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-1);
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--sf-color-border-strong);
+  transition: color var(--sf-transition-fast),
+    text-decoration-color var(--sf-transition-fast);
+}
+
+.creditMax:hover {
+  color: var(--sf-color-accent);
+  text-decoration-color: currentColor;
+}
+
+.creditMax:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+.creditHint {
+  margin-top: var(--sf-space-2);
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.creditRows {
+  margin: var(--sf-space-5) 0 0;
+  padding: 0;
+}
+
+.creditRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-2) 0;
+  font-size: var(--sf-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.creditRow dt {
+  color: var(--sf-color-text-secondary);
+}
+
+.creditRow dd {
+  margin: 0;
+  font-weight: var(--sf-font-medium);
+  white-space: nowrap;
+}
+
+.creditRowCredit {
+  color: var(--sf-color-discount);
+}
+
+.creditRowPayable {
+  color: var(--sf-color-text);
+}
+
+/* Fully covered — a sentence where the method list would have been. */
+.covered {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  max-width: 52ch;
+  margin: 0 0 var(--sf-space-6);
+  padding-bottom: var(--sf-space-6);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.coveredLead {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.coveredNote {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ── Payment methods ─────────────────────────────────────────────────────── */
+
+.payGroup {
+  /* The gutter the radio and the mark occupy, so an opened form can align its
+     first field with the method's name rather than with the page edge. */
+  --pay-indent: calc(16px + var(--sf-space-4) + 24px + var(--sf-space-4));
+
+  margin-bottom: var(--sf-space-6);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.payRow {
+  border-bottom: 1px solid var(--sf-color-border);
+  transition: background-color var(--sf-transition-fast);
+}
+
+.payHead {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-4) 0;
+  cursor: pointer;
+}
+
+.payHead .control {
+  left: 0;
+  top: var(--sf-space-4);
+}
+
+.payHead:hover .box {
+  border-color: var(--sf-color-text-secondary);
+}
+
+.payMark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  margin-top: -1px;
+  color: var(--sf-color-text-muted);
+  transition: color var(--sf-transition-fast);
+}
+
+.payRowSelected .payMark {
+  color: var(--sf-color-text);
+}
+
+.payCopy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-1);
+}
+
+.payName {
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.payDesc {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+/* Out of range: dimmed marks, muted type — but the hint stays at full contrast
+   because it is the one thing on the row worth reading. */
+.payRowDisabled .payHead {
+  cursor: not-allowed;
+}
+
+.payRowDisabled .payMark,
+.payRowDisabled .box {
+  opacity: 0.45;
+}
+
+.payRowDisabled .payName,
+.payRowDisabled .payDesc {
+  color: var(--sf-color-text-muted);
+}
+
+.payRowDisabled:hover .box {
+  border-color: var(--sf-color-border-strong);
+}
+
+/* The opened form, hanging under its own row. */
+.payForm {
+  max-width: 40rem;
+  padding: var(--sf-space-1) 0 var(--sf-space-6) var(--pay-indent);
+}
+
+.payForm > .formGroup:last-child,
+.payForm > .formRow:last-child .formGroup {
+  margin-bottom: 0;
+}
+
+.payNote {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The one assurance. Store policy, nothing implied about demand or timing. */
+.secure {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  margin: 0;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+.secureMark {
+  display: inline-flex;
+}
+
+@media (max-width: 480px) {
+  .payGroup {
+    --pay-indent: 0px;
+  }
+}
+
+/* ── Review & confirm ────────────────────────────────────────────────────── */
+
+.recap {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--sf-space-6) var(--sf-space-8);
+  margin-bottom: var(--sf-space-10);
+}
+
+.recapBlock {
+  min-width: 0;
+  padding-top: var(--sf-space-3);
+  border-top: 1px solid var(--sf-color-border-strong);
+}
+
+.recapHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-3);
+  margin-bottom: var(--sf-space-2);
+}
+
+.recapTitle {
+  margin: 0;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+.recapEdit {
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--sf-color-border-strong);
+  transition: color var(--sf-transition-fast),
+    text-decoration-color var(--sf-transition-fast);
+}
+
+.recapEdit:hover {
+  color: var(--sf-color-accent);
+  text-decoration-color: currentColor;
+}
+
+.recapEdit:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+.recapLead {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  margin: 0 0 var(--sf-space-2);
+  font-size: var(--sf-text-md);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text);
+}
+
+.recapMark {
+  flex: none;
+  display: inline-flex;
+  color: var(--sf-color-text-secondary);
+}
+
+.recapLine {
+  margin: 0 0 2px;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.recapFree {
+  color: var(--sf-color-discount);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+/* The pieces, read-only — the step-0 row without its controls. */
+.recapItems {
+  margin-bottom: var(--sf-space-4);
+}
+
+.recapList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.recapItem {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-4) 0;
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.recapThumb {
+  flex: none;
+  width: 56px;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface-2);
+}
+
+.recapThumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recapItemBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recapItemName {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-md);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.recapItemVariant {
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+}
+
+.recapItemQty {
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.recapItemTotal {
+  flex: none;
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  white-space: nowrap;
+  color: var(--sf-color-text);
+  font-variant-numeric: tabular-nums;
+}

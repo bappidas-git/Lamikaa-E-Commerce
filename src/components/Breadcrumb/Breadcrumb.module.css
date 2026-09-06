@@ -1,0 +1,13 @@
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; padding: 12px 0; flex-wrap: wrap; color: var(--sf-color-text-muted); }
+.link { color: var(--sf-color-accent); text-decoration: none; }
+.link:hover { text-decoration: underline; }
+/* Touch-target sizing: grow the hit area without moving the row */
+@media (max-width: 768px) {
+  .link {
+    display: inline-block;
+    padding: 10px 2px;
+    margin: -10px 0;
+  }
+}
+.separator { color: var(--sf-color-text-muted); }
+.current { color: var(--sf-color-text-secondary); font-weight: 500; }

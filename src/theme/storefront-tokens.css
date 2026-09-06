@@ -1,0 +1,357 @@
+/* =============================================================================
+ * STOREFRONT DESIGN TOKENS  —  edit this ONE file to re-skin a client storefront
+ * =============================================================================
+ *
+ * Every shared storefront component (and, increasingly, every storefront page)
+ * reads its colours, spacing, radius, shadows and type scale from the CSS custom
+ * properties defined here — never from hardcoded hex. To launch a new client in a
+ * new business domain you change values in THIS file (and optionally
+ * `colors.js` for the MUI layer); you do not edit component code.
+ *
+ * HOW THEMING WORKS
+ *   • Light mode  → the `:root` block below (the base token set).
+ *   • Dark mode   → the `body.dark` block (ThemeContext toggles `body.dark`).
+ *                   DARK IS THE DEFAULT THEME; light is the user's opt-in.
+ *   • Structural tokens (spacing/radius/shadows/type) are mode-agnostic and
+ *     declared once in `:root`.
+ *
+ * RELATIONSHIP TO colors.js
+ *   `src/theme/colors.js` holds the same brand palette for the MUI theme (the
+ *   few MUI-based storefront bits). Keep the brand hexes here in sync with
+ *   colors.js. The storefront CSS Modules consume the tokens below; MUI consumes
+ *   colors.js. Documented in STOREFRONT_UX_GUIDELINES.md.
+ *
+ * NB: This file styles the STOREFRONT only. The admin panel builds its own MUI
+ * palette in `src/theme/adminTheme.js` and is intentionally untouched by changes
+ * here.
+ *
+ * -----------------------------------------------------------------------------
+ * THE MEGHALI'S SILK EDITORIAL PALETTE  (source of truth — read this first)
+ * -----------------------------------------------------------------------------
+ * Warm-minimalist, gallery-like, image-forward. Three materials only:
+ * IVORY ground, INK type, GOLD seasoning. Gold is never a fill for large areas.
+ *
+ * SAMPLED FROM THE BRAND ASSETS (not guessed). Both logo PNGs were decoded and
+ * pixel-histogrammed; the wordmark is a gold gradient on a TRANSPARENT ground —
+ * there is no green anywhere in either asset (every chromatic pixel falls in
+ * hue 37–53°, i.e. gold/amber).
+ *   Light logo  → …/v1787592407/meghali-silk-logo.png        (gold on transparent)
+ *   White logo  → …/v1787592405/meghali-silk-logo-white.png  (white on transparent)
+ *
+ *   Sampled gold gradient, by luminance percentile of the logo's gold pixels:
+ *     p95 highlight  #F0D06B      p50 mid   #E1A52D      p10 shadow  #CC940B
+ *     mean gold      #DCAA33      hue cluster 40–46°, sat 72–90%
+ *   Sampled warm halo of the WHITE logo (its antialiasing tone) → #FAF6EC.
+ *   That halo IS the ivory ground below, so page and logo share one warm cast.
+ *
+ * LIGHT MODE ROLES                                    contrast on ivory ground
+ *   #FAF6EC  ground / page ivory (sampled halo)                             —
+ *   #FFFFFF  raised surface (cards, sheets, drawers)                        —
+ *   #F2ECE1  sunken panel / thumbnail / track                               —
+ *   #E8DFCD  hairline border          #D6C9B2  strong hairline              —
+ *   #1D1A16  ink — primary type AND the primary CTA fill              16.06:1
+ *   #5C554A  secondary type                                            6.82:1
+ *   #6E665A  muted type / struck-through compare price                 5.24:1
+ *   #8A6118  text-safe antique gold — links, accent, price             5.12:1
+ *   #AF7E26  star / meaningful gold graphics (clears 3:1 everywhere)    3.33:1
+ *   #C8912A  brand gold — gradients, rules, washes (DECORATIVE ONLY)    2.58:1
+ *   #F0D06B  champagne highlight (gradient top stop, tints)                 —
+ *   #AA7A22  focus ring                                                3.53:1
+ *   #1A2A24  deep green-black — SUPPORTING tone only (see note below)  13.89:1
+ *
+ * DARK MODE ("evening gallery") ROLES               contrast on charcoal ground
+ *   #14120F  ground   #1B1815 surface   #221E1A sunken panel                —
+ *   #F4EFE6  ivory type; also the CTA fill (--sf-color-emerald)      16.33:1
+ *   #2B241C  raised ink band (--sf-color-primary, ivory type on it)  14.18:1
+ *   #C4BCAE  secondary type                                           9.93:1
+ *   #948B7D  muted type                                               5.56:1
+ *   #E3B95E  gold, lifted — accent, price, links                     10.12:1
+ *   #E8C069  star                                                    10.84:1
+ *
+ * NOTE ON THE OLD BRAND GREEN (#0B3B2E)
+ *   The green is NOT present in either logo asset. It is demoted to a supporting
+ *   deep tone: `--sf-color-brand-green` / `-deep` are now deep green-BLACKS that
+ *   read as ink with a faint heritage undertone. Do not reintroduce green as a
+ *   primary brand surface.
+ *
+ * NOTE ON LEGACY TOKEN NAMES
+ *   `--sf-color-emerald*` (188 usages, the de-facto CTA token) and
+ *   `--brand-logo-bg` keep their NAMES for compatibility but now carry the ink
+ *   CTA / ink logo panel. Never remove or rename a token here — components
+ *   consume them by name.
+ * ========================================================================== */
+
+:root {
+  /* ---- Brand ------------------------------------------------------------- */
+  /* Primary is INK, not a colour: in warm-minimalist editorial the CTA and the
+     type are the same near-black, and gold does the accenting.
+     See the INVARIANT note in the body.dark block before changing this pair —
+     primary must stay a DARK surface with ivory `-contrast` type in BOTH modes. */
+  --sf-color-primary: #1D1A16;         /* warm near-black ink */
+  --sf-color-primary-dark: #0F0D0A;
+  --sf-color-primary-light: #322C25;
+  --sf-color-primary-contrast: #FAF6EC; /* ivory label on ink — 16.06:1 */
+  --sf-color-primary-soft: rgba(29, 26, 22, 0.06); /* tinted fills/hovers */
+  --sf-color-secondary: #8A6118;       /* text-safe antique gold */
+  --sf-color-accent: #8A6118;          /* links/accents — must stay text-safe */
+  --sf-gradient-primary: linear-gradient(135deg, #1D1A16 0%, #322C25 100%);
+  --sf-gradient-primary-hover: linear-gradient(135deg, #322C25 0%, #1D1A16 100%);
+
+  /* ---- Surfaces & text -------------------------------------------------- */
+  --sf-color-bg: #FAF6EC;              /* warm ivory (sampled from logo halo) */
+  --sf-color-surface: #FFFFFF;
+  --sf-color-surface-2: #F2ECE1;       /* subtle panels, thumbnails, tracks */
+  --sf-color-surface-hover: #F5F0E4;
+  --sf-color-text: #1D1A16;            /* warm ink */
+  --sf-color-text-secondary: #5C554A;
+  --sf-color-text-muted: #6E665A;
+  --sf-color-border: #E8DFCD;          /* warm sand hairline */
+  --sf-color-border-strong: #D6C9B2;
+  --sf-color-overlay: rgba(29, 26, 22, 0.48); /* warm ink scrim */
+
+  /* ---- Semantic --------------------------------------------------------- */
+  /* Functional, but desaturated toward the editorial palette. */
+  --sf-color-success: #2F6B4F;
+  --sf-color-success-bg: rgba(47, 107, 79, 0.10);
+  --sf-color-warning: #8A5A16;
+  --sf-color-warning-bg: rgba(138, 90, 22, 0.10);
+  --sf-color-danger: #9E3B2E;
+  --sf-color-danger-bg: rgba(158, 59, 46, 0.09);
+  --sf-color-info: #3F5A7A;
+  --sf-color-info-bg: rgba(63, 90, 122, 0.10);
+
+  /* ---- Commerce-specific ----------------------------------------------- */
+  --sf-color-star: #AF7E26;            /* rating stars — gold, clears 3:1 */
+  --sf-color-price: #8A6118;           /* current/sale price — antique gold */
+  --sf-color-compare: #6E665A;         /* struck-through original price */
+  --sf-color-discount: #2F6B4F;        /* "% off" + savings */
+  --sf-color-discount-bg: rgba(47, 107, 79, 0.10);
+  --sf-color-badge-bg: rgba(29, 26, 22, 0.05); /* neutral chip background */
+
+  /* ---- Brand system (Meghali's Silk) ----------------------------------- */
+  /* Both logo PNGs are transparent-ground artwork, so the old "logo sits on a
+     green panel" device is retired. --brand-logo-bg is kept (components still
+     reference it until their own redesign prompts land) and repointed to ink:
+     the gold logo reads 8.12:1 on it, the white logo 17.33:1. */
+  --sf-color-brand-green: #1A2A24;     /* demoted: deep green-black, supporting */
+  --brand-logo-bg: #1D1A16;            /* ink logo panel (was brand green) */
+  --sf-color-brand-green-deep: #101C18;
+  --sf-color-gold: #C8912A;            /* brand gold — DECORATIVE surfaces only */
+  --sf-color-gold-light: #F0D06B;      /* champagne highlight (logo p95) */
+  --sf-color-gold-deep: #8A6118;       /* text-safe gold */
+  /* Legacy name, new role: the ink CTA. */
+  --sf-color-emerald: #1D1A16;
+  --sf-color-emerald-hover: #322C25;
+  --sf-color-emerald-contrast: #FAF6EC;
+  /* Sampled straight off the logo: highlight → mean → shadow. */
+  --sf-gradient-gold: linear-gradient(135deg, #F0D06B 0%, #DCAA33 50%, #B5842A 100%);
+  --sf-gradient-heritage: linear-gradient(135deg, #1D1A16 0%, #33261E 55%, #4A3F31 100%);
+  --sf-gradient-announce-1: linear-gradient(90deg, #1D1A16, #3E352A);
+  --sf-gradient-announce-2: linear-gradient(90deg, #33261E, #6B5030);
+  --sf-gradient-announce-3: linear-gradient(90deg, #14322A, #2F4A3E);
+  /* Category accents — muted silk tones (clay / mauve / terracotta / indigo /
+     jade / madder). Used as TEXT in places, so all clear 4.5:1 on every ground. */
+  --sf-cat-pink: #8F5850;
+  --sf-cat-purple: #665A73;
+  --sf-cat-orange: #95552E;
+  --sf-cat-blue: #4A5D7A;
+  --sf-cat-teal: #3F6B5C;
+  --sf-cat-red: #94443A;
+
+  /* ---- Radius ----------------------------------------------------------- */
+  /* Classic and near-square: editorial pages crop like photographs. */
+  --sf-radius-sm: 2px;
+  --sf-radius-md: 4px;
+  --sf-radius-lg: 8px;
+  --sf-radius-xl: 12px;
+  --sf-radius-pill: 999px;
+
+  /* ---- Spacing scale (4px base) ---------------------------------------- */
+  --sf-space-1: 4px;
+  --sf-space-2: 8px;
+  --sf-space-3: 12px;
+  --sf-space-4: 16px;
+  --sf-space-5: 20px;
+  --sf-space-6: 24px;
+  --sf-space-8: 32px;
+  --sf-space-10: 40px;
+  --sf-space-12: 48px;
+  --sf-space-16: 64px;
+  /* Editorial section rhythm — the generous whitespace tier. */
+  --sf-space-20: 80px;
+  --sf-space-24: 96px;
+  --sf-space-32: 128px;
+
+  /* ---- Shadows ---------------------------------------------------------- */
+  /* Warm, soft, low-contrast. Editorial pages sit FLAT — reserve md/lg for
+     overlays, drawers and modals, not for cards. */
+  --sf-shadow-xs: 0 1px 2px rgba(29, 26, 22, 0.04);
+  --sf-shadow-sm: 0 2px 8px rgba(29, 26, 22, 0.06);
+  --sf-shadow-md: 0 8px 24px rgba(29, 26, 22, 0.08);
+  --sf-shadow-lg: 0 20px 48px rgba(29, 26, 22, 0.12);
+  /* Two-layer ring: a ground-coloured gap, then the gold. Solid (not alpha) so
+     the 3:1 minimum holds on ivory, white and sunken panels alike. */
+  --sf-color-focus-ring: #AA7A22;
+  --sf-shadow-focus: 0 0 0 2px var(--sf-color-bg), 0 0 0 4px var(--sf-color-focus-ring);
+
+  /* ---- Typography ------------------------------------------------------- */
+  /* Editorial pairing: Cormorant Garamond displays, Inter carries the UI. */
+  --sf-font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+  --sf-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", sans-serif;
+  --sf-text-xs: 0.75rem;
+  --sf-text-sm: 0.875rem;
+  --sf-text-base: 1rem;
+  --sf-text-md: 1.0625rem;
+  --sf-text-lg: 1.25rem;
+  --sf-text-xl: 1.5rem;
+  --sf-text-2xl: 1.875rem;
+  --sf-text-3xl: 2.25rem;
+  /* Display tier — hero headlines, set in --sf-font-display. Fluid by design. */
+  --sf-text-4xl: clamp(2.5rem, 5vw, 3.5rem);
+  --sf-text-5xl: clamp(3rem, 7vw, 4.5rem);
+  --sf-font-light: 300;
+  --sf-font-normal: 400;
+  --sf-font-medium: 500;
+  --sf-font-semibold: 600;
+  --sf-font-bold: 700;
+  --sf-leading-display: 1.1;            /* headlines set tight */
+  --sf-leading-tight: 1.25;
+  --sf-leading-normal: 1.5;
+  --sf-leading-relaxed: 1.7;            /* long-form editorial body */
+  /* Tracking — --sf-tracking-wide/-wider drive the uppercase "eyebrow" label
+     that sits above section headings throughout the storefront. */
+  --sf-tracking-tight: -0.01em;
+  --sf-tracking-normal: 0;
+  --sf-tracking-wide: 0.14em;
+  --sf-tracking-wider: 0.2em;
+
+  /* ---- Motion ----------------------------------------------------------- */
+  /* Calm and confident: slower, with a decelerating editorial curve. ONE
+     curve and THREE durations — the whole storefront animates on this
+     language, CSS transitions and framer-motion alike. The JS half is
+     mirrored in `src/theme/motion.js`; retune the two together.
+     The durations are exposed on their own so a rule that needs a bare time —
+     a keyframe, a grid-template-rows collapse, a delayed visibility — can
+     still say it in the shared language instead of a magic number. */
+  --sf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sf-duration-fast: 0.2s;   /* leaving: exits, presses, hairline swaps */
+  --sf-duration: 0.35s;       /* the default: hovers, collapses, arrivals */
+  --sf-duration-slow: 0.6s;   /* panels, in-view reveals, the image breathing */
+  /* These three tiers govern TRANSITIONS AND ENTRANCES — anything that starts
+     because something changed and then stops. The looping "working" signals
+     keep their own steady rhythms instead, because they are read as tempo
+     rather than as travel: every storefront spinner turns at 0.9s, the shared
+     skeleton shimmer sweeps at 1.6s, the search field's gold rule at 1.2s. */
+  --sf-transition-fast: var(--sf-duration-fast) var(--sf-ease);
+  --sf-transition: var(--sf-duration) var(--sf-ease);
+  --sf-transition-slow: var(--sf-duration-slow) var(--sf-ease);
+
+  /* ---- Layout & a11y ---------------------------------------------------- */
+  --sf-container-max: 1280px;
+  --sf-tap-target: 44px;               /* min touch target (WCAG 2.5.5) */
+
+  /* ---- z-index scale ---------------------------------------------------- */
+  --sf-z-sticky: 40;
+  --sf-z-stickybar: 60;                /* mobile sticky Add-to-Cart bar */
+  --sf-z-overlay: 1000;
+  --sf-z-modal: 1100;
+}
+
+/* ===========================================================================
+ * DARK MODE  —  "evening gallery": the same room after hours. Deep warm
+ * charcoal ground, ivory type, the gold lifted a step. Overrides colour tokens
+ * only; structural tokens persist from :root.
+ * ======================================================================== */
+body.dark {
+  /* INVARIANT — do not invert this pair. `--sf-color-primary` is a DARK band and
+     `--sf-color-primary-contrast` is the ivory type on it, in BOTH modes. Much
+     of the site chrome (Header .mainHeader, TrustStrip, AnnouncementBar,
+     SidebarMenu, ProductCard's overlay) pairs primary-contrast with a
+     mode-agnostic dark surface, so flipping the contrast to ink drops those to
+     ~1.25:1. Note primary is also used as TEXT in 7 places, which wants the
+     opposite; the two demands are mathematically unsatisfiable at once
+     (ivory-on-it needs L≤0.166, it-on-charcoal needs L≥0.223), so the chrome
+     wins. The ivory-fill CTA for dark mode lives in --sf-color-emerald below. */
+  --sf-color-primary: #2B241C;         /* raised warm ink band */
+  --sf-color-primary-dark: #1E1913;
+  --sf-color-primary-light: #3A3128;
+  --sf-color-primary-contrast: #FAF6EC; /* ivory — identical in both modes */
+  --sf-color-primary-soft: rgba(244, 239, 230, 0.08);
+  --sf-color-secondary: #E3B95E;       /* gold, lifted */
+  --sf-color-accent: #E3B95E;
+  --sf-gradient-primary: linear-gradient(135deg, #2B241C 0%, #3A3128 100%);
+  --sf-gradient-primary-hover: linear-gradient(135deg, #3A3128 0%, #2B241C 100%);
+
+  --sf-color-bg: #14120F;              /* deep warm charcoal */
+  --sf-color-surface: #1B1815;
+  --sf-color-surface-2: #221E1A;
+  --sf-color-surface-hover: #282320;
+  --sf-color-text: #F4EFE6;
+  --sf-color-text-secondary: #C4BCAE;
+  --sf-color-text-muted: #948B7D;
+  --sf-color-border: rgba(244, 239, 230, 0.10);      /* low-alpha ivory hairline */
+  --sf-color-border-strong: rgba(227, 185, 94, 0.30);
+  --sf-color-overlay: rgba(8, 7, 6, 0.72);
+
+  --sf-color-success: #6FBF95;
+  --sf-color-success-bg: rgba(111, 191, 149, 0.14);
+  --sf-color-warning: #E0B057;
+  --sf-color-warning-bg: rgba(224, 176, 87, 0.14);
+  --sf-color-danger: #E08472;
+  --sf-color-danger-bg: rgba(224, 132, 114, 0.14);
+  --sf-color-info: #8FAAC9;
+  --sf-color-info-bg: rgba(143, 170, 201, 0.14);
+
+  --sf-color-star: #E8C069;
+  --sf-color-price: #E3B95E;
+  --sf-color-compare: #948B7D;
+  --sf-color-discount: #6FBF95;
+  --sf-color-discount-bg: rgba(111, 191, 149, 0.14);
+  --sf-color-badge-bg: rgba(244, 239, 230, 0.07);
+
+  /* Brand tones re-derived for the evening room. The green-blacks
+     (--sf-color-brand-green / -deep) are already dark and inherit from :root. */
+  --brand-logo-bg: #1B1815;            /* logo panel melts into the surface */
+  --sf-color-gold: #E3B95E;
+  --sf-color-gold-light: #F3DDA4;
+  --sf-color-gold-deep: #C99B3D;
+  --sf-color-emerald: #F4EFE6;         /* legacy name — the inverted ink CTA */
+  --sf-color-emerald-hover: #E1D9CA;
+  --sf-color-emerald-contrast: #14120F;
+  --sf-gradient-gold: linear-gradient(135deg, #F3DDA4 0%, #E3B95E 50%, #C99B3D 100%);
+  --sf-gradient-heritage: linear-gradient(135deg, #14120F 0%, #241C15 55%, #3A2F24 100%);
+  --sf-gradient-announce-1: linear-gradient(90deg, #14120F, #332C23);
+  --sf-gradient-announce-2: linear-gradient(90deg, #2A2019, #5C452A);
+  --sf-gradient-announce-3: linear-gradient(90deg, #0F2721, #274038);
+  /* Category accents lifted for the dark ground (all clear 4.5:1). */
+  --sf-cat-pink: #D2988A;
+  --sf-cat-purple: #A99BB8;
+  --sf-cat-orange: #D9A45E;
+  --sf-cat-blue: #93A8C6;
+  --sf-cat-teal: #7FB3A0;
+  --sf-cat-red: #D68A7E;
+
+  --sf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --sf-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --sf-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --sf-shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.65);
+  --sf-color-focus-ring: #E3B95E;
+  --sf-shadow-focus: 0 0 0 2px var(--sf-color-bg), 0 0 0 4px var(--sf-color-focus-ring);
+}
+
+/* Respect users who prefer reduced motion — shared, applies storefront-wide.
+   Zeroing the durations zeroes the composite transitions with them, and with
+   those every local override built on the same names (the hero crossfade, the
+   order-history collapse), so one block covers the lot. The composites are
+   still written out because a few stylesheets read them directly. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sf-duration-fast: 0s;
+    --sf-duration: 0s;
+    --sf-duration-slow: 0s;
+    --sf-transition-fast: 0s;
+    --sf-transition: 0s;
+    --sf-transition-slow: 0s;
+  }
+}

@@ -1,0 +1,56 @@
+/* =============================================================================
+ * StarRating — the gold mark
+ * =============================================================================
+ * A row of SVG stars: an unfilled base in the hairline tone with a gold overlay
+ * clipped to 100% (full) or 50% (half). Sizing is driven by the `size` prop in
+ * px on the wrapper, so the SVG scales without touching font metrics.
+ * ========================================================================== */
+
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1em;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.star {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+}
+
+.mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--sf-color-border-strong);
+}
+
+/* The gold overlay — sized inline by the component, never stretched to fit its
+   shell (that is what would squash a half star). */
+.markOn {
+  display: block;
+  fill: var(--sf-color-star);
+}
+
+/* Clipping shells — the inner SVG keeps its full width and is cropped by the
+   shell, so a half star is a true vertical split rather than a squashed mark. */
+.clipFull,
+.clipHalf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.clipFull {
+  width: 100%;
+}
+
+.clipHalf {
+  width: 50%;
+}

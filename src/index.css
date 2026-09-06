@@ -1,0 +1,53 @@
+/* Storefront design tokens (CSS custom properties). Re-skin a client by editing
+   src/theme/storefront-tokens.css — see STOREFRONT_UX_GUIDELINES.md.
+   NB: the webfonts (Cormorant Garamond for display, Inter for UI) are loaded by
+   the <link> in public/index.html. Do NOT @import them here — a second request
+   for the same families only delays first paint. */
+@import "./theme/storefront-tokens.css";
+/* Shared, reusable brand primitives (buttons, chips, cards, skeleton, toast)
+   built on the tokens above. Loaded once, app-wide. Order is load-bearing:
+   tokens must be defined before the primitives that consume them. */
+@import "./theme/storefront-primitives.css";
+
+body {
+  margin: 0;
+  font-family: var(--sf-font-family);
+  color: var(--sf-color-text);
+  background-color: var(--sf-color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Champagne selection — the logo's highlight stop over ink. Storefront only;
+   the admin panel keeps the browser default. */
+body:not(.admin-area)::selection,
+body:not(.admin-area) ::selection {
+  background: var(--sf-color-gold-light);
+  color: var(--sf-color-primary-dark);
+}
+
+/*
+ * SweetAlert2 defaults to z-index 1060, which sits *below* MUI's modal layer
+ * (Dialog = 1300). Without this, a confirm/validation popup fired while a
+ * dialog is open — e.g. the Admin → Payments refund confirmation or a Coupons
+ * form validation toast — renders hidden behind the dialog and can't be seen or
+ * clicked. Lift it above MUI's modal/snackbar/tooltip stack (≤1500).
+ */
+.swal2-container {
+  z-index: 2000 !important;
+}

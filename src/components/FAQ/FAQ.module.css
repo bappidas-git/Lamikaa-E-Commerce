@@ -1,0 +1,25 @@
+.faq { padding: 48px 16px; color: var(--sf-color-text); }
+.container { max-width: 800px; margin: 0 auto; }
+.container h2 { font-family: var(--sf-font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 24px; text-align: center; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.item { border-radius: var(--sf-radius-md); border: 1px solid var(--sf-color-border); overflow: hidden; transition: border-color var(--sf-transition-fast); }
+.item.open { border-color: var(--sf-color-accent); }
+.question { width: 100%; padding: 16px 20px; min-height: var(--sf-tap-target); background: var(--sf-color-surface); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 1rem; font-weight: 500; text-align: left; font-family: inherit; color: var(--sf-color-text); }
+.question:hover { background: var(--sf-color-surface-hover); }
+.question:focus-visible { outline: none; box-shadow: var(--sf-shadow-focus); }
+
+/* Plus icon drawn with pseudo-elements so it can rotate into a cross. */
+.toggle { position: relative; flex: 0 0 auto; width: 18px; height: 18px; }
+.toggle::before, .toggle::after { content: ""; position: absolute; top: 50%; left: 50%; width: 14px; height: 2px; border-radius: 2px; background: var(--sf-color-accent); transform: translate(-50%, -50%); transition: transform var(--sf-transition); }
+.toggle::after { transform: translate(-50%, -50%) rotate(90deg); }
+.item.open .toggle::after { transform: translate(-50%, -50%) rotate(180deg); }
+
+/* Smooth height animation via animatable grid-template-rows (0fr -> 1fr). */
+.answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--sf-transition); }
+.item.open .answer { grid-template-rows: 1fr; }
+.answerInner { overflow: hidden; min-height: 0; }
+.answerInner p { padding: 0 20px 16px; margin: 0; color: var(--sf-color-text-secondary); line-height: 1.6; }
+
+@media (prefers-reduced-motion: reduce) {
+  .answer, .toggle::before, .toggle::after { transition: none; }
+}

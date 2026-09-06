@@ -1,0 +1,280 @@
+/* =============================================================================
+ * VariantSelector — the options, laid out in the open
+ * =============================================================================
+ * Every choice is visible at once (never a dropdown), set as hairline tiles and
+ * colour chips on the page ground. The selected option is marked by an INK
+ * frame, not a fill; unavailable ones are dimmed; genuinely sold-out ones are
+ * hard-disabled and struck through. The honesty is in the states — this file
+ * only makes them quiet.
+ *
+ * Selected = ink frame + ink label. Muted = the option exists and is buyable,
+ * just not with the OTHER current selections (still clickable — it snaps).
+ * Sold out = struck and disabled.
+ * ========================================================================== */
+
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-6);
+  font-family: var(--sf-font-family);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+}
+
+/* Attribute name on the left, the resolved choice on the right — one line, the
+   two ends of a caption. */
+.groupHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+}
+
+.label {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+.chosen {
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+  text-align: right;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-3);
+}
+
+/* Colour rows sit closer together — the chips are round and read as a row of
+   marks rather than a row of buttons. */
+.optionsColor {
+  gap: var(--sf-space-2);
+}
+
+/* =============================================================================
+ * TILES — flat variants (name + price) and non-colour structured values
+ * ========================================================================== */
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--sf-space-1);
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-2) var(--sf-space-4);
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast),
+    color var(--sf-transition-fast), background-color var(--sf-transition-fast);
+}
+
+/* chip = the compact single-line tile used for structured attribute values */
+.tileChip {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--sf-tap-target);
+  padding: var(--sf-space-2) var(--sf-space-5);
+}
+
+.tile:hover:not(:disabled) {
+  border-color: var(--sf-color-text-secondary);
+  color: var(--sf-color-text);
+}
+
+.tile:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* Selected — the ink frame. A second inset hairline gives it the weight of a
+   double rule without a fill that would fight the page. */
+.tileActive {
+  border-color: var(--sf-color-text);
+  color: var(--sf-color-text);
+  background: var(--sf-color-primary-soft);
+  box-shadow: inset 0 0 0 1px var(--sf-color-text);
+}
+
+.tileName {
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+}
+
+.tilePrice {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-price);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unavailable with the CURRENT other selections, but buyable on its own — kept
+   clickable (clicking snaps to a valid variant). Dimmed, no strike. */
+.tileMuted {
+  opacity: 0.45;
+}
+
+.tileOos {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Diagonal strike for sold-out tiles — hairline, in the border tone. */
+.tileOos::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to top left,
+    transparent calc(50% - 0.5px),
+    var(--sf-color-border-strong) calc(50% - 0.5px),
+    var(--sf-color-border-strong) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+  pointer-events: none;
+}
+
+.oosTag {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-danger);
+}
+
+/* =============================================================================
+ * COLOUR CHIPS
+ * ========================================================================== */
+
+/* The button is only a target and a ring holder; the colour lives in the chip. */
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  border-radius: var(--sf-radius-pill);
+  background: transparent;
+  cursor: pointer;
+}
+
+.swatch:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.swatchChip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--sf-radius-pill);
+  border: 1px solid var(--sf-color-border-strong);
+  background: var(--sf-color-surface-2);
+  transition: box-shadow var(--sf-transition-fast);
+}
+
+/* Hover and selection are drawn as rings AROUND the colour, so the colour the
+   shopper is judging is never tinted or overlaid by the UI. */
+.swatch:hover:not(:disabled) .swatchChip {
+  box-shadow: 0 0 0 2px var(--sf-color-bg), 0 0 0 3px var(--sf-color-border-strong);
+}
+
+.swatchActive .swatchChip {
+  box-shadow: 0 0 0 2px var(--sf-color-bg), 0 0 0 3px var(--sf-color-text);
+}
+
+.swatchText {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text-secondary);
+}
+
+/* Unavailable with the current other selections but buyable on its own —
+   clickable (snaps on click). Dimmed without the hard sold-out strike. */
+.swatchMuted {
+  opacity: 0.4;
+}
+
+.swatchOos {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.swatchOos .swatchChip {
+  overflow: hidden;
+}
+
+.swatchOos .swatchChip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top left,
+    transparent calc(50% - 0.5px),
+    var(--sf-color-text-secondary) calc(50% - 0.5px),
+    var(--sf-color-text-secondary) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+}
+
+/* =============================================================================
+ * THE HONEST LINE UNDER THE OPTIONS
+ * Only ever printed when the REAL stock of the resolved variant warrants it.
+ * ========================================================================== */
+
+.selectedMeta:empty {
+  display: none;
+}
+
+/* Set as a sentence, deliberately NOT as tracked capitals. The buy box already
+   carries a status label ("In Stock" / "Only N left") for the whole selection,
+   and this line is about ONE option — two capitalised labels in the same column
+   read as an argument, whereas a note under the swatches reads as a footnote,
+   which is what it is. */
+.metaLow,
+.metaOos {
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  letter-spacing: 0.01em;
+}
+
+.metaLow {
+  color: var(--sf-color-warning);
+}
+
+.metaOos {
+  color: var(--sf-color-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .swatchChip {
+    transition: none;
+  }
+}

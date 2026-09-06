@@ -1,0 +1,788 @@
+/* =============================================================================
+ * AuthModal — the boutique welcome
+ * =============================================================================
+ * Not a sign-in form: the front desk of the shop. The dialog paints
+ * --sf-color-bg, the same warm ivory as the page, and the wordmark sits
+ * straight on it — the old deep-green logo plate is retired (both logo PNGs
+ * are transparent-ground artwork, so a plate was never needed). Light art on
+ * the ivory day room, white art on the evening one.
+ *
+ * THE ONE SERIF MOMENT
+ *   Only the greeting is set in the display serif ("Welcome back" / "Join
+ *   Meghali's Silk"). Everything else is quiet Inter: tracked uppercase for
+ *   labels, tabs and actions; sentence case for help text.
+ *
+ * EVERY FIELD IS A HAIRLINE
+ *   No filled inputs, no boxes, no card inside the card. A field is a rule
+ *   under a line of type; focus deepens that rule to the gold focus ring.
+ *   Errors are stated in small danger-token type, never shouted in a red box.
+ *
+ * TOKENS ONLY
+ *   Colour, spacing, radius, shadow, type and motion all come from
+ *   src/theme/storefront-tokens.css, so dark mode ("evening gallery") and the
+ *   reduced-motion pass are re-derived for free. The five social-brand hexes
+ *   live in the SVGs in AuthModal.js — the documented exception — and there is
+ *   no hardcoded colour in this file.
+ * ========================================================================== */
+
+/* Colours come from the storefront tokens (which flip on body.dark); these
+   marker classes only hint the native color-scheme so form controls, the
+   caret and scrollbars render correctly for the active theme. */
+.light {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* The strength meter is coloured from inline styles in JS that reference these
+   --auth-strength-* vars, so map them to the brand palette here. They live on
+   the overlay so the dialog and its fields inherit them.
+   NB "good" maps to gold-DEEP, not --sf-color-gold: the same value colours the
+   strength word, and decorative gold is 2.58:1 on ivory. gold-deep is the
+   text-safe gold (5.12:1), so bar and label can share one value. */
+.overlay {
+  --auth-strength-empty: var(--sf-color-border);
+  --auth-strength-weak: var(--sf-color-danger);
+  --auth-strength-fair: var(--sf-color-warning);
+  --auth-strength-good: var(--sf-color-gold-deep);
+  --auth-strength-strong: var(--sf-color-emerald);
+}
+
+/* =============================================================================
+ * 1. SCRIM + DIALOG
+ * ========================================================================== */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sf-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sf-space-4);
+  background: var(--sf-color-overlay);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Near-rectangular, hairline-edged, lifted off the scrim by its shadow alone. */
+.dialog {
+  position: relative;
+  width: 100%;
+  max-width: 448px;
+  max-height: calc(100vh - var(--sf-space-8));
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--sf-color-bg);
+  color: var(--sf-color-text);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-lg);
+  font-family: var(--sf-font-family);
+  outline: none;
+}
+
+.dialog::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dialog::-webkit-scrollbar-thumb {
+  background: var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-pill);
+}
+
+/* Mobile bottom-sheet: the same page, hinged at the bottom edge. */
+.dialogMobile {
+  max-width: 100%;
+  max-height: 92vh;
+  border-width: 1px 0 0;
+  border-radius: var(--sf-radius-md) var(--sf-radius-md) 0 0;
+}
+
+.body {
+  padding: var(--sf-space-8);
+}
+
+/* =============================================================================
+ * 2. CLOSE MARK
+ * Sits over the ivory, not over a coloured plate — so it is plain ink.
+ * ========================================================================== */
+
+.closeBtn {
+  position: absolute;
+  top: var(--sf-space-2);
+  right: var(--sf-space-2);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text-muted);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast),
+    transform var(--sf-transition-fast), opacity var(--sf-transition-fast);
+}
+
+.closeBtn:hover {
+  color: var(--sf-color-text);
+}
+
+/* The shared icon-button press. */
+.closeBtn:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.closeBtn:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* =============================================================================
+ * 3. MASTHEAD — wordmark, then the greeting
+ * ========================================================================== */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: var(--sf-space-8);
+}
+
+.logo {
+  display: block;
+  height: 34px;
+  width: auto;
+  max-width: 62%;
+  object-fit: contain;
+  margin-bottom: var(--sf-space-6);
+}
+
+.title {
+  margin: 0 0 var(--sf-space-2);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-normal);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-normal);
+  color: var(--sf-color-text);
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 36ch;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+/* =============================================================================
+ * 4. TABS — two tracked labels on one hairline, gold rule beneath the active
+ * ========================================================================== */
+
+.tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--sf-color-border);
+  margin-bottom: var(--sf-space-6);
+}
+
+.tab {
+  position: relative;
+  z-index: 1;
+  padding: var(--sf-space-3) var(--sf-space-2);
+  border: none;
+  background: transparent;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.tab:hover {
+  color: var(--sf-color-text);
+}
+
+.tab:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.tabActive {
+  color: var(--sf-color-text);
+}
+
+/* Gold is seasoning: a 2px rule, nothing more. Sits ON the hairline it
+   replaces, so the row reads as one continuous line. */
+.tabIndicator {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  z-index: 0;
+  width: 50%;
+  height: 2px;
+  background: var(--sf-color-gold);
+}
+
+/* =============================================================================
+ * 5. BANNERS + TOAST
+ * A rule in the margin, not a coloured slab.
+ * ========================================================================== */
+
+.errorBanner,
+.infoBanner {
+  overflow: hidden;
+  margin-bottom: var(--sf-space-5);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+}
+
+.bannerInner {
+  padding: var(--sf-space-3) var(--sf-space-4);
+  border-left: 2px solid var(--sf-color-danger);
+  background: var(--sf-color-danger-bg);
+  color: var(--sf-color-text);
+}
+
+.infoBanner .bannerInner {
+  border-left-color: var(--sf-color-info);
+  background: var(--sf-color-info-bg);
+}
+
+.infoBannerLink {
+  color: var(--sf-color-accent);
+  font-weight: var(--sf-font-medium);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.infoBannerLink:hover {
+  text-decoration-thickness: 2px;
+}
+
+.infoBannerLink:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* The success note lands as a hairline chip on the surface, not a green pill. */
+.successToast {
+  position: absolute;
+  top: var(--sf-space-4);
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  max-width: calc(100% - var(--sf-space-8));
+  padding: var(--sf-space-3) var(--sf-space-5);
+  border: 1px solid var(--sf-color-success);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface);
+  color: var(--sf-color-success);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  box-shadow: var(--sf-shadow-md);
+}
+
+.successIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =============================================================================
+ * 6. FORM + FIELDS
+ * ========================================================================== */
+
+.formWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.fieldGroup {
+  margin-bottom: var(--sf-space-5);
+}
+
+/* Small, tracked, quiet — a caption above the rule. */
+.label {
+  display: block;
+  margin-bottom: var(--sf-space-1);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+/* The field IS the hairline. Focus deepens it to the gold ring rather than
+   drawing a box; the box-shadow doubles the rule to 2px without shifting
+   anything below it. */
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  transition: border-color var(--sf-transition-fast),
+    box-shadow var(--sf-transition-fast);
+}
+
+.field:focus-within {
+  border-bottom-color: var(--sf-color-focus-ring);
+  box-shadow: 0 1px 0 0 var(--sf-color-focus-ring);
+}
+
+.fieldInvalid {
+  border-bottom-color: var(--sf-color-danger);
+  box-shadow: 0 1px 0 0 var(--sf-color-danger);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  color: var(--sf-color-text);
+  caret-color: var(--sf-color-gold);
+}
+
+.input::placeholder {
+  color: var(--sf-color-text-muted);
+  opacity: 1;
+}
+
+/* Chrome paints autofilled inputs a hard blue; hold the ivory ground and the
+   ink type with a long inset shadow (the only way to override it). */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--sf-color-text);
+  -webkit-box-shadow: 0 0 0 1000px var(--sf-color-bg) inset;
+  caret-color: var(--sf-color-text);
+}
+
+.phonePrefix {
+  flex: none;
+  font-size: var(--sf-text-base);
+  color: var(--sf-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.phoneInput {
+  font-variant-numeric: tabular-nums;
+}
+
+.eyeBtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text-muted);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.eyeBtn:hover {
+  color: var(--sf-color-text);
+}
+
+.eyeBtn:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* Stated, not shouted. */
+.fieldError {
+  display: block;
+  margin-top: var(--sf-space-2);
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-danger);
+}
+
+.nameRow {
+  display: grid;
+  /* minmax(0,…) lets the columns shrink below the inputs' intrinsic width —
+     plain 1fr floors at min-content and overflows the dialog */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sf-space-4);
+}
+
+/* =============================================================================
+ * 7. PASSWORD STRENGTH — four hairline segments + the word
+ * ========================================================================== */
+
+.strengthWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  margin-top: var(--sf-space-3);
+}
+
+.strengthBar {
+  display: flex;
+  flex: 1;
+  gap: var(--sf-space-1);
+}
+
+.strengthSegment {
+  flex: 1;
+  height: 2px;
+  transition: background-color var(--sf-transition);
+}
+
+/* The word carries the meaning; the bar only echoes it. */
+.strengthLabel {
+  flex: none;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+/* =============================================================================
+ * 8. CHECKBOXES + QUIET LINKS
+ * ========================================================================== */
+
+.optionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  margin-bottom: var(--sf-space-6);
+}
+
+.checkLabel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Visually hidden but still focusable — the trap and screen readers need it. */
+.checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+.checkMark {
+  position: relative;
+  flex: none;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  transition: background-color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast);
+}
+
+.checkbox:checked + .checkMark {
+  background: var(--sf-color-emerald);
+  border-color: var(--sf-color-emerald);
+}
+
+.checkbox:checked + .checkMark::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--sf-color-emerald-contrast);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox:focus-visible + .checkMark {
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.termsLabel {
+  align-items: flex-start;
+}
+
+.termsLabel .checkMark {
+  margin-top: 3px;
+}
+
+/* Used on <button> (forgot password) and <a> (terms/privacy). */
+.linkBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--sf-font-family);
+  font-size: inherit;
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: text-decoration-thickness var(--sf-transition-fast);
+}
+
+.linkBtn:hover {
+  text-decoration-thickness: 2px;
+}
+
+.linkBtn:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.forgotBtn {
+  flex: none;
+  font-size: var(--sf-text-sm);
+  white-space: nowrap;
+}
+
+/* =============================================================================
+ * 9. SUBMIT — the shared sf-btn primitive, no local chrome
+ * ========================================================================== */
+
+.submitBtn {
+  margin-top: var(--sf-space-1);
+}
+
+.spinner {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The spinner still has to turn (it is the only "working" signal), but it
+   slows right down for anyone who asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+
+  /* The press dims but no longer moves. */
+  .closeBtn:active {
+    transform: none;
+  }
+}
+
+/* Screen-reader-only text — the spinner's "Please wait" status. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =============================================================================
+ * 10. DIVIDER + SOCIAL
+ * ========================================================================== */
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-4);
+  margin: var(--sf-space-8) 0 var(--sf-space-5);
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--sf-color-border);
+}
+
+.dividerText {
+  flex: none;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+  white-space: nowrap;
+}
+
+.socialRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sf-space-3);
+}
+
+/* Hairline buttons — the same weight as a field rule, so they sit back. */
+.socialBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-2) var(--sf-space-3);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast);
+}
+
+.socialBtn:hover:not(:disabled) {
+  border-color: var(--sf-color-border-strong);
+}
+
+/* Social providers aren't wired up yet — shown disabled with an honest badge
+   so they read as "on the roadmap" rather than silently dead. */
+.socialBtnDisabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.soonBadge {
+  font-size: 0.625rem;
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  padding: 1px 5px 1px 7px;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+ * 11. FOOTER SWITCH LINE
+ * ========================================================================== */
+
+.switchText {
+  margin: var(--sf-space-8) 0 0;
+  text-align: center;
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-secondary);
+}
+
+.switchBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: text-decoration-thickness var(--sf-transition-fast);
+}
+
+.switchBtn:hover {
+  text-decoration-thickness: 2px;
+}
+
+.switchBtn:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* =============================================================================
+ * 12. RESPONSIVE
+ * ========================================================================== */
+
+@media (max-width: 640px) {
+  .overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .body {
+    padding: var(--sf-space-6) var(--sf-space-5) var(--sf-space-8);
+  }
+
+  .header {
+    margin-bottom: var(--sf-space-6);
+  }
+
+  .title {
+    font-size: var(--sf-text-2xl);
+  }
+
+  .nameRow {
+    display: block;
+  }
+
+  .socialRow {
+    grid-template-columns: 1fr;
+  }
+
+  .divider {
+    margin: var(--sf-space-6) 0 var(--sf-space-4);
+  }
+}
+
+@media (max-width: 380px) {
+  .body {
+    padding: var(--sf-space-6) var(--sf-space-4) var(--sf-space-6);
+  }
+
+  .optionsRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sf-space-3);
+  }
+}

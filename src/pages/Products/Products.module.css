@@ -1,0 +1,1335 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRODUCTS  —  the collection gallery
+   ═══════════════════════════════════════════════════════════════════════════
+   A gallery wall, not a results page. Three moves and nothing else:
+
+     1. A HEAD given real air — breadcrumb, tracked eyebrow, serif title, one
+        muted line of counts.
+     2. ONE HAIRLINE ROW carrying every control: Filter on the left, the chip
+        scroller in the middle, Sort as a quiet underline on the right. There is
+        no sidebar and no second toolbar.
+     3. THE WALL — a wide-gutter grid of unframed ProductCards on the ivory
+        ground. The gutters are the design; the cards bring no boxes of their
+        own, so nothing separates one garment from the next but light.
+
+   The filter panel is the only surface that ever floats: a bottom sheet on a
+   phone, a right-hand drawer from 769px up, both built from hairlines, tracked
+   capitals and the same near-square controls as the rest of the storefront.
+
+   TOKENS ONLY
+   Every colour, space, radius, shadow and type value comes from
+   storefront-tokens.css, and the buttons, chips and skeletons are the global
+   primitives from storefront-primitives.css. The only local variables are the
+   three that colour the inline empty-state artwork, and they are aliases onto
+   tokens — there is no hex in this file, and dark mode needs no rules of its
+   own because the tokens flip under `body.dark`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.page {
+  /* The line-art states paint through these two aliases so a single SVG can be
+     re-coloured from the token layer. Aliases, never values. */
+  --empty-line: var(--sf-color-border-strong);
+  --empty-gold: var(--sf-color-gold-deep);
+
+  min-height: 100vh;
+  padding-bottom: var(--sf-space-24);
+  background: var(--sf-color-bg);
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+}
+
+.container {
+  max-width: var(--sf-container-max);
+  margin: 0 auto;
+  padding: 0 var(--sf-space-6);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. BREADCRUMB  —  a whisper, set in the muted tone with a thin slash between
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  padding: var(--sf-space-10) 0 0;
+  font-size: var(--sf-text-xs);
+  letter-spacing: 0.04em;
+  color: var(--sf-color-text-muted);
+}
+
+/* The glyph between the crumbs is TYPE, so it takes a type token. It used to
+   take --sf-color-border-strong, which is a hairline colour: 1.5:1 on ivory and
+   about 2:1 on the evening ground, i.e. a separator you could not see. */
+.breadcrumbSep {
+  color: var(--sf-color-text-muted);
+}
+
+/* The house link: no chrome, a gold hairline that grows in under it. */
+.breadcrumbLink {
+  position: relative;
+  color: var(--sf-color-text-secondary);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+.breadcrumbLink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -3px;
+  height: 1px;
+  background: var(--sf-color-gold-deep);
+  transition: right var(--sf-transition);
+}
+
+.breadcrumbLink:hover {
+  color: var(--sf-color-text);
+}
+
+.breadcrumbLink:hover::after {
+  right: 0;
+}
+
+.breadcrumbLink:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.breadcrumbCurrent {
+  color: var(--sf-color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. COLLECTION HEAD
+   The prompt-12 convention: a tracked eyebrow opened by a short gold rule, the
+   serif title, then one quiet line of real counts. Generous air below.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.collectionHead {
+  max-width: 60ch;
+  padding: var(--sf-space-10) 0 var(--sf-space-12);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  margin: 0 0 var(--sf-space-4);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-gold-deep);
+}
+
+.eyebrow::before {
+  content: "";
+  flex: none;
+  width: var(--sf-space-8);
+  height: 1px;
+  background: currentColor;
+}
+
+.collectionTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: clamp(2.25rem, 4.4vw, 3.25rem);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+/* The echoed search query, set in the gold italic so the words the shopper
+   typed read as a quotation rather than as part of the headline. */
+.resultsQuery {
+  font-style: italic;
+  color: var(--sf-color-gold-deep);
+}
+
+.collectionSummary {
+  margin: var(--sf-space-4) 0 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.collectionSummary strong {
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. TOOLBAR  —  one rule band. Nothing here has a fill or a shadow; the two
+   hairlines and the tracked capitals do all the work.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-6);
+  padding: var(--sf-space-3) 0;
+  margin-bottom: var(--sf-space-12);
+  border-top: 1px solid var(--sf-color-border);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+/* ── Filter: a text button, opened by the hairline mark ──────────────────── */
+
+.filterBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.filterBtn:hover {
+  color: var(--sf-color-gold-deep);
+}
+
+.filterBtn:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.filterBtnText {
+  position: relative;
+}
+
+.filterBtnText::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -4px;
+  height: 1px;
+  background: var(--sf-color-gold-deep);
+  transition: right var(--sf-transition);
+}
+
+.filterBtn:hover .filterBtnText::after {
+  right: 0;
+}
+
+/* The count is a note, not a badge: a hairline square with tabular digits. */
+.filterBtnCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--sf-space-1);
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  font-size: 0.6875rem;
+  font-weight: var(--sf-font-medium);
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--sf-color-gold-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The chip scroller ───────────────────────────────────────────────────── */
+
+.chipScroller {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-4);
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Room for the focus ring, which sits 4px outside the chip. */
+  padding: var(--sf-space-1) var(--sf-space-1);
+  margin: calc(var(--sf-space-1) * -1) calc(var(--sf-space-1) * -1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--sf-color-border-strong) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chipScroller::-webkit-scrollbar {
+  height: 3px;
+}
+
+.chipScroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chipScroller::-webkit-scrollbar-thumb {
+  background: var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+}
+
+.chipGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  flex: none;
+}
+
+/* A hairline, not a gap, separates one facet's chips from the next. */
+.chipGroup:not(:last-child)::after {
+  content: "";
+  flex: none;
+  width: 1px;
+  height: 18px;
+  margin-left: var(--sf-space-2);
+  background: var(--sf-color-border);
+}
+
+/* On top of the global .sf-chip primitive: one line, and a size down so a rule
+   of chips reads as a caption rather than a row of buttons. The primitive's own
+   `button.sf-chip` rule keeps the 44px tap target — deliberately not overridden
+   here, since these are the page's most-tapped controls on a phone. */
+.chip {
+  white-space: nowrap;
+  font-size: var(--sf-text-xs);
+  letter-spacing: 0.04em;
+}
+
+/* The primitive's own flex gap already sets this off from the label; the
+   negative right margin pulls it back toward the chip's edge. */
+.chipRemove {
+  flex: none;
+  margin-right: calc(var(--sf-space-1) * -1);
+  opacity: 0.75;
+}
+
+/* ── Sort: the native select, stripped back to a word and a hairline ─────── */
+
+.sortField {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  flex: none;
+  min-height: var(--sf-tap-target);
+}
+
+.sortLabelText {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+  white-space: nowrap;
+}
+
+/* Shared by both selects on the page. The wrapper draws the chevron, because a
+   <select> cannot carry a pseudo-element of its own. */
+.selectWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.selectWrap::after {
+  content: "";
+  position: absolute;
+  right: var(--sf-space-1);
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid var(--sf-color-text-muted);
+  border-bottom: 1px solid var(--sf-color-text-muted);
+  transform: translateY(-2px) rotate(45deg);
+  pointer-events: none;
+  transition: border-color var(--sf-transition-fast);
+}
+
+.selectWrap:hover::after {
+  border-color: var(--sf-color-text);
+}
+
+.sortSelect,
+.perPageSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-height: 32px;
+  padding: 0 var(--sf-space-6) 0 0;
+  border: none;
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  line-height: 1.4;
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast), color var(--sf-transition-fast);
+}
+
+.sortSelect:hover,
+.perPageSelect:hover {
+  border-bottom-color: var(--sf-color-gold-deep);
+}
+
+.sortSelect:focus-visible,
+.perPageSelect:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* The dropdown list itself is drawn by the OS — give it the page's ground so it
+   is not a white rectangle in the evening room. */
+.sortSelect option,
+.perPageSelect option {
+  background: var(--sf-color-surface);
+  color: var(--sf-color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. THE WALL
+   Wide gutters, generous rows. The cards bring no frame, so the ONLY thing
+   separating two garments is this whitespace — which is why the row gap is
+   twice the column gap.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--sf-space-8);
+  row-gap: var(--sf-space-16);
+}
+
+.cell {
+  display: flex;
+  min-width: 0;
+}
+
+.cell > * {
+  width: 100%;
+}
+
+/* ── Skeletons — the card's silhouette on the shared primitive ───────────── */
+
+.skelCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+  min-width: 0;
+}
+
+.skelMedia {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--sf-radius-sm);
+}
+
+.skelBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+}
+
+.skelBrand { width: 32%; height: 8px; }
+.skelName  { width: 78%; height: 13px; }
+.skelStars { width: 46%; height: 9px; }
+.skelPrice { width: 38%; height: 13px; margin-top: var(--sf-space-1); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. EMPTY / ERROR  —  editorial moments, centred on the measure
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--sf-space-20) var(--sf-space-5) var(--sf-space-24);
+}
+
+.stateArt {
+  display: block;
+  margin-bottom: var(--sf-space-8);
+}
+
+.stateTitle {
+  margin: 0 0 var(--sf-space-3);
+  font-family: var(--sf-font-display);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.stateText {
+  max-width: 46ch;
+  margin: 0 0 var(--sf-space-8);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.stateBtn {
+  min-width: 200px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. PAGINATION  —  words and numbers on a hairline, then a quiet meta line
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.pager {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sf-space-5);
+  margin-top: var(--sf-space-20);
+  padding-top: var(--sf-space-8);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.pagerRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sf-space-4);
+}
+
+.pagerNums {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-1);
+}
+
+/* Prev / Next — words, set in the tracked capitals with a hairline mark. */
+.pagerStep {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-2);
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast), opacity var(--sf-transition-fast);
+}
+
+.pagerStep:hover:not(:disabled) {
+  color: var(--sf-color-text);
+}
+
+.pagerStep:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.pagerStep:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* A number is a number: no button chrome until it is the page you are on, and
+   then it is underlined in gold rather than filled. */
+.pagerNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: var(--sf-tap-target);
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-2);
+  border: none;
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.pagerNum::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 11px;
+  height: 1px;
+  background: var(--sf-color-gold-deep);
+  transition: left var(--sf-transition), right var(--sf-transition);
+}
+
+.pagerNum:hover {
+  color: var(--sf-color-text);
+}
+
+.pagerNum:hover::after {
+  left: var(--sf-space-2);
+  right: var(--sf-space-2);
+}
+
+.pagerNum:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.pagerNumActive {
+  color: var(--sf-color-text);
+  font-weight: var(--sf-font-medium);
+}
+
+.pagerNumActive::after {
+  left: var(--sf-space-2);
+  right: var(--sf-space-2);
+}
+
+.pagerGap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--sf-space-6);
+  height: var(--sf-tap-target);
+  color: var(--sf-color-text-muted);
+  font-size: var(--sf-text-sm);
+}
+
+.pagerMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sf-space-4);
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+}
+
+.pagerMetaSep {
+  width: var(--sf-space-6);
+  height: 1px;
+  background: var(--sf-color-border);
+}
+
+.pagerInfo {
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.perPage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+}
+
+.perPageText {
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  white-space: nowrap;
+}
+
+.perPageSelect {
+  min-height: var(--sf-tap-target);
+  font-size: var(--sf-text-xs);
+  padding-right: var(--sf-space-5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. FILTER PANEL
+   Bottom sheet on a phone, right-hand drawer from 769px. Hairline sections,
+   tracked titles, near-square controls — the drawer is the page's own language
+   at a smaller measure, not a different one.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--sf-color-overlay);
+  /* Above the fixed Header and the mobile BottomNav, so the footer is never
+     covered by either. */
+  z-index: 1300;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 86vh;
+  overflow: hidden;
+  background: var(--sf-color-bg);
+  color: var(--sf-color-text);
+  border-top: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-lg) var(--sf-radius-lg) 0 0;
+  box-shadow: var(--sf-shadow-lg);
+  outline: none;
+}
+
+.sheetHead {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-5) var(--sf-space-6);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.sheetHeading {
+  min-width: 0;
+}
+
+.sheetEyebrow {
+  margin: 0 0 var(--sf-space-1);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  color: var(--sf-color-gold-deep);
+}
+
+.sheetTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-2xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.sheetClose {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  margin: calc(var(--sf-space-2) * -1) calc(var(--sf-space-3) * -1) 0 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast),
+    transform var(--sf-transition-fast), opacity var(--sf-transition-fast);
+}
+
+.sheetClose:hover {
+  color: var(--sf-color-gold-deep);
+}
+
+/* The shared icon-button press. */
+.sheetClose:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.sheetClose:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.sheetBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--sf-space-6);
+  overscroll-behavior: contain;
+}
+
+.sheetFoot {
+  flex: none;
+  display: flex;
+  gap: var(--sf-space-3);
+  padding: var(--sf-space-4) var(--sf-space-6);
+  border-top: 1px solid var(--sf-color-border);
+  background: var(--sf-color-bg);
+}
+
+.sheetClear,
+.sheetApply {
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-3) var(--sf-space-4);
+  border-radius: var(--sf-radius-sm);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: background-color var(--sf-transition), border-color var(--sf-transition),
+    color var(--sf-transition), opacity var(--sf-transition);
+}
+
+.sheetClear {
+  flex: 1;
+  border: 1px solid var(--sf-color-border-strong);
+  background: transparent;
+  color: var(--sf-color-text);
+}
+
+.sheetClear:hover:not(:disabled) {
+  border-color: var(--sf-color-gold-deep);
+  color: var(--sf-color-gold-deep);
+}
+
+.sheetClear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sheetApply {
+  flex: 1.6;
+  border: 1px solid var(--sf-color-emerald);
+  background: var(--sf-color-emerald);
+  color: var(--sf-color-emerald-contrast);
+}
+
+.sheetApply:hover {
+  background: var(--sf-color-emerald-hover);
+  border-color: var(--sf-color-emerald-hover);
+}
+
+.sheetClear:focus-visible,
+.sheetApply:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ── Facets ──────────────────────────────────────────────────────────────── */
+
+.facets {
+  display: flex;
+  flex-direction: column;
+}
+
+.facet {
+  padding: var(--sf-space-6) 0;
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.facet:last-child {
+  border-bottom: none;
+  padding-bottom: var(--sf-space-8);
+}
+
+.facetTitle {
+  margin: 0 0 var(--sf-space-4);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+.facetList {
+  display: flex;
+  flex-direction: column;
+  max-height: 264px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sf-color-border) transparent;
+  /* Room for the focus ring on the first and last rows, and for the overlay
+     scrollbar — which reserves no width of its own and would otherwise be
+     drawn straight over the counts in the right-hand column. */
+  margin: calc(var(--sf-space-1) * -1) 0;
+  padding: var(--sf-space-1) var(--sf-space-3) var(--sf-space-1) 0;
+}
+
+.facetList::-webkit-scrollbar {
+  width: 3px;
+}
+
+.facetList::-webkit-scrollbar-thumb {
+  background: var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+}
+
+/* ── One option row: a real input, visually hidden, plus the mark it drives ─
+   The native control keeps every bit of its semantics and keyboard behaviour;
+   the span beside it is the part we are allowed to draw. Hiding with opacity
+   (not display:none) keeps it focusable, and the focus ring is forwarded onto
+   the mark by the sibling selector below. */
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-1) 0;
+  cursor: pointer;
+  color: var(--sf-color-text-secondary);
+  transition: color var(--sf-transition-fast);
+}
+
+.option:hover {
+  color: var(--sf-color-text);
+}
+
+.control {
+  position: absolute;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface);
+  color: transparent;
+  transition: background-color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast), color var(--sf-transition-fast);
+}
+
+.boxRound {
+  border-radius: var(--sf-radius-pill);
+}
+
+.option:hover .box {
+  border-color: var(--sf-color-text-secondary);
+}
+
+.control:checked + .box {
+  background: var(--sf-color-emerald);
+  border-color: var(--sf-color-emerald);
+  color: var(--sf-color-emerald-contrast);
+}
+
+/* The radio's dot, drawn on the mark rather than shipped as an icon. */
+.control:checked + .boxRound::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--sf-radius-pill);
+  background: currentColor;
+}
+
+.control:focus-visible + .box {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.optionText {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-width: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+}
+
+/* Child categories sit a step back in tone as well as in space: the indent says
+   where they are, the muted colour says they are a subdivision of the row
+   above. Hover still lifts them, so the row never feels disabled. */
+.optionChild {
+  color: var(--sf-color-text-muted);
+}
+
+.option:hover .optionChild {
+  color: var(--sf-color-text-secondary);
+}
+
+.optionCount {
+  flex: none;
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--sf-color-star);
+}
+
+.ratingPlus {
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+  white-space: nowrap;
+}
+
+/* ── Price facet ─────────────────────────────────────────────────────────── */
+
+.rangeChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin-bottom: var(--sf-space-5);
+}
+
+.rangeChip {
+  font-size: var(--sf-text-xs);
+  letter-spacing: 0.04em;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+}
+
+/* Underline fields, not boxes — the same hairline the selects sit on. */
+.priceInput {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-1);
+  border: none;
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--sf-transition-fast);
+}
+
+.priceInput::placeholder {
+  color: var(--sf-color-text-muted);
+}
+
+.priceInput:hover {
+  border-bottom-color: var(--sf-color-text-secondary);
+}
+
+.priceInput:focus-visible {
+  outline: 2px solid transparent;
+  border-bottom-color: var(--sf-color-gold-deep);
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.priceDash {
+  flex: none;
+  color: var(--sf-color-text-muted);
+  font-size: var(--sf-text-xs);
+}
+
+.priceGo {
+  flex: none;
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-4);
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast), color var(--sf-transition-fast);
+}
+
+.priceGo:hover {
+  border-color: var(--sf-color-gold-deep);
+  color: var(--sf-color-gold-deep);
+}
+
+.priceGo:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ── Availability switch ─────────────────────────────────────────────────── */
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  min-height: var(--sf-tap-target);
+  cursor: pointer;
+  color: var(--sf-color-text-secondary);
+}
+
+.switchRow:hover {
+  color: var(--sf-color-text);
+}
+
+/* OFF is the state this control spends most of its life in, and it is drawn
+   entirely by the track and the thumb — there is no label change to fall back
+   on. Both used --sf-color-border-strong, a hairline colour that reads 1.5:1 on
+   ivory (and, in the dark room, gold at 30% alpha), so an unset switch was very
+   nearly not there. WCAG 1.4.11 wants 3:1 for the parts that identify a control
+   and its state; the muted TYPE token clears that in both modes and is the same
+   one the review picker's empty stars now take. ON is unchanged: an ink fill. */
+.switch {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--sf-color-text-muted);
+  border-radius: var(--sf-radius-pill);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast);
+}
+
+.switch:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.switchOn {
+  background: var(--sf-color-emerald);
+  border-color: var(--sf-color-emerald);
+}
+
+.switchThumb {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-text-muted);
+  transform: translateY(-50%);
+  transition: transform var(--sf-transition-fast), background-color var(--sf-transition-fast);
+}
+
+.switchOn .switchThumb {
+  background: var(--sf-color-emerald-contrast);
+  transform: translateY(-50%) translateX(16px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   8. RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* From 769px the sheet stands up into a right-hand drawer. Matches the
+   `(min-width: 769px)` query the component uses to pick its entry direction —
+   keep the two in step. */
+@media (min-width: 769px) {
+  .scrim {
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+
+  .sheet {
+    width: 420px;
+    max-width: 92vw;
+    max-height: 100vh;
+    border-top: none;
+    border-left: 1px solid var(--sf-color-border);
+    border-radius: 0;
+  }
+}
+
+/* Tablet — three across, and the head steps down a size. */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: var(--sf-space-12);
+  }
+
+  .collectionHead {
+    padding: var(--sf-space-8) 0 var(--sf-space-10);
+  }
+}
+
+/* Mobile — two across, and the toolbar folds: Filter and Sort keep the rule,
+   the chips drop to their own line beneath. */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--sf-space-4);
+  }
+
+  .breadcrumb {
+    padding-top: var(--sf-space-6);
+  }
+
+  .collectionHead {
+    padding: var(--sf-space-6) 0 var(--sf-space-8);
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: var(--sf-space-3) var(--sf-space-4);
+    margin-bottom: var(--sf-space-8);
+  }
+
+  .chipScroller {
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+    padding-top: var(--sf-space-2);
+    border-top: 1px solid var(--sf-color-border);
+  }
+
+  .sortField {
+    margin-left: auto;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--sf-space-4);
+    row-gap: var(--sf-space-10);
+  }
+
+  .pager {
+    margin-top: var(--sf-space-12);
+  }
+
+  .pagerRow {
+    gap: var(--sf-space-2);
+  }
+
+  .state {
+    padding: var(--sf-space-16) var(--sf-space-4) var(--sf-space-20);
+  }
+
+  .sheetHead,
+  .sheetBody,
+  .sheetFoot {
+    padding-left: var(--sf-space-5);
+    padding-right: var(--sf-space-5);
+  }
+}
+
+/* Small phones — the prev/next words give way to their marks, and the meta
+   line stacks rather than wrapping mid-phrase. */
+@media (max-width: 480px) {
+  .pagerStepText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .pagerNum {
+    min-width: 38px;
+  }
+
+  .pagerMeta {
+    flex-direction: column;
+    gap: var(--sf-space-3);
+  }
+
+  .grid {
+    column-gap: var(--sf-space-3);
+    row-gap: var(--sf-space-8);
+  }
+
+  .stateBtn {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. TOUCH TARGETS
+   Nothing here changes what is drawn. The editorial toolbar is built from
+   hairline-underlined type rather than buttons, so several controls measure
+   well under 44px in one axis; on a coarse pointer they grow their BOX (or,
+   where a box would drag the underline with it, an invisible ::before) to the
+   44px minimum. --sf-tap-target, WCAG 2.5.5.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (pointer: coarse) {
+  /* Was 32px tall — .perPageSelect already had this; .sortSelect was missed. */
+  .sortSelect {
+    min-height: var(--sf-tap-target);
+  }
+
+  /* Short labels ("12") and the arrow-only steps left these under 44px wide. */
+  .perPageSelect,
+  .pagerStep,
+  .pagerNum {
+    min-width: var(--sf-tap-target);
+  }
+
+  /* The toggle is a drawn 40×22 pill. Growing it would make it a lozenge, so
+     an invisible square takes the tap and the pill stays the size it looks. */
+  .switch::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--sf-tap-target);
+    height: var(--sf-tap-target);
+    transform: translate(-50%, -50%);
+  }
+
+  /* The crumbs are 18px-tall inline type. Padding would push the hover
+     hairline (::after, pinned to the padding box) away from the words, so the
+     tap area is an invisible band instead. */
+  .breadcrumbLink {
+    position: relative;
+  }
+
+  .breadcrumbLink::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: var(--sf-tap-target);
+    transform: translateY(-50%);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   10. REDUCED MOTION
+   The token layer already zeroes the shared durations; these are the local
+   hairline reveals, which animate a length rather than a transition property.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .breadcrumbLink::after,
+  .filterBtnText::after,
+  .pagerNum::after {
+    transition: none;
+  }
+
+  /* The press dims but no longer moves. */
+  .sheetClose:active {
+    transform: none;
+  }
+}

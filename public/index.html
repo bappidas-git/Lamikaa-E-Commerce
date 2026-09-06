@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!--
+      Splash logo preload. The loader paints before any bundle arrives, so the
+      brand lockup is fetched at the highest priority the document can give it.
+      No `crossorigin` here on purpose: the <img> below is same-mode, and adding
+      it would split the cache entry and fetch the file twice.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      fetchpriority="high"
+      href="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png"
+    />
+
+    <!--
+      Favicons. Every file referenced here exists in public/ — verified against
+      the shipped set (favicon.ico carries 16/32/48, plus the PNGs below).
+      NOTE ON THE ARTWORK: the shipped icons draw the gold Assamese silk motif on
+      the RETIRED deep-green ground (#0B3B2E), which Prompt 01 demoted out of the
+      palette. The mark itself is on-brand; only its ground is stale. Regenerating
+      icon artwork is out of scope — the files are used as shipped.
+    -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="%PUBLIC_URL%/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="%PUBLIC_URL%/favicon-16x16.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="%PUBLIC_URL%/apple-touch-icon.png"
+    />
+
+    <!--
+      Browser chrome colour. Mirrors --sf-color-bg from
+      src/theme/storefront-tokens.css: #14120F is the dark "evening gallery"
+      ground, which is the site's default theme regardless of the OS
+      preference. src/context/ThemeContext.js rewrites this meta to #FAF6EC
+      (the light ivory ground) when the visitor switches to light.
+    -->
+    <meta name="theme-color" content="#14120F" />
+
+    <!-- Copy is kept in sync with settings.seo in db.json. -->
+    <meta
+      name="description"
+      content="Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft matte Eri, woven to last generations."
+    />
+    <meta
+      name="keywords"
+      content="Assamese silk, Muga silk, Pat silk, Eri silk, Mekhela Chador, Sualkuchi silk, handwoven saree, Assam handloom, silk shawl, Meghali's Silk"
+    />
+    <meta name="author" content="Meghali's Silk" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Meghali's Silk" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:url" content="https://meghalissilk.com/" />
+    <meta
+      property="og:title"
+      content="Meghali's Silk — Assamese Muga, Pat &amp; Eri Silk Mekhela Chador and Sarees"
+    />
+    <meta
+      property="og:description"
+      content="Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft matte Eri, woven to last generations."
+    />
+    <meta property="og:image" content="%PUBLIC_URL%/android-chrome-512x512.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Meghali's Silk" />
+
+    <!--
+      Twitter/X. The only shipped share image is the 512x512 icon, so this is a
+      `summary` card, not `summary_large_image` — the large card crops to 2:1 and
+      would slice the top and bottom off the circular mark.
+    -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="https://meghalissilk.com/" />
+    <meta
+      name="twitter:title"
+      content="Meghali's Silk — Assamese Muga, Pat &amp; Eri Silk Mekhela Chador and Sarees"
+    />
+    <meta
+      name="twitter:description"
+      content="Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft matte Eri, woven to last generations."
+    />
+    <meta
+      name="twitter:image"
+      content="%PUBLIC_URL%/android-chrome-512x512.png"
+    />
+    <meta name="twitter:image:alt" content="Meghali's Silk" />
+
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!--
+      Google Fonts — Cormorant Garamond (display) + Inter (body/UI).
+      THIS IS THE ONLY LOAD PATH for the two families: src/index.css deliberately
+      does not @import them (a second request for the same faces only delays
+      first paint). Keep the weight lists in step with --sf-font-* usage.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Material Icons — required by the admin panel's MUI icon set. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <!-- Mirrors settings.seo.metaTitle in db.json. Kept on one line: browsers
+         collapse whitespace inside <title>, but naive SEO scrapers do not. -->
+    <title>Meghali's Silk — Assamese Muga, Pat &amp; Eri Silk Mekhela Chador and Sarees</title>
+
+    <!--
+      Pre-mount shell styles: the loading screen ("quiet editorial arrival") and
+      the body ground it fades into.
+
+      TOKEN DISCIPLINE — this stylesheet is inlined into public/index.html and is
+      parsed long before the app bundle (and therefore before
+      src/theme/storefront-tokens.css) exists, so it CANNOT use var(--sf-*).
+      Every literal below is copied from storefront-tokens.css and must be
+      re-copied if the palette moves:
+
+        #FAF6EC  --sf-color-bg              (light ground, ivory)
+        #FFFFFF  --sf-color-surface
+        #F2ECE1  --sf-color-surface-2
+        #E8DFCD  --sf-color-border          (light hairline)
+        #1D1A16  --sf-color-text            (warm ink)
+        #6E665A  --sf-color-text-muted      (light)
+        #C8912A  --sf-color-gold            (decorative only)
+        #14120F  --sf-color-bg              (body.dark ground)
+        #1B1815  --sf-color-surface         (body.dark)
+        #948B7D  --sf-color-text-muted      (body.dark)
+        #E3B95E  --sf-color-accent          (body.dark gold, lifted)
+        rgba(244, 239, 230, 0.10)  --sf-color-border (body.dark)
+        cubic-bezier(0.22, 1, 0.36, 1)      --sf-ease
+    -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+          "Helvetica Neue", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /* Dark ("evening gallery") is the default theme — this static rule
+           paints before the pre-mount script runs, so it must match the dark
+           branch there. The script overrides it inline when light is the
+           saved choice. */
+        background: linear-gradient(135deg, #14120f 0%, #1b1815 100%);
+        min-height: 100vh;
+      }
+
+      /* -----------------------------------------------------------------------
+       * LOADING SCREEN
+       * The mechanics are a contract with src/index.js and the scripts at the
+       * bottom of this file: #loading-screen is the id that gets .fade-out, and
+       * body.react-loaded is what hides it for good. Restyle freely; do not
+       * rename either hook, and keep the fade transition <= the 600ms the hide
+       * script waits before setting display:none.
+       * -------------------------------------------------------------------- */
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* Identical to the body ground above, so the fade-out reveals the page
+           with no colour step. */
+        background: linear-gradient(135deg, #faf6ec 0%, #ffffff 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        overflow: hidden;
+      }
+
+      #loading-screen.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Hide loading screen when React app loads */
+      body.react-loaded #loading-screen {
+        display: none;
+      }
+
+      .loader-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 0 24px;
+      }
+
+      /* The brand lockup already carries the wordmark and a tracked caps line of
+         its own, so no wordmark is repeated beneath it. */
+      .loader-logo {
+        display: block;
+        width: clamp(190px, 46vw, 260px);
+        height: auto;
+        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
+          backwards;
+      }
+
+      /* Dark-mode twin of .loader-logo, using the WHITE brand asset. It is a
+         CSS background rather than a second <img> on purpose: a display:none
+         <img> is still fetched, whereas a background on a display:none element
+         is not — so light-mode visitors never pay for this file. */
+      .loader-logo-dark {
+        display: none;
+        width: clamp(190px, 46vw, 260px);
+        aspect-ratio: 1454 / 454;
+        background: url("https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png")
+          center / contain no-repeat;
+        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
+          backwards;
+      }
+
+      .loader-tagline {
+        margin: 28px 0 0;
+        max-width: 24em;
+        font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+        font-size: 17px;
+        font-weight: 500;
+        line-height: 1.5;
+        color: #6e665a;
+        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
+      }
+
+      /* A single gold hairline. Decorative only — it does not report real load
+         progress, so it is hidden from assistive tech rather than dressed up as
+         a progressbar. */
+      .loader-rule {
+        position: relative;
+        width: clamp(160px, 38vw, 220px);
+        height: 1px;
+        margin-top: 44px;
+        background: #e8dfcd;
+        overflow: hidden;
+        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s
+          backwards;
+      }
+
+      .loader-rule-sweep {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          rgba(200, 145, 42, 0) 0%,
+          #c8912a 50%,
+          rgba(200, 145, 42, 0) 100%
+        );
+        animation: loaderSweep 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+      }
+
+      @keyframes loaderRise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes loaderSweep {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(250%);
+        }
+      }
+
+      /* ---- Dark saved theme -------------------------------------------------
+       * The pre-mount script adds body.dark before first paint, so the splash
+       * arrives in the evening-gallery ground with the white logo — no ivory
+       * flash for dark-mode visitors. */
+      body.dark #loading-screen {
+        background: linear-gradient(135deg, #14120f 0%, #1b1815 100%);
+      }
+
+      body.dark .loader-logo {
+        display: none;
+      }
+
+      body.dark .loader-logo-dark {
+        display: block;
+      }
+
+      body.dark .loader-tagline {
+        color: #948b7d;
+      }
+
+      body.dark .loader-rule {
+        background: rgba(244, 239, 230, 0.1);
+      }
+
+      body.dark .loader-rule-sweep {
+        background: linear-gradient(
+          90deg,
+          rgba(227, 185, 94, 0) 0%,
+          #e3b95e 50%,
+          rgba(227, 185, 94, 0) 100%
+        );
+      }
+
+      /* ---- No-JS notice ---------------------------------------------------- */
+      .noscript-note {
+        position: relative;
+        z-index: 10000;
+        margin: 0;
+        padding: 20px 24px;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #1d1a16;
+        background: #f2ece1;
+        border-bottom: 1px solid #e8dfcd;
+      }
+
+      /* ---- Responsive ------------------------------------------------------ */
+      @media (max-width: 480px) {
+        .loader-tagline {
+          margin-top: 22px;
+          font-size: 15px;
+        }
+
+        .loader-rule {
+          margin-top: 34px;
+        }
+      }
+
+      /* ---- Reduced motion --------------------------------------------------
+       * Static splash: everything already at its resting state, the hairline a
+       * still gold rule, and no cross-fade on the way out. The hide script's
+       * 600ms display:none timer is unaffected. */
+      @media (prefers-reduced-motion: reduce) {
+        #loading-screen {
+          transition: none;
+        }
+
+        .loader-logo,
+        .loader-logo-dark,
+        .loader-tagline,
+        .loader-rule {
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+
+        .loader-rule-sweep {
+          animation: none;
+          left: 0;
+          width: 100%;
+          background: #c8912a;
+          opacity: 0.5;
+        }
+
+        body.dark .loader-rule-sweep {
+          background: #e3b95e;
+          opacity: 0.5;
+        }
+      }
+    </style>
+
+    <noscript>
+      <!--
+        With JavaScript off React never mounts, so nothing ever adds
+        body.react-loaded and the fixed loader would sit over the page forever,
+        hiding the <noscript> message below it. Drop the loader in that case.
+        Must come AFTER the stylesheet above: same specificity as the
+        #loading-screen rule there, so source order is what decides.
+      -->
+      <style>
+        #loading-screen {
+          display: none;
+        }
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <noscript>
+      <p class="noscript-note">You need to enable JavaScript to run this app.</p>
+    </noscript>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div class="loader-container">
+        <img
+          class="loader-logo"
+          src="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png"
+          alt="Meghali's Silk"
+          width="1454"
+          height="454"
+        />
+        <!-- Dark-theme twin; swapped in by body.dark, see the stylesheet above.
+             Same accessible name, and only one of the two is ever exposed. -->
+        <div class="loader-logo-dark" role="img" aria-label="Meghali's Silk"></div>
+        <p class="loader-tagline">
+          Handwoven Assamese silk from the looms of Sualkuchi
+        </p>
+        <div class="loader-rule" aria-hidden="true">
+          <span class="loader-rule-sweep"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="root"></div>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+
+    <script>
+      // Theme detection and initial setup — applied BEFORE React mounts so the
+      // first paint already has the correct theme (matches src/context/ThemeContext.js,
+      // which keys CSS off body.dark / body.light). Avoids a flash of the wrong theme.
+      (function () {
+        // Dark ("evening gallery") is the default for Meghali's Silk — this
+        // MUST mirror src/context/ThemeContext.js: dark unless the user has
+        // explicitly chosen light.
+        var savedTheme = null;
+        try {
+          savedTheme = localStorage.getItem("theme");
+        } catch (e) {
+          savedTheme = null;
+        }
+        var isDark = savedTheme !== "light";
+
+        document.body.classList.add(isDark ? "dark" : "light");
+        // Keep these two gradients in sync with LIGHT/DARK.bodyBackground in
+        // src/theme/colors.js, or the first paint won't match React's.
+        document.body.style.background = isDark
+          ? "linear-gradient(135deg, #14120F 0%, #1B1815 100%)"
+          : "linear-gradient(135deg, #FAF6EC 0%, #FFFFFF 100%)";
+      })();
+
+      // Hide the loading screen once React has mounted. React signals readiness
+      // by adding the "react-loaded" class to <body> (see src/index.js). We watch
+      // for that class instead of using a fixed delay, so the loader never fades
+      // out before content is ready (no flash of unstyled content). A fallback
+      // timeout guarantees the loader can never get permanently stuck visible.
+      (function () {
+        var hidden = false;
+        function hideLoadingScreen() {
+          if (hidden) return;
+          hidden = true;
+          document.body.classList.add("react-loaded");
+          var loadingScreen = document.getElementById("loading-screen");
+          if (loadingScreen) {
+            loadingScreen.classList.add("fade-out");
+            setTimeout(function () {
+              loadingScreen.style.display = "none";
+            }, 600);
+          }
+        }
+
+        if (document.body.classList.contains("react-loaded")) {
+          hideLoadingScreen();
+        } else if (typeof MutationObserver !== "undefined") {
+          var observer = new MutationObserver(function () {
+            if (document.body.classList.contains("react-loaded")) {
+              hideLoadingScreen();
+              observer.disconnect();
+            }
+          });
+          observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ["class"],
+          });
+        }
+
+        // Safety net: never let the loader hang if React is slow or fails.
+        setTimeout(hideLoadingScreen, 10000);
+      })();
+    </script>
+  </body>
+</html>

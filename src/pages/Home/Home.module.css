@@ -1,0 +1,845 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME PAGE  —  Meghali's Silk, read as a magazine (below the Prompt 12 hero)
+   ═══════════════════════════════════════════════════════════════════════════
+   Few sections, each large, each given air. The rhythm alternates a CONTAINED
+   spread (.section) against a FULL-BLEED band (.band), and a hairline top rule
+   opens a spread when it follows another contained one, so the page reads as a
+   sequence of pages rather than a stack of widgets.
+
+   Token-only: every colour / space / radius / type value comes from
+   storefront-tokens.css, and the skeletons, buttons and card surfaces are the
+   global primitives from storefront-primitives.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.homePage {
+  min-height: 100vh;
+  background-color: var(--sf-color-bg);
+  color: var(--sf-color-text);
+  transition: background-color var(--sf-transition), color var(--sf-transition);
+}
+
+/* ── Layout ────────────────────────────────────────────────────────────────── */
+
+.container {
+  max-width: var(--sf-container-max);
+  margin: 0 auto;
+  padding: 0 var(--sf-space-6);
+}
+
+/* The contained spread — the editorial whitespace tier. */
+.section {
+  padding: var(--sf-space-24) 0;
+}
+
+/* Shorter spread, for the sections that are footnotes rather than statements. */
+.sectionTight {
+  padding: var(--sf-space-16) 0;
+}
+
+/* A hairline opens the spread when the one above it was also contained (two
+   bands never need a rule between them — the ground already changes). The rule
+   is drawn inside the container so it stops at the text measure, not the
+   viewport edge. */
+.ruled > .container {
+  border-top: 1px solid var(--sf-color-border);
+  padding-top: var(--sf-space-24);
+  margin-top: calc(-1 * var(--sf-space-24));
+}
+
+.sectionTight.ruled > .container {
+  padding-top: var(--sf-space-16);
+  margin-top: calc(-1 * var(--sf-space-16));
+}
+
+/* The full-bleed band — its ground runs the whole viewport. */
+.band {
+  position: relative;
+  padding: var(--sf-space-24) 0;
+}
+
+.bandSunken {
+  background: var(--sf-color-surface-2);
+}
+
+/* The hero is full-bleed: neither .main-content nor .homePage constrains its
+   width, and the section adds no container of its own. HeroSection owns its
+   internal max-width; everything below here uses .container. */
+.heroSection {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION HEADER  —  the Prompt 12 convention
+   Tracked eyebrow opened by a short gold rule, serif title, one quiet lede;
+   on the far side whatever the section needs (timer, rail arrows) and then the
+   "View all", set as a hairline-underlined link rather than a button.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sf-space-8);
+  flex-wrap: wrap;
+  margin-bottom: var(--sf-space-12);
+}
+
+.sectionHeadText {
+  min-width: 0;
+  max-width: 46ch;
+}
+
+.sectionHeadAside {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-6);
+  flex-wrap: wrap;
+  padding-bottom: var(--sf-space-1);
+}
+
+/* Same device as the hero's eyebrow: uppercase, widely tracked, opened by a
+   short rule in the current colour. */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  margin: 0 0 var(--sf-space-4);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-gold-deep);
+}
+
+.eyebrow::before {
+  content: "";
+  width: var(--sf-space-8);
+  height: 1px;
+  background: currentColor;
+  flex: none;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.sectionHeadQuiet .sectionTitle {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+}
+
+.sectionHeadQuiet {
+  margin-bottom: var(--sf-space-8);
+}
+
+.sectionLede {
+  margin: var(--sf-space-4) 0 0;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* The quiet "View all": no chrome, a gold hairline that grows in under it —
+   the same device the footer and the hero's collection index use. */
+.viewAllLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sf-tap-target);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--sf-color-text-secondary);
+  transition: color var(--sf-transition-fast);
+}
+
+.viewAllLink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: 11px;
+  height: 1px;
+  background: var(--sf-color-gold-deep);
+  transition: right var(--sf-transition);
+}
+
+.viewAllLink:hover {
+  color: var(--sf-color-text);
+}
+
+.viewAllLink:hover::after {
+  right: 0;
+}
+
+.viewAllLink:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. WHERE TO BEGIN  —  collection stories
+   An asymmetric mosaic: one tall lead story beside two stacked wide ones. The
+   whole tile is the link (a covering ::after on the name), so it is one tab
+   stop named by the collection.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The lead column is the wider one, and the two stories beside it are cropped
+   wide (16:9) — which is what sizes the lead: it stretches to the height of the
+   pair, so its photograph lands on a portrait crop and the three tiles start
+   and finish on the same two lines. No fixed heights anywhere. */
+.collections {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: var(--sf-space-8);
+}
+
+.story {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  min-width: 0;
+}
+
+/* The lead runs the full height of the two stacked stories beside it. */
+.storyLead {
+  grid-row: span 2;
+}
+
+.storyMedia {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--sf-color-surface-2);
+  border-radius: var(--sf-radius-sm);
+}
+
+.storyLead .storyMedia {
+  aspect-ratio: auto;
+  flex: 1 1 auto;
+  min-height: 280px;
+}
+
+.storyImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--sf-transition-slow);
+}
+
+.story:hover .storyImg {
+  transform: scale(1.03);
+}
+
+.storyBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+  min-width: 0;
+}
+
+.storyIndex {
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  letter-spacing: var(--sf-tracking-wider);
+  color: var(--sf-color-text-muted);
+}
+
+.storyName {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-2xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.storyLead .storyName {
+  font-size: var(--sf-text-3xl);
+}
+
+.storyLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The tile-covering hit area. The focus ring is drawn on this overlay, so a
+   keyboard user sees the whole story outlined, not just the words. */
+.storyLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--sf-radius-sm);
+}
+
+.storyLink:focus-visible {
+  outline: none;
+}
+
+.storyLink:focus-visible::after {
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.storyText {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.storyMeta {
+  margin: 0;
+  font-size: var(--sf-text-xs);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sf-color-text-muted);
+}
+
+/* "Explore", with the gold hairline that grows in when the tile is hovered or
+   focused — decorative, since the name above it carries the link. */
+.storyCta {
+  position: relative;
+  margin-top: var(--sf-space-2);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-gold-deep);
+}
+
+.storyCta::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -4px;
+  height: 1px;
+  background: currentColor;
+  transition: right var(--sf-transition);
+}
+
+.story:hover .storyCta::after,
+.story:focus-within .storyCta::after {
+  right: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. THE EDIT  —  featured on a staggered baseline
+   Four columns of the Prompt 09 card, with every second column dropped by a
+   step so the row has a magazine's ragged foot instead of a grid's flat one.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.editGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sf-space-10) var(--sf-space-6);
+}
+
+.editCell {
+  min-width: 0;
+}
+
+.editGrid > .editCell:nth-child(even) {
+  margin-top: var(--sf-space-12);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. RAILS  —  offers / trending / recently viewed
+   The track scrolls; the arrows live up in the section header beside the
+   "View all", never over the photographs. The track itself is focusable so the
+   overflow region is reachable and arrow-scrollable from the keyboard.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.railTrack {
+  display: flex;
+  gap: var(--sf-space-6);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Room for the card's focus ring, which would otherwise be clipped by the
+     scroll container — and the matching scroll-padding, so snapping still
+     parks the first card at scroll position zero rather than 4px past it. */
+  padding: var(--sf-space-1) var(--sf-space-1) var(--sf-space-4);
+  margin: 0 calc(-1 * var(--sf-space-1));
+  scroll-padding-inline: var(--sf-space-1);
+}
+
+.railTrack::-webkit-scrollbar {
+  display: none;
+}
+
+.railTrack:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+.railCard {
+  flex: 0 0 clamp(240px, 24vw, 300px);
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+/* The footnote rail sits smaller than the statement rails above it. */
+.railTrackCompact {
+  gap: var(--sf-space-5);
+}
+
+.railCardCompact {
+  flex: 0 0 clamp(180px, 17vw, 210px);
+}
+
+.railControls {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+}
+
+.railBtn {
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast),
+    color var(--sf-transition-fast), opacity var(--sf-transition-fast),
+    transform var(--sf-transition-fast);
+}
+
+.railBtn:hover:not(:disabled) {
+  border-color: var(--sf-color-gold-deep);
+  color: var(--sf-color-text);
+}
+
+/* The shared icon-button press. */
+.railBtn:active:not(:disabled) {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.railBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.railBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COUNTDOWN  —  one tracked line, not a bank of digits
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.countdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sf-space-2);
+  margin: 0;
+  font-size: var(--sf-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-secondary);
+}
+
+.countdownLabel {
+  color: var(--sf-color-text-muted);
+}
+
+.countdownValue {
+  /* Tabular figures keep the line from shivering as the seconds tick. */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-gold-deep);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. OUR CRAFT  —  the heritage interlude
+   A full-bleed ink band split into a serif pull-line and its supporting note.
+   The weave is a pair of hairline gradients — the same device as the hero's —
+   so the band carries texture without shipping an image.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.heritage {
+  overflow: hidden;
+  background: var(--sf-gradient-heritage);
+  color: var(--sf-color-primary-contrast);
+  padding: var(--sf-space-32) 0;
+}
+
+.heritageWeave {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--sf-color-primary-contrast) 5%, transparent) 0 1px,
+      transparent 1px 7px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--sf-color-primary-contrast) 4%, transparent) 0 1px,
+      transparent 1px 7px
+    );
+}
+
+.heritageInner {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--sf-space-16);
+  align-items: end;
+}
+
+.heritageLead {
+  min-width: 0;
+}
+
+/* The eyebrow's gold has to lift off the ink ground, so the band re-points it
+   at the champagne highlight rather than the text-safe gold. */
+.eyebrowInk {
+  color: var(--sf-color-gold-light);
+}
+
+.heritagePull {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-primary-contrast);
+  max-width: 20ch;
+}
+
+.heritageAside {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-8);
+}
+
+.heritageText {
+  margin: 0;
+  max-width: 46ch;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: color-mix(in srgb, var(--sf-color-primary-contrast) 82%, transparent);
+}
+
+/* Hairline CTA — the band already carries the page's gold moment in its
+   eyebrow; a gold fill here would shout. */
+.heritageCta {
+  color: var(--sf-color-primary-contrast);
+  border-color: color-mix(
+    in srgb,
+    var(--sf-color-primary-contrast) 45%,
+    transparent
+  );
+}
+
+.heritageCta:hover {
+  color: var(--sf-color-gold-light);
+  border-color: var(--sf-color-gold-light);
+}
+
+.heritageCta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sf-color-primary-dark),
+    0 0 0 4px var(--sf-color-gold-light);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   7. PROMISES  —  one hairline row, store-attested policy
+   No accent cards, no colour-coding: four quiet columns divided by hairlines.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The closing note. The footer opens on its own invitation band immediately
+   below, so this spread gives back some of its bottom air. Doubled selector so
+   it outranks `.section` inside every media query, whatever the source order. */
+.section.promises {
+  padding-bottom: var(--sf-space-16);
+}
+
+.promisesRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sf-space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.promise {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+  min-width: 0;
+  padding-left: var(--sf-space-6);
+  border-left: 1px solid var(--sf-color-border);
+}
+
+.promise:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.promiseIcon {
+  font-size: var(--sf-text-xl);
+  color: var(--sf-color-gold-deep);
+  margin-bottom: var(--sf-space-1);
+}
+
+.promiseTitle {
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text);
+}
+
+.promiseText {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SKELETONS  —  the global .sf-skeleton primitive, shaped like the card
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.skelCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+}
+
+.skelMedia {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  border-radius: var(--sf-radius-sm);
+}
+
+.skelLines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+}
+
+.skelW80 {
+  width: 80%;
+}
+
+.skelW50 {
+  width: 50%;
+}
+
+.skelW40 {
+  width: 40%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE  —  1440 → 1024 → 768 → 375
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .section,
+  .band {
+    padding: var(--sf-space-20) 0;
+  }
+
+  .sectionTight {
+    padding: var(--sf-space-12) 0;
+  }
+
+  .ruled > .container {
+    padding-top: var(--sf-space-20);
+    margin-top: calc(-1 * var(--sf-space-20));
+  }
+
+  .sectionTight.ruled > .container {
+    padding-top: var(--sf-space-12);
+    margin-top: calc(-1 * var(--sf-space-12));
+  }
+
+  .heritage {
+    padding: var(--sf-space-24) 0;
+  }
+
+  .heritageInner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sf-space-8);
+    align-items: start;
+  }
+
+  /* The staggered baseline is the four-column device; at two columns the
+     dropped card reads as a mistake rather than a rhythm. */
+  .editGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sf-space-8) var(--sf-space-5);
+  }
+
+  .editGrid > .editCell:nth-child(even) {
+    margin-top: 0;
+  }
+
+  .promisesRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sf-space-6);
+  }
+
+  /* Two-up: only the second column can carry a divider. */
+  .promise:nth-child(odd) {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--sf-space-5);
+  }
+
+  .section,
+  .band {
+    padding: var(--sf-space-16) 0;
+  }
+
+  .ruled > .container {
+    padding-top: var(--sf-space-16);
+    margin-top: calc(-1 * var(--sf-space-16));
+  }
+
+  /* Restated after `.section` above, which shares its specificity: the footnote
+     spread stays tighter than a statement spread, and its rule stays welded to
+     the section boundary rather than floating inside it. */
+  .sectionTight {
+    padding: var(--sf-space-12) 0;
+  }
+
+  .sectionTight.ruled > .container {
+    padding-top: var(--sf-space-12);
+    margin-top: calc(-1 * var(--sf-space-12));
+  }
+
+  .sectionHead {
+    gap: var(--sf-space-5);
+    margin-bottom: var(--sf-space-8);
+  }
+
+  /* Below the arrows' usefulness: the rails are swiped, so the controls go and
+     the header keeps only its "View all". */
+  .railControls {
+    display: none;
+  }
+
+  .collections {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sf-space-10);
+  }
+
+  .storyLead {
+    grid-row: auto;
+  }
+
+  .storyLead .storyMedia {
+    aspect-ratio: 4 / 5;
+    min-height: 0;
+  }
+
+  .storyLead .storyName {
+    font-size: var(--sf-text-2xl);
+  }
+
+  .editGrid {
+    gap: var(--sf-space-8) var(--sf-space-4);
+  }
+}
+
+@media (max-width: 540px) {
+  .container {
+    padding: 0 var(--sf-space-4);
+  }
+
+  /* Two-up, like every other ProductCard grid on the storefront (Products,
+     Wishlist). One-up would make The Edit alone eight screens tall. */
+  .editGrid {
+    gap: var(--sf-space-8) var(--sf-space-3);
+  }
+
+  .promisesRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sf-space-6);
+  }
+
+  .promise {
+    padding-left: 0;
+    padding-top: var(--sf-space-6);
+    border-left: none;
+    border-top: 1px solid var(--sf-color-border);
+  }
+
+  .promise:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .sectionHeadAside {
+    padding-bottom: 0;
+  }
+
+  .railCard {
+    flex: 0 0 68vw;
+  }
+
+  .railCardCompact {
+    flex: 0 0 48vw;
+  }
+}
+
+/* The reveal animations are framer-motion's and are already disabled through
+   useReducedMotion; this covers the CSS-side motion (image breathing, hairline
+   growth) for the same users. */
+@media (prefers-reduced-motion: reduce) {
+  .storyImg,
+  .story:hover .storyImg,
+  .railBtn:active:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
+
+  .railTrack {
+    scroll-behavior: auto;
+  }
+}
