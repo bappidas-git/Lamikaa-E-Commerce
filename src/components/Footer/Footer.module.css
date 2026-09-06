@@ -1,5 +1,5 @@
 /* =============================================================================
- * Footer — Meghali's Silk editorial close
+ * Footer — LAMIKAA NATURALS editorial close
  * =============================================================================
  * One deep band closing the ivory page, in FOUR quiet strips: the invitation
  * (newsletter), the grid (wordmark + columns), the promises hairline, and the
@@ -7,30 +7,25 @@
  * grammar as the masthead, inverted.
  *
  * WHY THE BAND IS PINNED
- *   A dark footer is the classic editorial close, so it must NOT flip with the
- *   app theme. --sf-color-brand-green-deep is declared once in :root and never
- *   re-declared under body.dark, so pointing the ground at it gives an identical
- *   band in both modes — dark mode can't double-darken it into mud.
+ *   The footer band is its own room, not a tint of the page: pointing the
+ *   ground at --sf-color-brand-green-deep pins it to the deepest ground in the
+ *   palette regardless of what surface tokens a future section uses around it.
  *
  * THE FOOTER-SCOPED ALIASES
- *   Because the ground is pinned, the mode-flipping surface/text tokens are
- *   unusable in here (--sf-color-text-secondary is a dark warm grey in light
- *   mode and would vanish on this band). So the footer re-derives its own small
- *   palette from tokens that are identical in both modes — the ivory
- *   --sf-color-primary-contrast, mixed down for the quieter tiers — and pins
- *   --sf-shadow-focus so the shared .sf-btn focus ring reads on the dark ground.
- *   These are aliases over existing tokens: still no hardcoded hex anywhere.
- *   (The gold pair does lift a step in dark mode, which is the palette's own
- *   evening-gallery intent; both variants clear 6:1 on this ground.)
+ *   The footer re-derives its own small palette on top of the pinned ground —
+ *   the warm-white --sf-color-text, mixed down for the quieter tiers — and pins
+ *   --sf-shadow-focus so the shared .sf-btn focus ring reads on it. These are
+ *   aliases over existing tokens: still no hardcoded hex anywhere. Every tier
+ *   clears 6:1 on this ground.
  * ========================================================================== */
 
 .footer {
   --sf-footer-ground: var(--sf-color-brand-green-deep);
-  --sf-footer-ink: var(--sf-color-primary-contrast);
-  --sf-footer-ink-soft: color-mix(in srgb, var(--sf-color-primary-contrast) 72%, transparent);
-  --sf-footer-ink-faint: color-mix(in srgb, var(--sf-color-primary-contrast) 52%, transparent);
-  --sf-footer-rule: color-mix(in srgb, var(--sf-color-primary-contrast) 14%, transparent);
-  --sf-footer-rule-soft: color-mix(in srgb, var(--sf-color-primary-contrast) 8%, transparent);
+  --sf-footer-ink: var(--sf-color-text);
+  --sf-footer-ink-soft: color-mix(in srgb, var(--sf-color-text) 72%, transparent);
+  --sf-footer-ink-faint: color-mix(in srgb, var(--sf-color-text) 52%, transparent);
+  --sf-footer-rule: color-mix(in srgb, var(--sf-color-text) 14%, transparent);
+  --sf-footer-rule-soft: color-mix(in srgb, var(--sf-color-text) 8%, transparent);
   --sf-footer-gold: var(--sf-color-gold);
   --sf-footer-gold-hi: var(--sf-color-gold-light);
   /* Overrides the global ring for everything inside the footer, so the gap

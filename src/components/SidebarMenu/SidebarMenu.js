@@ -11,10 +11,7 @@ import {
   LogoutOutlined,
   SettingsOutlined,
   HelpOutline,
-  DarkModeOutlined,
-  LightModeOutlined,
 } from "@mui/icons-material";
-import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import apiService from "../../services/api";
@@ -65,7 +62,6 @@ const DISCOVER_LINKS = [
 
 const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   const navigate = useNavigate();
-  const { isDarkMode, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   // The deals entry disappears when the admin turns the Special Offers page off.
   const { enabled: dealsEnabled } = useDealsConfig();
@@ -598,35 +594,6 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                       transition={collapse}
                     >
                       <div className={styles.subInner}>
-                        <button
-                          type="button"
-                          className={styles.metaRow}
-                          onClick={toggleTheme}
-                          role="switch"
-                          aria-checked={isDarkMode}
-                          aria-label="Dark mode"
-                        >
-                          {isDarkMode ? (
-                            <DarkModeOutlined
-                              className={styles.metaIcon}
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <LightModeOutlined
-                              className={styles.metaIcon}
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span className={styles.metaLabel}>Dark mode</span>
-                          <span className={styles.toggleSwitch} aria-hidden="true">
-                            <span
-                              className={`${styles.toggleKnob} ${
-                                isDarkMode ? styles.toggleKnobOn : ""
-                              }`}
-                            />
-                          </span>
-                        </button>
-
                         {renderMetaRow(
                           { label: "Help centre", to: "/help", Icon: HelpOutline },
                           false

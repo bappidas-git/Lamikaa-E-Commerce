@@ -16,9 +16,9 @@
      4. THE CLOSING BAND — one sunken band, the hours, the two live channels.
 
    TOKENS ONLY
-   Every colour, space, radius and type value resolves through `--sf-*`, which
-   flips under `body.dark` — light and dark are one stylesheet, and there is no
-   hex in this file.
+   Every colour, space, radius and type value resolves through `--sf-*`,
+   declared once in `:root` — one theme, one stylesheet, and no hex in this
+   file.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .page {
@@ -27,12 +27,6 @@
   background: var(--sf-color-bg);
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
-}
-
-/* The only thing ThemeContext is consumed for here: a native color-scheme hint,
-   so the search field's own chrome renders for the active theme. */
-.dark {
-  color-scheme: dark;
 }
 
 .container {

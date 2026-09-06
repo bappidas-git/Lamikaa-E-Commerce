@@ -14,7 +14,7 @@
 .imageWrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--sf-transition-slow); }
 .card:hover .imageWrapper img { transform: scale(1.03); }
 .discountBadge { position: absolute; top: 8px; left: 8px; background: var(--sf-color-discount); color: var(--sf-color-primary-contrast); padding: 2px 8px; border-radius: var(--sf-radius-sm); font-size: 0.75rem; font-weight: 700; }
-.wishlistBtn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,0.9); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: color var(--sf-transition-fast), transform var(--sf-transition-fast), opacity var(--sf-transition-fast); color: var(--sf-color-text-muted); }
+.wishlistBtn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--sf-color-overlay); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: color var(--sf-transition-fast), transform var(--sf-transition-fast), opacity var(--sf-transition-fast); color: var(--sf-color-text); }
 .wishlistBtn:active { transform: scale(0.98); opacity: 0.85; }
 .wishlistBtn:focus-visible { outline: none; box-shadow: var(--sf-shadow-focus); }
 .wishlistBtn:hover, .wishlisted { color: var(--sf-color-danger); }

@@ -1,5 +1,5 @@
 // =============================================================================
-// PRIVACY POLICY  —  Meghali's Silk, route `/privacy`
+// PRIVACY POLICY  —  LAMIKAA NATURALS, route `/privacy`
 // =============================================================================
 // The first of the four policy pages (/privacy, /terms, /cookies, /refund),
 // which share one typeset "document" treatment: a tracked gold kicker, a serif
@@ -26,15 +26,14 @@
 //   other three pages so the four can never disagree about their revision date.
 //
 // THEMING
-//   Tokens only. Every colour resolves through `--sf-*`, which flips under
-//   `body.dark`, so light and dark are one stylesheet. ThemeContext is consumed
-//   for nothing but the `color-scheme` hint that themes native scrollbars.
+//   Tokens only. Every colour resolves through `--sf-*`, declared once in
+//   `:root`. One theme, one stylesheet, and nothing to read from
+//   ThemeContext — the `color-scheme` hint is global.
 // =============================================================================
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { reveal as sharedReveal } from "../../theme/motion";
-import { useTheme } from "../../context/ThemeContext";
 import {
   POLICY_LAST_UPDATED,
 } from "../../utils/constants";
@@ -45,7 +44,6 @@ const PrivacyPolicy = () => {
   // Store name and contact details are whatever the admin last saved in
   // Settings > General, so the policy never names a store that no longer exists.
   const { storeName, email: supportEmail, address: supportAddress, emailHref } = useStoreSettings();
-  const { isDarkMode } = useTheme();
   const prefersReducedMotion = useReducedMotion();
 
   // The shared reveal from theme/motion.js: one gentle fade and rise, stepped
@@ -125,7 +123,7 @@ const PrivacyPolicy = () => {
   ];
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.doc}>
           {/* ── Breadcrumb ───────────────────────────────────────────────── */}

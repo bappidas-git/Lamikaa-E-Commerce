@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import {
   Box,
@@ -14,7 +14,6 @@ import {
 import { ThemeProvider } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import { useAdmin } from "../../context/AdminContext";
-import { useTheme } from "../../context/ThemeContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../../components/brand/Logo";
 import buildAdminTheme from "../../theme/adminTheme";
@@ -28,7 +27,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const AdminLogin = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: adminLoading } = useAdmin();
-  const { isDarkMode } = useTheme();
   const { storeName } = useStoreSettings();
   useAdminBodyClass();
 
@@ -77,7 +75,9 @@ const AdminLogin = () => {
     }
   };
 
-  const adminTheme = buildAdminTheme(isDarkMode ? "dark" : "light");
+  // One admin theme — dark, like the rest of the app. Built once so the
+  // login card is not re-themed on every keystroke.
+  const adminTheme = useMemo(() => buildAdminTheme("dark"), []);
 
   // Wait for the sessionStorage restore before deciding what to render, so an
   // already-authenticated admin never sees a flash of the login form.

@@ -24,26 +24,27 @@
 //   skipped entirely under `prefers-reduced-motion`. The seal's own flourish is
 //   CSS and purely additive: its resting state is its finished state.
 //
-// ThemeContext is consumed for exactly one thing: the `color-scheme` hint that
-// makes native scrollbars and controls render for the active theme.
+// Nothing is read from ThemeContext: there is one theme, and the `color-scheme`
+// hint that makes native scrollbars and controls render dark is global.
 // =============================================================================
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
-import { useTheme } from "../../context/ThemeContext";
 import apiService from "../../services/api";
 import { formatCurrency, formatDate, normalizeOrderAddress } from "../../utils/helpers";
 import styles from "./OrderConfirmation.module.css";
 
 // The one documented hex exception on this page: canvas-confetti paints to a
 // <canvas>, so it cannot read CSS custom properties. These are the storefront's
-// own golds, copied from src/theme/storefront-tokens.css — keep in sync:
-//   #F0D06B  --sf-color-gold-light   (champagne highlight, logo p95)
-//   #DCAA33  the mean gold, middle stop of --sf-gradient-gold
-//   #C8912A  --sf-color-gold         (brand gold)
-// Gold only, in both themes: a shimmer that reads on ivory and on charcoal.
-const CONFETTI_COLORS = ["#F0D06B", "#DCAA33", "#C8912A"];
+// own accents, copied from src/theme/storefront-tokens.css — keep in sync:
+//   #F5D76E  --sf-color-gold         (champagne gold)
+//   #FFEFA6  --sf-color-gold-light   (the lifted highlight)
+//   #FF4FD8  --sf-color-pink         (neon pink)
+//   #8B5CF6  --sf-color-violet       (neon violet)
+// Gold leads and the two neons flicker through it — the signature gradient,
+// scattered. Every one of them reads on the #0B0B0D ground.
+const CONFETTI_COLORS = ["#F5D76E", "#FFEFA6", "#FF4FD8", "#8B5CF6"];
 
 // The customer's own name, taken off the order so it works for guests and for
 // a deep-linked order alike. Returns "" when the order carries no name.
@@ -60,7 +61,6 @@ const firstNameOf = (order) => {
 const OrderConfirmation = () => {
   const { orderNumber } = useParams();
   const navigate = useNavigate();
-  const { isDarkMode } = useTheme();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -163,7 +163,7 @@ const OrderConfirmation = () => {
   // Loading state
   if (loading) {
     return (
-      <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+      <div className={styles.page}>
         <div className={styles.container}>
           <div className={styles.state} role="status" aria-live="polite">
             <div className={styles.stateMark}>
@@ -181,7 +181,7 @@ const OrderConfirmation = () => {
   // the order doesn't exist.
   if (fetchError) {
     return (
-      <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+      <div className={styles.page}>
         <div className={styles.container}>
           <div className={styles.state}>
             <div className={styles.stateMark}>
@@ -215,7 +215,7 @@ const OrderConfirmation = () => {
   // Order not found
   if (!order) {
     return (
-      <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+      <div className={styles.page}>
         <div className={styles.container}>
           <div className={styles.state}>
             <div className={styles.stateMark}>
@@ -299,7 +299,7 @@ const OrderConfirmation = () => {
   })();
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         {/* ── The seal & the thank-you ─────────────────────────────────── */}
         <header className={styles.head}>

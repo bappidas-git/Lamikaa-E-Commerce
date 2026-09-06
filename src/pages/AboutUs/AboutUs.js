@@ -1,5 +1,5 @@
 // =============================================================================
-// OUR STORY  —  Meghali's Silk, route `/about`
+// OUR STORY  —  LAMIKAA NATURALS, route `/about`
 // =============================================================================
 // The flagship spread. Every other page in the storefront has a job to do —
 // sell, confirm, reassure, collect a message. This one only has to be read, so
@@ -49,10 +49,9 @@
 //   moving parts are the breadcrumb, two <Link>s and the reveals.
 //
 // THEMING
-//   Tokens only, and this page deliberately does not consume ThemeContext:
-//   every colour resolves through `--sf-*`, which flips under `body.dark`, so
-//   light and dark are one stylesheet. (The `styles.dark` class the old page
-//   toggled was never defined in the stylesheet.)
+//   Tokens only, and this page does not consume ThemeContext: every colour
+//   resolves through `--sf-*`, declared once in `:root`. One theme, one
+//   stylesheet.
 // =============================================================================
 import React from "react";
 import { Link } from "react-router-dom";

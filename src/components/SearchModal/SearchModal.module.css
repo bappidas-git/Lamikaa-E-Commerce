@@ -1,5 +1,5 @@
 /* =============================================================================
- * SearchModal — Meghali's Silk editorial search overlay
+ * SearchModal — LAMIKAA NATURALS editorial search overlay
  * =============================================================================
  * Not a boxed modal: an ivory veil that descends over the page, full-bleed at
  * every width, holding one oversized display-serif line on a hairline. The
@@ -12,9 +12,9 @@
  * Both wrap their content in .inner, a centred --sf-container-max column.
  *
  * Token-driven only (storefront-tokens.css): no hardcoded hex, no hardcoded
- * type, no theme branching — dark mode ("evening gallery") is re-derived for
- * free by the body.dark block. The only literal colours in this feature live in
- * the data-URI fallback image in SearchModal.js, which cannot read var().
+ * type, no theme branching — there is one theme and the tokens carry it. The
+ * only literal colours in this feature live in the data-URI fallback image in
+ * SearchModal.js, which cannot read var().
  * ========================================================================== */
 
 /* ---- Scrim ------------------------------------------------------------- */

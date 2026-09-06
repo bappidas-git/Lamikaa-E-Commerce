@@ -8,7 +8,6 @@ import React, {
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useCart } from "../../hooks/useCart";
-import { useTheme } from "../../context/ThemeContext";
 import apiService from "../../services/api";
 import {
   formatCurrency,
@@ -51,7 +50,6 @@ const couponDiscountFor = (coupon, amount) => {
 
 const CartDrawer = ({ open, onClose }) => {
   const navigate = useNavigate();
-  const { isDarkMode } = useTheme();
   const reduceMotion = useReducedMotion();
   const panelRef = useRef(null);
   const {
@@ -232,7 +230,6 @@ const CartDrawer = ({ open, onClose }) => {
     setCouponNote("");
   };
 
-  const themeClass = isDarkMode ? styles.dark : styles.light;
   const isEmpty = cart.length === 0;
 
   // ---------------------------------------------------------------------------
@@ -282,7 +279,7 @@ const CartDrawer = ({ open, onClose }) => {
           {/* ===== The tray ===== */}
           <motion.div
             ref={panelRef}
-            className={`${styles.drawer} ${themeClass}`}
+            className={styles.drawer}
             role="dialog"
             aria-modal="true"
             aria-label="Shopping cart"

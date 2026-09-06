@@ -1,5 +1,5 @@
 // =============================================================================
-// HELP CENTRE  —  Meghali's Silk, route `/help`
+// HELP CENTRE  —  LAMIKAA NATURALS, route `/help`
 // =============================================================================
 // The reference shelf next door to the care desk. Where `/support` is a letter
 // you write, this is a book you look something up in — so it is set as one:
@@ -28,7 +28,6 @@
 // =============================================================================
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { useFaqs } from "../../context/FaqContext";
 import { SUPPORT_HOURS } from "../../utils/constants";
@@ -165,7 +164,6 @@ const TOPICS = [
 ];
 
 const HelpCenter = () => {
-  const { isDarkMode } = useTheme();
   // The care desk's own address and number, as set in Settings > General.
   const {
     email: supportEmail,
@@ -196,7 +194,7 @@ const HelpCenter = () => {
   const isSearching = query.trim().length > 0;
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         {/* ── 1. THE OPENING ────────────────────────────────────────────── */}
         <header className={styles.head}>

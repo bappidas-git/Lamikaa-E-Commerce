@@ -11,9 +11,9 @@
  *      it in a narrow left column (initial, name, date, the verified mark set
  *      quiet), what they wrote in the measure beside it.
  *
- * TOKENS ONLY. Dark mode needs no rules of its own — the tokens flip under
- * `body.dark`, and the only colours used here are ink, muted ink, the border
- * hairline, the star gold and the success tone on the verified tick.
+ * TOKENS ONLY. There is one theme, declared once in `:root`, and the only
+ * colours used here are the text tones, the border hairline, the star gold and
+ * the success tone on the verified tick.
  * ========================================================================== */
 
 .section {

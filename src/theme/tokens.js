@@ -27,15 +27,20 @@ import { formatCurrency } from "../utils/helpers";
 
 // --- Structural token mirror (keep in sync with storefront-tokens.css) -------
 export const TOKENS = {
-  radius: { sm: 2, md: 4, lg: 8, xl: 12, pill: 999 },
+  radius: { sm: 8, md: 14, lg: 20, xl: 28, pill: 999 },
   space: {
     1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48, 16: 64,
-    // Editorial section rhythm — the generous whitespace tier.
+    // Section rhythm — the generous whitespace tier.
     20: 80, 24: 96, 32: 128,
   },
   breakpoints: { xs: 480, sm: 768, md: 1024, lg: 1280, xl: 1440 },
   tapTarget: 44,
   containerMax: 1280,
+  containerWide: 1440,
+  // --sf-section-y: the vertical rhythm of every home/shop section. The CSS
+  // token is fluid (`clamp(64px, 10vw, 140px)`); JS only ever needs the two
+  // ends and the preferred middle, so all three are mirrored here.
+  sectionY: { min: 64, preferred: "10vw", max: 140 },
 };
 
 // --- Trust-badge catalogue ---------------------------------------------------
@@ -56,8 +61,7 @@ export const TRUST_BADGE_CATALOG = {
 
 // --- The per-client storefront configuration --------------------------------
 export const STOREFRONT_CONFIG = {
-  // Which trust badges appear near the buy box, in order. For Meghali's Silk
-  // this maps to: 7-Day Returns / Authentic Silk / Free Shipping / Support.
+  // Which trust badges appear near the buy box, in order.
   trustBadges: ["easyReturns", "genuine", "freeShipping", "support"],
 
   // Returns policy window (days). Drives the "Easy Returns" badge + the

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
-import { useTheme } from "../../context/ThemeContext";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../hooks/useAuth";
 import apiService from "../../services/api";
@@ -28,7 +27,7 @@ const reviewDisplayName = (user) => {
 // tree, and a per-call confirmButtonColor is set as an inline variable on the
 // button (see the Swal block in App.css). This mirrors --sf-color-danger from
 // storefront-tokens.css; keep the two in sync if that token is ever retuned.
-const DANGER_HEX = "#9E3B2E";
+const DANGER_HEX = "#FF8A80";
 
 const REVIEW_STATUS = {
   pending: { label: "Review pending approval", className: "reviewPending" },
@@ -222,7 +221,6 @@ const AlertMark = () => (
 
 const OrderHistory = () => {
   const navigate = useNavigate();
-  const { isDarkMode } = useTheme();
   const { addToCart, setIsCartOpen } = useCart();
   const { user, isAuthenticated, isLoading: authLoading, openAuthModal } = useAuth();
 
@@ -499,7 +497,7 @@ const OrderHistory = () => {
 
   // The page shell, so every state below is framed the same way.
   const shell = (children) => (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>{children}</div>
     </div>
   );
@@ -564,7 +562,7 @@ const OrderHistory = () => {
   }
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         {/* ── The head ─────────────────────────────────────────────────── */}
         <header className={styles.head}>

@@ -19,9 +19,9 @@
    primitives; this stylesheet owns only the page chrome around them.
 
    TOKENS ONLY
-   Every colour, space, radius and type value resolves through `--sf-*`, which
-   flips under `body.dark` — so light and dark are one stylesheet and there is
-   no hex in this file. The only local variables are the two aliases colouring
+   Every colour, space, radius and type value resolves through `--sf-*`,
+   declared once in `:root` — one theme, one stylesheet and no hex in this
+   file. The only local variables are the two aliases colouring
    the inline empty-state artwork and the one timing the removal fade, and all
    three are aliases onto tokens, never values.
    ═══════════════════════════════════════════════════════════════════════════ */

@@ -51,17 +51,6 @@
   font-family: var(--sf-font-family);
 }
 
-/* Colours come from the storefront tokens (which flip on body.dark); these
-   marker classes only hint the native color-scheme so form controls and
-   scrollbars render correctly for the active theme. */
-.drawer.dark {
-  color-scheme: dark;
-}
-
-.drawer.light {
-  color-scheme: light;
-}
-
 /* =============================================================================
  * 2. MASTHEAD ROW
  * ========================================================================== */

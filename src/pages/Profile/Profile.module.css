@@ -30,8 +30,8 @@
    order number and running balance. Nothing here is invented to fill a space.
 
    TOKENS ONLY
-   Colour, space, radius and type resolve through `--sf-*`, which flips under
-   `body.dark` — light and dark are one stylesheet, and there is no hex here.
+   Colour, space, radius and type resolve through `--sf-*`, declared once in
+   `:root` — one theme, one stylesheet, and no hex here.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .page {
@@ -40,12 +40,6 @@
   background: var(--sf-color-bg);
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
-}
-
-/* The only thing ThemeContext is consumed for here: a native color-scheme hint
-   so scrollbars and native controls render for the active theme. */
-.dark {
-  color-scheme: dark;
 }
 
 .container {

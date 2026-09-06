@@ -23,9 +23,9 @@
    payment forms consume them as-is.
 
    TOKENS ONLY
-   Every colour, space, radius and type value resolves through `--sf-*`, which
-   flips under `body.dark` — so light and dark are one stylesheet and there is
-   no hex in this file. The only local variables are the two aliases colouring
+   Every colour, space, radius and type value resolves through `--sf-*`,
+   declared once in `:root` — one theme, one stylesheet and no hex in this
+   file. The only local variables are the two aliases colouring
    the inline empty-state artwork and the measured header height, and all three
    are aliases onto tokens or measurements, never colours.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -52,12 +52,6 @@
   .page {
     --checkout-header-h: 69px;
   }
-}
-
-/* The only thing ThemeContext is consumed for: a native color-scheme hint so
-   number spinners, selects and scrollbars render for the active theme. */
-.dark {
-  color-scheme: dark;
 }
 
 .container {
@@ -195,18 +189,19 @@
     border-color var(--sf-transition), color var(--sf-transition);
 }
 
-/* Passed — gold fill, ink check. */
+/* Passed — gold fill, near-black check. */
 .stepDone .stepMark {
   background: var(--sf-color-gold);
   border-color: var(--sf-color-gold);
-  color: var(--sf-color-primary-dark);
+  color: var(--sf-color-primary-contrast);
 }
 
 .stepDone {
   color: var(--sf-color-gold-deep);
 }
 
-/* Here — the ink mark (ivory under body.dark; both tokens invert together). */
+/* Here — the gold mark under a near-black numeral (the two tokens are a
+   fill/label pair, so they move together). */
 .stepCurrent .stepMark {
   background: var(--sf-color-emerald);
   border-color: var(--sf-color-emerald);

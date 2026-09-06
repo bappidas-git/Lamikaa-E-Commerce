@@ -43,9 +43,9 @@ import styles from "./Products.module.css";
 //   "View all" to point at, and so a flagged edit is a shareable link.
 //
 // THEMING
-//   Tokens only. This page deliberately does not consume ThemeContext: every
-//   colour resolves through `--sf-*`, which flips under `body.dark`, so light
-//   and dark are one stylesheet.
+//   Tokens only. This page does not consume ThemeContext: every colour
+//   resolves through `--sf-*`, declared once in `:root`. One theme, one
+//   stylesheet.
 // =============================================================================
 
 // ---------------------------------------------------------------------------

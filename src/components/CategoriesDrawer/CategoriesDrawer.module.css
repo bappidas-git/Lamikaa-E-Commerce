@@ -4,7 +4,7 @@
  * Opened from the primary nav's overflow button. A left-edge boutique panel on
  * the page ground (--sf-color-bg), in the same dress as SidebarMenu: display
  * serif for the collections, quiet Inter for the meta rows, gold only as
- * seasoning. Fully token-driven, so dark mode is re-derived by body.dark.
+ * seasoning. Fully token-driven, so the single dark theme is re-derived.
  * ========================================================================== */
 
 /* ---- Backdrop ---------------------------------------------------------- */

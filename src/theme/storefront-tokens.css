@@ -1,170 +1,197 @@
 /* =============================================================================
- * STOREFRONT DESIGN TOKENS  —  edit this ONE file to re-skin a client storefront
+ * STOREFRONT DESIGN TOKENS  —  edit this ONE file to re-skin the storefront
  * =============================================================================
  *
  * Every shared storefront component (and, increasingly, every storefront page)
  * reads its colours, spacing, radius, shadows and type scale from the CSS custom
- * properties defined here — never from hardcoded hex. To launch a new client in a
- * new business domain you change values in THIS file (and optionally
- * `colors.js` for the MUI layer); you do not edit component code.
+ * properties defined here — never from hardcoded hex. To re-skin the storefront
+ * you change values in THIS file (and optionally `colors.js` for the MUI layer);
+ * you do not edit component code.
  *
  * HOW THEMING WORKS
- *   • Light mode  → the `:root` block below (the base token set).
- *   • Dark mode   → the `body.dark` block (ThemeContext toggles `body.dark`).
- *                   DARK IS THE DEFAULT THEME; light is the user's opt-in.
- *   • Structural tokens (spacing/radius/shadows/type) are mode-agnostic and
- *     declared once in `:root`.
+ *   There is ONE theme. Every token — colour and structural alike — is declared
+ *   once in the `:root` block below, and `color-scheme: dark` tells the UA to
+ *   render form controls, scrollbars and the canvas to match. There is no
+ *   theme class on <body>, no stored preference, no media-query branch and no
+ *   toggle: the storefront and the admin are dark, always. A visitor whose OS
+ *   asks for a light appearance sees exactly the same page.
  *
  * RELATIONSHIP TO colors.js
- *   `src/theme/colors.js` holds the same brand palette for the MUI theme (the
- *   few MUI-based storefront bits). Keep the brand hexes here in sync with
- *   colors.js. The storefront CSS Modules consume the tokens below; MUI consumes
- *   colors.js. Documented in STOREFRONT_UX_GUIDELINES.md.
+ *   `src/theme/colors.js` holds the same palette for the MUI theme (the few
+ *   MUI-based storefront bits: the header controls and CssBaseline). Keep the
+ *   brand hexes here in sync with colors.js. The storefront CSS Modules consume
+ *   the tokens below; MUI consumes colors.js.
  *
  * NB: This file styles the STOREFRONT only. The admin panel builds its own MUI
  * palette in `src/theme/adminTheme.js` and is intentionally untouched by changes
  * here.
  *
  * -----------------------------------------------------------------------------
- * THE MEGHALI'S SILK EDITORIAL PALETTE  (source of truth — read this first)
+ * THE LAMIKAA PALETTE — "LUXURY SKINCARE AFTER DARK"
+ * (source of truth: prompts/_reference/DESIGN_SYSTEM.md §2 and §3)
  * -----------------------------------------------------------------------------
- * Warm-minimalist, gallery-like, image-forward. Three materials only:
- * IVORY ground, INK type, GOLD seasoning. Gold is never a fill for large areas.
+ * Deep near-black grounds, warm-white type, champagne gold as the one accent
+ * that may fill a button. Neon pink and violet are ambient — glows, hairlines
+ * and gradient stops — and cyan is a rare micro-detail. Products and the
+ * LAMIKAA lockup are the visual focus; every effect is a supporting device.
  *
- * BRAND ASSETS ARE NOT DECLARED HERE ANY MORE. The wordmark and the mark live
- * in src/config/brand.js (brand.logoUrl / brand.iconUrl) and reach the page
+ * BRAND ASSETS ARE NOT DECLARED HERE. The wordmark and the mark live in
+ * src/config/brand.js (brand.logoUrl / brand.iconUrl) and reach the page
  * through <Logo>; no stylesheet, component or HTML file outside brand.js and
  * public/index.html may name their URLs.
  *
- * The palette below is still the retired one and is rewritten to the LAMIKAA
- * "Luxury Skincare After Dark" set in Prompt 03.
+ *   ROLES                                              contrast on #0B0B0D
+ *   #0B0B0D  page ground (never pure #000)                              —
+ *   #141416  surface — sections, cards, drawers, image plates           —
+ *   #1C1C20  sunken — inputs, panels, thumbnails                        —
+ *   #F7F5F0  warm-white primary type                                18.9:1
+ *   #B8B5B0  secondary type                                         10.5:1
+ *   rgba(247,245,240,.62)  muted type / captions                      7.4:1
+ *   #F5D76E  champagne gold — accent, eyebrows, prices, links, CTA   13.4:1
+ *   #FFEFA6  gold, lifted — hover/active, highlights                    —
+ *   #B88924  gold, pressed — gradient stop, borders on light plates    6.2:1
+ *   #FF4FD8  neon pink — glow, gradient stop, rare micro-label         6.9:1
+ *   #8B5CF6  neon violet — glow, gradient stop                        4.65:1
+ *   #5DE7FF  cyan — info states, at most one micro-detail per page       —
  *
- *   Sampled gold gradient, by luminance percentile of the logo's gold pixels:
- *     p95 highlight  #F0D06B      p50 mid   #E1A52D      p10 shadow  #CC940B
- *     mean gold      #DCAA33      hue cluster 40–46°, sat 72–90%
- *   Sampled warm halo of the WHITE logo (its antialiasing tone) → #FAF6EC.
- *   That halo IS the ivory ground below, so page and logo share one warm cast.
- *
- * LIGHT MODE ROLES                                    contrast on ivory ground
- *   #FAF6EC  ground / page ivory (sampled halo)                             —
- *   #FFFFFF  raised surface (cards, sheets, drawers)                        —
- *   #F2ECE1  sunken panel / thumbnail / track                               —
- *   #E8DFCD  hairline border          #D6C9B2  strong hairline              —
- *   #1D1A16  ink — primary type AND the primary CTA fill              16.06:1
- *   #5C554A  secondary type                                            6.82:1
- *   #6E665A  muted type / struck-through compare price                 5.24:1
- *   #8A6118  text-safe antique gold — links, accent, price             5.12:1
- *   #AF7E26  star / meaningful gold graphics (clears 3:1 everywhere)    3.33:1
- *   #C8912A  brand gold — gradients, rules, washes (DECORATIVE ONLY)    2.58:1
- *   #F0D06B  champagne highlight (gradient top stop, tints)                 —
- *   #AA7A22  focus ring                                                3.53:1
- *   #1A2A24  deep green-black — SUPPORTING tone only (see note below)  13.89:1
- *
- * DARK MODE ("evening gallery") ROLES               contrast on charcoal ground
- *   #14120F  ground   #1B1815 surface   #221E1A sunken panel                —
- *   #F4EFE6  ivory type; also the CTA fill (--sf-color-emerald)      16.33:1
- *   #2B241C  raised ink band (--sf-color-primary, ivory type on it)  14.18:1
- *   #C4BCAE  secondary type                                           9.93:1
- *   #948B7D  muted type                                               5.56:1
- *   #E3B95E  gold, lifted — accent, price, links                     10.12:1
- *   #E8C069  star                                                    10.84:1
- *
- * NOTE ON THE OLD BRAND GREEN (#0B3B2E)
- *   The green is NOT present in either logo asset. It is demoted to a supporting
- *   deep tone: `--sf-color-brand-green` / `-deep` are now deep green-BLACKS that
- *   read as ink with a faint heritage undertone. Do not reintroduce green as a
- *   primary brand surface.
+ * VISUAL BALANCE BUDGET (audited in Prompt 38)
+ *   ≈ 60% dark grounds · 20% warm white · 10% gold · 5% pink · 3% violet ·
+ *   2% cyan. Gold is the ONLY accent allowed as a solid button fill; pink and
+ *   violet appear only as glows, hairlines and gradient stops; never gold text
+ *   on pink or violet.
  *
  * NOTE ON LEGACY TOKEN NAMES
- *   `--sf-color-emerald*` (188 usages, the de-facto CTA token) and
- *   `--brand-logo-bg` keep their NAMES for compatibility but now carry the ink
- *   CTA / ink logo panel. Never remove or rename a token here — components
- *   consume them by name.
+ *   `--sf-color-emerald*` (188 usages — the de-facto CTA token),
+ *   `--sf-gradient-heritage`, `--sf-gradient-announce-1/2/3`, `--sf-cat-*`,
+ *   `--sf-color-brand-green-deep` and `--brand-logo-bg` keep their NAMES for
+ *   compatibility and are aliased onto the LAMIKAA values below. Prompt 35
+ *   renames them (`--sf-color-cta*`, `--sf-gradient-brand`,
+ *   `--sf-gradient-announce`, `--sf-concern-*`) and deletes the aliases.
+ *   Until then: never remove or rename a token here — components consume them
+ *   by name.
  * ========================================================================== */
 
 :root {
+  /* Dark form controls, scrollbars and canvas, with no class on <body> and no
+     media query — this is the only theme there is. */
+  color-scheme: dark;
+
   /* ---- Brand ------------------------------------------------------------- */
-  /* Primary is INK, not a colour: in warm-minimalist editorial the CTA and the
-     type are the same near-black, and gold does the accenting.
-     See the INVARIANT note in the body.dark block before changing this pair —
-     primary must stay a DARK surface with ivory `-contrast` type in BOTH modes. */
-  --sf-color-primary: #1D1A16;         /* warm near-black ink */
-  --sf-color-primary-dark: #0F0D0A;
-  --sf-color-primary-light: #322C25;
-  --sf-color-primary-contrast: #FAF6EC; /* ivory label on ink — 16.06:1 */
-  --sf-color-primary-soft: rgba(29, 26, 22, 0.06); /* tinted fills/hovers */
-  --sf-color-secondary: #8A6118;       /* text-safe antique gold */
-  --sf-color-accent: #8A6118;          /* links/accents — must stay text-safe */
-  --sf-gradient-primary: linear-gradient(135deg, #1D1A16 0%, #322C25 100%);
-  --sf-gradient-primary-hover: linear-gradient(135deg, #322C25 0%, #1D1A16 100%);
+  /* Primary is the champagne gold, and its `-contrast` is the near-black label
+     that sits on it (13.4:1). Every consumer of --sf-color-primary uses the
+     pair as a fill/label couple, so the two invert together and stay legible. */
+  --sf-color-primary: #F5D76E;
+  --sf-color-primary-dark: #B88924;    /* pressed */
+  --sf-color-primary-light: #FFEFA6;   /* hover */
+  --sf-color-primary-contrast: #0B0B0D; /* near-black on gold — 13.4:1 */
+  --sf-color-primary-soft: rgba(245, 215, 110, 0.10); /* tinted fills/hovers */
+  --sf-color-secondary: #F5D76E;
+  --sf-color-accent: #F5D76E;          /* links/accents — text-safe on ground */
+  --sf-gradient-primary: linear-gradient(135deg, #FFEFA6 0%, #F5D76E 50%, #B88924 100%);
+  --sf-gradient-primary-hover: linear-gradient(135deg, #B88924 0%, #F5D76E 50%, #FFEFA6 100%);
 
   /* ---- Surfaces & text -------------------------------------------------- */
-  --sf-color-bg: #FAF6EC;              /* warm ivory (sampled from logo halo) */
-  --sf-color-surface: #FFFFFF;
-  --sf-color-surface-2: #F2ECE1;       /* subtle panels, thumbnails, tracks */
-  --sf-color-surface-hover: #F5F0E4;
-  --sf-color-text: #1D1A16;            /* warm ink */
-  --sf-color-text-secondary: #5C554A;
-  --sf-color-text-muted: #6E665A;
-  --sf-color-border: #E8DFCD;          /* warm sand hairline */
-  --sf-color-border-strong: #D6C9B2;
-  --sf-color-overlay: rgba(29, 26, 22, 0.48); /* warm ink scrim */
+  --sf-color-bg: #0B0B0D;              /* page ground — never pure black */
+  --sf-color-surface: #141416;         /* sections, cards, drawers, plates */
+  --sf-color-surface-2: #1C1C20;       /* inputs, sunken panels, thumbnails */
+  --sf-color-surface-hover: #222228;
+  --sf-color-text: #F7F5F0;            /* warm white */
+  --sf-color-text-secondary: #B8B5B0;
+  --sf-color-text-muted: rgba(247, 245, 240, 0.62); /* ≈ #9C9B98 — 7.4:1 */
+  --sf-color-border: rgba(255, 255, 255, 0.08);     /* hairline */
+  --sf-color-border-strong: rgba(245, 215, 110, 0.35); /* emphasised hairline */
+  --sf-color-overlay: rgba(11, 11, 13, 0.72);       /* scrims */
 
   /* ---- Semantic --------------------------------------------------------- */
-  /* Functional, but desaturated toward the editorial palette. */
-  --sf-color-success: #2F6B4F;
-  --sf-color-success-bg: rgba(47, 107, 79, 0.10);
-  --sf-color-warning: #8A5A16;
-  --sf-color-warning-bg: rgba(138, 90, 22, 0.10);
-  --sf-color-danger: #9E3B2E;
-  --sf-color-danger-bg: rgba(158, 59, 46, 0.09);
-  --sf-color-info: #3F5A7A;
-  --sf-color-info-bg: rgba(63, 90, 122, 0.10);
+  /* Lifted for the dark ground; every one clears 4.5:1 on #0B0B0D. */
+  --sf-color-success: #7ED9A6;
+  --sf-color-success-bg: rgba(126, 217, 166, 0.12);
+  --sf-color-warning: #F5C76E;
+  --sf-color-warning-bg: rgba(245, 199, 110, 0.12);
+  --sf-color-danger: #FF8A80;
+  --sf-color-danger-bg: rgba(255, 138, 128, 0.12);
+  --sf-color-info: #5DE7FF;
+  --sf-color-info-bg: rgba(93, 231, 255, 0.10);
 
   /* ---- Commerce-specific ----------------------------------------------- */
-  --sf-color-star: #AF7E26;            /* rating stars — gold, clears 3:1 */
-  --sf-color-price: #8A6118;           /* current/sale price — antique gold */
-  --sf-color-compare: #6E665A;         /* struck-through original price */
-  --sf-color-discount: #2F6B4F;        /* "% off" + savings */
-  --sf-color-discount-bg: rgba(47, 107, 79, 0.10);
-  --sf-color-badge-bg: rgba(29, 26, 22, 0.05); /* neutral chip background */
+  --sf-color-star: #F5D76E;            /* rating stars */
+  --sf-color-price: #F5D76E;           /* current/sale price */
+  --sf-color-compare: #B8B5B0;         /* struck-through original price */
+  --sf-color-discount: #7ED9A6;        /* "% off" + savings */
+  --sf-color-discount-bg: rgba(126, 217, 166, 0.12);
+  --sf-color-badge-bg: rgba(255, 255, 255, 0.06); /* neutral chip */
 
-  /* ---- Brand system (Meghali's Silk) ----------------------------------- */
-  /* Both logo PNGs are transparent-ground artwork, so the old "logo sits on a
-     green panel" device is retired. --brand-logo-bg is kept (components still
-     reference it until their own redesign prompts land) and repointed to ink:
-     the gold logo reads 8.12:1 on it, the white logo 17.33:1. */
-  --sf-color-brand-green: #1A2A24;     /* demoted: deep green-black, supporting */
-  --brand-logo-bg: #1D1A16;            /* ink logo panel (was brand green) */
-  --sf-color-brand-green-deep: #101C18;
-  --sf-color-gold: #C8912A;            /* brand gold — DECORATIVE surfaces only */
-  --sf-color-gold-light: #F0D06B;      /* champagne highlight (logo p95) */
-  --sf-color-gold-deep: #8A6118;       /* text-safe gold */
-  /* Legacy name, new role: the ink CTA. */
-  --sf-color-emerald: #1D1A16;
-  --sf-color-emerald-hover: #322C25;
-  --sf-color-emerald-contrast: #FAF6EC;
-  /* Sampled straight off the logo: highlight → mean → shadow. */
-  --sf-gradient-gold: linear-gradient(135deg, #F0D06B 0%, #DCAA33 50%, #B5842A 100%);
-  --sf-gradient-heritage: linear-gradient(135deg, #1D1A16 0%, #33261E 55%, #4A3F31 100%);
-  --sf-gradient-announce-1: linear-gradient(90deg, #1D1A16, #3E352A);
-  --sf-gradient-announce-2: linear-gradient(90deg, #33261E, #6B5030);
-  --sf-gradient-announce-3: linear-gradient(90deg, #14322A, #2F4A3E);
-  /* Category accents — muted silk tones (clay / mauve / terracotta / indigo /
-     jade / madder). Used as TEXT in places, so all clear 4.5:1 on every ground. */
-  --sf-cat-pink: #8F5850;
-  --sf-cat-purple: #665A73;
-  --sf-cat-orange: #95552E;
-  --sf-cat-blue: #4A5D7A;
-  --sf-cat-teal: #3F6B5C;
-  --sf-cat-red: #94443A;
+  /* ---- Accents ---------------------------------------------------------- */
+  --sf-color-gold: #F5D76E;            /* champagne gold — the one accent */
+  --sf-color-gold-light: #FFEFA6;      /* hover/active, highlights */
+  --sf-color-gold-deep: #B88924;       /* pressed, gradient stop, borders */
+  --sf-color-pink: #FF4FD8;            /* neon pink — glow, gradient stop */
+  --sf-color-violet: #8B5CF6;          /* neon violet — glow, gradient stop */
+  --sf-color-cyan: #5DE7FF;            /* rare accent: info, one per page */
+
+  /* Legacy name, current role: the primary CTA fill / hover / label. */
+  --sf-color-emerald: #F5D76E;
+  --sf-color-emerald-hover: #FFEFA6;
+  --sf-color-emerald-contrast: #0B0B0D;
+
+  /* Compatibility aliases — consumed by components that have not been rebuilt
+     yet. Both are deleted in Prompt 35 once their consumers are rewritten.
+     --sf-color-brand-green-deep is the pinned dark ground behind the footer and
+     the hero band, and the near-black label on the gold gradient button. */
+  --sf-color-brand-green-deep: #0B0B0D;
+  --brand-logo-bg: var(--sf-color-surface);
+
+  /* ---- Gradients -------------------------------------------------------- */
+  /* The signature: hairlines, eyebrow underlines, active indicators, one
+     gradient-text keyword per section, the full-page CTA wash. */
+  --sf-gradient-signature: linear-gradient(135deg, #F5D76E, #FF4FD8, #8B5CF6);
+  --sf-gradient-gold: linear-gradient(135deg, #FFEFA6, #F5D76E 50%, #B88924);
+  --sf-gradient-brand: linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330);
+  --sf-gradient-heritage: var(--sf-gradient-brand); /* legacy alias */
+  --sf-gradient-announce: linear-gradient(90deg, #141416 0%, #2A2330 100%);
+  /* The three announcement washes collapse to the single one above. */
+  --sf-gradient-announce-1: var(--sf-gradient-announce);
+  --sf-gradient-announce-2: var(--sf-gradient-announce);
+  --sf-gradient-announce-3: var(--sf-gradient-announce);
+
+  /* ---- Concern accents --------------------------------------------------- */
+  /* Six chip accents, used as borders and as text at ≥ 4.5:1 on the ground. */
+  --sf-concern-pink: #FF4FD8;
+  --sf-concern-violet: #8B5CF6;
+  --sf-concern-cyan: #5DE7FF;
+  --sf-concern-gold: #F5D76E;
+  --sf-concern-mint: #7ED9A6;
+  --sf-concern-rose: #F7A8C4;
+  /* Legacy names (Prompt 35 rewrites the consumers, then deletes these). */
+  --sf-cat-pink: var(--sf-concern-pink);
+  --sf-cat-purple: var(--sf-concern-violet);
+  --sf-cat-orange: var(--sf-concern-gold);
+  --sf-cat-blue: var(--sf-concern-cyan);
+  --sf-cat-teal: var(--sf-concern-mint);
+  --sf-cat-red: var(--sf-concern-rose);
+
+  /* ---- Glass ------------------------------------------------------------- */
+  /* The `.sf-glass` primitive (Prompt 04) is built from these. Budget: at most
+     two blurred layers in view, and never on a full-page scrolling background. */
+  --sf-glass-bg: rgba(255, 255, 255, 0.06);
+  --sf-glass-bg-strong: rgba(255, 255, 255, 0.08); /* header after scroll, modals */
+  --sf-glass-border: rgba(255, 255, 255, 0.08);
+  --sf-glass-blur: 20px;
+  --sf-glass-fallback: rgba(20, 20, 22, 0.92);     /* @supports not backdrop-filter */
+
+  /* ---- Ambient glow ------------------------------------------------------ */
+  /* Small blurred elements placed BEHIND products and CTAs — never another
+     backdrop filter. Driven by `GlowWrap` / `.sf-glow-*` (Prompts 04–05). */
+  --sf-glow-pink: radial-gradient(closest-side, rgba(255, 79, 216, 0.22), transparent 70%);
+  --sf-glow-violet: radial-gradient(closest-side, rgba(139, 92, 246, 0.22), transparent 70%);
+  --sf-glow-gold: radial-gradient(closest-side, rgba(245, 215, 110, 0.16), transparent 70%);
 
   /* ---- Radius ----------------------------------------------------------- */
-  /* Classic and near-square: editorial pages crop like photographs. */
-  --sf-radius-sm: 2px;
-  --sf-radius-md: 4px;
-  --sf-radius-lg: 8px;
-  --sf-radius-xl: 12px;
+  /* Soft and modern; pills for every button. Mirrored in tokens.js TOKENS.radius. */
+  --sf-radius-sm: 8px;
+  --sf-radius-md: 14px;
+  --sf-radius-lg: 20px;
+  --sf-radius-xl: 28px;
   --sf-radius-pill: 999px;
 
   /* ---- Spacing scale (4px base) ---------------------------------------- */
@@ -178,25 +205,29 @@
   --sf-space-10: 40px;
   --sf-space-12: 48px;
   --sf-space-16: 64px;
-  /* Editorial section rhythm — the generous whitespace tier. */
+  /* Section rhythm — the generous whitespace tier. */
   --sf-space-20: 80px;
   --sf-space-24: 96px;
   --sf-space-32: 128px;
 
   /* ---- Shadows ---------------------------------------------------------- */
-  /* Warm, soft, low-contrast. Editorial pages sit FLAT — reserve md/lg for
-     overlays, drawers and modals, not for cards. */
-  --sf-shadow-xs: 0 1px 2px rgba(29, 26, 22, 0.04);
-  --sf-shadow-sm: 0 2px 8px rgba(29, 26, 22, 0.06);
-  --sf-shadow-md: 0 8px 24px rgba(29, 26, 22, 0.08);
-  --sf-shadow-lg: 0 20px 48px rgba(29, 26, 22, 0.12);
-  /* Two-layer ring: a ground-coloured gap, then the gold. Solid (not alpha) so
-     the 3:1 minimum holds on ivory, white and sunken panels alike. */
-  --sf-color-focus-ring: #AA7A22;
-  --sf-shadow-focus: 0 0 0 2px var(--sf-color-bg), 0 0 0 4px var(--sf-color-focus-ring);
+  /* Two tiers carry the system: --sf-shadow-1 for cards and glass, -2 for
+     drawers, modals and anything that leaves the page. The xs/sm/md/lg names
+     are kept (existing consumers) and re-pointed onto the same language. */
+  --sf-shadow-1: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --sf-shadow-2: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --sf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sf-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --sf-shadow-md: var(--sf-shadow-1);
+  --sf-shadow-lg: var(--sf-shadow-2);
+  /* One gold ring, everywhere something takes keyboard focus. */
+  --sf-color-focus-ring: #F5D76E;
+  --sf-shadow-focus: 0 0 0 3px rgba(245, 215, 110, 0.55);
 
   /* ---- Typography ------------------------------------------------------- */
-  /* Editorial pairing: Cormorant Garamond displays, Inter carries the UI. */
+  /* Families and the type scale are Prompt 04's job (Fraunces + Manrope);
+     they are carried over unchanged here so this prompt changes colour and
+     structure only. */
   --sf-font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
   --sf-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Roboto", sans-serif;
@@ -219,7 +250,7 @@
   --sf-leading-display: 1.1;            /* headlines set tight */
   --sf-leading-tight: 1.25;
   --sf-leading-normal: 1.5;
-  --sf-leading-relaxed: 1.7;            /* long-form editorial body */
+  --sf-leading-relaxed: 1.7;            /* long-form body */
   /* Tracking — --sf-tracking-wide/-wider drive the uppercase "eyebrow" label
      that sits above section headings throughout the storefront. */
   --sf-tracking-tight: -0.01em;
@@ -228,17 +259,16 @@
   --sf-tracking-wider: 0.2em;
 
   /* ---- Motion ----------------------------------------------------------- */
-  /* Calm and confident: slower, with a decelerating editorial curve. ONE
-     curve and THREE durations — the whole storefront animates on this
+  /* ONE curve and THREE durations — the whole storefront animates on this
      language, CSS transitions and framer-motion alike. The JS half is
      mirrored in `src/theme/motion.js`; retune the two together.
      The durations are exposed on their own so a rule that needs a bare time —
      a keyframe, a grid-template-rows collapse, a delayed visibility — can
      still say it in the shared language instead of a magic number. */
-  --sf-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --sf-duration-fast: 0.2s;   /* leaving: exits, presses, hairline swaps */
-  --sf-duration: 0.35s;       /* the default: hovers, collapses, arrivals */
-  --sf-duration-slow: 0.6s;   /* panels, in-view reveals, the image breathing */
+  --sf-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --sf-duration-fast: 0.16s;  /* leaving: exits, presses, hairline swaps */
+  --sf-duration: 0.32s;       /* the default: hovers, collapses, arrivals */
+  --sf-duration-slow: 0.6s;   /* panels, in-view reveals, the hero crossfade */
   /* These three tiers govern TRANSITIONS AND ENTRANCES — anything that starts
      because something changed and then stops. The looping "working" signals
      keep their own steady rhythms instead, because they are read as tempo
@@ -249,96 +279,26 @@
   --sf-transition-slow: var(--sf-duration-slow) var(--sf-ease);
 
   /* ---- Layout & a11y ---------------------------------------------------- */
+  --sf-section-y: clamp(64px, 10vw, 140px); /* vertical rhythm of a section */
   --sf-container-max: 1280px;
+  --sf-container-wide: 1440px;
   --sf-tap-target: 44px;               /* min touch target (WCAG 2.5.5) */
 
   /* ---- z-index scale ---------------------------------------------------- */
   --sf-z-sticky: 40;
+  --sf-z-header: 50;
   --sf-z-stickybar: 60;                /* mobile sticky Add-to-Cart bar */
   --sf-z-overlay: 1000;
   --sf-z-modal: 1100;
+  --sf-z-toast: 1200;
 }
 
-/* ===========================================================================
- * DARK MODE  —  "evening gallery": the same room after hours. Deep warm
- * charcoal ground, ivory type, the gold lifted a step. Overrides colour tokens
- * only; structural tokens persist from :root.
- * ======================================================================== */
-body.dark {
-  /* INVARIANT — do not invert this pair. `--sf-color-primary` is a DARK band and
-     `--sf-color-primary-contrast` is the ivory type on it, in BOTH modes. Much
-     of the site chrome (Header .mainHeader, TrustStrip, AnnouncementBar,
-     SidebarMenu, ProductCard's overlay) pairs primary-contrast with a
-     mode-agnostic dark surface, so flipping the contrast to ink drops those to
-     ~1.25:1. Note primary is also used as TEXT in 7 places, which wants the
-     opposite; the two demands are mathematically unsatisfiable at once
-     (ivory-on-it needs L≤0.166, it-on-charcoal needs L≥0.223), so the chrome
-     wins. The ivory-fill CTA for dark mode lives in --sf-color-emerald below. */
-  --sf-color-primary: #2B241C;         /* raised warm ink band */
-  --sf-color-primary-dark: #1E1913;
-  --sf-color-primary-light: #3A3128;
-  --sf-color-primary-contrast: #FAF6EC; /* ivory — identical in both modes */
-  --sf-color-primary-soft: rgba(244, 239, 230, 0.08);
-  --sf-color-secondary: #E3B95E;       /* gold, lifted */
-  --sf-color-accent: #E3B95E;
-  --sf-gradient-primary: linear-gradient(135deg, #2B241C 0%, #3A3128 100%);
-  --sf-gradient-primary-hover: linear-gradient(135deg, #3A3128 0%, #2B241C 100%);
-
-  --sf-color-bg: #14120F;              /* deep warm charcoal */
-  --sf-color-surface: #1B1815;
-  --sf-color-surface-2: #221E1A;
-  --sf-color-surface-hover: #282320;
-  --sf-color-text: #F4EFE6;
-  --sf-color-text-secondary: #C4BCAE;
-  --sf-color-text-muted: #948B7D;
-  --sf-color-border: rgba(244, 239, 230, 0.10);      /* low-alpha ivory hairline */
-  --sf-color-border-strong: rgba(227, 185, 94, 0.30);
-  --sf-color-overlay: rgba(8, 7, 6, 0.72);
-
-  --sf-color-success: #6FBF95;
-  --sf-color-success-bg: rgba(111, 191, 149, 0.14);
-  --sf-color-warning: #E0B057;
-  --sf-color-warning-bg: rgba(224, 176, 87, 0.14);
-  --sf-color-danger: #E08472;
-  --sf-color-danger-bg: rgba(224, 132, 114, 0.14);
-  --sf-color-info: #8FAAC9;
-  --sf-color-info-bg: rgba(143, 170, 201, 0.14);
-
-  --sf-color-star: #E8C069;
-  --sf-color-price: #E3B95E;
-  --sf-color-compare: #948B7D;
-  --sf-color-discount: #6FBF95;
-  --sf-color-discount-bg: rgba(111, 191, 149, 0.14);
-  --sf-color-badge-bg: rgba(244, 239, 230, 0.07);
-
-  /* Brand tones re-derived for the evening room. The green-blacks
-     (--sf-color-brand-green / -deep) are already dark and inherit from :root. */
-  --brand-logo-bg: #1B1815;            /* logo panel melts into the surface */
-  --sf-color-gold: #E3B95E;
-  --sf-color-gold-light: #F3DDA4;
-  --sf-color-gold-deep: #C99B3D;
-  --sf-color-emerald: #F4EFE6;         /* legacy name — the inverted ink CTA */
-  --sf-color-emerald-hover: #E1D9CA;
-  --sf-color-emerald-contrast: #14120F;
-  --sf-gradient-gold: linear-gradient(135deg, #F3DDA4 0%, #E3B95E 50%, #C99B3D 100%);
-  --sf-gradient-heritage: linear-gradient(135deg, #14120F 0%, #241C15 55%, #3A2F24 100%);
-  --sf-gradient-announce-1: linear-gradient(90deg, #14120F, #332C23);
-  --sf-gradient-announce-2: linear-gradient(90deg, #2A2019, #5C452A);
-  --sf-gradient-announce-3: linear-gradient(90deg, #0F2721, #274038);
-  /* Category accents lifted for the dark ground (all clear 4.5:1). */
-  --sf-cat-pink: #D2988A;
-  --sf-cat-purple: #A99BB8;
-  --sf-cat-orange: #D9A45E;
-  --sf-cat-blue: #93A8C6;
-  --sf-cat-teal: #7FB3A0;
-  --sf-cat-red: #D68A7E;
-
-  --sf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
-  --sf-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
-  --sf-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
-  --sf-shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.65);
-  --sf-color-focus-ring: #E3B95E;
-  --sf-shadow-focus: 0 0 0 2px var(--sf-color-bg), 0 0 0 4px var(--sf-color-focus-ring);
+/* Blur is expensive on phones and reads as mud at full strength on a small
+   panel; the glass recipe halves it below the tablet breakpoint. */
+@media (max-width: 768px) {
+  :root {
+    --sf-glass-blur: 12px;
+  }
 }
 
 /* Respect users who prefer reduced motion — shared, applies storefront-wide.

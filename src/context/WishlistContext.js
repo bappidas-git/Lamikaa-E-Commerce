@@ -14,7 +14,7 @@ import Swal from "sweetalert2";
 // tree, and a per-call confirmButtonColor is set as an inline variable on the
 // button (see the Swal block in App.css). This mirrors --sf-color-danger from
 // storefront-tokens.css; keep the two in sync if that token is ever retuned.
-const DANGER_HEX = "#9E3B2E";
+const DANGER_HEX = "#FF8A80";
 
 const WishlistContext = createContext();
 

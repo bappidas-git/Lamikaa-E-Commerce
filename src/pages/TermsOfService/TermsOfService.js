@@ -1,5 +1,5 @@
 // =============================================================================
-// TERMS OF SERVICE  —  Meghali's Silk, route `/terms`
+// TERMS OF SERVICE  —  LAMIKAA NATURALS, route `/terms`
 // =============================================================================
 // One of the four policy pages (/privacy, /terms, /cookies, /refund) that share
 // a single typeset "document" treatment: a tracked gold kicker, a serif title
@@ -31,14 +31,13 @@
 //   can never disagree about their date.
 //
 // THEMING
-//   Tokens only; ThemeContext is consumed for nothing but the `color-scheme`
-//   hint that themes native scrollbars.
+//   Tokens only, and nothing is read from ThemeContext — the `color-scheme`
+//   hint that themes native scrollbars is global.
 // =============================================================================
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { reveal as sharedReveal } from "../../theme/motion";
-import { useTheme } from "../../context/ThemeContext";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import {
   POLICY_LAST_UPDATED,
@@ -81,7 +80,6 @@ const TermsOfService = () => {
         { decimals: 0 }
       )} and may be withheld for addresses with a history of refused deliveries.`
     : "Cash on delivery is available and may be withheld for addresses with a history of refused deliveries.";
-  const { isDarkMode } = useTheme();
   const prefersReducedMotion = useReducedMotion();
 
   // The shared reveal from theme/motion.js: one gentle fade and rise, stepped
@@ -187,7 +185,7 @@ const TermsOfService = () => {
   ];
 
   return (
-    <div className={`${styles.page} ${isDarkMode ? styles.dark : ""}`}>
+    <div className={styles.page}>
       <div className={styles.container}>
         <div className={styles.doc}>
           {/* ── Breadcrumb ───────────────────────────────────────────────── */}

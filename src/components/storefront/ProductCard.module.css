@@ -167,7 +167,7 @@
   z-index: 2;
   padding: var(--sf-space-3);
   background: var(--sf-color-overlay);
-  color: var(--sf-color-primary-contrast);
+  color: var(--sf-color-text);
   font-size: var(--sf-text-xs);
   font-weight: var(--sf-font-medium);
   letter-spacing: var(--sf-tracking-wide);

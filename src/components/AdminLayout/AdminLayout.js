@@ -30,7 +30,6 @@ import {
 import { ThemeProvider, alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import { useAdmin } from "../../context/AdminContext";
-import { useThemeContext } from "../../context/ThemeContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../brand/Logo";
 import buildAdminTheme from "../../theme/adminTheme";
@@ -150,15 +149,15 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { admin, isAuthenticated, isLoading: adminLoading, logout } = useAdmin();
-  const { mode, toggleTheme } = useThemeContext();
   // Names the shell after the store the admin configured — and, by subscribing
   // here at the root of the admin tree, makes a currency change repaint every
   // figure on the page under it (the admin screens format with the plain
   // formatCurrency() helper, which cannot ask React for a re-render itself).
   const { storeName } = useStoreSettings();
-  // Dedicated flat/professional admin theme; tracks the same light/dark mode
-  // as the storefront toggle but swaps the whole design language.
-  const adminTheme = useMemo(() => buildAdminTheme(mode), [mode]);
+  // Dedicated flat/professional admin theme. The admin is dark like the
+  // storefront but keeps its own design language; there is no mode to track,
+  // so the theme is built once. (Prompt 32 recolours it to the LAMIKAA palette.)
+  const adminTheme = useMemo(() => buildAdminTheme("dark"), []);
   useAdminBodyClass();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -488,21 +487,6 @@ const AdminLayout = () => {
           </IconButton>
 
           <Box sx={{ flexGrow: 1 }} />
-
-          {/* Theme Toggle */}
-          <Tooltip title={mode === "dark" ? "Light Mode" : "Dark Mode"}>
-            <IconButton
-              onClick={toggleTheme}
-              aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              sx={{ color: "text.primary" }}
-            >
-              <Icon
-                icon={
-                  mode === "dark" ? "mdi:weather-sunny" : "mdi:weather-night"
-                }
-              />
-            </IconButton>
-          </Tooltip>
 
           {/* Notifications */}
           <Tooltip title="Notifications">

@@ -399,9 +399,6 @@ const Home = () => {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    // No `dark` class hook: this stylesheet is entirely token-driven and the
-    // tokens already flip under body.dark, so there is nothing left for a
-    // mode-specific selector to say.
     // No page-level fade here: the route transition is applied once, to the
     // keyed wrapper around <Routes> in App.js, so every storefront route
     // arrives the same way.

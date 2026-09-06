@@ -45,15 +45,16 @@ const MAX_TRENDING = 5;
 const DEBOUNCE_MS = 300;
 
 // Inline SVG fallback (no external host) shown if a product image fails to load.
-// A data URI cannot read var(), so these two literals mirror the light-mode
-// tokens by hand: --sf-color-surface-2 (#F2ECE1) and --sf-color-text-muted
-// (#6E665A). If either token changes in storefront-tokens.css, change them here.
+// A data URI cannot read var(), so these two literals mirror the tokens by
+// hand: --sf-color-surface (#141416) as the plate and --sf-color-text-secondary
+// (#B8B5B0) as the glyph — 10.5:1 on that plate. If either token changes in
+// storefront-tokens.css, change them here.
 const FALLBACK_IMAGE =
   "data:image/svg+xml;charset=UTF-8," +
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="160" viewBox="0 0 120 160">' +
-      '<rect width="120" height="160" fill="#F2ECE1"/>' +
-      '<g fill="none" stroke="#6E665A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
+      '<rect width="120" height="160" fill="#141416"/>' +
+      '<g fill="none" stroke="#B8B5B0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
       '<rect x="28" y="52" width="64" height="56" rx="2"/>' +
       '<circle cx="47" cy="72" r="6"/>' +
       '<path d="M32 102l19-17 15 13 10-8 16 12"/>' +
