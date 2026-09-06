@@ -1,681 +1,435 @@
-import React, {
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { useMediaQuery } from "@mui/material";
+import { Icon } from "@iconify/react";
 import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
-import apiService from "../../services/api";
-import { categoryPath, getMainMenuCategories } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
 import Logo from "../brand/Logo";
 import AnnouncementBar from "../AnnouncementBar";
-import TrustStrip from "../TrustStrip";
 import CartDrawer from "../CartDrawer/CartDrawer";
 import SidebarMenu from "../SidebarMenu/SidebarMenu";
 import AuthModal from "../AuthModal/AuthModal";
 import SearchModal from "../SearchModal/SearchModal";
-import CategoriesDrawer from "../CategoriesDrawer/CategoriesDrawer";
-import {
-  IconButton,
-  Badge,
-  Avatar,
-  Menu,
-  MenuItem,
-  Typography,
-  useMediaQuery,
-  Divider,
-} from "@mui/material";
-import {
-  MenuOutlined,
-  SearchOutlined,
-  ShoppingBagOutlined,
-  FavoriteBorder,
-  PersonOutline,
-  ListAltOutlined,
-  LogoutOutlined,
-  LoginOutlined,
-  PersonAddAltOutlined,
-  GridViewOutlined,
-} from "@mui/icons-material";
+import HeaderActions from "./HeaderActions";
+import MegaPanel, { loadMegaPanelData } from "./MegaPanel";
 import styles from "./Header.module.css";
 
-// The wordmark is on a TRANSPARENT ground, so it sits directly on the masthead
-// — there is no logo panel. The artwork, its URL and its aspect ratio all live
-// in src/config/brand.js and reach the page through <Logo>; the 44px slot in
-// Header.module.css still decides the rendered height.
+// =============================================================================
+// Header — the LAMIKAA sticky glass masthead
+// =============================================================================
+//
+// Three zones on one 64px row (56px on phones): the mobile hamburger and the
+// wordmark on the left, four primary nav entries in the centre, the utility
+// actions on the right. The announcement band renders ABOVE it in normal flow,
+// so it scrolls away and the PINNED chrome is the header alone — 100px of page
+// chrome before the first scroll, 64px after it.
+//
+// THREE STATES, in this order of precedence:
+//   transparent  while `#hero-sentinel` is intersecting. The hero renders that
+//                sentinel (Prompt 14); when it is absent the header is glass
+//                from the first pixel, which is the correct default for every
+//                route that is not the home page.
+//   glass        `.sf-glass` — the resting state.
+//   glass--strong after 24px of scroll.
+//
+// THE BLUR BUDGET (DESIGN_SYSTEM §4: two blurred layers, ever). The header
+// drops its backdrop filter while `body[data-drawer-open]` is set — the flag
+// ui/Drawer reference-counts — and also while one of the four overlays THIS
+// component mounts is open, since those still carry their own traps until
+// Prompts 10-12 migrate them onto the primitive. The announcement band has no
+// blur at all, which is what keeps the sum at two.
+//
+// WHAT LEFT IN PROMPT 09. The measured "priority nav" (a hidden twin list, a
+// ResizeObserver and an overflow count) is gone: four entries never overflow at
+// ≥1025px, and below that the whole nav collapses into the hamburger. So are
+// the per-category collection panels — the mega panel replaces them — and the
+// all-collections drawer they opened, whose files are deleted. The promises
+// hairline the masthead used to cap the page with becomes a home-page section
+// in Prompt 15; the mobile drawer still renders it.
+// =============================================================================
+
 const LOGO_WIDTH = 168;
+const LOGO_WIDTH_MOBILE = 140;
+const LOGO_WIDTH_MARK = 40;
+
+// Long enough that crossing the row on the way to the cart never opens the
+// panel, short enough that reaching for "Shop" feels like a hover, not a wait.
+const HOVER_INTENT_MS = 200;
+
+// The scroll depth at which the glass firms up. Small on purpose: the change
+// should read as "the page has moved", not as a second scroll threshold.
+const STRONG_AT = 24;
+
+const MEGA_PANEL_ID = "mega-panel";
+
+/** Pointer users get hover intent; touch users get click only (no hover to
+    detect, and a phantom hover on tap opens a panel nobody asked for). */
+const hasFinePointer = () =>
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(pointer: fine)").matches;
 
 const Header = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const {
-    user,
-    isAuthenticated,
-    logout,
-    authModalOpen,
-    authModalTab,
-    openAuthModal,
-    closeAuthModal,
-  } = useAuth();
+  const { authModalOpen, authModalTab, openAuthModal, closeAuthModal } = useAuth();
   const { getCartItemCount, isCartOpen, setIsCartOpen } = useCart();
   const { getWishlistCount } = useWishlist();
-  // The "Today's Deals" link is hidden when the admin turns the deals page off.
+  // The "Offers" entry is hidden when the admin turns the deals page off.
   const { enabled: dealsEnabled } = useDealsConfig();
-  // Store name comes from Settings > General, so renaming the store renames the
+  // Store name comes from Settings → General, so renaming the store renames the
   // lockup's label everywhere the artwork itself cannot say it.
   const { storeName } = useStoreSettings();
-  const isMobile = useMediaQuery("(max-width:768px)");
-  const isTablet = useMediaQuery("(max-width:1024px)");
 
-  // Live badge counts (context exposes getters, not raw values)
+  const isMobile = useMediaQuery("(max-width:768px)");
+  const isDesktop = useMediaQuery("(min-width:1025px)");
+  const isTiny = useMediaQuery("(max-width:340px)");
+
+  // Live badge counts (context exposes getters, not raw values).
   const cartCount = getCartItemCount();
   const wishlistCount = getWishlistCount();
 
-  const [categories, setCategories] = useState([]);
-  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  // Key of the nav entry whose collection panel is showing (hover or focus).
-  const [openCollection, setOpenCollection] = useState(null);
-  // The desktop "All Collections" drawer, opened from the nav's overflow button.
-  const [categoriesDrawerOpen, setCategoriesDrawerOpen] = useState(false);
+  const [overHero, setOverHero] = useState(false);
+  const [megaOpen, setMegaOpen] = useState(false);
 
-  // Fetch categories on mount. Also refetch when the tab regains focus so any
-  // change the admin makes (toggling a category into the main menu, reordering
-  // it, activating/deactivating it) shows up on the storefront without a hard
-  // reload — the menu is fully API-driven from the same categories source the
-  // admin edits.
-  useEffect(() => {
-    let active = true;
-    const fetchCategories = async () => {
-      try {
-        const data = await apiService.categories.getAll();
-        if (active) setCategories(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Failed to fetch categories:", err);
-      }
-    };
-    fetchCategories();
-    const onFocus = () => fetchCategories();
-    window.addEventListener("focus", onFocus);
-    return () => {
-      active = false;
-      window.removeEventListener("focus", onFocus);
-    };
-  }, []);
+  const headerRef = useRef(null);
+  const shopButtonRef = useRef(null);
+  const hoverTimerRef = useRef(null);
 
-  // Subtle hairline/elevation change once the page is scrolled. The masthead
-  // never changes height, so nothing under it shifts.
+  // ---- Scroll depth ------------------------------------------------------
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4);
+    const onScroll = () => setScrolled(window.scrollY > STRONG_AT);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Any route change closes an open collection panel.
+  // ---- The hero sentinel -------------------------------------------------
+  // The hero renders `#hero-sentinel` at its own top edge; while that element
+  // is on screen the header is transparent over it. The sentinel arrives with a
+  // lazily-loaded route chunk, so the lookup retries for a few frames (the same
+  // technique ScrollToTop uses for a hash target) before settling on "no hero
+  // here" — which is the right answer on every page but the home page.
   useEffect(() => {
-    setOpenCollection(null);
-  }, [location.pathname, location.search]);
+    let observer = null;
+    let raf = 0;
+    let frames = 0;
+    let cancelled = false;
 
-  const handleUserMenuOpen = (e) => {
-    if (isAuthenticated) {
-      setUserMenuAnchor(e.currentTarget);
-    } else {
-      openAuthModal("login");
+    setOverHero(false);
+
+    const attach = () => {
+      if (cancelled) return;
+      const sentinel = document.getElementById("hero-sentinel");
+      if (!sentinel) {
+        if (frames < 30) {
+          frames += 1;
+          raf = requestAnimationFrame(attach);
+        }
+        return;
+      }
+      if (typeof IntersectionObserver === "undefined") return;
+      observer = new IntersectionObserver(
+        ([entry]) => setOverHero(Boolean(entry?.isIntersecting)),
+        { threshold: 0 }
+      );
+      observer.observe(sentinel);
+    };
+
+    attach();
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+      if (observer) observer.disconnect();
+    };
+  }, [location.pathname]);
+
+  // ---- The mega panel ----------------------------------------------------
+  const clearHoverIntent = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
     }
   };
 
-  const handleUserMenuClose = () => setUserMenuAnchor(null);
+  const closeMega = useCallback(() => {
+    clearHoverIntent();
+    setMegaOpen(false);
+  }, []);
 
-  const handleMenuNavigate = (path) => {
-    handleUserMenuClose();
-    navigate(path);
+  /** Escape and a link click both hand focus back to the trigger that opened
+      the panel — a keyboard visitor must never be dropped at the top of the
+      document because a menu closed underneath them. */
+  const closeMegaAndRestoreFocus = useCallback(() => {
+    closeMega();
+    shopButtonRef.current?.focus();
+  }, [closeMega]);
+
+  // Any route change closes the panel.
+  useEffect(() => {
+    setMegaOpen(false);
+  }, [location.pathname, location.search]);
+
+  // Clear a pending hover timer on unmount.
+  useEffect(() => () => clearHoverIntent(), []);
+
+  // Outside click. Bound only while the panel is open, on `mousedown` so the
+  // panel is gone before the click resolves anywhere else.
+  useEffect(() => {
+    if (!megaOpen) return undefined;
+    const onDocumentPointerDown = (e) => {
+      if (!headerRef.current?.contains(e.target)) closeMega();
+    };
+    document.addEventListener("mousedown", onDocumentPointerDown);
+    document.addEventListener("touchstart", onDocumentPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocumentPointerDown);
+      document.removeEventListener("touchstart", onDocumentPointerDown);
+    };
+  }, [megaOpen, closeMega]);
+
+  const handleShopPointerEnter = () => {
+    if (!hasFinePointer()) return;
+    // Warm the cache while the intent delay runs, so the panel is drawn from
+    // memory rather than mid-fetch on the very first hover of a session.
+    loadMegaPanelData().catch(() => {});
+    clearHoverIntent();
+    hoverTimerRef.current = setTimeout(() => setMegaOpen(true), HOVER_INTENT_MS);
   };
 
-  const handleLogout = () => {
-    handleUserMenuClose();
-    logout();
-    navigate("/");
+  /**
+   * The pointer has said it is done with the panel — either by leaving the
+   * header (the panel is a DESCENDANT of it, so travelling from the trigger
+   * down into the sheet is not "leaving") or by arriving on a sibling nav
+   * entry, because a mega menu that stays up while the pointer reads "Rituals"
+   * is a mega menu in the way. Touch is excluded: there is no hover to end,
+   * and a tap's phantom one would close the panel it just opened.
+   */
+  const dismissMegaFromPointer = () => {
+    clearHoverIntent();
+    if (hasFinePointer()) setMegaOpen(false);
   };
 
+  const handleHeaderKeyDown = (e) => {
+    if (e.key === "Escape" && megaOpen) {
+      e.stopPropagation();
+      closeMegaAndRestoreFocus();
+    }
+  };
+
+  // Focus leaving the header entirely closes the panel; focus moving between
+  // the trigger and the panel's own links does not.
+  const handleHeaderBlur = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) closeMega();
+  };
+
+  // ---- Overlay handlers --------------------------------------------------
   const handleCartClick = () => setIsCartOpen(true);
   const handleSearchClick = () => setSearchModalOpen(true);
   const handleMobileMenuClick = () => setSidebarOpen(true);
 
-  // ---------------------------------------------------------------------------
-  // PRIMARY NAV
-  // ---------------------------------------------------------------------------
-  // Two groups on one hairline row: the admin-curated main-menu categories
-  // (API-driven, in `menuOrder`), then the curated editorial links.
-  const mainMenuCategories = useMemo(
-    () => getMainMenuCategories(categories),
-    [categories]
-  );
+  // ---- Nav ---------------------------------------------------------------
+  const { pathname } = location;
+  const shopActive = pathname === ROUTES.SHOP || pathname.startsWith("/category/");
+  const navLinks = [
+    {
+      key: "rituals",
+      label: "Rituals",
+      to: ROUTES.RITUALS,
+      active: pathname === ROUTES.RITUALS || pathname.startsWith("/rituals/"),
+    },
+    {
+      key: "about",
+      label: "Our Story",
+      to: ROUTES.ABOUT,
+      active: pathname === ROUTES.ABOUT,
+    },
+    {
+      key: "why",
+      label: "Why LAMIKAA",
+      to: ROUTES.WHY,
+      active: pathname === ROUTES.WHY,
+    },
+    // Hidden while the admin has the deals page switched off.
+    ...(dealsEnabled
+      ? [
+          {
+            key: "offers",
+            label: "Offers",
+            to: ROUTES.SPECIAL_OFFERS,
+            active: pathname === ROUTES.SPECIAL_OFFERS,
+          },
+        ]
+      : []),
+  ];
 
-  // Children of a main-menu category, for its collection panel. Ordered the way
-  // the rest of the app orders siblings: sortOrder, then name.
-  const childrenOf = useCallback(
-    (parentId) =>
-      categories
-        .filter(
-          (c) => String(c.parentId) === String(parentId) && c.isActive !== false
-        )
-        .sort(
-          (a, b) =>
-            (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
-            String(a.name).localeCompare(String(b.name))
-        ),
-    [categories]
-  );
+  // ---- Surface -----------------------------------------------------------
+  // Transparent wins over glass; glass--strong is glass one step firmer. The
+  // blur is dropped while any overlay this header owns is up — the drawer flag
+  // ui/Drawer sets is handled in CSS, for the drawers that already use it.
+  const overlayOpen =
+    isCartOpen || sidebarOpen || searchModalOpen || authModalOpen;
 
-  const categoryLinks = useMemo(
-    () =>
-      mainMenuCategories.map((cat) => ({
-        key: `cat-${cat.id}`,
-        label: cat.name,
-        to: categoryPath(cat),
-        children: childrenOf(cat.id),
-      })),
-    [mainMenuCategories, childrenOf]
-  );
+  const headerClasses = [
+    styles.header,
+    overHero ? styles.transparent : "sf-glass",
+    !overHero && scrolled ? "sf-glass--strong" : "",
+    !overHero && scrolled ? styles.strong : "",
+    overlayOpen ? styles.noBlur : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  // The three editorial links used to be `?sort=` deep links into the old
-  // listing. The LAMIKAA shop has no sort (the owner's decision, brief §7.3), so
-  // all three collapse into the one entry they now share. Prompt 09 rebuilds
-  // this menu around the mega panel.
-  const editorialLinks = useMemo(
-    () => [
-      { key: "shop", label: "Shop all", to: ROUTES.SHOP },
-      // Deals link is hidden when the admin disables the deals page.
-      ...(dealsEnabled
-        ? [{ key: "deals", label: "Today's Deals", to: "/special-offers" }]
-        : []),
-    ],
-    [dealsEnabled]
-  );
-
-  // A link is active when the current route matches its path and every query
-  // param the link sets is present with the same value.
-  const currentParams = new URLSearchParams(location.search);
-  const isLinkActive = (to) => {
-    const [path, query] = to.split("?");
-    if (location.pathname !== path) return false;
-    if (!query) return location.search === "";
-    const linkParams = new URLSearchParams(query);
-    for (const [key, value] of linkParams.entries()) {
-      if (currentParams.get(key) !== value) return false;
-    }
-    return true;
-  };
-
-  // ---------------------------------------------------------------------------
-  // OVERFLOW ("priority nav")
-  // ---------------------------------------------------------------------------
-  // The row is centred and never wraps or scrolls. Every entry — the category
-  // links, the hairline tick between the groups, and the editorial links — is
-  // rendered twice: once in a hidden, unclipped measuring list that always
-  // holds all of them, and once in the visible list, which shows only as many
-  // leading entries as fit beside the "All collections" button. The rest are
-  // reachable through that button, which opens the CategoriesDrawer (and only
-  // appears when something is actually hidden).
-  const navEntries = useMemo(() => {
-    const sep =
-      categoryLinks.length > 0 && editorialLinks.length > 0
-        ? [{ key: "sep", sep: true }]
-        : [];
-    return [...categoryLinks, ...sep, ...editorialLinks];
-  }, [categoryLinks, editorialLinks]);
-
-  const navInnerRef = useRef(null);
-  const measureListRef = useRef(null);
-  const measureMoreRef = useRef(null);
-  const [visibleCount, setVisibleCount] = useState(navEntries.length);
-
-  const measureOverflow = useCallback(() => {
-    const host = navInnerRef.current;
-    const list = measureListRef.current;
-    const more = measureMoreRef.current;
-    if (!host || !list) return;
-
-    const hostStyle = window.getComputedStyle(host);
-    const available =
-      host.clientWidth -
-      parseFloat(hostStyle.paddingLeft || "0") -
-      parseFloat(hostStyle.paddingRight || "0");
-    const gap = parseFloat(window.getComputedStyle(list).columnGap || "0") || 0;
-
-    const items = Array.from(list.children).filter(
-      (el) => el !== more && el.dataset.entry === "1"
-    );
-    const widths = items.map((el) => el.getBoundingClientRect().width);
-    const total = widths.reduce((sum, w) => sum + w, 0) + gap * Math.max(widths.length - 1, 0);
-
-    // Everything fits on its own: no button, no hidden entries.
-    if (total <= available + 0.5) {
-      setVisibleCount(widths.length);
-      return;
-    }
-
-    // Otherwise reserve room for the button and take entries until they no
-    // longer fit. A trailing separator is dropped (it would tick to nothing).
-    const moreWidth = more ? more.getBoundingClientRect().width : 0;
-    let budget = available - moreWidth - gap;
-    let count = 0;
-    let used = 0;
-    for (let i = 0; i < widths.length; i += 1) {
-      const next = used + (i > 0 ? gap : 0) + widths[i];
-      if (next > budget + 0.5) break;
-      used = next;
-      count = i + 1;
-    }
-    if (count > 0 && navEntries[count - 1]?.sep) count -= 1;
-    setVisibleCount(count);
-  }, [navEntries]);
-
-  // Measure before paint (so the row never flashes in a wrapped state), then
-  // again whenever the host resizes, the entries change, or the webfonts land
-  // and re-flow the tracked uppercase labels.
-  useLayoutEffect(() => {
-    if (isMobile) return undefined;
-    measureOverflow();
-    const host = navInnerRef.current;
-    let observer;
-    if (host && typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(() => measureOverflow());
-      observer.observe(host);
-    } else {
-      window.addEventListener("resize", measureOverflow);
-    }
-    if (document.fonts?.ready) {
-      document.fonts.ready.then(measureOverflow).catch(() => {});
-    }
-    return () => {
-      if (observer) observer.disconnect();
-      else window.removeEventListener("resize", measureOverflow);
-    };
-  }, [measureOverflow, isMobile]);
-
-  const visibleEntries = navEntries.slice(0, visibleCount);
-  const hiddenCount = navEntries.filter((e) => !e.sep).length -
-    visibleEntries.filter((e) => !e.sep).length;
-  const hasOverflow = hiddenCount > 0;
-
-  const openPanelFor = (item) =>
-    setOpenCollection(item.children && item.children.length ? item.key : null);
-
-  // Close the panel when focus leaves the nav entirely (a keyboard user tabbing
-  // past it), but not while focus moves between a trigger and the panel links.
-  const handleNavBlur = (e) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) setOpenCollection(null);
-  };
-
-  const handleNavKeyDown = (e) => {
-    if (e.key === "Escape") setOpenCollection(null);
-  };
-
-  // Collection panel — a hairline drawer of one category's sub-collections.
-  // It lives INSIDE its trigger's <li> so its links follow the trigger in the
-  // tab order (as a sibling of the whole list they were visually adjacent but
-  // eight links away from the keyboard, i.e. unreachable). It still positions
-  // against .navBar, so it spans the full band and never needs measuring.
-  const renderCollectionPanel = (item) => (
-    <div
-      className={styles.collectionPanel}
-      role="group"
-      aria-label={`${item.label} collections`}
-    >
-      <div className={styles.collectionInner}>
-        <div className={styles.collectionHead}>
-          <span className={styles.collectionEyebrow}>{item.label}</span>
-          <Link
-            to={item.to}
-            className={styles.collectionAll}
-            aria-label={`View all ${item.label}`}
-            onClick={() => setOpenCollection(null)}
-          >
-            View all
-          </Link>
-        </div>
-        <ul className={styles.collectionList}>
-          {item.children.map((child) => (
-            <li key={child.id}>
-              <Link
-                to={categoryPath(child)}
-                className={styles.collectionLink}
-                onClick={() => setOpenCollection(null)}
-              >
-                {child.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-
-  const renderNavLink = (item) => {
-    const active = isLinkActive(item.to);
-    const hasPanel = Boolean(item.children && item.children.length);
-    const expanded = hasPanel && openCollection === item.key;
-    return (
-      <li
-        key={item.key}
-        className={styles.navItem}
-        onMouseEnter={() => openPanelFor(item)}
-      >
-        <Link
-          to={item.to}
-          className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
-          aria-current={active ? "page" : undefined}
-          aria-expanded={hasPanel ? expanded : undefined}
-          onFocus={() => openPanelFor(item)}
-          onClick={() => setOpenCollection(null)}
-        >
-          {item.label}
-        </Link>
-        {expanded && renderCollectionPanel(item)}
-      </li>
-    );
-  };
+  const logoWidth = isTiny
+    ? LOGO_WIDTH_MARK
+    : isMobile
+    ? LOGO_WIDTH_MOBILE
+    : LOGO_WIDTH;
 
   return (
     <>
-      {/* ===== UTILITY LINE =================================================
-          Rendered in normal flow ABOVE the sticky header, so it scrolls away
-          and the pinned masthead + nav stay inside their ~120px budget. */}
+      {/* ===== ANNOUNCEMENT BAND ===========================================
+          In normal flow ABOVE the sticky header, so it scrolls away and the
+          pinned chrome stays at the header's own 64px. */}
       <AnnouncementBar />
 
-      <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
-        {/* ===== MASTHEAD ===== */}
-        <div className={styles.masthead}>
-          <div className={styles.mastheadInner}>
-            {/* Hamburger (mobile) */}
-            {isMobile && (
-              <IconButton
+      <header
+        ref={headerRef}
+        className={headerClasses}
+        onMouseLeave={dismissMegaFromPointer}
+        onKeyDown={handleHeaderKeyDown}
+        onBlur={handleHeaderBlur}
+      >
+        <div className={`sf-container ${styles.inner}`}>
+          {/* ---- Left: hamburger + wordmark ---- */}
+          <div className={styles.left}>
+            {!isDesktop && (
+              <button
+                type="button"
+                className={styles.menuButton}
                 onClick={handleMobileMenuClick}
-                className={styles.actionIcon}
                 aria-label="Open menu"
+                aria-haspopup="dialog"
+                aria-expanded={sidebarOpen}
               >
-                <MenuOutlined />
-              </IconButton>
+                <Icon icon="mdi:menu" aria-hidden="true" />
+              </button>
             )}
 
-            {/* Wordmark — transparent-ground artwork straight on the ground. */}
-            <Link to="/" className={styles.logoLink} aria-label={storeName}>
+            {/* Transparent-ground artwork straight on the ground — the LAMIKAA
+                wordmark needs no plate on #0B0B0D (PACKAGING_NOTES §1). */}
+            <Link to={ROUTES.HOME} className={styles.logoLink} aria-label={storeName}>
               <Logo
+                variant={isTiny ? "mark" : "wordmark"}
+                width={logoWidth}
                 className={styles.logoImg}
-                width={LOGO_WIDTH}
                 alt={storeName}
               />
             </Link>
-
-            {/* Right actions */}
-            <div className={styles.actions}>
-              {/* Search — ONE honest affordance opening the search modal.
-                  Below 340px the icon steps out of the masthead (see the
-                  small-phone block in Header.module.css); the BottomNav's
-                  Search tab is on screen throughout, so nothing is lost. */}
-              {isMobile ? (
-                <IconButton
-                  onClick={handleSearchClick}
-                  className={`${styles.actionIcon} ${styles.actionSearch}`}
-                  aria-label="Search"
-                >
-                  <SearchOutlined />
-                </IconButton>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.searchTrigger}
-                  onClick={handleSearchClick}
-                  aria-label="Search"
-                >
-                  <SearchOutlined
-                    className={styles.searchTriggerIcon}
-                    aria-hidden="true"
-                  />
-                  {!isTablet && (
-                    <span className={styles.searchTriggerLabel}>Search</span>
-                  )}
-                </button>
-              )}
-
-              {/* Wishlist (desktop/tablet) */}
-              {!isMobile && (
-                <IconButton
-                  onClick={() => navigate("/wishlist")}
-                  className={styles.actionIcon}
-                  aria-label={`Wishlist, ${wishlistCount} ${
-                    wishlistCount === 1 ? "item" : "items"
-                  }`}
-                >
-                  <Badge
-                    badgeContent={wishlistCount}
-                    max={99}
-                    className={styles.badge}
-                  >
-                    <FavoriteBorder />
-                  </Badge>
-                </IconButton>
-              )}
-
-              {/* Cart */}
-              <IconButton
-                onClick={handleCartClick}
-                className={styles.actionIcon}
-                aria-label={`Cart, ${cartCount} ${
-                  cartCount === 1 ? "item" : "items"
-                }`}
-              >
-                <Badge
-                  badgeContent={cartCount}
-                  max={99}
-                  className={styles.badge}
-                >
-                  <ShoppingBagOutlined />
-                </Badge>
-              </IconButton>
-
-              {/* Account */}
-              <IconButton
-                onClick={handleUserMenuOpen}
-                className={styles.actionIcon}
-                aria-label={isAuthenticated ? "Account menu" : "Log in"}
-                aria-haspopup={isAuthenticated ? "menu" : undefined}
-              >
-                {isAuthenticated && user ? (
-                  /* The initial is a portrait, not a label: left exposed it
-                     became the button's visible text ("B"), which the
-                     "Account menu" name cannot contain — so voice control had
-                     nothing to match on (WCAG 2.5.3). */
-                  <Avatar
-                    className={styles.avatar}
-                    aria-hidden="true"
-                    sx={{ width: 28, height: 28 }}
-                  >
-                    {(user.firstName || user.name || "U").charAt(0).toUpperCase()}
-                  </Avatar>
-                ) : (
-                  <PersonOutline />
-                )}
-              </IconButton>
-            </div>
           </div>
-        </div>
 
-        {/* ===== PRIMARY NAV (desktop/tablet), under a 1px hairline ===== */}
-        {!isMobile && (
-          <nav
-            className={styles.navBar}
+          {/* ---- Centre: primary nav (≥1025px) ---- */}
+          {isDesktop && (
             /* Not "Primary" — BottomNav already claims that label, and two nav
                landmarks with the same name are indistinguishable to a screen
                reader running the landmark list. */
-            aria-label="Shop"
-            onMouseLeave={() => setOpenCollection(null)}
-            onBlur={handleNavBlur}
-            onKeyDown={handleNavKeyDown}
-          >
-            <div className={styles.navInner} ref={navInnerRef}>
-              {/* Measuring twin: every entry, unclipped, never painted. */}
-              <ul
-                className={`${styles.navList} ${styles.navMeasure}`}
-                ref={measureListRef}
-                aria-hidden="true"
-              >
-                {navEntries.map((entry) =>
-                  entry.sep ? (
-                    <li key={entry.key} className={styles.navSep} data-entry="1" />
-                  ) : (
-                    <li key={entry.key} className={styles.navItem} data-entry="1">
-                      <span className={styles.navLink}>{entry.label}</span>
-                    </li>
-                  )
-                )}
-                <li className={styles.navItem} ref={measureMoreRef}>
-                  <span className={styles.navMore}>
-                    <GridViewOutlined className={styles.navMoreIcon} />
-                    <span className={styles.navMoreCount}>+99</span>
-                  </span>
-                </li>
-              </ul>
-
+            <nav className={styles.nav} aria-label="Shop">
               <ul className={styles.navList}>
-                {visibleEntries.map((entry) =>
-                  entry.sep ? (
-                    <li key={entry.key} className={styles.navSep} role="presentation" />
-                  ) : (
-                    renderNavLink(entry)
-                  )
-                )}
-                {hasOverflow && (
-                  <li className={styles.navItem}>
-                    <button
-                      type="button"
-                      className={styles.navMore}
-                      onClick={() => {
-                        setOpenCollection(null);
-                        setCategoriesDrawerOpen(true);
-                      }}
-                      aria-label={`View all collections, ${hiddenCount} more`}
-                      aria-haspopup="dialog"
-                      aria-expanded={categoriesDrawerOpen}
-                      title="View all collections"
-                    >
-                      <GridViewOutlined
-                        className={styles.navMoreIcon}
-                        aria-hidden="true"
+                <li
+                  className={styles.navItem}
+                  onPointerEnter={handleShopPointerEnter}
+                  onPointerLeave={clearHoverIntent}
+                >
+                  <button
+                    type="button"
+                    ref={shopButtonRef}
+                    className={`${styles.navLink} ${
+                      shopActive ? styles.navLinkActive : ""
+                    }`}
+                    aria-haspopup="true"
+                    aria-expanded={megaOpen}
+                    aria-controls={MEGA_PANEL_ID}
+                    aria-current={shopActive ? "page" : undefined}
+                    onClick={() => setMegaOpen((open) => !open)}
+                    onFocus={() => loadMegaPanelData().catch(() => {})}
+                  >
+                    Shop
+                    <Icon
+                      icon="mdi:chevron-down"
+                      className={styles.navChevron}
+                      aria-hidden="true"
+                    />
+                  </button>
+
+                  {/* Inside the trigger's <li> so its links follow the trigger
+                      in the tab order; positioned against the <header>, so it
+                      still spans the full width. */}
+                  <AnimatePresence>
+                    {megaOpen && (
+                      <MegaPanel
+                        id={MEGA_PANEL_ID}
+                        onNavigate={closeMega}
                       />
-                      <span className={styles.navMoreCount} aria-hidden="true">
-                        +{hiddenCount}
-                      </span>
-                    </button>
+                    )}
+                  </AnimatePresence>
+                </li>
+
+                {navLinks.map((item) => (
+                  <li
+                    key={item.key}
+                    className={styles.navItem}
+                    onPointerEnter={dismissMegaFromPointer}
+                  >
+                    <Link
+                      to={item.to}
+                      className={`${styles.navLink} ${
+                        item.active ? styles.navLinkActive : ""
+                      }`}
+                      aria-current={item.active ? "page" : undefined}
+                    >
+                      {item.label}
+                    </Link>
                   </li>
-                )}
+                ))}
               </ul>
-            </div>
-          </nav>
-        )}
+            </nav>
+          )}
+
+          {/* ---- Right: utility actions ---- */}
+          <HeaderActions
+            cartCount={cartCount}
+            wishlistCount={wishlistCount}
+            onSearch={handleSearchClick}
+            onCart={handleCartClick}
+          />
+        </div>
       </header>
 
-      {/* ===== PROMISES LINE ================================================
-          Store-attested policies. Deliberately OUTSIDE the sticky header — it
-          used to pin, which pushed the pinned chrome past its height budget —
-          so it caps the top of the page and then scrolls away. */}
-      {!isMobile && (
-        <div className={styles.promises}>
-          <TrustStrip />
-        </div>
-      )}
-
-      {/* ===== USER DROPDOWN MENU ===== */}
-      <Menu
-        anchorEl={userMenuAnchor}
-        open={Boolean(userMenuAnchor)}
-        onClose={handleUserMenuClose}
-        className={styles.userMenu}
-        PaperProps={{
-          className: styles.userMenuPaper,
-          elevation: 0,
-        }}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        {isAuthenticated ? (
-          [
-            <div key="greeting" className={styles.menuGreeting}>
-              <Avatar className={styles.menuAvatar} sx={{ width: 36, height: 36 }}>
-                {(user?.firstName || user?.name || "U").charAt(0).toUpperCase()}
-              </Avatar>
-              <div className={styles.menuIdentity}>
-                <Typography variant="subtitle2" className={styles.menuUserName}>
-                  {user?.firstName || user?.name || "User"}
-                </Typography>
-                <Typography variant="caption" className={styles.menuUserEmail}>
-                  {user?.email || ""}
-                </Typography>
-              </div>
-            </div>,
-            <Divider key="div1" className={styles.menuDivider} />,
-            <MenuItem key="profile" onClick={() => handleMenuNavigate("/profile")} className={styles.menuItem}>
-              <PersonOutline fontSize="small" className={styles.menuItemIcon} />
-              My Profile
-            </MenuItem>,
-            <MenuItem key="orders" onClick={() => handleMenuNavigate("/orders")} className={styles.menuItem}>
-              <ListAltOutlined fontSize="small" className={styles.menuItemIcon} />
-              My Orders
-            </MenuItem>,
-            <MenuItem key="wishlist" onClick={() => handleMenuNavigate("/wishlist")} className={styles.menuItem}>
-              <FavoriteBorder fontSize="small" className={styles.menuItemIcon} />
-              My Wishlist
-            </MenuItem>,
-            <Divider key="div2" className={styles.menuDivider} />,
-            <MenuItem key="logout" onClick={handleLogout} className={`${styles.menuItem} ${styles.logoutItem}`}>
-              <LogoutOutlined fontSize="small" className={styles.menuItemIcon} />
-              Logout
-            </MenuItem>,
-          ]
-        ) : (
-          [
-            <MenuItem key="login" onClick={() => { handleUserMenuClose(); openAuthModal("login"); }} className={styles.menuItem}>
-              <LoginOutlined fontSize="small" className={styles.menuItemIcon} />
-              Login
-            </MenuItem>,
-            <MenuItem key="register" onClick={() => { handleUserMenuClose(); openAuthModal("signup"); }} className={styles.menuItem}>
-              <PersonAddAltOutlined fontSize="small" className={styles.menuItemIcon} />
-              Register
-            </MenuItem>,
-          ]
-        )}
-      </Menu>
-
-      {/* ===== MODALS & DRAWERS ===== */}
+      {/* ===== MODALS & DRAWERS =============================================
+          Unchanged mounts, unchanged props: each keeps its own focus trap until
+          its own prompt migrates it onto the ui/Drawer + ui/Modal primitives. */}
       <CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <SidebarMenu
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onOpenAuth={() => openAuthModal("login")}
       />
-      <AuthModal open={authModalOpen} onClose={closeAuthModal} defaultTab={authModalTab} />
-      <SearchModal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} />
-      {!isMobile && (
-        <CategoriesDrawer
-          open={categoriesDrawerOpen}
-          onClose={() => setCategoriesDrawerOpen(false)}
-          categories={categories}
-          editorialLinks={editorialLinks}
-          isLinkActive={isLinkActive}
-        />
-      )}
+      <AuthModal
+        open={authModalOpen}
+        onClose={closeAuthModal}
+        defaultTab={authModalTab}
+      />
+      <SearchModal
+        open={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+      />
     </>
   );
 };

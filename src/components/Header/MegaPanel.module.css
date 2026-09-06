@@ -1,0 +1,281 @@
+/* =============================================================================
+ * MegaPanel — the Shop menu sheet under the header
+ * =============================================================================
+ * A full-width strong-glass sheet positioned against the sticky <header>. The
+ * `.sf-glass--strong` ground, the hairline and the shadow are the primitives'
+ * (theme/storefront-primitives.css); this module owns the grid, the category
+ * rows and the featured card's proportions — nothing about the surface is
+ * restated here.
+ *
+ * Only ONE blurred layer is added by this file: none. The sheet inherits the
+ * header's stacking context and paints its ground with the strong glass class,
+ * whose blur is the header's own — the budget in DESIGN_SYSTEM §4 stays at two.
+ * ========================================================================== */
+
+.panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  /* Above the page, below anything modal. It sits inside the header's stacking
+     context, so this only orders it against the header's own children. */
+  z-index: 1;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid var(--sf-glass-border);
+  border-bottom: 1px solid var(--sf-glass-border);
+  box-shadow: var(--sf-shadow-2);
+}
+
+/* THE GROUND UNDER THE GLASS. `.sf-glass--strong` is 8% white, which is a
+   surface when something dims the page beneath it — a modal has its scrim, this
+   sheet has nothing: it opens straight over the hero, and 8% white over a
+   headline is a menu you cannot read. So the panel lays its own near-black wash
+   between the glass ground and the content.
+   `z-index: -1` puts it above the element's background and below every child;
+   the panel is a positioned, z-indexed element, so that negative layer cannot
+   escape it.
+   AND NO `backdrop-filter`. It was tried and it is INERT here: the panel is a
+   descendant of the blurred header, so its backdrop root is the header's
+   filtered result rather than the page, and the sheet stayed as sharp as it was
+   without it. A blur that cannot blur is a promise in the stylesheet and a cost
+   on the compositor. What a sharp ghost of the page behind menu text needs is
+   opacity, not a filter — hence 97%, four points of glass and no artefact. One
+   blurred layer, in the header, is also the budget (DESIGN_SYSTEM §4). */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--sf-color-bg) 97%, transparent);
+  pointer-events: none;
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1.2fr;
+  gap: var(--sf-space-8);
+  padding-block: var(--sf-space-10);
+}
+
+.innerEmpty {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-4);
+}
+
+.empty {
+  margin: 0;
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+}
+
+.column {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 var(--sf-space-4);
+}
+
+/* ---- Categories --------------------------------------------------------- */
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row is a plate, a name, a one-line description and the count. The whole row
+   is the link — a 40px thumbnail beside a 20px serif name is one target, not
+   three, and splitting it would put two links to the same place in the tab
+   order. */
+.categoryRow {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: var(--sf-space-3);
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-2);
+  border-radius: var(--sf-radius-md);
+  color: var(--sf-color-text);
+  text-decoration: none;
+  transition: background var(--sf-transition-fast),
+    color var(--sf-transition-fast);
+}
+
+.categoryRow:hover {
+  background: var(--sf-color-surface-hover);
+}
+
+.categoryRow:hover .categoryName {
+  color: var(--sf-color-gold);
+}
+
+.categoryRow:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* The plate primitive at 40px. `aspect-ratio: 1` comes with it, so only the
+   width and the smaller radius are set here. */
+.thumb {
+  width: 40px;
+  border-radius: var(--sf-radius-sm);
+}
+
+.categoryText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.categoryName {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg); /* 20px */
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  transition: color var(--sf-transition-fast);
+}
+
+/* One line, always: a description that wraps turns a seven-row list into a
+   scrolling column. */
+.categoryDesc {
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.countChip {
+  flex: none;
+  min-width: 24px;
+  padding: 2px var(--sf-space-2);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-badge-bg);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* "All products" closes the list under a hairline. It keeps the three-track
+   grid with an empty thumbnail cell rather than collapsing it, so its label
+   starts on the same x as the seven category names above it. */
+.allRow {
+  margin-top: var(--sf-space-2);
+  padding-top: var(--sf-space-3);
+  border-top: 1px solid var(--sf-color-border);
+  border-radius: 0;
+}
+
+.allRow .categoryName {
+  color: var(--sf-color-gold);
+  font-size: var(--sf-text-md);
+}
+
+/* ---- Concerns ----------------------------------------------------------- */
+
+/* Two columns of chips. `columns` rather than a grid so a short list stays
+   left-packed instead of stretching eleven chips across two thin tracks. */
+.concernList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* `.sf-chip` never says `text-decoration: none` — it was written for the inert
+   <span> a badge usually is — so a chip rendered as a link arrives underlined.
+   Corrected here rather than in the primitive, which is Prompt 05's file. */
+.concernChip {
+  width: 100%;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* ---- Featured ----------------------------------------------------------- */
+
+.featured {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+}
+
+.featuredPlate {
+  width: 100%;
+  margin-bottom: var(--sf-space-2);
+}
+
+.featuredEyebrow {
+  margin: 0;
+}
+
+/* A <p>, not a heading. The panel is a MENU that happens to be on every page:
+   an <h3> here would put "Black Rice Face Wash" at the top of the heading
+   outline of the whole storefront, ahead of each page's own <h1>. The region's
+   `aria-label="Shop menu"` is what makes it findable. */
+.featuredName {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  /* 24px. The fluid scale steps 20px -> clamp(22-28px), and a card inside a
+     fixed-width menu column wants neither: it is the one place the panel names
+     a size, the way the announcement band names its 13px. */
+  font-size: 1.5rem;
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+}
+
+.featuredPromise {
+  margin: 0;
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+}
+
+.featuredPrice {
+  margin-top: var(--sf-space-1);
+}
+
+.featuredCta {
+  margin-top: var(--sf-space-2);
+}
+
+/* ---- Narrow desktops ---------------------------------------------------- */
+/* Between 1025 and 1200 the three tracks would squeeze the featured card below
+   its plate's usable size, so the panel trades the gap and the padding first. */
+@media (max-width: 1200px) {
+  .inner {
+    gap: var(--sf-space-6);
+    padding-block: var(--sf-space-8);
+  }
+}
+
+/* The panel never renders below 1025px (Header.js gates it on a media query),
+   so there is no tablet or phone layout to write here — the hamburger drawer is
+   the Shop menu at those widths. */
+
+@media (prefers-reduced-motion: reduce) {
+  .categoryRow {
+    transition: none;
+  }
+}
+
+@media print {
+  .panel {
+    display: none !important;
+  }
+}

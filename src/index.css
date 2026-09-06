@@ -44,6 +44,22 @@ html {
 }
 
 /* -----------------------------------------------------------------------------
+ * ANCHOR OFFSET
+ * The header is sticky and 64px tall (56px on phones), so anything the browser
+ * scrolls to by id — the skip link's #main-content, an in-page section, a
+ * ScrollToTop hash jump — would otherwise land UNDER it. 80px is the header
+ * plus a breath of air; the announcement band is in normal flow and has already
+ * scrolled away by the time any of this happens.
+ *
+ * `:where()` so the rule carries ZERO specificity: a component that needs its
+ * own offset (a page with a second sticky bar) overrides it with a plain class,
+ * in either source order. It is a default, not an opinion.
+ * -------------------------------------------------------------------------- */
+:where([id]) {
+  scroll-margin-top: 80px;
+}
+
+/* -----------------------------------------------------------------------------
  * BODY — the reading defaults
  * Manrope 400 at a hard 16px floor over 1.5 leading, warm white on the near-
  * black ground. Every page inherits this and overrides only what it must.

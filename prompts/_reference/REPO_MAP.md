@@ -13,7 +13,7 @@
 | Dependencies | `@emotion/react` + `@emotion/styled` (MUI peer), `@iconify/react` 4 (icons, 20 files), `@mui/material` 5.14 + `@mui/icons-material` (admin UI, Header controls, ThemeContext), `axios` 1.6, `canvas-confetti` (OrderConfirmation only), `framer-motion` 10 (route transition, drawers, reveals; 25 files), `json-server` 0.17 (mock backend), `sweetalert2` 11 (toasts/confirms, 20 files), `web-vitals` (unused: `reportWebVitals` is commented out), testing-library trio. DevDependency: `concurrently`. |
 | Styling approach | **CSS Modules** (`*.module.css`, one per component/page) consuming **CSS custom properties** (`--sf-*`) declared in `src/theme/storefront-tokens.css`; global primitives in `src/theme/storefront-primitives.css` (`.sf-btn`, `.sf-chip`, `.sf-card`, `.sf-skeleton`, `.sf-toast`, `.sf-badge-discount`, `.sf-ribbon-premium`, `.sf-flag*`); `src/index.css` imports both; `src/App.css` holds page ground, skip link, scrollbars, SweetAlert2 skin (storefront + admin blocks). **Zero hard-coded hex in any CSS module** (one, inside a comment, at `src/components/BottomNav/BottomNav.module.css:172`); all 135 hex values live in `storefront-tokens.css`, 17 in `App.css`. MUI is styled through `createTheme` in `src/context/ThemeContext.js` (storefront) and `src/theme/adminTheme.js` (admin). No Sass, no styled-components usage, no Tailwind. |
 | Animation | `framer-motion` via the vocabulary in `src/theme/motion.js` (`pageMotion`, `overlay()`, `panel()`, `sheet()`, `reveal()`, `collapse()`, `EASE`, `DURATION`); CSS transitions on `--sf-transition*` tokens; reduced motion handled by zeroing the duration tokens (`storefront-tokens.css:349-358`) and by `useReducedMotion()` in JS. |
-| Icons | `@iconify/react` (`mdi:*`) on the storefront + admin; `@mui/icons-material` in Header, BottomNav, SidebarMenu, CategoriesDrawer. |
+| Icons | `@iconify/react` (`mdi:*`) on the storefront + admin; `@mui/icons-material` in BottomNav, SidebarMenu, and (Prompt 09) only the Header's account-menu rows — CategoriesDrawer is deleted and the masthead's own marks are Iconify. |
 | Forms / HTTP / SEO | Hand-rolled forms (no form lib); `axios` instance in `src/services/api.js`; **no helmet** — `src/utils/documentTitle.js` owns `document.title`; the PDP writes `meta[name=description]` by hand; no JSON-LD anywhere. |
 | ESLint / Prettier | `eslintConfig: { extends: ["react-app", "react-app/jest"] }` in package.json; no `.eslintrc`, no Prettier config. |
 | Env files (committed) | `.env`: `REACT_APP_API_URL=http://localhost:3001`, `REACT_APP_USE_MOCK_API=true`, `REACT_APP_NAME=Meghali's Silk`, `REACT_APP_VERSION=1.0.0`, `REACT_APP_ENABLE_ANALYTICS=false`, `GENERATE_SOURCEMAP=true`; commented `REACT_APP_RAZORPAY_KEY_ID`, `REACT_APP_SHIPROCKET_EMAIL`; comment mentions `https://core.meghalisilk.in`. `.env.production`: `REACT_APP_API_URL=https://core.lamikanaturals.com/api/v1`, `REACT_APP_USE_MOCK_API=false`, `REACT_APP_NAME=Meghali's Silk`, `REACT_APP_ENABLE_ANALYTICS=true`, `GENERATE_SOURCEMAP=false`. `.env.example`: template (`My E-Commerce Store`). `process.env.*` read in code: `REACT_APP_API_URL`, `REACT_APP_USE_MOCK_API`, `REACT_APP_NAME` (`src/utils/constants.js:2`), `NODE_ENV`; `REACT_APP_ENABLE_ANALYTICS`/`REACT_APP_VERSION` are **never read**. |
@@ -212,6 +212,71 @@ Highlights that shape the prompts:
 - `Footer.js` (445): newsletter (`apiService.leads.createNewsletter`), brand+contact, four columns, promises + payment marks, colophon; old white logo at 45.
 - `storefront/*` (13 atoms exported from `index.js`): `ProductCard` (props `product, onAddToCart, onToggleWishlist, isWishlisted, showAddToCart`), `ProductGallery` (props `images, alt, discount, zoom, ribbon, inStock` — images only), `AddToCartBar` (mobile sticky), `PriceBlock`, `QuantityStepper`, `VariantSelector` (+ `variantUtils.js`), `TrustBadges` (config-driven from `tokens.js`), `DeliveryReturnsInfo`, `ReviewsSection`, `RelatedProducts`, `FrequentlyBoughtTogether`, `SocialProof`, `StarRating`.
 - Unused/duplicate: `FeaturedProducts` (private card copy), `CTASection`, `Newsletter`, `BottomDrawer` — none imported by Home/Products/PDP.
+
+
+**Updated by Prompt 09.** The masthead is rebuilt; `CategoriesDrawer/` is
+deleted (nothing imports it) and `TrustStrip` no longer renders from the header
+(the mobile drawer still does; Prompt 15 gives it a home page section).
+
+- `Header.js` (437): `position: sticky; top: 0; z-index: var(--sf-z-header)`,
+  ONE row inside `.sf-container` — 64px, 56px at ≤768px. Three zones: hamburger
+  (rendered <1025px, also CSS-hidden ≥1025) + `<Logo>` (wordmark 168 / 140
+  ≤768px, `variant="mark"` 40 at ≤340px) · `<nav aria-label="Shop">` (≥1025px
+  only) · `<HeaderActions>`. Surface classes are composed in JS:
+  `.transparent` while `#hero-sentinel` intersects (IntersectionObserver
+  re-attached on every `pathname` change, retried for up to 30 frames so a lazy
+  chunk's sentinel is still caught), otherwise `sf-glass`, plus
+  `sf-glass--strong` past 24px of scroll. `.noBlur` (its own four overlays) and
+  `:global(body[data-drawer-open])` (everything on `ui/Drawer`) both withdraw
+  the backdrop filter. Still hosts the unchanged `AnnouncementBar`,
+  `CartDrawer`, `SidebarMenu`, `AuthModal` and `SearchModal` mounts with their
+  existing props.
+  **Nav contract:** `Shop` is a `<button>` carrying `aria-haspopup`,
+  `aria-expanded` and `aria-controls="mega-panel"`; then `Rituals` → `/rituals`,
+  `Our Story` → `/about`, `Why LAMIKAA` → `/why-lamikaa`, and `Offers` →
+  `/special-offers` only while `useDealsConfig().enabled`. `aria-current="page"`
+  on the active entry. No measurement, no overflow button, no collection panels.
+- `Header/MegaPanel.js` (318) + `.module.css`: the Shop sheet — `role="region"
+  aria-label="Shop menu"`, `id="mega-panel"`, `max-height: calc(100vh - 100px)`,
+  a `1.1fr 1fr 1.2fr` grid at 40px padding inside `.sf-container`. Rendered
+  INSIDE the Shop `<li>` (tab order) but positioned against the `<header>` (full
+  width) — nothing between the two may take `position`. Columns: seven
+  categories (40px `.sf-plate` thumbnail from `stageSrc(firstHeroProduct,
+  {w:96})`, `displayName`, one-line `description`, count chip, `categoryPath()`)
+  closing on **All products** → `/shop`; `Chip variant="concern"` per concern →
+  `concernPath()`; a `GlassCard glow="duo" interactive` featuring
+  `products.getHeroProducts()[0]` (falls back to `rituals[0]`).
+  Exports **`loadMegaPanelData()`**, a module-level promise over
+  `categories.getAll` + `concerns.getAll` + `products.getHeroProducts` +
+  `rituals.getAll` (the `SearchModal.loadSearchData` shape); the header warms it
+  on the Shop button's hover and focus. Props: `id`, `onNavigate`.
+  Opens on 200ms hover intent (fine pointers only) or click/Enter/Space; closes
+  on Escape (focus returns to the trigger), outside pointerdown, focus leaving
+  the header, a sibling nav entry being hovered, and any route change.
+  NOT rendered below 1025px.
+- `Header/HeaderActions.js` (243): search (`mdi:magnify` → `SearchModal`),
+  account (the MUI `Menu` moved verbatim — greeting, My Profile, My Orders, My
+  Wishlist, Logout / Login, Register — its paper restyled to glass through
+  `PaperProps.className`), wishlist → `/wishlist`, cart → `CartDrawer`. All four
+  are `ui/Button variant="icon"`. Account and wishlist are CSS-hidden at ≤768px
+  (the drawer and BottomNav carry them). The count badge is an 18px gold disc
+  with near-black numerals, capped at `99+`, `aria-hidden` — the button's
+  `aria-label` ("Cart, 3 items") is the accessible name. Props: `cartCount`,
+  `wishlistCount`, `onSearch`, `onCart`.
+- `AnnouncementBar.js` (217): `announcements.getAll()` on mount, falling back to
+  `brand.announcements` when the API answers empty or throws; every row whose
+  `text` is `isPlaceholder()` is dropped; 6s opacity crossfade paused on
+  hover/focus and while the tab is hidden, held under reduced motion;
+  `role="status" aria-live="polite"`; dismissal in
+  **`sessionStorage["lk-announcement-dismissed"]`**. A 36px band at 4% warm
+  white with NO backdrop filter (it sits above the blurred header), Manrope 500
+  at 13px, a gold dot marker, the message itself carrying `row.link`, and a
+  44px dismiss target around a 16px glyph. Renders in normal flow ABOVE the
+  sticky header, so it scrolls away.
+- Base layer: `src/index.css` now gives every `[id]` `scroll-margin-top: 80px`
+  through `:where()`, so the skip link's `#main-content` and every in-page
+  anchor clear the sticky header. `App.css`'s `.main-content` has no spacer and
+  no `padding-top` — the header is sticky and occupies its own flow.
 
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
