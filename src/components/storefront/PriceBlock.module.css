@@ -112,3 +112,43 @@
   font-size: var(--sf-text-xs);
   letter-spacing: 0.08em;
 }
+
+/* =============================================================================
+ * "Price on launch" — the honest stand-in  (added by Prompt 05)
+ * =============================================================================
+ * A quiet hairline pill in secondary ink, deliberately NOT gold: gold is the
+ * price colour, and a chip that says "we haven't set one yet" must not look
+ * like a price. It sits at the same optical weight as the compare-at line, so a
+ * card grid holding both priced and unpriced products still scans evenly.
+ * ========================================================================== */
+.tba {
+  display: inline-flex;
+  align-items: center;
+  /* `.block` is a column flex container, which would otherwise stretch this to
+     the full width of whatever holds it — a chip the width of a card reads as a
+     banner, not as a label standing in for a number. */
+  align-self: flex-start;
+  min-height: 28px;
+  padding: var(--sf-space-1) var(--sf-space-4);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-badge-bg);
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lg .tba {
+  min-height: 36px;
+  font-size: var(--sf-text-base);
+}
+
+.sm .tba {
+  min-height: 26px;
+  padding: var(--sf-space-1) var(--sf-space-3);
+  font-size: var(--sf-text-xs);
+}

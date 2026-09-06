@@ -1,0 +1,45 @@
+/* =============================================================================
+ * Skeleton — shapes only; the shimmer is `.sf-skeleton` in the primitives
+ * ========================================================================== */
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  width: 100%;
+}
+
+.line {
+  display: block;
+  width: 100%;
+}
+
+.block {
+  display: block;
+  width: 100%;
+}
+
+.circle {
+  display: block;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  width: 100%;
+}
+
+/* The 1:1 image plate every product card opens with — the same ratio
+   `.sf-plate` uses, so nothing shifts when the photograph arrives. */
+.plate {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--sf-radius-lg);
+  margin-bottom: var(--sf-space-2);
+}

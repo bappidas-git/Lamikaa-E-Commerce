@@ -3,6 +3,10 @@ import {
   SUPPORTED_CURRENCIES,
   formatMoney,
 } from "./storeSettings";
+// The "is there a price at all?" predicate lives in product.js, next to the
+// rest of the product normalisation. The import cycle between the two files is
+// deliberate: both directions are read at call time, inside function bodies.
+import { isPriceKnown } from "./product";
 
 // Inline SVG placeholder (no network) used when an image is missing or its URL
 // fails to load, so image-bearing cards always degrade gracefully.
@@ -74,9 +78,20 @@ export const formatCurrency = (amount, currency, options = {}) => {
   });
 };
 
-// Get the minimum price from product variants
+// Get the minimum price from product variants.
+//
+// PLACEHOLDER-AWARE. Five of the eight LAMIKAA products ship before their MRP
+// is set, carrying `price: null` (or `priceTBA: true`). Those must not fall
+// through to `parseFloat(null) || 0` and be printed as a confident ₹0.00 — a
+// free product is a very different promise from an unpriced one. The `unknown`
+// flag is the signal every price surface reads: PriceBlock renders its "Price
+// on launch" chip, ui/Price renders nothing else, and Add to Cart is disabled.
+// The zeroes underneath keep arithmetic callers (cart totals, sorting) safe.
 export const getProductMinPrice = (product) => {
-  if (!product) return { sellingPrice: 0, originalPrice: 0, discount: 0 };
+  if (!product) return { sellingPrice: 0, originalPrice: 0, discount: 0, unknown: true };
+  if (!isPriceKnown(product)) {
+    return { sellingPrice: 0, originalPrice: 0, discount: 0, unknown: true };
+  }
 
   const basePrice = parseFloat(product.price) || 0;
   const comparePrice = parseFloat(product.comparePrice) || 0;
@@ -128,6 +143,12 @@ export const getDefaultCartVariant = (product) => {
 // the price always equals the (minimum) price the card displays — never a
 // synthetic `${id}-default` id that would collide with real variant cart ids.
 export const buildCartItem = (product) => {
+  // A product without a price cannot become a cart line: there is nothing to
+  // charge, and a ₹0 line would check out. Every caller disables its Add to
+  // Cart before this can happen (the button reads `priceTBA` / isPriceKnown),
+  // so reaching here is a bug in the caller — and a thrown PRICE_TBA is how it
+  // surfaces as one rather than as a free order.
+  if (!isPriceKnown(product)) throw new Error("PRICE_TBA");
   const { sellingPrice } = getProductMinPrice(product);
   const variant = getDefaultCartVariant(product);
   const stock = variant ? variant.stock : product.stock;

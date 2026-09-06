@@ -45,6 +45,9 @@ import Support from "./pages/Support/Support";
 import AboutUs from "./pages/AboutUs/AboutUs";
 import SpecialOffers from "./pages/SpecialOffers/SpecialOffers";
 import Wishlist from "./pages/Wishlist/Wishlist";
+// TEMPORARY (Prompt 05, removed by Prompt 35): the visual QA surface for the
+// shared UI primitives. Unlinked from the navigation and from the sitemap.
+import Playground from "./pages/_Playground/Playground";
 
 // Admin Pages
 import AdminLogin from "./pages/Admin/AdminLogin";
@@ -127,6 +130,8 @@ function StorefrontShell() {
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/refund" element={<RefundPolicy />} />
+                {/* TEMPORARY — primitive playground, deleted by Prompt 35. */}
+                <Route path="/_playground" element={<Playground />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </motion.div>

@@ -1,0 +1,189 @@
+/* =============================================================================
+ * VideoPlayer
+ * ========================================================================== */
+
+.wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--sf-radius-lg);
+  background: var(--sf-color-surface);
+  border: 1px solid var(--sf-glass-border);
+  isolation: isolate;
+}
+
+/* The wrapper is the keyboard target for Space / K / M / arrows / F, so it must
+   show a ring like any other control. */
+.wrap:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Film is composed for its frame: unlike product photography, it covers. */
+  object-fit: cover;
+  background: var(--sf-color-bg);
+}
+
+/* ---- the play badge ------------------------------------------------------
+   Gold circle, centred, the one solid accent fill the palette allows. It fades
+   with the shared duration rather than scaling, so nothing bounces. */
+.badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sf-color-gold);
+  color: var(--sf-color-primary-contrast);
+  font-size: 2rem;
+  cursor: pointer;
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--sf-color-gold) 30%, transparent);
+  transition: background-color var(--sf-transition), box-shadow var(--sf-transition);
+}
+
+.badge:hover {
+  background: var(--sf-color-gold-light);
+  box-shadow: 0 10px 36px color-mix(in srgb, var(--sf-color-gold) 45%, transparent);
+}
+
+.badge:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.badge:active {
+  opacity: 0.92;
+}
+
+@media (max-width: 480px) {
+  .badge {
+    width: 56px;
+    height: 56px;
+    font-size: 1.75rem;
+  }
+}
+
+/* ---- the control bar -----------------------------------------------------
+   A scrim rather than a panel: another blurred layer here would spend the glass
+   budget (DESIGN_SYSTEM §4) on chrome sitting over a video. */
+.bar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  padding: var(--sf-space-3) var(--sf-space-4);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--sf-color-bg) 82%, transparent)
+  );
+}
+
+.barMinimal {
+  padding: var(--sf-space-2) var(--sf-space-3);
+}
+
+.control {
+  display: grid;
+  place-items: center;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-size: var(--sf-text-lg);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast), background-color var(--sf-transition-fast);
+}
+
+.control:hover {
+  color: var(--sf-color-gold);
+  background: var(--sf-glass-bg);
+}
+
+.control:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.control:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+/* ---- progress ------------------------------------------------------------ */
+.track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 2px;
+  min-width: 0;
+  border-radius: var(--sf-radius-pill);
+  background: color-mix(in srgb, var(--sf-color-text) 22%, transparent);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  background-image: var(--sf-gradient-signature);
+  /* No transition: the fill is driven by timeupdate, which already fires four
+     times a second — easing it would make it lag behind the picture. */
+}
+
+/* ---- failure ------------------------------------------------------------- */
+.error {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--sf-color-surface);
+}
+
+.errorPoster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+}
+
+.errorText {
+  position: relative;
+  margin: 0;
+  padding: var(--sf-space-2) var(--sf-space-4);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-overlay);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge,
+  .control {
+    transition: none;
+  }
+  .control:active {
+    transform: none;
+  }
+}

@@ -209,9 +209,15 @@
   content: "";
   position: absolute;
   z-index: -1;
-  inset: -12% -8%;
-  --sf-glow-x: 6%;
-  --sf-glow-y: -8%;
+  /* The lamp's size and placement are overridable from the HOST element:
+     `GlowWrap` (ui/GlowWrap.js) sets --sf-glow-offset-x/-y and --sf-glow-inset
+     on the element, and they inherit into this pseudo-element as the fallback
+     value here. The per-tone defaults below stay the defaults, and the breathe
+     keyframe keeps reading --sf-glow-x/-y, so nothing about a bare `.sf-glow`
+     changes. */
+  inset: var(--sf-glow-inset, -12% -8%);
+  --sf-glow-x: var(--sf-glow-offset-x, 6%);
+  --sf-glow-y: var(--sf-glow-offset-y, -8%);
   border-radius: 50%;
   background: var(--sf-glow-pink);
   filter: blur(60px);
@@ -222,8 +228,8 @@
 
 .sf-glow--violet::before {
   background: var(--sf-glow-violet);
-  --sf-glow-x: -8%;
-  --sf-glow-y: 10%;
+  --sf-glow-x: var(--sf-glow-offset-x, -8%);
+  --sf-glow-y: var(--sf-glow-offset-y, 10%);
 }
 
 .sf-glow--gold::before {
@@ -234,17 +240,19 @@
    pair is for hero-scale moments only — a card gets one. */
 .sf-glow--duo::before {
   background: var(--sf-glow-pink);
-  --sf-glow-x: 12%;
-  --sf-glow-y: -12%;
+  --sf-glow-x: var(--sf-glow-offset-x, 12%);
+  --sf-glow-y: var(--sf-glow-offset-y, -12%);
 }
 
 .sf-glow--duo::after {
   content: "";
   position: absolute;
   z-index: -1;
-  inset: -12% -8%;
-  --sf-glow-x: -12%;
-  --sf-glow-y: 12%;
+  inset: var(--sf-glow-inset, -12% -8%);
+  /* The second lamp mirrors the first, so a caller's offset moves the PAIR
+     apart rather than stacking them on the same spot. */
+  --sf-glow-x: calc(-1 * var(--sf-glow-offset-x, 12%));
+  --sf-glow-y: calc(-1 * var(--sf-glow-offset-y, -12%));
   border-radius: 50%;
   background: var(--sf-glow-violet);
   filter: blur(60px);

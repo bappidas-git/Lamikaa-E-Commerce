@@ -1,0 +1,88 @@
+/* =============================================================================
+ * SectionHeading
+ * ========================================================================== */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  margin-bottom: var(--sf-space-10);
+}
+
+/* The actions slot joins the cluster on one row only when there is room for
+   both to keep their measure. Below that it stacks, which is also the order a
+   screen reader and a keyboard walk already follow. */
+@media (min-width: 769px) {
+  .wrap {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sf-space-8);
+  }
+}
+
+.cluster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--sf-text-2xl);
+  line-height: var(--sf-leading-display);
+  /* The headline's own measure. Longer than the lede's because display type at
+     this size fits fewer words per line to begin with. */
+  max-width: 22ch;
+}
+
+.lede {
+  margin: 0;
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  max-width: 60ch;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  flex-wrap: wrap;
+  flex: none;
+}
+
+/* ---- alignment ----------------------------------------------------------- */
+.center {
+  align-items: center;
+  text-align: center;
+}
+
+.center .cluster {
+  align-items: center;
+}
+
+.center .title,
+.center .lede {
+  margin-inline: auto;
+}
+
+@media (min-width: 769px) {
+  .center {
+    flex-direction: column;
+  }
+}
+
+.right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.right .cluster {
+  align-items: flex-end;
+}

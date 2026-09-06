@@ -1,0 +1,125 @@
+/* =============================================================================
+ * Chip — five recolourings of one pill
+ * =============================================================================
+ * `.sf-chip` in the primitives owns the geometry (pill, 13px/500, 36px tall,
+ * 44px when interactive, focus ring, hover). Nothing here restates any of it.
+ * ========================================================================== */
+
+.chip {
+  /* A chip that is not a control should not look like one. `.sf-chip` sets a
+     pointer cursor for the interactive case; a <span> takes it back. */
+  cursor: inherit;
+}
+
+button.chip,
+a.chip {
+  cursor: pointer;
+}
+
+/* ---- trust — the three owner-mandated badges ------------------------------
+   The one place besides the eyebrow where tracked uppercase survives: these are
+   marks, not sentences, and the tracking is what separates them from a label. */
+.trust {
+  background: transparent;
+  border-color: var(--sf-color-border-strong);
+  color: var(--sf-color-gold);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+/* ---- concern — glass with one accent ------------------------------------- */
+.concern {
+  color: var(--sf-chip-tone, var(--sf-color-text-secondary));
+  border-color: color-mix(in srgb, var(--sf-chip-tone, var(--sf-color-border)) 45%, transparent);
+  background: color-mix(in srgb, var(--sf-chip-tone, transparent) 10%, var(--sf-glass-bg));
+}
+
+.concern:hover {
+  color: var(--sf-chip-tone, var(--sf-color-text));
+  border-color: color-mix(in srgb, var(--sf-chip-tone, var(--sf-color-border-strong)) 70%, transparent);
+}
+
+/* ---- status — the semantic set ------------------------------------------- */
+.status {
+  color: var(--sf-chip-tone, var(--sf-color-text-secondary));
+  border-color: color-mix(in srgb, var(--sf-chip-tone, var(--sf-color-border)) 40%, transparent);
+  background: color-mix(in srgb, var(--sf-chip-tone, transparent) 12%, transparent);
+  font-weight: var(--sf-font-semibold);
+}
+
+/* ---- step — a numeral inside a signature-gradient ring -------------------
+   28px at rest, per DESIGN_SYSTEM §7. The ring is a masked pseudo-element for
+   the same reason the add-to-cart hairline is: a 1px gradient border that
+   follows a full circle, on every engine. */
+.step {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  flex: none;
+  border-color: transparent;
+  background: var(--sf-color-surface);
+  color: var(--sf-color-gold);
+  border-radius: 50%;
+}
+
+.step::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 1px;
+  background-image: var(--sf-gradient-signature);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* An interactive step keeps the 44px target: the ring stays 28px, the hit area
+   grows around it. */
+button.step,
+a.step {
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  background: transparent;
+}
+
+button.step::after,
+a.step::after {
+  inset: 8px;
+}
+
+.numeral {
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: 1;
+}
+
+/* ---- tones ---------------------------------------------------------------
+   One custom property per chip; the rules above are written once against it, so
+   a new accent is one class, not four declarations. */
+.tonePink { --sf-chip-tone: var(--sf-concern-pink); }
+.toneViolet { --sf-chip-tone: var(--sf-concern-violet); }
+.toneCyan { --sf-chip-tone: var(--sf-concern-cyan); }
+.toneGold { --sf-chip-tone: var(--sf-concern-gold); }
+.toneMint { --sf-chip-tone: var(--sf-concern-mint); }
+.toneRose { --sf-chip-tone: var(--sf-concern-rose); }
+
+.toneSuccess { --sf-chip-tone: var(--sf-color-success); }
+.toneWarning { --sf-chip-tone: var(--sf-color-warning); }
+.toneDanger { --sf-chip-tone: var(--sf-color-danger); }
+.toneInfo { --sf-chip-tone: var(--sf-color-info); }
+
+/* Violet is the one accent that fails AA as 13px text on its own 10% tint
+   (4.1:1 measured on --sf-color-surface). The mix restores 5.9:1 at the same
+   hue — the same correction `.sf-flag-hot` makes in the primitives — while the
+   tint and the hairline stay pure violet. */
+.toneViolet.concern,
+.toneViolet.status {
+  color: color-mix(in srgb, var(--sf-concern-violet) 78%, var(--sf-color-text));
+}

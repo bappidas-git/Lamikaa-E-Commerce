@@ -1,0 +1,15 @@
+/* =============================================================================
+ * GlowWrap
+ * =============================================================================
+ * The lamp itself is `.sf-glow*` in the primitives, driven by the custom
+ * properties this component sets inline. All that is left is making sure the
+ * wrapper does not change the layout of whatever it is wrapping.
+ * ========================================================================== */
+
+.wrap {
+  /* A glow wrapper is transparent to layout: it takes the width it is given and
+     the height of its content, so wrapping an element in one never moves it.
+     `.sf-glow` already supplies `position: relative` and `isolation: isolate`. */
+  display: block;
+  min-width: 0;
+}
