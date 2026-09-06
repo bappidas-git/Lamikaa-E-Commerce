@@ -2,31 +2,42 @@
 // Hero section configuration — shared shape, defaults & normalizers
 // =============================================================================
 //
-// The storefront hero is fully admin-managed. Two records drive it:
+// The storefront hero is fully admin-managed. Two things drive it:
 //
 //   • `heroConfig` — a singleton (json-server object in mock mode,
 //     `GET/PUT /hero/config` on Laravel) holding everything that belongs to the
-//     SECTION rather than to one slide: the master toggle, autoplay + default
-//     timer, the transition, which chrome is shown (counter / hairlines /
-//     progress / arrows), the scrim strength, the stage height per device, the
-//     shared secondary CTA and the collection-openers row.
+//     SECTION rather than to one slide: the master toggle, the slide source,
+//     autoplay + default timer, the transition and which chrome is shown
+//     (counter / hairlines / progress / arrows). The seeded record stops there;
+//     the presentation keys below it (scrim strength, per-device stage height,
+//     the shared secondary CTA, the collection-openers row) are defaults this
+//     module supplies until Prompt 14 rebuilds the hero.
 //
-//   • `banners`    — one row per SLIDE, carrying its own copy, background
-//     (gradient, image or video), text alignment, scrim override, timer
-//     override, active flag and sort order.
+//   • the SLIDES — one per PRODUCT. A product joins the carousel by carrying a
+//     `heroOrder` and prints its own `heroHeadline`/`heroSubtext`
+//     (`heroConfig.source === "products"`). apiService.products.getHeroProducts()
+//     returns them in order, and Admin → Hero writes that order back through
+//     apiService.admin.setHeroOrder().
 //
-// Nothing about the hero is hardcoded in the component any more: it reads these
-// two records and renders them. `HERO_FALLBACK_SLIDES` exists only so the
-// storefront still opens on something branded if the API is unreachable.
+// Nothing about the hero is hardcoded in the component any more: it reads the
+// config and the catalogue and renders them. `HERO_FALLBACK_SLIDES` exists only
+// so the storefront still opens on something branded if the API is unreachable.
 //
 // BACKWARD COMPATIBILITY
-//   Older banner rows carry only { title, subtitle, cta, link, gradient, image }
-//   and no `backgroundType`/`sortOrder`/`isActive`. normalizeHeroSlide() infers
-//   the type from whatever media is present, defaults the row to active, and
-//   falls back to the array index for order — so a pre-existing db.json renders
-//   exactly as it did before anyone opens the admin screen.
+//   normalizeHeroSlide() takes a slide in ANY shape — the product-derived one
+//   the storefront builds today, or a hand-written row carrying only
+//   { title, subtitle, cta, link, gradient, image } — infers the background
+//   type from whatever media is present, defaults the row to active, and falls
+//   back to the array index for order.
+//
+//   normalizeHeroConfig() is the same kind of tolerant: the seeded record is
+//   now much smaller (behaviour only — no `heights`, `openers`, `secondaryCta`
+//   or `overlayOpacity`), and every one of those missing keys resolves to the
+//   designed default rather than to undefined. Prompt 14 rebuilds the hero and
+//   retires the keys it no longer reads.
 // =============================================================================
 
+import brand from "../config/brand";
 import { APP_NAME } from "./constants";
 
 // ─── Vocabularies (shared by the admin selects and the renderer) ─────────────
@@ -89,8 +100,15 @@ export const DEFAULT_HERO_OPENERS = {
   limit: 8,
 };
 
+// The slides' origin. "products" is the only source there is — the carousel is
+// the catalogue, ordered by `heroOrder` — but the key is stored and normalised
+// so a future source (a curated collection, a campaign) is a data change rather
+// than a code change.
+export const HERO_SOURCE_PRODUCTS = "products";
+
 export const DEFAULT_HERO_CONFIG = {
   enabled: true,
+  source: HERO_SOURCE_PRODUCTS,
   autoplay: true,
   intervalMs: 5000,
   transition: "fade",
@@ -119,7 +137,7 @@ export const DEFAULT_HERO_SLIDE = {
   secondaryCtaLabel: "",
   secondaryCtaLink: "",
   backgroundType: "gradient",
-  gradient: "var(--sf-gradient-heritage)",
+  gradient: "var(--sf-gradient-brand)",
   image: "",
   imagePosition: "right center",
   videoUrl: "",
@@ -138,24 +156,22 @@ export const DEFAULT_HERO_SLIDE = {
 export const HERO_MIN_DURATION_MS = 1000;
 export const HERO_MAX_DURATION_MS = 60000;
 
-// On-brand recoloured placeholder — the same generator and ink/gold palette the
-// catalogue seed uses, so the storefront ships no third-party photography.
-export const HERO_FALLBACK_IMAGE =
-  "https://placehold.co/1600x900/1D1A16/8A6118?text=Handwoven+in+Assam";
-
-// Shown only when the banners API is unreachable, so the storefront never opens
-// on an empty stage. Real slides come from the admin-managed `banners` store.
+// Shown only when the catalogue is unreachable, so the storefront never opens
+// on an empty stage. The real slides are the products themselves.
+//
+// It carries NO photography and NO fact that is not already in brand.js: a
+// gradient ground, the brand name and the brand's own tagline. An offline
+// storefront must not be the one surface that invents a claim.
 export const HERO_FALLBACK_SLIDES = [
   {
     id: "fallback-1",
-    title: "Handwoven Assamese Silk",
-    subtitle:
-      "Muga, Pat and Eri from the looms of Sualkuchi — woven a metre a day.",
-    cta: "Shop the Collection",
+    title: brand.name,
+    subtitle: brand.tagline,
+    cta: "Shop the range",
     link: "/products",
-    backgroundType: "image",
-    gradient: "var(--sf-gradient-heritage)",
-    image: HERO_FALLBACK_IMAGE,
+    backgroundType: "gradient",
+    gradient: "var(--sf-gradient-brand)",
+    image: "",
   },
 ];
 
@@ -213,6 +229,9 @@ export const normalizeHeroConfig = (raw) => {
     // Every toggle defaults to ON unless explicitly false, so a config written
     // by an older build never silently hides part of the hero.
     enabled: cfg.enabled !== false,
+    // Only one source exists today, so anything unrecognised resolves to it —
+    // a config that predates the key still drives a product carousel.
+    source: HERO_SOURCE_PRODUCTS,
     autoplay: cfg.autoplay !== false,
     intervalMs: clampInt(
       cfg.intervalMs,

@@ -57,19 +57,28 @@ import {
 // =============================================================================
 // Admin → Storefront → Hero Section
 // =============================================================================
-// One screen for the entire home-page hero. Two records back it:
+// SECTION SETTINGS — the `heroConfig` singleton: the master toggle, autoplay
+// and the default timer, the transition and which chrome shows. This half is
+// live and correct; the storefront reads exactly what is saved here.
 //
-//   SLIDES   the `banners` collection — one row each, with its own copy, CTAs,
-//            background (gradient / image / video), alignment, scrim, timer,
-//            order and on/off switch.
-//   SECTION  the `heroConfig` singleton — the master toggle, autoplay and the
-//            default timer, the transition, which chrome shows, the scrim
-//            strength, the stage height for desktop/tablet/mobile, the shared
-//            secondary CTA and the collection-openers row.
+// TEMPORARY, PROMPT 34 REPLACES THIS SCREEN
+//   The hero is PRODUCT-DRIVEN now. Its slides are the products carrying a
+//   `heroOrder` (apiService.products.getHeroProducts()), and their order is
+//   written with apiService.admin.setHeroOrder() — neither has an editor yet.
+//   The old slide store became the `announcements` collection (the line above
+//   the masthead), so the first tab is wired to that collection to keep this
+//   screen open and its data intact until Prompt 34 builds the real editors:
+//   a hero product-ordering screen and an announcements manager.
 //
-// Nothing about the hero is hardcoded on the storefront any more: it reads
-// exactly what is saved here. The live preview below renders from the same
-// normalizers the storefront uses, so what an admin sees is what ships.
+//   The row adapters below are what make that safe. A row is read as a slide
+//   (its `text` shown in the headline field) and written back as an
+//   announcement (headline → `text`, schedule window preserved), because
+//   updateAnnouncement PUTs the whole row: anything this screen does not send
+//   is destroyed. The slide-only fields it also writes (subtitle, CTAs,
+//   background, alignment…) are inert on an announcement — they are carried
+//   rather than used, and Prompt 34 drops them.
+//
+// The live preview renders from the same normalizers the storefront uses.
 // =============================================================================
 
 const toast = (icon, title, text) =>
@@ -83,19 +92,39 @@ const toast = (icon, title, text) =>
     timer: icon === "error" ? 4000 : 2500,
   });
 
-// On-brand grounds an admin can pick without writing CSS. The first is the
-// shared token (it follows the theme); the rest are the ink-to-gold casts the
-// four seeded slides ship with, so a new slide can match them exactly.
+// On-brand grounds an admin can pick without writing CSS. Every one is a design
+// token, so they follow the palette rather than freezing today's hex values
+// into a database row — the design system is the only styling source.
 const GRADIENT_PRESETS = [
-  { label: "Heritage", value: "var(--sf-gradient-heritage)" },
-  { label: "Bridal Muga", value: "linear-gradient(135deg,#1D1A16 0%,#3A2E1B 60%,#8A6118 100%)" },
-  { label: "Sualkuchi", value: "linear-gradient(135deg,#322C25 0%,#6B5030 55%,#C8912A 100%)" },
-  { label: "Bihu Night", value: "linear-gradient(135deg,#0F0D0A 0%,#5C554A 50%,#8A6118 100%)" },
-  { label: "Eri Warmth", value: "linear-gradient(135deg,#1D1A16 0%,#4A3F31 55%,#AF7E26 100%)" },
+  { label: "Brand", value: "var(--sf-gradient-brand)" },
+  { label: "Announce", value: "var(--sf-gradient-announce)" },
+  { label: "Signature", value: "var(--sf-gradient-signature)" },
+  { label: "Gold", value: "var(--sf-gradient-gold)" },
 ];
 
 const typeMeta = (value) =>
   HERO_BACKGROUND_TYPES.find((t) => t.value === value) || HERO_BACKGROUND_TYPES[0];
+
+// ─── Temporary announcement ⇄ slide adapters (Prompt 07 → Prompt 34) ─────────
+
+// An announcement row as this screen's slide shape. Its copy lives in `text`;
+// showing it in the headline field is what makes the seeded rows recognisable
+// instead of a list of "Untitled slide".
+const rowToSlide = (row) => ({ ...row, title: row?.title || row?.text || "" });
+
+// …and back. `text` is the field the storefront's announcement bar reads, and
+// the schedule window has no control on this screen, so both are written
+// explicitly: the API PUTs the whole row, and an edit made here must not empty
+// what it never showed.
+const slideToRow = (slide) => {
+  const { id, createdAt, updatedAt, imageUrl, ...rest } = normalizeHeroSlide(slide);
+  return {
+    ...rest,
+    text: String(slide?.title || "").trim(),
+    startsAt: slide?.startsAt ?? null,
+    endsAt: slide?.endsAt ?? null,
+  };
+};
 
 // Seconds in the inputs, milliseconds in the record — one place to convert.
 const msToSeconds = (ms) => Math.round((Number(ms) || 0) / 100) / 10;
@@ -136,7 +165,7 @@ const SlidePreview = ({ slide, config, compact = false }) => {
       {/* Ground — always painted, so it backs a loading image or a letterboxed video. */}
       <Box
         sx={{ position: "absolute", inset: 0 }}
-        style={{ background: slide.gradient || "var(--sf-gradient-heritage)" }}
+        style={{ background: slide.gradient || "var(--sf-gradient-brand)" }}
       />
 
       {slide.backgroundType === "image" && slide.image && (
@@ -447,10 +476,10 @@ const AdminHeroSection = () => {
       setLoading(true);
       const [cfg, rows] = await Promise.all([
         apiService.admin.getHeroConfig().catch(() => null),
-        apiService.admin.getBanners().catch(() => []),
+        apiService.admin.getAnnouncements().catch(() => []),
       ]);
       setConfig(normalizeHeroConfig(cfg));
-      setSlides(normalizeHeroSlides(rows));
+      setSlides(normalizeHeroSlides((Array.isArray(rows) ? rows : []).map(rowToSlide)));
     } catch (error) {
       console.error("Error loading hero section:", error);
       setSnackbar({ open: true, message: "Failed to load the hero section", severity: "error" });
@@ -513,13 +542,6 @@ const AdminHeroSection = () => {
     setDialogOpen(true);
   };
 
-  // Strip the identity/audit fields so a saved slide only ever carries hero
-  // data — ids are the store's to assign, timestamps the API layer's to stamp.
-  const slidePayload = (slide) => {
-    const { id, createdAt, updatedAt, imageUrl, ...rest } = normalizeHeroSlide(slide);
-    return rest;
-  };
-
   const handleSaveSlide = async () => {
     if (!form.title.trim()) {
       toast("warning", "A headline is required");
@@ -527,11 +549,11 @@ const AdminHeroSection = () => {
     }
     try {
       setSavingSlide(true);
-      const payload = slidePayload({ ...form, title: form.title.trim() });
+      const payload = slideToRow({ ...form, title: form.title.trim() });
       if (editing) {
-        await apiService.admin.updateBanner(editing.id, payload);
+        await apiService.admin.updateAnnouncement(editing.id, payload);
       } else {
-        await apiService.admin.createBanner(payload);
+        await apiService.admin.createAnnouncement(payload);
       }
       setDialogOpen(false);
       await load();
@@ -548,8 +570,8 @@ const AdminHeroSection = () => {
     try {
       setBusy(true);
       const maxSort = slides.reduce((m, s) => Math.max(m, s.sortOrder ?? 0), -1);
-      await apiService.admin.createBanner(
-        slidePayload({
+      await apiService.admin.createAnnouncement(
+        slideToRow({
           ...slide,
           title: `${slide.title} (copy)`,
           // A duplicate arrives hidden, so it can be edited before it goes out.
@@ -586,7 +608,7 @@ const AdminHeroSection = () => {
     if (!result.isConfirmed) return;
     try {
       setBusy(true);
-      await apiService.admin.deleteBanner(slide.id);
+      await apiService.admin.deleteAnnouncement(slide.id);
       await load();
       toast("success", "Slide deleted");
     } catch (error) {
@@ -603,7 +625,7 @@ const AdminHeroSection = () => {
     setSlides((prev) => prev.map((s) => (s.id === slide.id ? { ...s, isActive } : s)));
     try {
       setBusy(true);
-      await apiService.admin.updateBanner(slide.id, slidePayload({ ...slide, isActive }));
+      await apiService.admin.updateAnnouncement(slide.id, slideToRow({ ...slide, isActive }));
     } catch (error) {
       console.error("Error toggling slide:", error);
       toast("error", "Could not update the slide", error.message);
@@ -623,7 +645,7 @@ const AdminHeroSection = () => {
     setSlides(renumbered);
     try {
       setBusy(true);
-      await apiService.admin.reorderBanners(
+      await apiService.admin.reorderAnnouncements(
         renumbered.map((s) => s.id),
         slides
       );
@@ -669,10 +691,20 @@ const AdminHeroSection = () => {
           Hero Section
         </Typography>
         <Typography color="text.secondary">
-          The opening band of the storefront home page — its slides, their backgrounds and copy, and
-          how the whole carousel behaves on every device.
+          The opening band of the storefront home page — how the carousel behaves on every device.
+          Its slides are now the products themselves.
         </Typography>
       </Box>
+
+      <Alert severity="info" icon={<Icon icon="mdi:progress-wrench" />} sx={{ mb: 3 }}>
+        <strong>The hero carousel is product-driven.</strong> Each slide is a product carrying a
+        hero position, and it prints that product&rsquo;s own hero headline and hero subtext — so
+        there is no slide to write here any more. The screen for ordering hero products is still to
+        come; until then, the first tab manages the <strong>announcement bar</strong> (the line
+        above the masthead), which is where the old slide records now live. Only its headline
+        (shown as the announcement text), link, on/off switch and order reach the storefront — the
+        background, alignment and timing fields below are carried but unused.
+      </Alert>
 
       {!loading && !config.enabled && (
         <Alert
@@ -703,9 +735,9 @@ const AdminHeroSection = () => {
           }}
         >
           <Tab
-            icon={<Icon icon="mdi:view-carousel-outline" style={{ fontSize: 20 }} />}
+            icon={<Icon icon="mdi:bullhorn-outline" style={{ fontSize: 20 }} />}
             iconPosition="start"
-            label={`Slides${loading ? "" : ` (${slides.length})`}`}
+            label={`Announcements (temporary)${loading ? "" : ` (${slides.length})`}`}
           />
           <Tab
             icon={<Icon icon="mdi:tune-variant" style={{ fontSize: 20 }} />}
@@ -746,7 +778,7 @@ const AdminHeroSection = () => {
                   />
                 )}
                 <Typography variant="body2" color="text.secondary">
-                  Shown in this order, top first.
+                  Shown in this order, top first, in the announcement bar.
                 </Typography>
               </Box>
               <Button
@@ -766,10 +798,11 @@ const AdminHeroSection = () => {
               >
                 <Icon icon="mdi:image-multiple-outline" style={{ fontSize: 48, opacity: 0.4 }} />
                 <Typography variant="h6" sx={{ mt: 1 }}>
-                  No slides yet
+                  No announcements yet
                 </Typography>
                 <Typography color="text.secondary" sx={{ mb: 3 }}>
-                  The storefront is showing its built-in fallback slide. Add one to take it over.
+                  The announcement bar is hidden while there is nothing to say. Add a line to show
+                  it.
                 </Typography>
                 <Button variant="contained" startIcon={<Icon icon="mdi:plus" />} onClick={openCreate}>
                   Add the first slide

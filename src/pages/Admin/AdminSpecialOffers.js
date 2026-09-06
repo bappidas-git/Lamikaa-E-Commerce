@@ -456,7 +456,7 @@ const AdminSpecialOffers = () => {
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
                 <Icon icon="mdi:format-title" style={{ fontSize: 22 }} />
-                <Typography variant="h6">Hero Banner</Typography>
+                <Typography variant="h6">Hero copy</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 The headline copy shown at the top of the deals page.

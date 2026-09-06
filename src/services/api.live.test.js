@@ -7,7 +7,8 @@
 //
 // It WRITES to the real database: it registers a throwaway customer, places and
 // then cancels/returns orders, and creates + deletes admin records (product,
-// category, coupon, shipping method, review, banner, FAQ, leads). Every record it
+// category, coupon, shipping method, review, announcement, ritual, concern, FAQ,
+// leads). Every record it
 // creates is tagged "LIVE-TEST" and removed again where the API allows it; the
 // orders and the throwaway customer cannot be deleted through the API, so they
 // are left cancelled / deactivated.
@@ -147,9 +148,12 @@ live("Live API — " + BASE_URL, () => {
   afterAll(() => errorSpy.mockRestore());
 
   // ───────────────────────────── configuration ─────────────────────────────
-  test("service is pointed at the production API, not the mock server", () => {
+  test("service is pointed at a live API, not the mock server", () => {
     expect(IS_MOCK_API).toBe(false);
-    expect(BASE_URL).toBe("https://core.meghalisilk.in/api/v1");
+    // Whatever host .env names, so this suite can be run against staging — and
+    // must be: it WRITES. The one thing it insists on is that the URL is not
+    // the mock server and carries the versioned API prefix.
+    expect(BASE_URL).toMatch(/^https:\/\/.+\/api\/v1$/);
     expect(api.defaults.baseURL).toBe(BASE_URL);
   });
 
@@ -163,12 +167,29 @@ live("Live API — " + BASE_URL, () => {
       expect(typeof p.id).toBe("number");
       expect(typeof p.name).toBe("string");
       expect(typeof p.slug).toBe("string");
-      expect(typeof p.price).toBe("number");
+      // A product may ship before its MRP is settled: `priceTBA` is the flag
+      // the whole storefront reads, and it is what disables Add to Cart.
+      if (p.priceTBA) expect(p.price == null).toBe(true);
+      else expect(typeof p.price).toBe("number");
+      // normalizeProduct() guarantees these on every read, in both api modes.
+      expect(Array.isArray(p.media)).toBe(true);
       expect(Array.isArray(p.images)).toBe(true);
+      expect(Array.isArray(p.categoryIds)).toBe(true);
+      expect(Array.isArray(p.concerns)).toBe(true);
       expect(Array.isArray(p.variants)).toBe(true);
+      // `images[]` is the derived mirror of the image rows of `media[]`.
+      expect(p.images).toEqual(
+        p.media.filter((m) => m.type === "image" && m.primary).map((m) => m.url).concat(
+          p.media.filter((m) => m.type === "image" && !m.primary).map((m) => m.url)
+        )
+      );
     }
-    // Cheapest product is what the order flows below buy.
-    S.product = [...list].sort((a, b) => a.price - b.price)[0];
+    S.products = list;
+    // Cheapest PRICED product is what the order flows below buy.
+    S.product = list
+      .filter((p) => !p.priceTBA && typeof p.price === "number")
+      .sort((a, b) => a.price - b.price)[0];
+    expect(S.product).toBeDefined();
     S.stockBefore = S.product.stock;
   });
 
@@ -194,10 +215,47 @@ live("Live API — " + BASE_URL, () => {
     const reviews = await apiService.products.getReviews(S.product.id);
     expect(Array.isArray(reviews)).toBe(true);
     for (const r of reviews) expect(r.status ?? "approved").toBe("approved");
+    // Sample rows are gated by brand.flags.showSampleReviews; asking for them
+    // can only ever widen the set.
+    const withSamples = await apiService.products.getReviews(S.product.id, { includeSample: true });
+    expect(Array.isArray(withSamples)).toBe(true);
+    expect(withSamples.length).toBeGreaterThanOrEqual(reviews.length);
 
     const related = await apiService.products.getRelated(S.product, 4);
     expect(Array.isArray(related)).toBe(true);
     expect(related.some((p) => p.id === S.product.id)).toBe(false);
+  });
+
+  test("products.getHeroProducts / getByCategorySlug / getByConcern", async () => {
+    const heroes = await apiService.products.getHeroProducts();
+    expect(Array.isArray(heroes)).toBe(true);
+    for (const p of heroes) expect(p.heroOrder == null).toBe(false);
+    // Strictly ascending: the carousel's order is the merchant's, not the
+    // backend's insertion order.
+    for (let i = 1; i < heroes.length; i += 1) {
+      expect(heroes[i].heroOrder).toBeGreaterThan(heroes[i - 1].heroOrder);
+    }
+
+    const cat = S.products.find((p) => p.categoryIds.length)?.categoryIds[0];
+    const catRow = (await apiService.categories.getAll()).find((c) => c.id === cat);
+    if (catRow) {
+      const { category, products } = await apiService.products.getByCategorySlug(catRow.slug);
+      expect(category?.id).toBe(catRow.id);
+      for (const p of products) {
+        expect(
+          p.categoryIds.some((id) => String(id) === String(catRow.id)) ||
+            String(p.categoryId) === String(catRow.id)
+        ).toBe(true);
+      }
+    }
+
+    const slug = S.products.find((p) => p.concerns.length)?.concerns[0];
+    if (slug) {
+      const { concern, products } = await apiService.products.getByConcern(slug);
+      expect(concern?.slug ?? slug).toBe(slug);
+      expect(products.length).toBeGreaterThan(0);
+      for (const p of products) expect(p.concerns).toContain(slug);
+    }
   });
 
   test("products.getById rejects an unknown id with 404", async () => {
@@ -216,14 +274,31 @@ live("Live API — " + BASE_URL, () => {
     await expectRejected(apiService.categories.getBySlug(`no-such-${STAMP}`), [404]);
   });
 
-  test("banners / hero config / settings / shipping methods / faqs / deals config / coupons", async () => {
-    const banners = await apiService.banners.getAll();
-    expect(Array.isArray(banners)).toBe(true);
-    S.banners = banners;
+  test("announcements / concerns / rituals / site content / hero config / settings / shipping methods / faqs / deals config / coupons", async () => {
+    const announcements = await apiService.announcements.getAll();
+    expect(Array.isArray(announcements)).toBe(true);
+    for (const a of announcements) expect(a.isActive).not.toBe(false);
+    S.announcements = announcements;
+
+    const concerns = await apiService.concerns.getAll();
+    expect(Array.isArray(concerns)).toBe(true);
+    S.concerns = concerns;
+
+    const rituals = await apiService.rituals.getAll();
+    expect(Array.isArray(rituals)).toBe(true);
+    for (const r of rituals) expect(r.isActive).not.toBe(false);
+    if (rituals.length) {
+      const one = await apiService.rituals.getBySlug(rituals[0].slug);
+      expect(one?.id).toBe(rituals[0].id);
+      const steps = apiService.rituals.resolveSteps(one, S.products);
+      expect(steps.length).toBe((one.steps || []).length);
+    }
+
+    const content = await apiService.siteContent.get();
+    expect(content && typeof content).toBe("object");
 
     const hero = await apiService.hero.getConfig();
     expect(typeof hero.enabled).toBe("boolean");
-    expect(hero.heights).toBeDefined();
 
     const settings = await apiService.settings.get();
     expect(settings.store?.currency).toBeDefined();
@@ -812,23 +887,77 @@ live("Live API — " + BASE_URL, () => {
     expect((await apiService.hero.getConfig()).intervalMs).toBe(hero.intervalMs);
   });
 
-  test("admin banners: create inactive → hidden from storefront → update → reorder → delete", async () => {
-    const created = await apiService.admin.createBanner({
-      title: `${TAG} banner`, subtitle: "automated", eyebrow: "", cta: "Shop", link: "/products",
-      secondaryCtaLabel: "", secondaryCtaLink: "", backgroundType: "gradient",
-      gradient: "linear-gradient(135deg,#000 0%,#333 100%)", image: "", imagePosition: "right center", videoUrl: "",
-      videoPoster: "", overlayOpacity: null, textAlign: "left", durationMs: 0, isActive: false, sortOrder: 99,
+  test("admin announcements: create inactive → hidden from storefront → update → reorder → delete", async () => {
+    const created = await apiService.admin.createAnnouncement({
+      text: `${TAG} announcement`, link: "/shop", isActive: false, sortOrder: 99,
+      startsAt: null, endsAt: null,
     });
     expect(created.id).toBeDefined();
-    const adminRows = await apiService.admin.getBanners();
-    expect(adminRows.some((b) => b.id === created.id)).toBe(true);
-    const updated = await apiService.admin.updateBanner(created.id, { ...created, subtitle: "updated" });
-    expect(updated.subtitle).toBe("updated");
-    const order = adminRows.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((b) => b.id);
-    const reordered = await apiService.admin.reorderBanners(order, adminRows);
+    const adminRows = await apiService.admin.getAnnouncements();
+    expect(adminRows.some((a) => a.id === created.id)).toBe(true);
+    // Inactive rows never reach the storefront read.
+    expect((await apiService.announcements.getAll()).some((a) => a.id === created.id)).toBe(false);
+    const updated = await apiService.admin.updateAnnouncement(created.id, { ...created, text: `${TAG} updated` });
+    expect(updated.text).toBe(`${TAG} updated`);
+    const order = adminRows.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((a) => a.id);
+    const reordered = await apiService.admin.reorderAnnouncements(order, adminRows);
     expect(reordered).toBeTruthy();
-    await apiService.admin.deleteBanner(created.id);
-    expect((await apiService.admin.getBanners()).some((b) => b.id === created.id)).toBe(false);
+    await apiService.admin.deleteAnnouncement(created.id);
+    expect((await apiService.admin.getAnnouncements()).some((a) => a.id === created.id)).toBe(false);
+  });
+
+  test("admin concerns: create → update → delete", async () => {
+    const created = await apiService.admin.createConcern({
+      slug: `live-test-${STAMP}`, name: `${TAG} concern`, order: 99,
+    });
+    expect(created.id).toBeDefined();
+    const rows = await apiService.admin.getConcerns();
+    expect(rows.some((c) => c.id === created.id)).toBe(true);
+    const updated = await apiService.admin.updateConcern(created.id, { ...created, name: `${TAG} renamed` });
+    expect(updated.name).toBe(`${TAG} renamed`);
+    await apiService.admin.deleteConcern(created.id);
+    expect((await apiService.admin.getConcerns()).some((c) => c.id === created.id)).toBe(false);
+  });
+
+  test("admin rituals: create inactive → hidden from storefront → update → reorder → delete", async () => {
+    const created = await apiService.admin.createRitual({
+      slug: `live-test-${STAMP}`, name: `${TAG} ritual`, tagline: "automated", story: "",
+      image: "", duration: "", steps: [{ order: 1, productId: S.product.id, note: "", frequency: "" }],
+      isActive: false, sortOrder: 99,
+    });
+    expect(created.id).toBeDefined();
+    const rows = await apiService.admin.getRituals();
+    expect(rows.some((r) => r.id === created.id)).toBe(true);
+    expect((await apiService.rituals.getAll()).some((r) => r.id === created.id)).toBe(false);
+    const updated = await apiService.admin.updateRitual(created.id, { ...created, tagline: "updated" });
+    expect(updated.tagline).toBe("updated");
+    const order = rows.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)).map((r) => r.id);
+    expect(await apiService.admin.reorderRituals(order, rows)).toBeTruthy();
+    await apiService.admin.deleteRitual(created.id);
+    expect((await apiService.admin.getRituals()).some((r) => r.id === created.id)).toBe(false);
+  });
+
+  test("admin site content: read → patch one section → read back", async () => {
+    const content = await apiService.admin.getSiteContent();
+    expect(content && typeof content).toBe("object");
+    const key = Object.keys(content).find((k) => content[k] && typeof content[k] === "object");
+    if (!key) return;
+    const before = content[key];
+    const saved = await apiService.admin.updateSiteContent(key, { ...before });
+    expect(saved).toBeTruthy();
+    // The merge must not have dropped the section's other keys.
+    const after = await apiService.siteContent.get(key);
+    for (const field of Object.keys(before)) expect(field in after).toBe(true);
+  });
+
+  test("admin hero order: set → read back → restore", async () => {
+    const before = (await apiService.products.getHeroProducts()).map((p) => p.id);
+    if (before.length < 2) return;
+    const flipped = [...before].reverse();
+    expect(await apiService.admin.setHeroOrder(flipped)).toBeTruthy();
+    expect((await apiService.products.getHeroProducts()).map((p) => p.id)).toEqual(flipped);
+    await apiService.admin.setHeroOrder(before);
+    expect((await apiService.products.getHeroProducts()).map((p) => p.id)).toEqual(before);
   });
 
   test("admin FAQs: create inactive → update → reorder → delete", async () => {

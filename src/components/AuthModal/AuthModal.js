@@ -468,7 +468,7 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
         }),
       };
 
-  const bannerMotion = reduceMotion
+  const noteMotion = reduceMotion
     ? {
         initial: { opacity: 0 },
         animate: { opacity: 1, transition: INSTANT },
@@ -595,19 +595,19 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
               {/* ---- General error ---- */}
               <AnimatePresence>
                 {errors.general && (
-                  <motion.div className={styles.errorBanner} {...bannerMotion} role="alert">
-                    <div className={styles.bannerInner}>{errors.general}</div>
+                  <motion.div className={styles.errorNote} {...noteMotion} role="alert">
+                    <div className={styles.noteInner}>{errors.general}</div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* ---- Info banner ---- */}
+              {/* ---- Info note ---- */}
               <AnimatePresence>
                 {infoMessage && (
-                  <motion.div className={styles.infoBanner} {...bannerMotion} role="status">
-                    <div className={styles.bannerInner}>
+                  <motion.div className={styles.infoNote} {...noteMotion} role="status">
+                    <div className={styles.noteInner}>
                       {infoMessage}{" "}
-                      <Link to="/support" className={styles.infoBannerLink} onClick={onClose}>
+                      <Link to="/support" className={styles.infoNoteLink} onClick={onClose}>
                         Contact support
                       </Link>
                     </div>
