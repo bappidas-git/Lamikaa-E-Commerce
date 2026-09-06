@@ -1,0 +1,145 @@
+/* =============================================================================
+ * /search — the results page
+ * =============================================================================
+ * The overlay's ranking, laid out as a grid. The field here is the same glass
+ * line with the gold hairline the overlay uses, plus a submit pill — the
+ * overlay can rely on Enter because it is a dialog you are already typing in;
+ * a page you have arrived at needs a visible way to say "search".
+ *
+ * Columns: 1 / 2 / 3 / 4 at 360 / 640 / 1024 / 1280.
+ * ========================================================================== */
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  width: 100%;
+  max-width: 560px;
+  height: 52px;
+  margin-block: var(--sf-space-6);
+  padding-inline: var(--sf-space-4) var(--sf-space-2);
+  border-radius: var(--sf-radius-md) var(--sf-radius-md) 0 0;
+  background: var(--sf-glass-bg);
+  border-bottom: 2px solid var(--sf-color-border);
+  transition: border-color var(--sf-transition);
+}
+
+.field:focus-within {
+  border-bottom-color: var(--sf-color-gold);
+}
+
+.fieldIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: var(--sf-text-lg);
+  color: var(--sf-color-text-secondary);
+}
+
+.field:focus-within .fieldIcon {
+  color: var(--sf-color-gold);
+}
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  /* 16px minimum, or iOS zooms the page the moment the field takes focus. */
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-medium);
+}
+
+.input::placeholder {
+  color: var(--sf-color-text-muted);
+  font-weight: var(--sf-font-normal);
+}
+
+/* The field carries the focus treatment (the gold hairline); a ring on the
+   input as well would be two focus indicators on one control. */
+.input:focus,
+.input:focus-visible {
+  outline: none;
+}
+
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.submit {
+  flex: none;
+}
+
+/* ---- The grid ------------------------------------------------------------ */
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sf-space-6);
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sf-space-8);
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---- Empty --------------------------------------------------------------- */
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--sf-space-4);
+  max-width: 52ch;
+  padding-block: var(--sf-space-6) var(--sf-space-12);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.emptyHint {
+  margin: 0;
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+}
+
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field {
+    transition: none;
+  }
+}

@@ -67,10 +67,12 @@ const Support = React.lazy(() => import("./pages/Support/Support"));
 const AboutUs = React.lazy(() => import("./pages/AboutUs/AboutUs"));
 const SpecialOffers = React.lazy(() => import("./pages/SpecialOffers/SpecialOffers"));
 const Wishlist = React.lazy(() => import("./pages/Wishlist/Wishlist"));
+const Search = React.lazy(() => import("./pages/Search/Search"));
 const NotFound = React.lazy(() => import("./pages/NotFound/NotFound"));
-// TEMPORARY (Prompt 08, removed by Prompts 11/24/28/29 as each page lands): the
+// TEMPORARY (Prompt 08, removed by Prompts 24/28/29 as each page lands): the
 // route map is complete from today, so the pages that have not been built yet
 // say so instead of 404ing or hiding behind a redirect to the homepage.
+// /search stopped needing it in Prompt 11.
 const ComingSoon = React.lazy(() => import("./pages/_ComingSoon/ComingSoon"));
 // TEMPORARY (Prompt 05, removed by Prompt 35): the visual QA surface for the
 // shared UI primitives. Unlinked from the navigation and from the sitemap.
@@ -229,12 +231,9 @@ function StorefrontShell() {
                   <Route path={ROUTES.REGISTER} element={<AuthRoute tab="signup" />} />
 
                   {/* ---- Utility ----------------------------------------- */}
-                  {/* Prompt 11 replaces this with the results page; the overlay
-                      already searches without leaving the current page. */}
-                  <Route
-                    path={ROUTES.SEARCH}
-                    element={<ComingSoon prompt="11" title="Search" />}
-                  />
+                  {/* The overlay's ranking as a page: shareable, bookmarkable
+                      and noindex. `/products?search=` redirects here. */}
+                  <Route path={ROUTES.SEARCH} element={<Search />} />
                   {/* TEMPORARY — primitive playground, deleted by Prompt 35. */}
                   <Route path="/_playground" element={<Playground />} />
                   {/* A real 404 — never a redirect to the homepage. */}

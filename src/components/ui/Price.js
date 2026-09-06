@@ -28,6 +28,7 @@ const Price = ({
   size = "md",
   showSavings,
   taxNote,
+  live,
   className = "",
   ...rest
 }) => {
@@ -48,6 +49,7 @@ const Price = ({
       size={size}
       showSavings={showSavings}
       taxNote={resolved.known ? taxNote : undefined}
+      live={live}
       className={className}
       {...rest}
     />

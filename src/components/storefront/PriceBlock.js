@@ -33,6 +33,7 @@ import styles from "./PriceBlock.module.css";
 //   showSavings  boolean  show "You save ₹X" line (default true on lg)
 //   taxNote      string   optional transparency note, e.g. "Inclusive of all taxes"
 //   unknown      boolean  force/deny the "Price on launch" chip
+//   live         boolean  announce the "Price on launch" chip (default true)
 //   className    string   pass-through for the wrapper
 // =============================================================================
 const PriceBlock = ({
@@ -43,6 +44,7 @@ const PriceBlock = ({
   showSavings,
   taxNote,
   unknown,
+  live = true,
   className = "",
 }) => {
   const current = Number(price) || 0;
@@ -54,10 +56,15 @@ const PriceBlock = ({
   // `role="status"` rather than a bare span: on a PDP where the variant switch
   // moves a product in and out of "price on launch", the change has to be
   // announced, and it is the same node either way.
+  //
+  // `live={false}` is for a LIST, where the chip is created and destroyed with
+  // its row and never changes in place — eight of them arriving at once in the
+  // search overlay is eight announcements over the result count, which is the
+  // one thing the visitor actually needed to hear (Prompt 11).
   if (isUnknown) {
     return (
       <div className={wrapperClass}>
-        <span className={styles.tba} role="status">
+        <span className={styles.tba} role={live ? "status" : undefined}>
           Price on launch
         </span>
       </div>

@@ -447,11 +447,11 @@ const Playground = () => {
       <Section
         eyebrow="Overlays"
         title="Modal and drawer"
-        lede="Each traps focus, closes on Escape and on navigation, and returns focus to the button that opened it."
+        lede="Each traps focus, closes on Escape and on navigation, and returns focus to the button that opened it. A full modal fills the viewport and hands its body padding to its child, which is why this demo's copy sits flush."
       >
         <div className={styles.row}>
           <span className={styles.rowLabel}>modal</span>
-          {["sm", "md", "lg"].map((size) => (
+          {["sm", "md", "lg", "full"].map((size) => (
             <Button key={size} variant="secondary" onClick={() => setModalSize(size)}>
               {size}
             </Button>

@@ -355,6 +355,70 @@ waits for its home page section in Prompt 15.
   every drawer and modal on a product page. Prompt 25 rebuilds the bar and
   inherits the order.
 
+
+**Updated by Prompt 11.** The search overlay is rebuilt on `ui/Modal` and the
+ranking it runs is now a shared, tested utility.
+
+- `SearchModal/SearchModal.js` (850 → 642) + `.module.css` (813 → 420): a
+  `Modal size="full"` (`showClose={false}`, `labelledBy` a visually-hidden
+  `<h2>Search products</h2>`, `initialFocus` the field) holding a fixed head —
+  52px glass field with a 2px gold bottom hairline on focus, a flat 44px clear
+  mark inside it, a 44px glass close circle beside it, and the count line — over
+  one scrolling region, both inside an 880px centred `.inner`. Its hand-rolled
+  focus trap, Escape handler, `document.body.style.overflow` lock and
+  focus-restore are **deleted**: the primitive owns all four
+  (`grep "focusable\|body.style.overflow" SearchModal.js` → 0).
+  **Empty:** `brand.search.popular` chips · `Recent` chips from
+  **`sessionStorage["lk-recent-searches"]`** (max 6, with a "Clear" text button)
+  · seven category chips through `categoryPath()`. One column, two from 1024px
+  (terms | destinations).
+  **Typed:** a `role="status" aria-live="polite"` count line ("3 results for
+  “serum”"), up to **8** rows and a "See all N results" link to `/search?q=`.
+  A row is a `Link` (≥64px, 72px from 769px) with a 56px `.sf-plate` thumbnail
+  from `stageSrc(p, { w: 112 })`, the name, a one-line `promise`, `Price` and a
+  40px `Button variant="icon"` quick add (`mdi:cart-plus`;
+  `disabled` + `srLabel="Coming soon"` when `priceTBA`; on add
+  `addToCart(buildCartItem(p), 1, { openDrawer: false })` and the overlay stays
+  open).
+  **Keyboard:** ↑/↓ move a `data-active` highlight while focus stays in the
+  field; roving `tabIndex` puts exactly ONE row in the tab order (the highlighted
+  one, else the first); ↑/↓ from a focused row move focus, and ↑ off the top
+  returns to the field; Enter opens the highlighted row, or submits to
+  `/search?q=` and remembers the term; Escape closes (the primitive's).
+  **Deleted:** `CURATED_SUGGESTIONS`/`CURATED_TRENDING` (silk terms), the
+  category-chip filter with its descendant-slug walk (categories are flat), the
+  trending rail and its `products.getTrending()` call, and the data-URI fallback
+  image (a plate simply renders empty).
+  Exports nothing; props `open`/`onClose` are unchanged, so `Header` and
+  `BottomNav` mount it exactly as before.
+- `src/utils/search.js` (new) + `search.test.js` (10 tests): `normalize()`
+  (NFD, drop combining marks, lower case, non-alphanumerics to spaces),
+  `tokenize()`, and `rankProducts(products, query, { categories, concerns })` →
+  `[{ product, score, matchedOn }]`, best first. Field weights: `name` 10 (14
+  when the name OPENS with the whole query) · `shortName` 10 · `tags` 6 ·
+  `concerns` 6 (slugs **and** the concern records' display names) ·
+  `keyIngredients[].name` 5 · `benefits` 4 · category `displayName` 4 ·
+  `promise` 3 · `description`+`shortDescription` 2; a word answers a token when
+  it is or starts with it (plus a singular fallback for a token of 4+ characters
+  ending in "s"); +6 per field for a multi-word query found verbatim. Ties break
+  known-price-first (`isPriceKnown`) then alphabetically. `[]` for an empty query.
+- `ui/Modal.js` + `.module.css`: new **`size="full"`** (100svw × 100svh, no
+  radius, `padding-top: env(safe-area-inset-top)`, and its `.body` handed to the
+  child — no padding, no scrollport) and a new **`initialFocus`** prop passed
+  through to `useFocusTrap`. A Modal now also raises `body[data-drawer-open]`.
+- `hooks/useOverlayFlag.js` (new): the reference-counted `body[data-drawer-open]`
+  flag, **lifted out of `ui/Drawer`** so `Modal` and `Drawer` share one counter —
+  two counters would each delete the attribute on their own way out, and a modal
+  closing over an open drawer would un-blur the header while the drawer was still
+  up. `Drawer.js` now calls the hook; its `drawerCount`/`markDrawerOpen`/
+  `markDrawerClosed` are gone. Exports `__resetOverlayFlag()` for tests.
+- `storefront/PriceBlock.js` + `ui/Price.js`: new **`live`** prop (default
+  `true`, so the PDP's variant switch still announces). `live={false}` drops the
+  `role="status"` from the "Price on launch" chip — in a list the chip is created
+  and destroyed with its row rather than changing in place, and eight live
+  regions arriving at once talk over the result count. The search overlay's rows
+  pass it.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.
@@ -371,6 +435,25 @@ waits for its home page section in Prompt 15.
 - `Support.js` (592): contact channels + lead form (`leads.createContact`, 7-key payload) + showroom/social/why-us rail.
 - Policies `PrivacyPolicy`, `TermsOfService` (live tax/COD clauses from settings; hard-coded ₹ shipping defs), `CookiePolicy`, `RefundPolicy` (`STOREFRONT_CONFIG.returnsWindowDays`): static typeset documents, Galleria/Kolkata/handloom copy.
 - **No 404 page** (`*` → `/`), only the PDP's inline "Product Not Found". **No lazy loading** (all pages imported eagerly in `App.js`).
+
+
+**Updated by Prompt 11.** `/search` is a real page; the `ComingSoon` stub it
+used is gone from `App.js` (four remain: `/rituals`, `/rituals/:slug`,
+`/why-lamikaa`, `/cart`).
+
+- `pages/Search/Search.js` (242) + `.module.css` (145): reads `?q=`, ranks the
+  catalogue with the SAME `rankProducts()` the overlay uses (so a query cannot
+  mean two things), and renders `SectionHeading as="h1"` — eyebrow "Search",
+  title `Results for “{q}”` (plain "Search" with no query), lede carrying the
+  count — over a `ProductCard` grid at **1 / 2 / 3 / 4 columns from 360 / 640 /
+  1024 / 1280**. `useSeo({ title: q ? "Search: {q}" : "Search", noindex: true })`.
+  A 52px field at the top (the overlay's treatment plus a submit pill) writes
+  `?q=` with `replace: true`, so editing a query does not stack history entries;
+  the field mirrors the URL, so Back and Forward move the query. Loading is four
+  `Skeleton variant="card"`; empty is "Nothing matched “{q}”." + the popular
+  chips + "Browse all products" → `/shop`; a failed catalogue read says so
+  instead of claiming nothing matched. `role="status"` announces the count.
+  `/products?search=x` already redirects here (`LegacyRedirects`, Prompt 08).
 
 ## 7. Admin panel
 
@@ -558,7 +641,7 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/components/SidebarMenu/*` | R | Glass mobile drawer (Prompt 10). |
 | `src/components/BottomNav/*` | K | Restyle (Prompt 10). |
 | `src/components/CategoriesDrawer/*` | X | Replaced by the mega panel (Prompt 09). |
-| `src/components/SearchModal/*` | K | Restyle + skincare terms + new fields (Prompt 11). |
+| `src/components/SearchModal/*` | K | **Done (Prompt 11)** — rebuilt on `ui/Modal size="full"`; ranking moved to `src/utils/search.js`. |
 | `src/components/CartDrawer/*` | K | Glass drawer + cross-sell (Prompt 12). |
 | `src/components/Footer/*` | R | New four-column glass footer (Prompt 13). |
 | `src/components/AnnouncementBar/*`, `TrustStrip/*` | K | Data from brand config / announcements (Prompts 09, 15). |

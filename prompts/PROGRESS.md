@@ -14,7 +14,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 08 | Routing, IA, lazy loading and SEO hook | complete | 2026-09-06 | (this commit) | The LAMIKAA route map is live: 25 storefront paths + the 16 unchanged admin paths, **every** Meghali URL redirected (16/16 verified in Chromium), a real 404 instead of `<Navigate to="/">`, `React.lazy` on all 34 pages but Home (**51 JS chunks**, was 2), and a dependency-free `useSeo` on 15 pages. Link sweep: 26 files; `grep -rn -E '"/(products|help|support|privacy|terms|cookies|refund)("|\?)' src --include=*.js` → **18, and not one is a link**: 16 are `api.get("/products")` REST endpoint paths in `services/api.js` and 2 are the new `utils/routes.test.js` assertions that those paths are gone. Zero in `LegacyRedirects.js`'s own exclusion, zero storefront links (see the Decisions log). New: `hooks/useSeo.js`, `components/routing/{LegacyRedirects,RouteFallback,AuthRoute}.js`, `pages/NotFound/*`, `pages/_ComingSoon/ComingSoon.js`, `utils/routes.test.js` (14 tests). `CI=true npm run build` exit 0 **no warnings**; `npm test` exit 0 (3 suites / 34 passed). |
 | 09 | Header, mega panel and announcement bar | complete | 2026-09-06 | (this commit) | The masthead is the LAMIKAA sticky glass header: one 64px row (56px ≤768px) inside `.sf-container`, `transparent` over `#hero-sentinel` → `.sf-glass` → `.sf-glass--strong` past 24px, blur withdrawn while any overlay is up. `Header.js` 683 → 437 lines; the priority-nav machinery (hidden twin list, `ResizeObserver`, `measureOverflow`, overflow count) and the per-category collection panels are **gone** — `grep -rn "navMeasure\|measureOverflow" src` → **0**. `CategoriesDrawer/` deleted (2 files, 1 071 lines); `grep -rn "CategoriesDrawer\|TrustStrip" src/components/Header` → **0**. New: `MegaPanel.{js,module.css}` (7 categories with real product thumbnails + counts, 11 concern chips, a featured glow card, module-level data cache) and `HeaderActions.js` (search · account · wishlist · cart, the MUI account menu moved verbatim). `AnnouncementBar` is data-driven (`announcements.getAll` → `brand.announcements` fallback), drops placeholder rows and remembers dismissal in **`sessionStorage`** — `grep -rn "localStorage\|FREE_SHIPPING_THRESHOLD" src/components/AnnouncementBar` → **0**. axe (axe-core 4.x, wcag2a/2aa/21a/21aa + best-practice) on the header at 1280 (closed and panel-open) and 390: **0 violations**. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). Browser QA at 320/360/390/414/768/1024/1280/1440 — 0px horizontal overflow at every width, 0 console errors. See "Prompt 09 record" below. |
 | 10 | Mobile navigation drawer and bottom nav | complete | 2026-09-06 | (this commit) | `SidebarMenu` is the first feature on the `ui/Drawer` primitive — its hand-rolled focus trap, Escape handler, `body.style.overflow` lock and close-on-navigate effect are **deleted**, not duplicated (`grep useFocusTrap|useScrollLock` in the file → 0; the primitive owns all four). 632 → 521 lines of JS, the 725-line stylesheet replaced wholesale by 377 (`toggleTheme|Dark mode` → **0**, no `.dark`, no logo swap, no hex). Four labelled navs — Catalogue (a one-item accordion over the seven categories at 48px behind 32px `.sf-plate` thumbnails, default-open on `/shop` and `/category/*`), Brand, Account, Contact — over a pinned **"Shop the Black Rice Range"** CTA and the clamped legal note. `BottomNav` is a five-tab glass bar (64px + safe area, gold + a 20px gradient hairline for active, hide-on-scroll suspended while an overlay is up). `src/utils/catalogue.js` extracts the category-membership rule the mega panel and the drawer now share. **Browser QA: 109/109 checks at 360/390/414/768/1024/1280 + reduced motion + a simulated notch; axe-core 0 violations** on the drawer (open and closed), the bar and the whole document. One pre-existing defect fixed on the way: `AddToCartBar`'s raw `z-index: 1300` painted the PDP purchase bar over every drawer and modal — deleted, so the reserved order 40 < 60 < 1000 < 1100 is now real. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). `db.json` and `api.js` untouched — reads only. |
-| 11 | Search overlay and search results | pending | | | |
+| 11 | Search overlay and search results | complete | 2026-09-06 | (this commit) | `SearchModal` is the first feature on `ui/Modal` — its hand-rolled focus trap, Escape handler, `document.body.style.overflow` lock and focus-restore are **deleted** (`grep "focusable\|body.style.overflow" SearchModal.js` → 0), and the primitive gains `size="full"` + `initialFocus`. 850 → 642 lines of JS, 813 → 420 of CSS. Ranking moved out to **`src/utils/search.js`** (+ `search.test.js`, 10 tests) so the overlay and `/search` cannot disagree: `"serum"` → Face Serum first, `"hydration"` → Mist/Gel/Body Wash and nothing else, `"goat"` → the soap, `"black rice"` → all eight with the three priced ones leading, nonsense → the empty state (all five verified in Chromium AND pinned in the suite). Recent searches are **`sessionStorage["lk-recent-searches"]`** — `grep -rn "localStorage" src/components/SearchModal src/pages/Search` → **0**. `/search?q=` is a real page (`noindex`), `ComingSoon` is gone from the route (`grep -rn "ComingSoon" src/App.js | grep -i search | wc -l` → **0**), and `/products?search=x` still lands on it. `grep -rn "Muga\|Mekhela\|Eri \|Pat silk\|weave" src/components/SearchModal src/pages/Search` → **0**. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` = **4 suites passed / 1 skipped** (44 passed, 50 skipped). Browser QA at 360/390/414/768/1024/1280/1440 + reduced motion: 0 horizontal overflow, 0 page errors, header backdrop-filter `none` throughout. |
 | 12 | Cart drawer with cross-sell | pending | | | |
 | 13 | Footer | pending | | | |
 | 14 | Home hero product carousel | pending | | | |
@@ -152,6 +152,18 @@ Record every decision a prompt had to make that the reference files did not sett
 - `10 · 2026-09-06 · The catalogue is fetched on the FIRST OPEN and refetched on window focus, not fetched on mount · `SidebarMenu` is mounted on every storefront route and most visits never open it, so two requests on mount would be two requests wasted on every page load. The old file fetched lazily too (on expanding "Collections"), but the accordion now opens by default on `/shop` and `/category/*`, so the trigger moved up to the drawer's own open. The focus refetch is the freshness rule `StoreSettingsContext` already applies: a category renamed or retired in the admin in another tab is right the next time the menu is opened. A failed load leaves the accordion empty and every other section untouched — the drawer is still the way to the shop.`
 - `10 · 2026-09-06 · `AddToCartBar.module.css`'s `@media (max-width: 768px) { z-index: 1300 }` was deleted · Task 6 asks this prompt to "reserve the z-index order now: bottom nav `--sf-z-sticky`, sticky bar `--sf-z-stickybar`". The tokens already said 40 < 60, but the PDP bar overrode itself to 1300 on phones — above `--sf-z-overlay` (1000) and `--sf-z-modal` (1100) — so on a product page the new navigation drawer and the cart drawer both opened UNDERNEATH a floating "Buy now" (reproduced: `elementFromPoint` at the foot of the screen with the drawer open returned `AddToCartBar_buyNow`). The comment justifying it cited "the global BottomNav (z 1200)", which no BottomNav in this repository has ever been. Removing the override leaves the base `var(--sf-z-stickybar)`, which still puts the bar above the tab bar — its actual purpose, verified by hit test — and under every dialog. Add to cart from the bar still works (cart line created). Prompt 25 rebuilds the bar and inherits a correct order.`
 - `10 · 2026-09-06 · `TrustStrip` is removed from the drawer and now has no consumer at all · The prompt forbids it here and Prompt 15 gives it a home page section, so the component and its stylesheet are left in place, unimported, rather than deleted and re-created three prompts later. Only the import was removed, so `CI=true npm run build` stays warning-free.`
+- `11 · 2026-09-06 · Focus STAYS IN THE FIELD while ↑/↓ move the highlight; a focused ROW moves focus with the arrows instead · The prompt's own wording settles it — "on Enter in the field with no active row" only makes sense if a row can be active while the field holds focus. So ↑/↓ from the field move `data-active` only (the next keystroke still types, which is the point of an instant overlay), and ↑/↓ from a row that has been Tabbed to move focus row to row, with ↑ off the top returning to the field. Both paths were walked in Chromium.`
+- `11 · 2026-09-06 · No `aria-activedescendant` and no `role="listbox"` — the list is `<ul role="list">` of links, as the prompt specifies · The combobox pattern would be the textbook answer for a highlight the field controls, but `role="option"` may not contain interactive descendants and every row here carries a quick-add button as well as a link. Declaring it anyway would be ARIA that lies about the markup. What assistive tech gets instead is real: the `role="status"` count line, real links, and roving `tabIndex` that puts the highlighted row one Tab away.`
+- `11 · 2026-09-06 · Roving `tabIndex` covers the row's LINK and its add button together; with nothing highlighted the FIRST row is the tab stop · Eight rows × two controls would be sixteen tab stops between the field and "See all N results". Measured walk with a query typed: field → clear → close → the one row link → its add button → See all → back to the field.`
+- `11 · 2026-09-06 · The reference-counted `body[data-drawer-open]` flag moved out of `ui/Drawer` into `hooks/useOverlayFlag.js` · The prompt asks `Modal` to set the same attribute. Two module-level counters would each delete it on their own way out, so a modal closing over an open drawer would un-blur the header while the drawer was still up. One counter, two callers. The attribute NAME is unchanged — `Header.module.css` and `BottomNav` select on it by name.`
+- `11 · 2026-09-06 · `size="full"` hands `Modal`'s body padding and scrolling to its child · A full-screen overlay wants a fixed head and one scrolling region under it, not one scrollport around everything — the field has to stay reachable while the results scroll, and a virtual keyboard must not be able to push it off the top. `.full .body` is therefore a bare flex column. Shown as-is in `/_playground` (the section lede says so) rather than hidden behind a padded demo wrapper.`
+- `11 · 2026-09-06 · `PriceBlock`/`Price` gain a `live` prop (default `true`) and the overlay's rows pass `live={false}` · The "Price on launch" chip is `role="status"` so the PDP's variant switch announces the change. In a LIST the chip is created and destroyed with its row and never changes in place, so eight of them arriving at once are eight announcements over the result count — the one thing the visitor needed to hear. Default unchanged, so no existing surface moves.`
+- `11 · 2026-09-06 · The catalogue cache is marked STALE on tab focus and refetched on the next OPEN, rather than refetched on focus · The prompt calls this "existing behaviour"; it was not (Prompt 10's drawer does it, `SearchModal` did not). Implemented as staleness because a background tab regaining focus is not evidence that anyone is about to search — the next open pays for the refresh. A failed refresh keeps the last good cache rather than emptying the overlay.`
+- `11 · 2026-09-06 · `rankProducts` takes an optional `concerns` list as well as `categories` · Task 2 requires `concerns.getAll()` to be fetched and the reference files do not say what for. Concern SLUGS already normalize to their display names for the seeded set ("even-tone" → "even tone"), so the lookup buys one real thing: a concern the owner RENAMES in the admin stays findable by its new wording without reseeding a single product.`
+- `11 · 2026-09-06 · Result rows are `min-height` floors, not fixed heights — measured 71px at ≤768px and 79px above it against the spec's 64/72 · The row carries a name, a one-line promise and a price, and that stack measures 63px on its own; hitting 64px exactly would mean dropping one of the three pieces Task 4 asks for. The floors are set at the spec's numbers and the padding tightens on a phone, so a row is never SMALLER than specified.`
+- `11 · 2026-09-06 · "See all N results" renders whenever there are results, not only past the eight-row cap · With eight products in the range the cap can never be exceeded, so gating on it would leave `/search` unreachable by pointer from the overlay and the whole link untested. Enter in the field goes there too; the link is the mouse's equivalent.`
+- `11 · 2026-09-06 · `role="list"` is restated on every `<ul>` with an `eslint-disable-next-line jsx-a11y/no-redundant-roles` · Safari drops the list semantics of a `<ul>` whose `list-style` is `none`, which is every list in this design system. The rule does not know about that bug, and `CI=true npm run build` treats its warning as an error.`
+- `11 · 2026-09-06 · The overlay calls `onClose()` itself on every navigation instead of relying on `Modal`'s close-on-route-change · `Modal` compares PATHNAMES, so submitting from `/search?q=a` to `/search?q=b` is not a navigation as far as the dialog is concerned and the overlay would sit over the results it had just produced. Verified: opened on `/search?q=face`, submitted "serum", overlay closed and the `<h1>` became "Results for “serum”".`
 
 ## Open TODOs
 
@@ -177,7 +189,7 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `04 · The QA in this prompt ran against a build made with REACT_APP_USE_MOCK_API=true forced in the shell, because CRA loads .env.production over .env for `npm run build` and the committed .env.production points at the live Laravel API (unreachable from here). The tree ships unchanged — the final verification build used the normal config. Worth knowing before anyone tries to reproduce the screenshots. · developer · —`
 
 - `05 · `/_playground` (route in App.js + `src/pages/_Playground/`) is TEMPORARY scaffolding and must be deleted with its route and its import. · Prompt 35 · 35`
-- `05 · Nothing has been migrated onto the primitives yet, deliberately (prompt guardrail) — only `PriceBlock` was touched. `CartDrawer`, `SidebarMenu`, `AuthModal`, `ReviewModal` and `SearchModal` still carry four hand-rolled copies of the focus trap (`CategoriesDrawer`'s went with the file in Prompt 09) that `useFocusTrap` now owns, and their own scroll locks (`document.body.style.overflow`) rather than `useScrollLock`'s reference-counted `body[data-scroll-lock]`. Each migrates in its own feature prompt. · Prompts 09–12, 30 · 09`
+- `05 · Nothing has been migrated onto the primitives yet, deliberately (prompt guardrail) — only `PriceBlock` was touched. `CartDrawer`, `AuthModal` and `ReviewModal` still carry hand-rolled copies of the focus trap (`SidebarMenu`'s went in Prompt 10, `SearchModal`'s in Prompt 11) (`CategoriesDrawer`'s went with the file in Prompt 09) that `useFocusTrap` now owns, and their own scroll locks (`document.body.style.overflow`) rather than `useScrollLock`'s reference-counted `body[data-scroll-lock]`. Each migrates in its own feature prompt. · Prompts 09–12, 30 · 09`
 - `05 · `body[data-drawer-open]` is SET by `ui/Drawer` but nothing reads it yet — the header must drop its backdrop blur while it is present, which is what keeps the two-blurred-layers budget (DESIGN_SYSTEM §4). · Prompt 09 · 09`
 - `05 · The three storefront `@iconify/react` icon sets used by the new primitives (`mdi:close`, `mdi:chevron-down`, `mdi:play`, `mdi:pause`, `mdi:volume-off`, `mdi:volume-high`, `mdi:fullscreen`, `mdi:check`) are fetched from the Iconify API at runtime, like every existing consumer. In an offline or restricted network the icon simply does not paint — every icon-only control already carries an `srLabel`/`aria-label`, so nothing loses its accessible name, but the audit prompt should decide whether to bundle the set. · Prompt 38 · 38`
 - `05 · `Modal`/`Drawer` release the scroll lock the instant `open` goes false, so the page can move for the ~320ms of the exit animation. Imperceptible in QA; revisit only if it shows up on a long page. · Prompt 37 · 37`
@@ -194,11 +206,11 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `07 · faqsForGroup() and normalizeFaq's `group` have no consumer yet — the FAQ page that renders headings from siteContent.faqPage.groups[] is Prompt 28's, and the admin control that sets a row's group is Prompt 34's. Until then every seeded row keeps the group Prompt 06 gave it and nothing reads it. · Prompts 28 / 34 · 28`
 - `07 · The twenty live routes in REPO_MAP §3.4 do not exist on the Laravel side yet, so Mode B is INCOMPLETE until the backend team ships them. Until then `npm run test:live` will fail on the new tests even against a correct staging host — that is the point of writing them now. · Backend team / owner · 39`
 - `07 · No .env.local and no staging host exist, so no api.js function has ever executed against a real Laravel API in this programme. Every "both modes" claim from here on rests on the mock run plus the §3 review. The first staging URL the owner provides should be spent on a full `npm run test:live`. · Owner · 39`
-- `07 · products.search() is still json-server's `?q=` in mock mode, which matches ANY field of a record (a query can hit an ingredient list or a meta description and rank as highly as a name). Ranking is deliberately left to the caller — src/utils/search.js does not exist yet. · Prompt 11 · 11`
+- `07 · products.search() is still json-server's `?q=` in mock mode, which matches ANY field of a record (a query can hit an ingredient list or a meta description and rank as highly as a name). Ranking is deliberately left to the caller — **`src/utils/search.js` exists as of Prompt 11**, and BOTH search surfaces (overlay and `/search`) rank client-side from `products.getAll()` rather than calling `products.search()` at all. The function is now unused by the storefront; a server-side `GET /products?search=` is still the answer if the range ever outgrows a linear pass, and its field list is documented at the function. · Prompt 39 / backend team · 39`
 - `07 · admin.setHeroOrder clears `heroOrder` on every product not in the list it is given. That is the documented contract (dropping a product out of the carousel is the same gesture as reordering it), but it means a caller that passes a PARTIAL list silently empties the rest of the hero. The Prompt 34 editor must always send the full order. · Prompt 34 · 34`
 
-- `08 · ComingSoon stubs are live at /rituals, /rituals/:slug, /why-lamikaa, /cart and /search. Each renders "This page is being built (Prompt NN)" and is noindex. Prompt 35 verifies no route still points at pages/_ComingSoon and deletes the folder (Prompt 31 in the index's plan). · Prompts 24, 28, 29, 11 · 11`
-- `08 · /search is a stub, so the search OVERLAY is the only search surface until Prompt 11: it still lists live results in place, but "see all results" (Enter, or the submit button) now lands on the stub instead of the old /products?search= listing. This is the one storefront capability that is temporarily reduced, and it is the route table's own instruction. · Prompt 11 · 11`
+- `08 · ComingSoon stubs are live at /rituals, /rituals/:slug, /why-lamikaa and /cart. **/search left the list in Prompt 11** (`pages/Search/Search`). Each of the four renders "This page is being built (Prompt NN)" and is noindex; Prompt 35 verifies no route still points at pages/_ComingSoon and deletes the folder (Prompt 31 in the index's plan). · Prompts 24, 28, 29 · 24`
+- ~~`08 · /search is a stub, so the search OVERLAY is the only search surface until Prompt 11 …` · **RESOLVED by Prompt 11**~~ — `/search?q=` is a real results page and Enter (or "See all N results") lands on it. The one temporarily reduced storefront capability is restored.
 - `08 · pages/AboutUs/AboutUs.js still carries the Meghali silk story end to end (72 matches for silk/saree/weave/Sualkuchi/Mekhela/loom — headline "Three silks, one river, and the families who weave them", the SILKS table, META ["Est. 2010", "Kolkata", …], the placehold.co loom imagery). Prompt 08 touched it for links + useSeo only. Prompt 28 deletes the folder and writes pages/About/About from siteContent. · Prompt 28 · 28`
 - `08 · pages/Products/Products.js still carries FABRIC_FAMILIES (Muga/Pat/Eri/Toss Silk) and its "Fabric" facet. It renders NOTHING with the LAMIKAA seed (availableFabrics is empty, so the chip group and the drawer section are both hidden) — it is dead code that Prompt 23 deletes with the page. · Prompt 23 · 23`
 - `08 · The temporary `categorySlug` prop on pages/Products/Products (and the CategoryRoute wrapper in App.js) exists only to make /category/:slug real before the Shop page lands. Both go when the element becomes `<Shop mode="category" />`. · Prompt 24 · 24`
@@ -209,6 +221,11 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `08 · The AnnouncementBar still reads "COMPLIMENTARY GIFT WRAPPING" and the TrustStrip still reads "AUTHENTIC SILK" in mock mode (both are seeded/component copy in files this prompt did not touch). Visible on every route in the QA screenshots. · Prompts 09 / 15 · 09`
 - `09 · `.sf-chip` never declares `text-decoration: none` — it was written for the inert `<span>` a badge usually is — so a chip rendered as a link (`as={Link}`) arrives underlined. Corrected locally on `MegaPanel.module.css .concernChip`; the primitive itself is Prompt 05's file and every later chip-as-link will hit the same thing. · Prompt 35 · 35`
 - `09 · Two `nav` landmarks are named "Shop": the header's (`aria-label="Shop"`, which this prompt's spec mandates) and the Footer's shop link column (`aria-labelledby` → its own `<h2>Shop</h2>`). axe flags `landmark-unique` (moderate) on the WHOLE document; scoped to the header it is clean, and the pair predates this prompt — the old masthead used the same label. The Footer is rewritten by Prompt 13, which should name its columns something a landmark list can tell apart (e.g. "Footer — Shop"). · Prompt 13 · 13`
+- `11 · `ui/Modal` now raises `body[data-drawer-open]` for EVERY modal, not only the search overlay. Today the only other consumer is `/_playground`, but `AuthModal` and `ReviewModal` migrate onto the primitive in Prompt 30 and will start withdrawing the header's blur too — which is correct, and worth seeing once when it happens. · Prompt 30 · 30`
+- `11 · `PriceBlock`'s `role="status"` fires for EVERY "Price on launch" chip that is not passed `live={false}`, and `ProductCard` renders one per card. A shop grid of eight unpriced products is eight live regions; the /search grid has the same shape. Only the search overlay's rows opt out so far — the card should too when Prompt 15 rebuilds it, and the a11y audit should confirm nothing else is announcing a static price. · Prompts 15 / 38 · 15`
+- `11 · The overlay ranks the WHOLE catalogue on every keystroke with no debounce, which is right for eight products and wrong for eight hundred. The threshold is a linear pass over nine fields per product; past a few hundred products the answer is the server endpoint documented at `products.search()` (REPO_MAP §3.4), not an index in `utils/search.js`. · Owner / backend team · 39`
+- `11 · `stageSrc(p, { w: 112 })` requests a 112px-wide crop for a 56px plate (2× for retina) but no `srcSet`, because the row thumbnail is one fixed size at every breakpoint. If the row ever becomes fluid, it should move onto `ui/CloudinaryImage` like the rest of the media layer. · Prompt 37 · 37`
+- `11 · The Iconify sets the overlay uses (`mdi:magnify`, `mdi:close`, `mdi:cart-plus`, `mdi:arrow-right`) are fetched from the Iconify API at runtime, so in the sandbox used for this prompt's QA they did not paint — the screenshots were re-taken with the assets relayed through the agent proxy. Every icon-only control carries an `srLabel`, so nothing loses its accessible name offline; whether to bundle the set is still Prompt 38's call (carried from Prompt 05). · Prompt 38 · 38`
 
 ## Placeholders introduced / resolved
 
@@ -1038,3 +1055,167 @@ exit 0 — 3 suites passed / 1 skipped, 34 passed / 50 skipped. `db.json`
 untouched (the Offers gating check patched the mock API and restored it;
 `git status --short db.json` is empty). `src/services/api.js` untouched — reads
 only. No dependency added.
+
+---
+
+## Prompt 11 record (2026-09-06)
+
+### What search now is
+
+Two surfaces, ONE ranking. `src/utils/search.js` is the only thing on the
+storefront that decides what a query means, and both the overlay and `/search`
+call it with the same three collections — so "serum" cannot return one list in
+the dialog and a different one on the page it links to. Neither surface calls
+`apiService.products.search()`: json-server's `?q=` matches any field of any
+record (an INCI list scores like a name), and the Laravel `?search=` does not
+exist yet. Eight products across nine fields is a linear pass with no index to
+build, so there is no debounce either — the list is under the keystroke.
+
+`SearchModal` is the FIRST feature to sit on `ui/Modal`, and everything the old
+file hand-rolled is deleted rather than duplicated:
+
+| Was, in `SearchModal.js` | Is, in `ui/Modal` |
+|---|---|
+| a 38-line `keydown` handler cycling Tab and catching Escape | `useFocusTrap(panelRef, { active, onEscape, initialFocus })` |
+| `document.body.style.overflow = "hidden"` | `useScrollLock(open)` — reference-counted |
+| a `triggerRef` effect calling `trigger.focus()` on close | the hook's own restore |
+| nothing | close on route change (`pathAtOpen` vs `location.pathname`) |
+| a hand-drawn `motion.div` scrim + sheet | `overlay(reduce)` + `sheet(reduce)` |
+| nothing | `body[data-drawer-open]` — new to `Modal` in this prompt |
+
+`grep -n "focusable\|body.style.overflow\|triggerRef" src/components/SearchModal/SearchModal.js` → **0**.
+
+### The primitive changes this needed
+
+- **`Modal size="full"`** — 100svw × 100svh, no radius, `.sf-glass--strong` over
+  the `--sf-color-overlay` scrim, `padding-top: env(safe-area-inset-top)`, and
+  `.full .body` handed to the child (no padding, no scrollport, a bare flex
+  column). `svh`, not `vh`: a mobile address bar that collapses mid-scroll must
+  not move the foot of a dialog you are typing in.
+- **`Modal initialFocus`** — passed through to `useFocusTrap`, which already
+  took it. Without it the trap focuses the panel and the field would need a
+  second, racing `setTimeout` of its own.
+- **`hooks/useOverlayFlag.js`** — the reference-counted `body[data-drawer-open]`
+  flag, lifted out of `ui/Drawer` so `Modal` and `Drawer` share ONE counter.
+  Two counters would each delete the attribute on their own way out. The
+  attribute name is unchanged; `Header.module.css:60` and `BottomNav` select on
+  it by name. Measured: `getComputedStyle(header).backdropFilter === "none"` for
+  as long as the overlay is up, at every breakpoint.
+- **`PriceBlock`/`Price` `live` prop** (default `true`) — see the decisions log.
+
+### `src/utils/search.js`
+
+`normalize()` → NFD, drop `\u0300-\u036f`, lower case, non-alphanumerics to
+spaces, trim. `tokenize()` → its words. `rankProducts(products, query, {
+categories, concerns })` → `[{ product, score, matchedOn }]`, best first.
+
+| Field | Weight | Note |
+|---|---|---|
+| `name` | 10 | **14** when the name opens with the whole query |
+| `shortName` | 10 | |
+| `tags[]` | 6 | |
+| `concerns[]` | 6 | slugs **and** the concern records' display names |
+| `keyIngredients[].name` | 5 | |
+| `benefits[]` | 4 | |
+| category `displayName` | 4 | membership by `categoryIds[] || categoryId` |
+| `promise` | 3 | |
+| `shortDescription` + `description` | 2 | |
+
+A word answers a token when it IS it or STARTS with it, plus a singular fallback
+for a 4+ character token ending in "s" ("serums" finds "serum"). A field scores
+`hits × weight`, +6 when a multi-word query is found verbatim in one of its
+values. Ties break **known-price first** (`isPriceKnown`) then alphabetically, so
+the same query always returns the same order — a list that reshuffles between
+keystrokes is unusable. `[]` for an empty query or an empty catalogue.
+
+`src/utils/search.test.js` — 10 tests over the eight seeded products, copied
+verbatim from `db.json`: the five the prompt names, plus normalize/tokenize, the
+category-display-name path, the concern path, and a missing catalogue.
+
+### The overlay, top to bottom
+
+- **Head (does not scroll)** — a 52px glass field with a 2px bottom hairline
+  that warms to `--sf-color-gold` on focus (no boxy border), a flat 44px clear
+  mark inside it and a 44px glass close circle beside it, then the count line.
+  `role="search" aria-label="Search products"` on the form, autofocus on open,
+  16px input text so iOS cannot zoom the page on focus.
+- **Empty query** — "Popular searches" from `brand.search.popular` (6 chips),
+  "Recent" from `sessionStorage["lk-recent-searches"]` (max 6, with a "Clear"
+  text button), "Shop by category" (7 chips through `categoryPath()`, so Rituals
+  goes to `/rituals`). One column; two from 1024px, terms | destinations.
+- **≥ 1 character** — `role="status" aria-live="polite"`: "8 results for
+  “black rice”" / "1 result for “goat”" / "No results for “zzzq”". Then up to
+  **8** rows, then "See all N results" → `/search?q=`.
+- **A row** — a `Link` (min 64px, 72px from 769px; measured 71px/79px because the
+  name + one-line promise + price stack is 63px on its own) with a 56px
+  `.sf-plate` thumbnail from `stageSrc(p, { w: 112 })`, the name in Manrope 600,
+  the `promise` clamped to one line, `Price` (or "Price on launch"), and a 40px
+  `Button variant="icon"` quick add — `mdi:cart-plus`, `disabled` +
+  `srLabel="Coming soon"` when `priceTBA`, otherwise
+  `addToCart(buildCartItem(p), 1, { openDrawer: false })` and CartContext's own
+  toast. The overlay stays open and the cart tray stays shut.
+- **Nothing matched** — "Nothing matched “{q}”." + "Try one of these:" + the
+  popular chips + "Browse all products" → `/shop`. A failed catalogue read says
+  "Search is unavailable right now." instead of claiming nothing matched.
+- **Keyboard hints** — "↑ ↓ to move · Enter to open · Esc to close", only at
+  ≥1025px with a fine pointer, only while there are results.
+
+### `/search?q=`
+
+`SectionHeading as="h1"` (eyebrow "Search", title `Results for “{q}”`, lede with
+the count) over a `ProductCard` grid at **1 / 2 / 3 / 4** columns from 360 / 640
+/ 1024 / 1280 — all four measured. `useSeo({ title: q ? "Search: {q}" : "Search",
+noindex: true })`. The field at the top writes `?q=` with `replace: true` (so
+editing a query does not stack history) and mirrors the URL back, so Back and
+Forward move the query. Four `Skeleton variant="card"` while the catalogue
+loads. `ProductCard` is the current card; Prompt 15 restyles it.
+
+### Verified in Chromium
+
+| Check | Result |
+|---|---|
+| `"serum"` | Black Rice Face Serum, first and only |
+| `"hydration"` | Moisturizer Gel · Body Wash · Face Mist — nothing else |
+| `"goat"` | Black Rice Goat Milk Soap, alone |
+| `"black rice"` | all 8; Scrub, Face Wash, Goat Milk Soap (the three priced) lead |
+| nonsense | "No results for “zzzqqq”" + the empty state |
+| ↑/↓ from the field | `data-active` moves, `document.activeElement` stays the INPUT |
+| ↑/↓ from a focused row | focus moves row to row; ↑ off the top returns to the field |
+| Enter, nothing active | `/search?q=black%20rice`, overlay closed, `<h1>` correct |
+| Enter, 3rd row active | `/product/black-rice-face-mist` |
+| Escape | overlay closed, `body[data-drawer-open]` cleared, focus back on the header's Search button |
+| Tab walk (query typed) | field → clear → close → **one** row link → its add button → See all → field |
+| Quick add | cart label "Cart, 1 item", toast shown, only the search dialog still open |
+| priceTBA rows | 5 buttons `disabled` with the name "Coming soon"; 3 enabled |
+| Recent | `sessionStorage["lk-recent-searches"] = ["black rice"]`; no localStorage key |
+| Submitting from `/search?q=face` | `/search?q=serum`, overlay closed (query-only change) |
+| `/products?search=serum` | → `/search?q=serum` |
+| `/search` with no `q` | `<h1>` "Search", title "Search · LAMIKAA NATURALS" |
+| 360 / 390 / 414 / 768 / 1024 / 1280 / 1440 + reduced motion | field 52px, thumb 56px, add 40px (44px on coarse pointers), close 44px, **0** horizontal overflow, **0** page errors |
+| header while open | `backdrop-filter: none` at every width |
+
+### Greps
+
+`Muga|Mekhela|Eri |Pat silk|weave` in `src/components/SearchModal src/pages/Search` → **0**.
+`localStorage` in the same two → **0**; `sessionStorage` → 3 (read/write/remove).
+`ComingSoon` in `src/App.js` filtered by `search` → **0**.
+`focusable|body.style.overflow|triggerRef` in `SearchModal.js` → **0**.
+`getTrending|CURATED_|descendantSlugs|FALLBACK_IMAGE` in `SearchModal.js` → **0**.
+
+### Files touched beyond the prompt's expected list
+
+Four, each for a reason recorded in the decisions log: `hooks/useOverlayFlag.js`
+(new — the shared `body[data-drawer-open]` counter `Modal` needed),
+`ui/Drawer.js` (moved onto that hook; its own counter deleted),
+`storefront/PriceBlock.js` + `ui/Price.js` (the additive `live` prop), and
+`pages/_Playground/Playground.js` (`size="full"` added to the modal size row, so
+the primitive playground still shows every state it claims to).
+
+### Gates
+
+`CI=true npm run build` exit 0, **no warnings**. `npm test -- --watchAll=false`
+exit 0 — **4 suites passed / 1 skipped, 44 passed / 50 skipped**. `db.json`
+untouched; `src/services/api.js` untouched (reads only — `products.getAll`,
+`categories.getAll`, `concerns.getAll`). No dependency added. `ComingSoon.js`
+unchanged, with one fewer usage. `Header.js` and `BottomNav.js` unchanged — the
+overlay's `open`/`onClose` contract is the same.

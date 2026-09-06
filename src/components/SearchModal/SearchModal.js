@@ -1,86 +1,163 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Icon } from "@iconify/react";
+import { motion, useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
-import { useStoreSettings } from "../../context/StoreSettingsContext";
-import { formatCurrency, getProductMinPrice, productPath } from "../../utils/helpers";
+import brand from "../../config/brand";
+import { Button, Chip, Modal, Price } from "../ui";
+import { useCart } from "../../hooks/useCart";
+import { buildCartItem, productPath } from "../../utils/helpers";
+import { isPriceKnown, stageSrc } from "../../utils/product";
+import { categoryPath } from "../../utils/categories";
+import { rankProducts } from "../../utils/search";
 import { ROUTES } from "../../utils/constants";
-import StarRating from "../storefront/StarRating";
-import { DURATION, RISE, overlay, staggerDelay, t } from "../../theme/motion";
+import { reveal } from "../../theme/motion";
 import styles from "./SearchModal.module.css";
 
-// ---------------------------------------------------------------------------
-// Static config
-// ---------------------------------------------------------------------------
-// Owner-curated starting points. These are NOT generated, ranked or personalised
-// — each one simply seeds a normal query (see handleTermSearch), so the real
-// search engine still produces the real result set. Labelled plainly as
-// "Suggestions" in the UI: no "AI", no claim the code cannot back. Keep every
-// phrase to something the catalogue actually answers.
-const CURATED_SUGGESTIONS = [
-  "Muga Mekhela Chador",
-  "Pat silk saree",
-  "Eri shawl",
-  "Toss silk saree",
-];
+// =============================================================================
+// SearchModal — the full-screen search overlay
+// =============================================================================
+//
+// One field, and everything under it answers it. Empty, the overlay offers the
+// three ways into a small catalogue that are honest to offer: the owner's
+// popular searches (brand config, not a metric nobody is measuring), what THIS
+// TAB has searched for, and the seven categories. Typed into, it becomes a
+// ranked list of real products with a price and an add button on every row.
+//
+// IT RANKS LOCALLY. `utils/search.js` scores the whole catalogue on every
+// keystroke — eight products across nine fields is roughly nothing, so there is
+// no debounce, no spinner between the keystroke and the answer, and no request
+// per keystroke to cancel. The catalogue itself is fetched once per page load
+// (`loadSearchData`, shared by the header's overlay and the bottom bar's) and
+// refreshed the next time the overlay opens after the tab has regained focus —
+// long enough away that the merchant may have changed something.
+//
+// THE KEYBOARD, in full:
+//   ↑ / ↓      move the highlight (`data-active`) through the rows. Focus stays
+//              in the field, so the next keystroke still types — which is what
+//              makes the highlight worth having.
+//   Tab        lands on the highlighted row (roving `tabIndex`), not on all
+//              eight in turn, then on its add button, then on "See all".
+//   ↑ / ↓      from a focused row, move focus row to row; ↑ off the top goes
+//              back to the field.
+//   Enter      opens the highlighted row; with nothing highlighted it submits
+//              the query to /search?q= and remembers it.
+//   Escape     closes, and focus returns to whatever opened the overlay.
+//              (Escape, the focus trap and the restore are `ui/Modal`'s.)
+//
+// GLASS BUDGET. `Modal size="full"` is one blurred layer over the scrim, and it
+// raises `body[data-drawer-open]`, which is what makes the sticky header drop
+// its own backdrop filter for as long as the overlay is up — two blurred layers
+// at most, per DESIGN_SYSTEM §4.
+//
+// Props: `open`, `onClose` — unchanged, so Header and BottomNav mount it as
+// they always have.
+// =============================================================================
 
-// Fallback for the Trending block, used only when the trending endpoint returns
-// nothing (see the load effect). Curated search terms, not fabricated metrics —
-// we never show a trend count or percentage we do not have.
-const CURATED_TRENDING = [
-  "Sualkuchi",
-  "Muga silk",
-  "Pat silk",
-  "Eri silk",
-  "Toss silk",
-];
+/** Rows in the overlay before it defers to the results page. */
+const MAX_ROWS = 8;
 
-// Category filter chips (and the slugs each one matches) are derived at runtime
-// from the live category tree — see buildCategoryNav() — so they always reflect
-// what's in the catalogue with no hardcoded list to drift out of sync.
+/** Terms kept in the tab's recent list. */
+const MAX_RECENT = 6;
 
-const RECENT_SEARCHES_KEY = "recentSearches";
-const MAX_RECENT_SEARCHES = 8;
-const MAX_RESULTS = 12;
-const MAX_TRENDING = 5;
-const DEBOUNCE_MS = 300;
-
-// Inline SVG fallback (no external host) shown if a product image fails to load.
-// A data URI cannot read var(), so these two literals mirror the tokens by
-// hand: --sf-color-surface (#141416) as the plate and --sf-color-text-secondary
-// (#B8B5B0) as the glyph — 10.5:1 on that plate. If either token changes in
-// storefront-tokens.css, change them here.
-const FALLBACK_IMAGE =
-  "data:image/svg+xml;charset=UTF-8," +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="160" viewBox="0 0 120 160">' +
-      '<rect width="120" height="160" fill="#141416"/>' +
-      '<g fill="none" stroke="#B8B5B0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
-      '<rect x="28" y="52" width="64" height="56" rx="2"/>' +
-      '<circle cx="47" cy="72" r="6"/>' +
-      '<path d="M32 102l19-17 15 13 10-8 16 12"/>' +
-      "</g></svg>"
-  );
+// SESSION, not local, storage: a search history is a trail, and the visitor did
+// not ask for one that outlives the tab. It is also why there is no "clear on
+// every device" to build — closing the tab is the clear.
+const RECENT_KEY = "lk-recent-searches";
 
 // ---------------------------------------------------------------------------
-// Module-level cache — shared across every SearchModal instance (Header +
-// BottomNav) so the catalogue is fetched once instead of on every open.
+// Recent searches
 // ---------------------------------------------------------------------------
-let searchDataCache = null; // { products, categories }
+
+const readRecent = () => {
+  try {
+    const stored = window.sessionStorage.getItem(RECENT_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed.filter((row) => typeof row === "string") : [];
+  } catch {
+    // Private mode, a disabled store, a corrupted value — all the same answer.
+    return [];
+  }
+};
+
+const writeRecent = (terms) => {
+  try {
+    window.sessionStorage.setItem(RECENT_KEY, JSON.stringify(terms));
+  } catch {
+    /* the list is a convenience; losing it is not an error worth showing */
+  }
+  return terms;
+};
+
+/** Most recent first, case-insensitively deduped, capped. */
+const rememberSearch = (query) => {
+  const term = query.trim();
+  if (!term) return readRecent();
+  const rest = readRecent().filter((row) => row.toLowerCase() !== term.toLowerCase());
+  return writeRecent([term, ...rest].slice(0, MAX_RECENT));
+};
+
+const forgetSearches = () => {
+  try {
+    window.sessionStorage.removeItem(RECENT_KEY);
+  } catch {
+    /* nothing to clear */
+  }
+  return [];
+};
+
+// ---------------------------------------------------------------------------
+// Catalogue cache — module level, so the header's overlay and the bottom bar's
+// share one fetch instead of one each.
+// ---------------------------------------------------------------------------
+
+let searchDataCache = null;
 let searchDataPromise = null;
+let searchDataStale = false;
+let watchingFocus = false;
 
+/**
+ * Mark the cache stale when the tab comes back.
+ *
+ * NOT a refetch: the visitor is not necessarily searching, and a background tab
+ * regaining focus is no reason to make a request. The next OPEN pays for it.
+ * Registered on first use rather than on import, so a page that never opens the
+ * overlay never installs a listener.
+ */
+const watchTabFocus = () => {
+  if (watchingFocus || typeof window === "undefined") return;
+  watchingFocus = true;
+  const markStale = () => {
+    if (!document.hidden) searchDataStale = true;
+  };
+  window.addEventListener("focus", markStale);
+  document.addEventListener("visibilitychange", markStale);
+};
+
+/**
+ * Products, categories and concerns, once per page load.
+ *
+ * A failed load clears the promise but KEEPS the last good cache: an overlay
+ * that empties itself because one refresh timed out is worse than an overlay
+ * showing a catalogue that is a few minutes old.
+ */
 const loadSearchData = () => {
-  if (searchDataCache) return Promise.resolve(searchDataCache);
+  watchTabFocus();
+  if (searchDataCache && !searchDataStale) return Promise.resolve(searchDataCache);
   if (!searchDataPromise) {
     searchDataPromise = Promise.all([
       apiService.products.getAll(),
       apiService.categories.getAll(),
+      apiService.concerns.getAll(),
     ])
-      .then(([products, categories]) => {
+      .then(([products, categories, concerns]) => {
         searchDataCache = {
           products: Array.isArray(products) ? products : [],
           categories: Array.isArray(categories) ? categories : [],
+          concerns: Array.isArray(concerns) ? concerns : [],
         };
+        searchDataStale = false;
+        searchDataPromise = null;
         return searchDataCache;
       })
       .catch((err) => {
@@ -91,759 +168,476 @@ const loadSearchData = () => {
   return searchDataPromise;
 };
 
-// ---------------------------------------------------------------------------
-// Recent searches (localStorage)
-// ---------------------------------------------------------------------------
-const getRecentSearches = () => {
-  try {
-    const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
-    const parsed = stored ? JSON.parse(stored) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveRecentSearch = (query) => {
-  try {
-    const recent = getRecentSearches();
-    const filtered = recent.filter((s) => s.toLowerCase() !== query.toLowerCase());
-    const updated = [query, ...filtered].slice(0, MAX_RECENT_SEARCHES);
-    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
-    return updated;
-  } catch {
-    return getRecentSearches();
-  }
-};
-
-// Drop a single term — the per-row remove affordance. Same storage shape and the
-// same cap as saveRecentSearch, so the two stay interchangeable.
-const removeRecentSearch = (query) => {
-  try {
-    const updated = getRecentSearches()
-      .filter((s) => s.toLowerCase() !== query.toLowerCase())
-      .slice(0, MAX_RECENT_SEARCHES);
-    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
-    return updated;
-  } catch {
-    return getRecentSearches();
-  }
-};
-
-const clearRecentSearches = () => {
-  try {
-    localStorage.removeItem(RECENT_SEARCHES_KEY);
-  } catch {
-    // ignore
-  }
-};
+const EMPTY_DATA = { products: [], categories: [], concerns: [] };
 
 // ---------------------------------------------------------------------------
-// Category resolution — products reference a numeric categoryId; resolve it to
-// a { name, slug } via the categories list. Tolerant of the Laravel shape too
-// (string slug or nested object), so both API branches keep working.
-// ---------------------------------------------------------------------------
-const buildCategoryMap = (categories) => {
-  const byId = {};
-  const bySlug = {};
-  (categories || []).forEach((c) => {
-    if (!c) return;
-    if (c.id != null) byId[c.id] = c;
-    if (c.slug) bySlug[String(c.slug).toLowerCase()] = c;
-  });
-  return { byId, bySlug };
-};
 
-// Build the storefront filter chips straight from the live category tree, so
-// adding / renaming / removing a category in the admin is reflected here with no
-// code change. One chip per active top-level category; each chip matches that
-// category's slug AND all of its descendants' slugs (so a "Mekhela Chador" chip
-// still surfaces the Muga / Pat / Eri products beneath it). Returns
-// { chips, groups }.
-const buildCategoryNav = (categories) => {
-  const list = (Array.isArray(categories) ? categories : []).filter(
-    (c) => c && c.isActive !== false
-  );
-  const byParent = {};
-  list.forEach((c) => {
-    const key = c.parentId == null ? "root" : String(c.parentId);
-    (byParent[key] = byParent[key] || []).push(c);
-  });
-  const descendantSlugs = (cat) => {
-    const slugs = [];
-    const stack = [cat];
-    while (stack.length) {
-      const cur = stack.pop();
-      if (cur.slug) slugs.push(String(cur.slug).toLowerCase());
-      (byParent[String(cur.id)] || []).forEach((child) => stack.push(child));
-    }
-    return slugs;
-  };
-  const tops = (byParent.root || [])
-    .slice()
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || String(a.name).localeCompare(String(b.name)));
-  const chips = ["All", ...tops.map((c) => c.name)];
-  const groups = {};
-  tops.forEach((c) => { groups[c.name] = descendantSlugs(c); });
-  return { chips, groups };
-};
-
-const resolveCategory = (product, map) => {
-  if (!product) return { name: "", slug: "" };
-  if (typeof product.category === "string" && product.category) {
-    const slug = product.category.toLowerCase();
-    const found = map.bySlug[slug];
-    return { name: found ? found.name : product.category, slug: found ? String(found.slug).toLowerCase() : slug };
-  }
-  if (product.category && typeof product.category === "object") {
-    return {
-      name: product.category.name || "",
-      slug: String(product.category.slug || "").toLowerCase(),
-    };
-  }
-  const byId = map.byId[product.categoryId];
-  if (byId) return { name: byId.name, slug: String(byId.slug || "").toLowerCase() };
-  return { name: "", slug: "" };
-};
-
-const matchesCategoryChip = (product, chip, catInfo, groups = {}) => {
-  if (!chip || chip === "All") return true;
-  const group = groups[chip] || [chip.toLowerCase()];
-  const slug = (catInfo.slug || "").toLowerCase();
-  const name = (catInfo.name || "").toLowerCase();
-  const chipLower = chip.toLowerCase();
-  if (group.includes(slug)) return true;
-  if ((name && name.includes(chipLower)) || (slug && slug.includes(chipLower))) return true;
-  const tags = (product.tags || []).map((t) => String(t).toLowerCase());
-  if (group.some((g) => tags.includes(g))) return true;
-  return false;
-};
-
-// ---------------------------------------------------------------------------
-// Relevance scoring: exact name → starts-with → word match → contains →
-// tags → brand/category → description, with a small trending/hot boost.
-// ---------------------------------------------------------------------------
-const scoreProduct = (product, lowerQuery, catInfo) => {
-  let score = 0;
-  const name = (product.name || "").toLowerCase();
-  const desc = (product.shortDescription || "").toLowerCase();
-  const brand = (product.brand || "").toLowerCase();
-  const tags = (product.tags || []).map((t) => String(t).toLowerCase());
-  const catName = (catInfo.name || "").toLowerCase();
-  const catSlug = (catInfo.slug || "").toLowerCase();
-
-  // Name
-  if (name === lowerQuery) score += 100;
-  else if (name.startsWith(lowerQuery)) score += 80;
-  else if (name.split(/\s+/).some((w) => w.startsWith(lowerQuery))) score += 60;
-  else if (name.includes(lowerQuery)) score += 40;
-
-  // Tags
-  if (tags.some((t) => t === lowerQuery)) score += 30;
-  else if (tags.some((t) => t.startsWith(lowerQuery))) score += 20;
-  else if (tags.some((t) => t.includes(lowerQuery))) score += 10;
-
-  // Category / brand
-  if (catName.includes(lowerQuery) || catSlug.includes(lowerQuery)) score += 15;
-  if (brand.includes(lowerQuery)) score += 15;
-
-  // Description (weakest signal)
-  if (desc.includes(lowerQuery)) score += 5;
-
-  // Only matched products are eligible. Trending/hot give a small ranking
-  // boost on top of a real match — never a reason to surface a non-match.
-  if (score <= 0) return 0;
-  if (product.trending) score += 3;
-  if (product.hot) score += 2;
-
-  return score;
-};
-
-// ---------------------------------------------------------------------------
-// Inline SVG icons. Deliberately few: an editorial overlay is typography, not
-// glyphs. Stroke colour inherits via currentColor, so they stay token-driven.
-// ---------------------------------------------------------------------------
-const Icon = {
-  Search: (props) => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="11" cy="11" r="7.5" />
-      <line x1="21" y1="21" x2="16.8" y2="16.8" />
-    </svg>
-  ),
-  Close: (props) => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  ),
-  Arrow: (props) => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <line x1="4" y1="12" x2="19" y2="12" />
-      <polyline points="13 6 19 12 13 18" />
-    </svg>
-  ),
-};
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 const SearchModal = ({ open, onClose }) => {
   const navigate = useNavigate();
-  const { storeName } = useStoreSettings();
-  const reduceMotion = useReducedMotion();
+  const { addToCart } = useCart();
+  const reduce = useReducedMotion();
+
   const inputRef = useRef(null);
-  const modalRef = useRef(null);
-  const triggerRef = useRef(null);
-  const debounceTimerRef = useRef(null);
-  const activeCategoryRef = useRef("All");
+  const listRef = useRef(null);
+  const rowRefs = useRef([]);
+
+  const headingId = useId();
+  const listId = useId();
 
   const [query, setQuery] = useState("");
-  const [allProducts, setAllProducts] = useState([]);
-  const [categoryMap, setCategoryMap] = useState({ byId: {}, bySlug: {} });
-  const [categoryNav, setCategoryNav] = useState({ chips: ["All"], groups: {} });
-  const [results, setResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [dataReady, setDataReady] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [recentSearches, setRecentSearches] = useState([]);
-  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [data, setData] = useState(searchDataCache || EMPTY_DATA);
+  const [ready, setReady] = useState(!!searchDataCache);
+  const [failed, setFailed] = useState(false);
+  const [recent, setRecent] = useState([]);
+  // -1 is "the field itself": Enter submits the query rather than opening a row.
+  const [activeIndex, setActiveIndex] = useState(-1);
 
-  // Keep a ref of the active category so the debounced query effect always uses
-  // the latest value without re-subscribing on every chip change.
+  // ---- Data ---------------------------------------------------------------
+
   useEffect(() => {
-    activeCategoryRef.current = activeCategory;
-  }, [activeCategory]);
-
-  // Core search routine (synchronous; the catalogue is already in memory).
-  const runSearch = useCallback(
-    (rawQuery, category) => {
-      const lowerQuery = (rawQuery || "").toLowerCase().trim();
-      if (!lowerQuery) {
-        setResults([]);
-        setIsSearching(false);
-        return;
-      }
-      const cat = category || "All";
-      const scored = allProducts
-        .map((product) => {
-          const catInfo = resolveCategory(product, categoryMap);
-          return { product, catInfo, score: scoreProduct(product, lowerQuery, catInfo) };
-        })
-        .filter((entry) => entry.score > 0 && matchesCategoryChip(entry.product, cat, entry.catInfo, categoryNav.groups))
-        .sort((a, b) => b.score - a.score)
-        .map((entry) => ({ ...entry.product, _catName: entry.catInfo.name }));
-
-      setResults(scored);
-      setIsSearching(false);
-    },
-    [allProducts, categoryMap, categoryNav]
-  );
-
-  // Load catalogue (cached) when the modal first opens; refresh recent searches
-  // and focus the input. Reset transient state when it closes.
-  useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setResults([]);
-      setIsSearching(false);
-      setActiveCategory("All");
-      return;
-    }
-
+    if (!open) return undefined;
     let active = true;
-    setRecentSearches(getRecentSearches());
+    setRecent(readRecent());
+    setFailed(false);
     loadSearchData()
-      .then((data) => {
+      .then((loaded) => {
         if (!active) return;
-        setAllProducts(data.products);
-        setCategoryMap(buildCategoryMap(data.categories));
-        setCategoryNav(buildCategoryNav(data.categories));
-        setDataReady(true);
+        setData(loaded);
+        setReady(true);
       })
       .catch((err) => {
         if (!active) return;
         console.error("Failed to load search data:", err);
-        // Settled, just empty-handed: flip the flag anyway so a failed fetch
-        // resolves to the empty state instead of a permanent "Searching…".
-        setDataReady(true);
+        // Settled, just empty-handed: `ready` flips either way so the overlay
+        // resolves to a state instead of a permanent "Searching…".
+        setReady(true);
+        setFailed(true);
       });
-
-    // Trending is real product data, shown as a small rail. On error / empty we
-    // fall back to the curated terms above — never to invented products.
-    apiService.products
-      .getTrending(MAX_TRENDING)
-      .then((list) => {
-        if (!active) return;
-        const items = (Array.isArray(list) ? list : []).filter(Boolean).slice(0, MAX_TRENDING);
-        if (items.length) setTrendingProducts(items);
-      })
-      .catch(() => {
-        /* keep the curated fallback */
-      });
-
-    const focusTimer = setTimeout(() => inputRef.current?.focus(), 120);
     return () => {
       active = false;
-      clearTimeout(focusTimer);
     };
   }, [open]);
 
-  // Lock body scroll while open (only the open instance acts; the closed one
-  // returns early so it never touches the body style).
+  // The overlay is mounted for the life of the page (Header and BottomNav both
+  // hold one), so closing has to reset it — otherwise it reopens mid-query.
   useEffect(() => {
-    if (!open) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open]);
-
-  // Remember the element that opened the overlay and restore focus to it on
-  // close, so keyboard users land back on the trigger.
-  useEffect(() => {
-    if (open) {
-      triggerRef.current = document.activeElement;
-      return undefined;
-    }
-    const trigger = triggerRef.current;
-    triggerRef.current = null;
-    if (trigger && typeof trigger.focus === "function") {
-      // Defer until after the exit animation unmounts the dialog.
-      const t = setTimeout(() => trigger.focus(), 0);
-      return () => clearTimeout(t);
-    }
-    return undefined;
-  }, [open]);
-
-  // Escape to close + focus trap (Tab / Shift+Tab cycle within the overlay).
-  useEffect(() => {
-    if (!open) return undefined;
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (e.key !== "Tab") return;
-      const modal = modalRef.current;
-      if (!modal) return;
-      const focusable = Array.from(
-        modal.querySelectorAll(
-          'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-      ).filter((el) => el.offsetParent !== null || el === document.activeElement);
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first || !modal.contains(document.activeElement)) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else if (
-        document.activeElement === last ||
-        !modal.contains(document.activeElement)
-      ) {
-        // The `!contains` half matters as much as the `=== last` half: results
-        // re-render as you type, and when the focused row is replaced focus
-        // falls to <body>. Without this the next Tab walked out into the page
-        // behind the overlay. The Shift branch above already guarded it, and
-        // AuthModal / ReviewModal guard both — this one was the odd trap out.
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
-
-  // Debounced search as the user types.
-  useEffect(() => {
-    const trimmed = query.trim();
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-
-    if (!trimmed) {
-      setResults([]);
-      setIsSearching(false);
-      return undefined;
-    }
-
-    setIsSearching(true);
-    debounceTimerRef.current = setTimeout(() => {
-      runSearch(trimmed, activeCategoryRef.current);
-    }, DEBOUNCE_MS);
-
-    return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    };
-  }, [query, runSearch]);
-
-  // ----- Handlers -----
-  const handleInputChange = (e) => setQuery(e.target.value);
-
-  const handleClear = () => {
+    if (open) return;
     setQuery("");
-    setResults([]);
-    inputRef.current?.focus();
+    setActiveIndex(-1);
+  }, [open]);
+
+  // ---- Results ------------------------------------------------------------
+
+  const trimmed = query.trim();
+  const results = useMemo(
+    () =>
+      rankProducts(data.products, trimmed, {
+        categories: data.categories,
+        concerns: data.concerns,
+      }),
+    [data, trimmed]
+  );
+  const rows = results.slice(0, MAX_ROWS);
+
+  const categories = useMemo(
+    () =>
+      (data.categories || [])
+        .filter((category) => category && category.isActive !== false)
+        .slice()
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [data.categories]
+  );
+
+  const popular = brand.search?.popular || [];
+  const hasQuery = trimmed.length > 0;
+  const searching = hasQuery && !ready;
+
+  // A highlight that outlives the row it pointed at is a highlight pointing at
+  // a different product, so every new query starts from the field again.
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [trimmed]);
+
+  // Keep the highlighted row in the scrollport. `nearest` so a row that is
+  // already visible does not scroll the list at all.
+  useEffect(() => {
+    if (activeIndex < 0) return;
+    rowRefs.current[activeIndex]?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+
+  // ---- Actions ------------------------------------------------------------
+
+  const openProduct = useCallback(
+    (product) => {
+      if (trimmed) setRecent(rememberSearch(trimmed));
+      onClose?.();
+      navigate(productPath(product));
+    },
+    [navigate, onClose, trimmed]
+  );
+
+  // `onClose` explicitly rather than leaning on Modal's close-on-navigation:
+  // submitting from /search?q=a to /search?q=b changes no pathname, so nothing
+  // would close the overlay over the results it just produced.
+  const submitQuery = useCallback(
+    (term) => {
+      const value = (term || "").trim();
+      if (!value) return;
+      setRecent(rememberSearch(value));
+      onClose?.();
+      navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(value)}`);
+    },
+    [navigate, onClose]
+  );
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const active = rows[activeIndex];
+    if (active) openProduct(active.product);
+    else submitQuery(query);
   };
 
-  const goToSearchResults = (term) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    setRecentSearches(saveRecentSearch(trimmed));
-    onClose();
-    navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(trimmed)}`);
+  const handleQuickAdd = (product) => {
+    // The button is disabled for an unpriced product, so this cannot build a
+    // ₹0 line — and the cart drawer stays shut either way: the visitor is
+    // mid-search, and a tray sliding over the results ends the search for them.
+    // The confirmation is CartContext's existing toast.
+    addToCart(buildCartItem(product), 1, { openDrawer: false });
   };
 
-  const handleSubmit = (e) => {
-    if (e) e.preventDefault();
-    goToSearchResults(query);
+  /**
+   * Move the highlight.
+   *
+   * `moveFocus` is what separates the two callers: from the field the highlight
+   * moves alone (so typing continues), from a focused row the focus goes with
+   * it — and off the top of the list it goes back to the field. Focusing a row
+   * that is still `tabIndex={-1}` this render is fine: programmatic focus does
+   * not care about the tab order, which is the whole reason -1 exists.
+   */
+  const moveActive = (delta, { moveFocus = false } = {}) => {
+    if (!rows.length) return;
+    const next = Math.min(activeIndex + delta, rows.length - 1);
+    if (next < 0) {
+      setActiveIndex(-1);
+      if (moveFocus) inputRef.current?.focus();
+      return;
+    }
+    setActiveIndex(next);
+    if (moveFocus) rowRefs.current[next]?.focus();
   };
 
-  const handleProductClick = (product) => {
-    if (query.trim()) setRecentSearches(saveRecentSearch(query.trim()));
-    onClose();
-    navigate(productPath(product));
+  const handleFieldKeyDown = (event) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveActive(1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      moveActive(-1);
+    }
   };
 
-  // Seed the query with a curated / recent / trending term so the real debounced
-  // search runs. Returns focus to the input for continued typing.
-  const handleTermSearch = (term) => {
+  const handleListKeyDown = (event) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveActive(1, { moveFocus: true });
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      moveActive(-1, { moveFocus: true });
+    }
+  };
+
+  const handleTerm = (term) => {
     setQuery(term);
     inputRef.current?.focus();
   };
 
-  const handleRemoveRecent = (term) => {
-    setRecentSearches(removeRecentSearch(term));
+  const handleClear = () => {
+    setQuery("");
+    inputRef.current?.focus();
   };
 
-  const handleClearRecent = () => {
-    clearRecentSearches();
-    setRecentSearches([]);
+  const handleResultNavigate = () => {
+    if (trimmed) setRecent(rememberSearch(trimmed));
+    onClose?.();
   };
 
-  const handleCategoryClick = (cat) => {
-    setActiveCategory(cat);
-    if (query.trim()) {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      runSearch(query, cat);
-    }
+  // ---- Render -------------------------------------------------------------
+
+  /** The one line the count is announced and shown on. "" while idle. */
+  const statusLine = () => {
+    if (!hasQuery) return "";
+    if (searching) return "Searching…";
+    if (!results.length) return `No results for “${trimmed}”`;
+    return `${results.length} ${results.length === 1 ? "result" : "results"} for “${trimmed}”`;
   };
 
-  // ----- Derived -----
-  const getPrice = (product) => {
-    const priceInfo = getProductMinPrice(product);
-    return priceInfo.sellingPrice || priceInfo.originalPrice || product.price || 0;
-  };
-
-  const trimmedQuery = query.trim();
-  const showResultsView = trimmedQuery.length > 0;
-  const cappedResults = results.slice(0, MAX_RESULTS);
-  // Busy while the debounce is pending OR while the catalogue is still in
-  // flight — on a slow connection the first keystroke must not read "nothing".
-  const isBusy = showResultsView && (isSearching || !dataReady);
-
-  // The shared overlay/panel treatment: the scrim on the base tier, the sheet
-  // dropping in on the slow one and leaving on the base one.
-  const scrim = overlay(reduceMotion);
-  const sheetSlide = t(reduceMotion, DURATION.slow);
-  const sheetExit = t(reduceMotion, DURATION.base);
-
-  // Quiet ruled rows — used for Suggestions and for the curated Trending
-  // fallback. Each row simply seeds the input with a real query.
-  const renderTermRows = (terms) => (
-    <ul className={styles.rows}>
-      {terms.map((term) => (
-        <li key={term} className={styles.rowItem}>
-          <button type="button" className={styles.row} onClick={() => handleTermSearch(term)}>
-            <span className={styles.rowText}>{term}</span>
-            <span className={styles.rowArrow} aria-hidden="true">
-              <Icon.Arrow />
-            </span>
-          </button>
+  const popularChips = (
+    <ul className={styles.chips}>
+      {popular.map((term) => (
+        <li key={term}>
+          <Chip variant="glass" as="button" onClick={() => handleTerm(term)}>
+            {term}
+          </Chip>
         </li>
       ))}
     </ul>
   );
 
-  const renderThumbImage = (product, className) => (
-    <img
-      src={product.images?.[0] || product.image || FALLBACK_IMAGE}
-      alt={product.name}
-      className={className}
-      loading="lazy"
-      onError={(e) => {
-        if (e.currentTarget.dataset.fallback) return;
-        e.currentTarget.dataset.fallback = "1";
-        e.currentTarget.src = FALLBACK_IMAGE;
-      }}
-    />
-  );
+  const renderRow = (entry, index) => {
+    const product = entry.product;
+    const buyable = isPriceKnown(product);
+    const label = product.shortName || product.name;
+    const thumb = stageSrc(product, { w: 112 });
+    const isActive = index === activeIndex;
+    // Roving tabIndex: exactly one row is in the tab order, and with nothing
+    // highlighted it is the first — so Tab out of the field reaches the best
+    // answer, not the eighth-best after seven presses.
+    const rowTab = isActive || (activeIndex < 0 && index === 0) ? 0 : -1;
+
+    return (
+      <motion.li
+        key={product.id}
+        className={styles.row}
+        data-active={isActive ? "true" : undefined}
+        {...reveal(reduce, { index })}
+      >
+        <Link
+          to={productPath(product)}
+          className={styles.rowLink}
+          ref={(node) => {
+            rowRefs.current[index] = node;
+          }}
+          tabIndex={rowTab}
+          onClick={handleResultNavigate}
+          onFocus={() => setActiveIndex(index)}
+        >
+          <span className={`sf-plate ${styles.thumb}`}>
+            {thumb ? <img src={thumb} alt="" loading="lazy" /> : null}
+          </span>
+          {/* A <div>, not a <span>: `Price` renders a block element, and an
+              <a> inside an <li> may hold flow content while a <span> may not. */}
+          <div className={styles.rowText}>
+            <span className={styles.rowName}>{product.name}</span>
+            {product.promise ? (
+              <span className={styles.rowPromise}>{product.promise}</span>
+            ) : null}
+            {/* `live={false}`: this chip is created and destroyed with its
+                row rather than changing in place, and eight live regions
+                arriving at once would talk over the result count. */}
+            <Price
+              product={product}
+              size="sm"
+              live={false}
+              className={styles.rowPrice}
+            />
+          </div>
+        </Link>
+
+        <Button
+          variant="icon"
+          size="sm"
+          icon="mdi:cart-plus"
+          className={styles.rowAdd}
+          tabIndex={rowTab}
+          disabled={!buyable}
+          srLabel={buyable ? `Add ${label} to cart` : "Coming soon"}
+          onClick={() => handleQuickAdd(product)}
+        />
+      </motion.li>
+    );
+  };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className={styles.overlay}
-          {...scrim}
-          onClick={onClose}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Search ${storeName}`}
-        >
-          <motion.div
-            ref={modalRef}
-            className={styles.sheet}
-            initial={{ opacity: 0, y: reduceMotion ? 0 : -RISE.reveal }}
-            animate={{ opacity: 1, y: 0, transition: sheetSlide }}
-            exit={{
-              opacity: 0,
-              y: reduceMotion ? 0 : -RISE.micro,
-              transition: sheetExit,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* ---- Masthead: label, close mark, the input line, the chips ---- */}
-            <div className={styles.head}>
-              <div className={styles.inner}>
-                <div className={styles.topRow}>
-                  <span className={styles.eyebrow}>Search the house</span>
-                  <button
-                    type="button"
-                    className={styles.closeBtn}
-                    onClick={onClose}
-                    aria-label="Close search"
-                  >
-                    <span className={styles.closeText}>Close</span>
-                    <Icon.Close width="18" height="18" />
-                  </button>
-                </div>
+    <Modal
+      open={!!open}
+      onClose={onClose}
+      size="full"
+      showClose={false}
+      labelledBy={headingId}
+      initialFocus={inputRef}
+      className={styles.modal}
+    >
+      <h2 id={headingId} className="sf-visually-hidden">
+        Search products
+      </h2>
 
-                <form
-                  className={styles.field}
-                  onSubmit={handleSubmit}
-                  role="search"
-                  data-busy={isBusy ? "true" : "false"}
-                >
-                  <span className={styles.fieldIcon} aria-hidden="true">
-                    <Icon.Search />
-                  </span>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    className={styles.input}
-                    placeholder="Search Muga, Eri, Mekhela Chador…"
-                    value={query}
-                    onChange={handleInputChange}
-                    autoComplete="off"
-                    aria-label={`Search ${storeName}`}
-                  />
-                  {query && (
-                    <button
-                      type="button"
-                      className={styles.clearBtn}
-                      onClick={handleClear}
-                      aria-label="Clear search"
-                    >
-                      <Icon.Close width="14" height="14" />
-                    </button>
-                  )}
-                </form>
+      {/* ---- The field, and the way out ------------------------------------ */}
+      <div className={styles.head}>
+        <div className={styles.inner}>
+          <div className={styles.topRow}>
+            <form
+              className={styles.field}
+              role="search"
+              aria-label="Search products"
+              onSubmit={handleSubmit}
+            >
+              <span className={styles.fieldIcon} aria-hidden="true">
+                <Icon icon="mdi:magnify" />
+              </span>
+              <input
+                ref={inputRef}
+                type="search"
+                className={styles.input}
+                value={query}
+                placeholder="Search products"
+                aria-label="Search products"
+                aria-controls={results.length ? listId : undefined}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
+                enterKeyHint="search"
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={handleFieldKeyDown}
+              />
+              {query ? (
+                <Button
+                  variant="icon"
+                  size="sm"
+                  icon="mdi:close"
+                  srLabel="Clear search"
+                  className={styles.clear}
+                  onClick={handleClear}
+                />
+              ) : null}
+            </form>
+            <Button
+              variant="icon"
+              icon="mdi:close"
+              srLabel="Close search"
+              className={styles.close}
+              onClick={onClose}
+            />
+          </div>
 
-                <div className={styles.chipRow} role="group" aria-label="Filter by category">
-                  {categoryNav.chips.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      className={`sf-chip ${styles.chip} ${
-                        activeCategory === cat ? "sf-chip--active" : ""
-                      }`}
-                      aria-pressed={activeCategory === cat}
-                      onClick={() => handleCategoryClick(cat)}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* Always in the DOM, empty while idle: a live region created at the
+              moment its text arrives is a live region that announces nothing. */}
+          <p className={styles.count} role="status" aria-live="polite">
+            {statusLine()}
+          </p>
+        </div>
+      </div>
 
-            {/* ---- Body ------------------------------------------------------ */}
-            <div className={styles.body}>
-              <div className={styles.inner}>
-                {/* Announce the outcome to screen readers without a visual echo. */}
-                <p className={styles.srOnly} role="status" aria-live="polite">
-                  {!showResultsView
-                    ? ""
-                    : isBusy
-                    ? "Searching"
-                    : `${results.length} ${results.length === 1 ? "piece" : "pieces"} found`}
-                </p>
+      {/* ---- Suggestions, or results --------------------------------------- */}
+      <div className={styles.scroll}>
+        <div className={styles.inner}>
+          {!hasQuery ? (
+            <div className={styles.idle}>
+              <div className={styles.idleCol}>
+                {popular.length ? (
+                  <section className={styles.block}>
+                    <h3 className={`sf-eyebrow ${styles.blockLabel}`}>
+                      Popular searches
+                    </h3>
+                    {popularChips}
+                  </section>
+                ) : null}
 
-                {showResultsView ? (
-                  isBusy && results.length === 0 ? (
-                    <p className={styles.searching}>Searching the collection…</p>
-                  ) : results.length === 0 ? (
-                    <div className={styles.empty}>
-                      <p className={styles.emptyTitle}>Nothing yet for “{trimmedQuery}”</p>
-                      <p className={styles.emptyHint}>
-                        Try another word — a product, an ingredient or a concern — or browse the whole range.
-                      </p>
-                      <Link to={ROUTES.SHOP} className={styles.emptyLink} onClick={onClose}>
-                        View the whole range
-                        <Icon.Arrow />
-                      </Link>
+                {recent.length ? (
+                  <section className={styles.block}>
+                    <div className={styles.blockHead}>
+                      <h3 className={`sf-eyebrow ${styles.blockLabel}`}>Recent</h3>
+                      <button
+                        type="button"
+                        className={styles.textBtn}
+                        onClick={() => setRecent(forgetSearches())}
+                      >
+                        Clear
+                      </button>
                     </div>
-                  ) : (
-                    <>
-                      <div className={styles.blockHead}>
-                        <h2 className={styles.blockLabel}>
-                          {results.length} {results.length === 1 ? "piece" : "pieces"} for “
-                          {trimmedQuery}”
-                        </h2>
-                        <button type="button" className={styles.textLink} onClick={handleSubmit}>
-                          View all
-                          <Icon.Arrow />
-                        </button>
-                      </div>
-
-                      <div className={styles.grid}>
-                        {cappedResults.map((product, idx) => (
-                          <motion.button
-                            key={product.id}
-                            type="button"
-                            className={styles.card}
-                            initial={{
-                              opacity: 0,
-                              y: reduceMotion ? 0 : RISE.micro,
-                            }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              ...t(reduceMotion, DURATION.base),
-                              delay: reduceMotion ? 0 : staggerDelay(idx),
-                            }}
-                            onClick={() => handleProductClick(product)}
+                    <ul className={styles.chips}>
+                      {recent.map((term) => (
+                        <li key={term}>
+                          <Chip
+                            variant="glass"
+                            as="button"
+                            onClick={() => handleTerm(term)}
                           >
-                            <span className={styles.thumb}>
-                              {renderThumbImage(product, styles.thumbImg)}
-                            </span>
-                            <span className={styles.cardName}>{product.name}</span>
-                            {product._catName && (
-                              <span className={styles.cardCat}>{product._catName}</span>
-                            )}
-                            <span className={styles.cardPrice}>
-                              {formatCurrency(getPrice(product))}
-                            </span>
-                            <span className={styles.cardStars}>
-                              {product.rating ? (
-                                <>
-                                  <StarRating rating={product.rating} size={11} />
-                                  <span className={styles.ratingNum}>
-                                    {Number(product.rating).toFixed(1)}
-                                  </span>
-                                </>
-                              ) : (
-                                <span className={styles.ratingNum}>New in</span>
-                              )}
-                            </span>
-                          </motion.button>
-                        ))}
-                      </div>
-
-                      {results.length > MAX_RESULTS && (
-                        <div className={styles.moreRow}>
-                          <button type="button" className={styles.textLink} onClick={handleSubmit}>
-                            View all {results.length} pieces
-                            <Icon.Arrow />
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )
-                ) : (
-                  <div className={styles.idle}>
-                    {/* Suggestions — curated phrases that seed a real query. */}
-                    <section className={styles.block}>
-                      <div className={styles.blockHead}>
-                        <h2 className={styles.blockLabel}>Suggestions</h2>
-                      </div>
-                      {renderTermRows(CURATED_SUGGESTIONS)}
-                    </section>
-
-                    {/* Recent searches — persisted in localStorage, removable. */}
-                    {recentSearches.length > 0 && (
-                      <section className={styles.block}>
-                        <div className={styles.blockHead}>
-                          <h2 className={styles.blockLabel}>Recent</h2>
-                          <button
-                            type="button"
-                            className={styles.quietBtn}
-                            onClick={handleClearRecent}
-                          >
-                            Clear all
-                          </button>
-                        </div>
-                        <ul className={styles.rows}>
-                          {recentSearches.map((term) => (
-                            <li key={term} className={`${styles.rowItem} ${styles.recentItem}`}>
-                              <button
-                                type="button"
-                                className={styles.row}
-                                onClick={() => handleTermSearch(term)}
-                              >
-                                <span className={styles.rowText}>{term}</span>
-                              </button>
-                              <button
-                                type="button"
-                                className={styles.removeBtn}
-                                onClick={() => handleRemoveRecent(term)}
-                                aria-label={`Remove “${term}” from recent searches`}
-                              >
-                                <Icon.Close width="13" height="13" />
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </section>
-                    )}
-
-                    {/* Trending — real products when we have them, curated terms
-                        as the honest fallback when the endpoint gives nothing. */}
-                    <section className={styles.block}>
-                      <div className={styles.blockHead}>
-                        <h2 className={styles.blockLabel}>Trending now</h2>
-                      </div>
-                      {trendingProducts.length > 0 ? (
-                        <div className={styles.rail}>
-                          {trendingProducts.map((product) => (
-                            <button
-                              key={product.id}
-                              type="button"
-                              className={styles.railItem}
-                              onClick={() => handleProductClick(product)}
-                            >
-                              <span className={styles.railThumb}>
-                                {renderThumbImage(product, styles.thumbImg)}
-                              </span>
-                              <span className={styles.railName}>{product.name}</span>
-                              <span className={styles.railPrice}>
-                                {formatCurrency(getPrice(product))}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        renderTermRows(CURATED_TRENDING)
-                      )}
-                    </section>
-                  </div>
-                )}
+                            {term}
+                          </Chip>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
               </div>
+
+              {categories.length ? (
+                <section className={`${styles.block} ${styles.idleCol}`}>
+                  <h3 className={`sf-eyebrow ${styles.blockLabel}`}>
+                    Shop by category
+                  </h3>
+                  <ul className={styles.chips}>
+                    {categories.map((category) => (
+                      <li key={category.id}>
+                        <Chip
+                          variant="glass"
+                          as={Link}
+                          to={categoryPath(category)}
+                          className={styles.linkChip}
+                          onClick={onClose}
+                        >
+                          {category.displayName || category.name}
+                        </Chip>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          ) : searching ? (
+            <p className={styles.searching}>Searching…</p>
+          ) : results.length ? (
+            <>
+              {/* `role="list"` restated on purpose: Safari drops the list
+                  semantics of a <ul> whose `list-style` is none, which is every
+                  list in this design system. eslint's redundant-role rule does
+                  not know about that bug. */}
+              {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
+              <ul
+                id={listId}
+                ref={listRef}
+                role="list"
+                className={styles.rows}
+                onKeyDown={handleListKeyDown}
+              >
+                {rows.map(renderRow)}
+              </ul>
+
+              <Link
+                to={`${ROUTES.SEARCH}?q=${encodeURIComponent(trimmed)}`}
+                className={styles.seeAll}
+                onClick={handleResultNavigate}
+              >
+                See all {results.length} {results.length === 1 ? "result" : "results"}
+                <Icon icon="mdi:arrow-right" aria-hidden="true" />
+              </Link>
+
+              {/* Desktop only (CSS): a phone has no keyboard to hint at. */}
+              <p className={styles.hints} aria-hidden="true">
+                ↑ ↓ to move · Enter to open · Esc to close
+              </p>
+            </>
+          ) : (
+            <div className={styles.empty}>
+              <p className={styles.emptyTitle}>
+                {failed
+                  ? "Search is unavailable right now."
+                  : `Nothing matched “${trimmed}”.`}
+              </p>
+              {!failed && popular.length ? (
+                <>
+                  <p className={styles.emptyHint}>Try one of these:</p>
+                  {popularChips}
+                </>
+              ) : null}
+              <Button variant="secondary" to={ROUTES.SHOP} onClick={onClose}>
+                Browse all products
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 };
 
