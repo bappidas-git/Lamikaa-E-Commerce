@@ -13,6 +13,8 @@ import {
   orderCategoriesHierarchically,
 } from "../../utils/categories";
 import { getProductMinPrice, getDeviceType } from "../../utils/helpers";
+import { ROUTES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
 import { overlay, panel, reveal } from "../../theme/motion";
 import styles from "./Products.module.css";
 
@@ -324,7 +326,12 @@ const ErrorIllustration = () => (
 // ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
-const Products = () => {
+// `categorySlug` is set by the /category/:slug route (Prompt 08). It LOCKS the
+// listing to one category: the slug comes from the path, so it never enters the
+// query string, the category facet steps aside (the route already answered that
+// question), and "Clear all" clears back to the route rather than out of it.
+// Prompt 24 replaces this page with <Shop mode="category" /> and the prop goes.
+const Products = ({ categorySlug = "" }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useCart();
@@ -363,7 +370,7 @@ const Products = () => {
   const pendingScrollRef = useRef(false); // set by pagination, consumed post-commit
 
   // ---- Read URL params ----
-  const urlCategory = searchParams.get("category") || "";
+  const urlCategory = categorySlug || searchParams.get("category") || "";
   const urlSearch = searchParams.get("search") || "";
   const urlSort = normalizeSort(searchParams.get("sort"));
   const urlPage = parseInt(searchParams.get("page"), 10) || 1;
@@ -485,7 +492,9 @@ const Products = () => {
           overrides.highlight !== undefined ? overrides.highlight : selectedHighlights,
       };
       const params = new URLSearchParams();
-      if (merged.category && merged.category.length) params.set("category", Array.isArray(merged.category) ? merged.category.join(",") : merged.category);
+      // Under /category/:slug the category IS the path; writing it to the query
+      // as well would produce /category/face-care?category=face-care.
+      if (!categorySlug && merged.category && merged.category.length) params.set("category", Array.isArray(merged.category) ? merged.category.join(",") : merged.category);
       if (merged.search) params.set("search", merged.search);
       if (merged.sort && merged.sort !== "relevance") params.set("sort", merged.sort);
       if (merged.page > 1) params.set("page", String(merged.page));
@@ -499,7 +508,7 @@ const Products = () => {
         );
       setSearchParams(params, { replace: true });
     },
-    [selectedCategories, urlSearch, sortBy, currentPage, perPage, minPrice, maxPrice, selectedHighlights, setSearchParams]
+    [categorySlug, selectedCategories, urlSearch, sortBy, currentPage, perPage, minPrice, maxPrice, selectedHighlights, setSearchParams]
   );
 
   // Reset to page 1 and drop the stale page param from the URL. Use this for the
@@ -764,7 +773,8 @@ const Products = () => {
 
   // ---- Helpers ----
   const hasActiveFilters =
-    selectedCategories.length > 0 ||
+    // A locked category is the route, not a filter the shopper can clear.
+    selectedCategories.length > (categorySlug ? 1 : 0) ||
     minPrice !== "" ||
     maxPrice !== "" ||
     minRating > 0 ||
@@ -780,7 +790,7 @@ const Products = () => {
   const hasAnyConstraint = hasActiveFilters || Boolean(urlSearch);
 
   const clearAllFilters = useCallback(() => {
-    setSelectedCategories([]);
+    setSelectedCategories(categorySlug ? [categorySlug] : []);
     setMinPrice("");
     setMaxPrice("");
     setMinRating(0);
@@ -794,7 +804,7 @@ const Products = () => {
     // Pass every reset value as an explicit override so no stale param survives.
     // per_page is intentionally preserved (it's a view preference, not a filter).
     syncUrlParams({
-      category: [],
+      category: categorySlug ? [categorySlug] : [],
       search: "",
       sort: "relevance",
       min_price: "",
@@ -802,7 +812,7 @@ const Products = () => {
       highlight: [],
       page: 1,
     });
-  }, [syncUrlParams]);
+  }, [categorySlug, syncUrlParams]);
 
   const handleCategoryToggle = useCallback(
     (slug) => {
@@ -974,11 +984,23 @@ const Products = () => {
     [categories]
   );
 
+  // ---- SEO ----
+  // The title follows the route: /shop is "Shop", /category/<slug> is the
+  // category's own name (the API's name, so it can never disagree with the
+  // heading below it). The canonical is the path, which is why a filtered or
+  // paginated view of the same listing does not become a second URL to index.
+  useSeo({
+    title: categorySlug ? getCategoryName(categorySlug) : "Shop",
+    description: categorySlug
+      ? `${getCategoryName(categorySlug)} from the LAMIKAA Naturals Black Rice range.`
+      : "The full LAMIKAA Naturals range — farmer-owned Black Rice skincare from Assam and Northeast India.",
+  });
+
   // ---- Breadcrumb ----
   const breadcrumbItems = useMemo(() => {
     const items = [
-      { label: "Home", path: "/" },
-      { label: "Products", path: "/products" },
+      { label: "Home", path: ROUTES.HOME },
+      { label: "Shop", path: ROUTES.SHOP },
     ];
     if (selectedCategories.length === 1) {
       items.push({ label: getCategoryName(selectedCategories[0]) });
@@ -998,7 +1020,7 @@ const Products = () => {
     if (selectedCategories.length === 1) {
       return getCategoryName(selectedCategories[0]);
     }
-    return "All Silk";
+    return "All products";
   }, [urlSearch, selectedCategories, getCategoryName]);
 
   // ---- Live result summary (bound to the real filtered set) ----
@@ -1048,7 +1070,7 @@ const Products = () => {
   // a price range counts once however it was set.
   const activeFilterCount = useMemo(() => {
     let n =
-      selectedCategories.length +
+      Math.max(0, selectedCategories.length - (categorySlug ? 1 : 0)) +
       selectedFabrics.length +
       selectedBrands.length +
       selectedHighlights.length;
@@ -1058,6 +1080,7 @@ const Products = () => {
     if (inStockOnly) n += 1;
     return n;
   }, [
+    categorySlug,
     selectedCategories,
     selectedFabrics,
     selectedBrands,
@@ -1076,7 +1099,9 @@ const Products = () => {
   // ---- Full facet set (the drawer body) ----
   const renderFilters = () => (
     <div className={styles.facets}>
-      {/* Categories — hierarchical, each count already includes its children */}
+      {/* Categories — hierarchical, each count already includes its children.
+          Hidden under /category/:slug: the path already answered this. */}
+      {!categorySlug && (
       <section className={styles.facet}>
         <h3 className={styles.facetTitle}>Categories</h3>
         <div className={styles.facetList}>
@@ -1110,6 +1135,7 @@ const Products = () => {
           })}
         </div>
       </section>
+      )}
 
       {/* Price — four quick ranges, then the manual pair */}
       <section className={styles.facet}>
@@ -1390,7 +1416,7 @@ const Products = () => {
           </button>
 
           <div className={styles.chipScroller}>
-            {topCategories.length > 0 && (
+            {!categorySlug && topCategories.length > 0 && (
               <div className={styles.chipGroup} role="group" aria-label="Category">
                 {topCategories.map((cat) =>
                   renderChip(

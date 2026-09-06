@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../utils/constants";
 import styles from "./CTASection.module.css";
 
-const CTASection = ({ title = "Discover Amazing Deals", subtitle = "Shop the latest trends at unbeatable prices", buttonText = "Shop Now", link = "/products" }) => {
+const CTASection = ({ title = "Discover Amazing Deals", subtitle = "Shop the latest trends at unbeatable prices", buttonText = "Shop Now", link = ROUTES.SHOP }) => {
   const navigate = useNavigate();
 
   return (

@@ -38,7 +38,7 @@
 // =============================================================================
 
 import brand from "../config/brand";
-import { APP_NAME } from "./constants";
+import { APP_NAME, ROUTES } from "./constants";
 
 // ─── Vocabularies (shared by the admin selects and the renderer) ─────────────
 
@@ -132,7 +132,7 @@ export const DEFAULT_HERO_SLIDE = {
   // store name), which is what the hero did before the eyebrow was editable.
   eyebrow: "",
   cta: "Shop the Collection",
-  link: "/products",
+  link: ROUTES.SHOP,
   // Blank = inherit the section-wide secondary CTA.
   secondaryCtaLabel: "",
   secondaryCtaLink: "",
@@ -168,7 +168,7 @@ export const HERO_FALLBACK_SLIDES = [
     title: brand.name,
     subtitle: brand.tagline,
     cta: "Shop the range",
-    link: "/products",
+    link: ROUTES.SHOP,
     backgroundType: "gradient",
     gradient: "var(--sf-gradient-brand)",
     image: "",

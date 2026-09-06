@@ -33,6 +33,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import apiService from "../../services/api";
 import { formatCurrency, formatDate, normalizeOrderAddress } from "../../utils/helpers";
+import useSeo from "../../hooks/useSeo";
 import styles from "./OrderConfirmation.module.css";
 
 // The one documented hex exception on this page: canvas-confetti paints to a
@@ -59,6 +60,12 @@ const firstNameOf = (order) => {
 };
 
 const OrderConfirmation = () => {
+  useSeo({
+    title: "Order confirmed",
+    description: "Thank you — your LAMIKAA Naturals order is confirmed.",
+    noindex: true,
+  });
+
   const { orderNumber } = useParams();
   const navigate = useNavigate();
 

@@ -1,3 +1,20 @@
 # https://www.robotstxt.org/robotstxt.html
+#
+# LAMIKAA NATURALS — the storefront is open to crawlers; the account, checkout
+# and admin surfaces are not. Every path below is either private to one visitor
+# (orders, profile, a cart, an order confirmation), a step in a transaction, or
+# build scaffolding. The pages themselves also carry `noindex` where it matters
+# (useSeo), because a Disallow only stops the crawl, not the indexing of a URL
+# someone else links to.
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /order-confirmation
+Disallow: /profile
+Disallow: /orders
+Disallow: /cart
+Disallow: /_playground
+
+# Prompt 38 generates the sitemap and resolves this host (or removes the line).
+Sitemap: https://{{LAMIKAA_DOMAIN}}/sitemap.xml

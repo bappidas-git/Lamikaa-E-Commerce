@@ -8,8 +8,9 @@ import React, {
 import { Link } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
-import { categoryParam, resolveCategory } from "../../utils/categories";
+import { categoryPath, resolveCategory } from "../../utils/categories";
 import { onImageError, productPath } from "../../utils/helpers";
+import { ROUTES } from "../../utils/constants";
 import { stageSrc } from "../../utils/product";
 import {
   DEFAULT_HERO_EYEBROW,
@@ -439,7 +440,7 @@ const HeroSection = () => {
               <div className={styles.actions}>
                 {activeSlide.cta && (
                   <Link
-                    to={activeSlide.link || "/products"}
+                    to={activeSlide.link || ROUTES.SHOP}
                     className={`sf-btn sf-btn--gold sf-btn--lg ${styles.ctaPrimary}`}
                   >
                     {activeSlide.cta}
@@ -447,7 +448,7 @@ const HeroSection = () => {
                 )}
                 {showSecondary && (
                   <Link
-                    to={secondaryLink || "/about"}
+                    to={secondaryLink || ROUTES.ABOUT}
                     className={`sf-btn sf-btn--lg ${styles.ctaGhost}`}
                   >
                     {secondaryLabel}
@@ -566,7 +567,7 @@ const HeroSection = () => {
               {openers.map((category) => (
                 <li key={category.id}>
                   <Link
-                    to={`/products?category=${categoryParam(category)}`}
+                    to={categoryPath(category)}
                     className={styles.openerLink}
                   >
                     {category.name}

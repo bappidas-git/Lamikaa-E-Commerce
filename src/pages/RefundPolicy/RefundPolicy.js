@@ -1,7 +1,7 @@
 // =============================================================================
-// RETURN & REFUND POLICY  —  LAMIKAA NATURALS, route `/refund`
+// RETURN & REFUND POLICY  —  LAMIKAA NATURALS, route `/policies/shipping-returns`
 // =============================================================================
-// The last of the four policy pages (/privacy, /terms, /cookies, /refund) that
+// The last of the four policy pages under /policies/* that
 // share one typeset "document" treatment: a tracked gold kicker, a serif title
 // over a hairline, the revision stamp, a standfirst, then numbered clauses down
 // a ~70-character measure with their numbers hung out into the left gutter.
@@ -14,7 +14,7 @@
 //     Return/Exchange" as though that opened a returns wizard. What the button
 //     on /orders actually does — see `isReturnEligible` and its onClick in
 //     OrderHistory.js — is appear on delivered orders inside the window and
-//     navigate to /support. The step now says so.
+//     navigate to /contact. The step now says so.
 //   • THE WINDOW WAS A LITERAL IN SIX PLACES. It is interpolated from
 //     `STOREFRONT_CONFIG.returnsWindowDays` — the same 7 that drives the
 //     buy-box badge, the Delivery & Returns panel, the checkout reassurance
@@ -42,8 +42,10 @@ import { reveal as sharedReveal } from "../../theme/motion";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import {
   POLICY_LAST_UPDATED,
+  ROUTES,
 } from "../../utils/constants";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import useSeo from "../../hooks/useSeo";
 import styles from "./RefundPolicy.module.css";
 
 // The one number this page turns on. Shared with the buy box, the checkout and
@@ -96,6 +98,12 @@ const TIMELINE = [
 ];
 
 const RefundPolicy = () => {
+  useSeo({
+    title: "Shipping and returns",
+    description:
+      "How LAMIKAA Naturals ships your order, and how returns and refunds work.",
+  });
+
   // Store name and contact details are whatever the admin last saved in
   // Settings > General, so the policy never names a store that no longer exists.
   const { email: supportEmail, emailHref } = useStoreSettings();
@@ -288,7 +296,7 @@ const RefundPolicy = () => {
           <div className={styles.colophon}>
             <p className={styles.colophonLabel}>Help with a return</p>
             <p className={styles.colophonText}>
-              <Link to="/support" className={styles.link}>
+              <Link to={ROUTES.CONTACT} className={styles.link}>
                 Write to the care desk
               </Link>{" "}
               or email{" "}
@@ -300,7 +308,7 @@ const RefundPolicy = () => {
             </p>
             <p className={styles.colophonText}>
               This policy forms part of our{" "}
-              <Link to="/terms" className={styles.link}>
+              <Link to={ROUTES.POLICY_TERMS} className={styles.link}>
                 Terms of Service
               </Link>
               .

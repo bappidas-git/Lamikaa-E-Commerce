@@ -13,6 +13,8 @@ import {
 } from "../../utils/helpers";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import { collapse } from "../../theme/motion";
+import { ROUTES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
 import styles from "./Checkout.module.css";
 
 // =============================================================================
@@ -236,6 +238,12 @@ const QuietCartIllustration = () => (
 );
 
 const Checkout = () => {
+  useSeo({
+    title: "Checkout",
+    description: "Complete your LAMIKAA Naturals order.",
+    noindex: true,
+  });
+
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
   const { cartItems, getCartTotal, getCartItemCount, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -517,7 +525,7 @@ const Checkout = () => {
               waits here — the colour, the length and the price, held until you are
               ready.
             </p>
-            <Link to="/products" className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}>
+            <Link to={ROUTES.SHOP} className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}>
               Continue Shopping
             </Link>
           </div>

@@ -15,7 +15,7 @@ import {
   PLACEHOLDER_IMG,
   onImageError,
 } from "../../utils/helpers";
-import { FREE_SHIPPING_THRESHOLD } from "../../utils/constants";
+import { FREE_SHIPPING_THRESHOLD, ROUTES } from "../../utils/constants";
 import { DURATION, INSTANT, overlay, panel, t, tween } from "../../theme/motion";
 import styles from "./CartDrawer.module.css";
 
@@ -342,14 +342,14 @@ const CartDrawer = ({ open, onClose }) => {
                 </svg>
                 <h3 className={styles.emptyTitle}>Your cart is empty</h3>
                 <p className={styles.emptyText}>
-                  Nothing chosen yet. The looms of Sualkuchi are waiting.
+                  Nothing chosen yet. The Black Rice range is waiting.
                 </p>
                 <button
                   type="button"
                   className="sf-btn sf-btn--outline-gold"
-                  onClick={() => handleNavigate("/products")}
+                  onClick={() => handleNavigate(ROUTES.SHOP)}
                 >
-                  Explore the collection
+                  Continue shopping
                 </button>
               </div>
             ) : (

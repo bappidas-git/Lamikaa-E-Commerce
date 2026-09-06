@@ -6,8 +6,9 @@ import { useWishlist } from "../../context/WishlistContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { useFaqs } from "../../context/FaqContext";
 import apiService from "../../services/api";
-import { categoryParam } from "../../utils/categories";
+import { categoryPath } from "../../utils/categories";
 import { productFlagMarks } from "../../utils/helpers";
+import { ROUTES } from "../../utils/constants";
 import {
   setPageTitle,
   releasePageTitle,
@@ -68,7 +69,7 @@ const NotFound = () => (
     <div className={styles.notFoundIcon}>404</div>
     <h2>Product Not Found</h2>
     <p>The product you are looking for does not exist or has been removed.</p>
-    <Link to="/products" className={styles.notFoundLink}>
+    <Link to={ROUTES.SHOP} className={styles.notFoundLink}>
       Browse Products
     </Link>
   </div>
@@ -288,7 +289,7 @@ const deriveFabricCraft = (product) => {
 
 // ═══════════════════════════════════════════════════════════════════════════
 const ProductDetails = () => {
-  // Route is /products/:slug (slug canonical; legacy numeric id still resolves).
+  // Route is /product/:slug (slug canonical; legacy numeric id still resolves).
   const { slug } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -353,7 +354,7 @@ const ProductDetails = () => {
 
       // Canonicalise the URL to the slug form so old links never 404.
       if (data.slug && String(slug) !== String(data.slug)) {
-        navigate(`/products/${data.slug}`, { replace: true });
+        navigate(`/product/${data.slug}`, { replace: true });
       }
 
       setProduct(data);
@@ -727,7 +728,7 @@ const ProductDetails = () => {
           {category ? (
             <>
               <Link
-                to={`/products?category=${categoryParam(category)}`}
+                to={categoryPath(category)}
                 className={styles.breadcrumbLink}
               >
                 {category.name}

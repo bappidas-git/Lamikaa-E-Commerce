@@ -8,7 +8,7 @@
 //   PRODUCT PAGES  the "FAQs" tab on the PDP. A row with no product targeting
 //                  appears on every product; a row targeted at specific
 //                  products appears only on those, above the general ones.
-//   HELP CENTRE    /help — the searchable list of answers.
+//   HELP CENTRE    /faq — the searchable list of answers.
 //   SHARED BLOCK   the reusable "Frequently Asked Questions" section.
 //
 // A row carries its own placements, so an answer written for one product page
@@ -56,7 +56,7 @@ export const FAQ_PLACEMENTS = [
     label: "Help centre",
     short: "Help",
     icon: "mdi:lifebuoy",
-    hint: "The searchable answers at /help",
+    hint: "The searchable answers at /faq",
   },
   {
     value: "home",

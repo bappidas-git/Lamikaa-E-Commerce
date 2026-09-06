@@ -6,12 +6,13 @@ import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import apiService from "../../services/api";
-import { categoryParam } from "../../utils/categories";
+import { categoryPath } from "../../utils/categories";
 import { resolveCountdownTarget, diffToParts } from "../../utils/dealsConfig";
 import { reveal as sharedReveal } from "../../theme/motion";
 import HeroSection from "../../components/HeroSection/HeroSection";
 import ProductCard from "../../components/storefront/ProductCard";
-import { TRUST_BADGES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
+import { ROUTES, TRUST_BADGES } from "../../utils/constants";
 import { getProductMinPrice, onImageError } from "../../utils/helpers";
 import styles from "./Home.module.css";
 
@@ -82,9 +83,11 @@ const PROMISE_DETAIL = {
 // so "View all" lands on the same pieces the rail was showing rather than on an
 // unrelated ordering of the whole catalogue. The offers rail still goes to the
 // real Special Offers page instead of a dead `?sort=sale`.
-const ALL_PRODUCTS_LINK = "/products";
-const FEATURED_LINK = "/products?highlight=featured";
-const TRENDING_LINK = "/products?highlight=trending";
+// (Prompt 08 moved the listing to /shop; the ?highlight= facet is unchanged and
+// is retired with the old listing in Prompt 23.)
+const ALL_PRODUCTS_LINK = ROUTES.SHOP;
+const FEATURED_LINK = `${ROUTES.SHOP}?highlight=featured`;
+const TRENDING_LINK = `${ROUTES.SHOP}?highlight=trending`;
 
 const getRecentlyViewed = () => {
   try {
@@ -260,6 +263,11 @@ const SectionHeader = ({
 // ══════════════════════════════════════════════════════════════════════════════
 
 const Home = () => {
+  // The homepage keeps the site-wide title and description (brand.seo) — a
+  // "Home · LAMIKAA NATURALS" tab says nothing the wordmark has not. Prompt 22
+  // adds the Organization/WebSite JSON-LD.
+  useSeo();
+
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { config: dealsConfig, enabled: dealsEnabled } = useDealsConfig();
@@ -386,7 +394,7 @@ const Home = () => {
   const showCountdown = countdown.active && !!countdown.target;
   // Never point the rail at the Special Offers page while the admin has it
   // switched off — that lands on its "no deals right now" state.
-  const offersLink = dealsEnabled ? "/special-offers" : ALL_PRODUCTS_LINK;
+  const offersLink = dealsEnabled ? ROUTES.SPECIAL_OFFERS : ALL_PRODUCTS_LINK;
 
   // After load, only render sections that actually have content.
   const collectionStories = categories
@@ -468,7 +476,7 @@ const Home = () => {
                               ::after) so the story is one tab stop named by
                               the collection. */}
                           <Link
-                            to={`/products?category=${categoryParam(cat)}`}
+                            to={categoryPath(cat)}
                             className={styles.storyLink}
                           >
                             {cat.name}

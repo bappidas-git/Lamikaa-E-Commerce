@@ -7,6 +7,9 @@ import {
 // rest of the product normalisation. The import cycle between the two files is
 // deliberate: both directions are read at call time, inside function bodies.
 import { isPriceKnown } from "./product";
+// The canonical route map (Prompt 08). constants.js pulls in brand.js only, so
+// there is no cycle back to this file.
+import { ROUTES } from "./constants";
 
 // Inline SVG placeholder (no network) used when an image is missing or its URL
 // fails to load, so image-bearing cards always degrade gracefully.
@@ -169,16 +172,17 @@ export const buildCartItem = (product) => {
   };
 };
 
-// Canonical storefront URL for a product. Prefers the human-readable slug and
-// falls back to the numeric product id, which the product detail route still
-// resolves (and then redirects to the slug). Accepts a full product object or a
-// cart/wishlist snapshot. NB: `productId` is preferred over `id` because a cart
-// line's `id` may be a composite like "1-v2" (productId-variantId), not the
-// product id.
+// Canonical storefront URL for a product — /product/<slug> (Prompt 08; the
+// Meghali-era /products/<slug> is redirected by components/routing/
+// LegacyRedirects.js). Prefers the human-readable slug and falls back to the
+// numeric product id, which the product detail route still resolves (and then
+// redirects to the slug). Accepts a full product object or a cart/wishlist
+// snapshot. NB: `productId` is preferred over `id` because a cart line's `id`
+// may be a composite like "1-v2" (productId-variantId), not the product id.
 export const productPath = (product) => {
-  if (!product) return "/products";
+  if (!product) return ROUTES.SHOP;
   const idPart = product.slug || product.productId || product.id;
-  return `/products/${idPart}`;
+  return `/product/${idPart}`;
 };
 
 // The merchandising flags a merchant sets by hand in

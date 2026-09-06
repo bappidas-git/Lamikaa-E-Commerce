@@ -18,24 +18,54 @@ export const APP_NAME = brand.name;
 export const APP_TAGLINE = brand.tagline;
 export const APP_DESCRIPTION = brand.seo.defaultDescription;
 
-// Routes
+// Routes — the canonical LAMIKAA route map (Prompt 08)
+//
+// One table, so a link, a redirect and a <Route path> can never disagree about
+// where a page lives. The paths with a `:param` are ROUTE PATTERNS (they are
+// what <Route path> takes); build a real URL with the helpers next to them —
+// `productPath()` in utils/helpers.js, `categoryPath()` / `ritualPath()` /
+// `concernPath()` in utils/categories.js.
+//
+// Every Meghali-era path (/products, /products/:slug, /help, /support,
+// /privacy, /terms, /refund, /cookies and the collection URLs) now lives ONLY
+// in components/routing/LegacyRedirects.js, which redirects it here.
 export const ROUTES = {
   HOME: "/",
+
+  // Catalogue
+  SHOP: "/shop",
+  CATEGORY: "/category/:slug",
+  PRODUCT: "/product/:slug",
+  RITUALS: "/rituals",
+  RITUAL: "/rituals/:slug",
+
+  // Brand and content
   ABOUT: "/about",
-  PRODUCTS: "/products",
-  PRODUCT_DETAIL: "/products/:slug",
-  PROFILE: "/profile",
-  ORDERS: "/orders",
-  ORDER_CONFIRMATION: "/order-confirmation",
+  WHY: "/why-lamikaa",
+  FAQ: "/faq",
+  CONTACT: "/contact",
+  POLICY_PRIVACY: "/policies/privacy",
+  POLICY_TERMS: "/policies/terms",
+  POLICY_SHIPPING_RETURNS: "/policies/shipping-returns",
+  POLICY_COOKIES: "/policies/cookies",
+
+  // Commerce
+  CART: "/cart",
   CHECKOUT: "/checkout",
-  WISHLIST: "/wishlist",
-  SUPPORT: "/support",
-  HELP: "/help",
-  PRIVACY: "/privacy",
-  TERMS: "/terms",
-  REFUND: "/refund",
-  COOKIES: "/cookies",
+  ORDER_CONFIRMATION: "/order-confirmation",
   SPECIAL_OFFERS: "/special-offers",
+
+  // Account
+  ORDERS: "/orders",
+  PROFILE: "/profile",
+  WISHLIST: "/wishlist",
+  LOGIN: "/login",
+  REGISTER: "/register",
+
+  // Utility
+  SEARCH: "/search",
+  // The catch-all PATTERN, not a URL: nothing links to it, App.js matches it.
+  NOT_FOUND: "*",
 };
 
 // Product flags
@@ -156,7 +186,7 @@ export const SUPPORT_HOURS = brand.contact.hours;
 // Terms, Cookie and Refund pages never show contradictory "last updated" dates.
 export const POLICY_LAST_UPDATED = "September 6, 2026";
 
-// FAQs — one shared set, read on three surfaces: the Help Centre (/help), the
+// FAQs — one shared set, read on three surfaces: the Help Centre (/faq), the
 // home FAQ block and the PDP's FAQ panel. This is also the set FaqContext falls
 // back to when the API is unreachable, and Prompt 06 seeds the same rows into
 // db.json.

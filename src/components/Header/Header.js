@@ -13,7 +13,8 @@ import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
-import { categoryParam, getMainMenuCategories } from "../../utils/categories";
+import { categoryPath, getMainMenuCategories } from "../../utils/categories";
+import { ROUTES } from "../../utils/constants";
 import Logo from "../brand/Logo";
 import AnnouncementBar from "../AnnouncementBar";
 import TrustStrip from "../TrustStrip";
@@ -182,17 +183,19 @@ const Header = () => {
       mainMenuCategories.map((cat) => ({
         key: `cat-${cat.id}`,
         label: cat.name,
-        to: `/products?category=${categoryParam(cat)}`,
+        to: categoryPath(cat),
         children: childrenOf(cat.id),
       })),
     [mainMenuCategories, childrenOf]
   );
 
+  // The three editorial links used to be `?sort=` deep links into the old
+  // listing. The LAMIKAA shop has no sort (the owner's decision, brief §7.3), so
+  // all three collapse into the one entry they now share. Prompt 09 rebuilds
+  // this menu around the mega panel.
   const editorialLinks = useMemo(
     () => [
-      { key: "new", label: "New Arrivals", to: "/products?sort=newest" },
-      { key: "best", label: "Bestsellers", to: "/products?sort=popular" },
-      { key: "sale", label: "Sale", to: "/products?sort=discount" },
+      { key: "shop", label: "Shop all", to: ROUTES.SHOP },
       // Deals link is hidden when the admin disables the deals page.
       ...(dealsEnabled
         ? [{ key: "deals", label: "Today's Deals", to: "/special-offers" }]
@@ -347,7 +350,7 @@ const Header = () => {
           {item.children.map((child) => (
             <li key={child.id}>
               <Link
-                to={`/products?category=${categoryParam(child)}`}
+                to={categoryPath(child)}
                 className={styles.collectionLink}
                 onClick={() => setOpenCollection(null)}
               >

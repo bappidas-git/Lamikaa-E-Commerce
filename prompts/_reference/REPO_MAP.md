@@ -263,10 +263,127 @@ Other storage keys: `localStorage.recentlyViewed` (PDP writes, Home reads, cap 2
 
 ## 9. Routing (`src/App.js`)
 
-- Storefront (inside `StorefrontShell` with `AnimatePresence` keyed on `pathname`, skip link, `Header`, `<main id="main-content">`, `Footer`, `BottomNav`): `/` Home · `/products` Products · `/products/:slug` ProductDetails (legacy numeric id redirects) · `/checkout` · `/order-confirmation/:orderNumber` · `/orders` · `/profile` · `/wishlist` · `/special-offers` · `/help` · `/support` · `/about` · `/privacy` · `/terms` · `/cookies` · `/refund` · `*` → `<Navigate to="/" />`.
-- Admin: `/admin` (AdminLogin, index) and `/admin/*` under `AdminLayout`: `dashboard, products, categories, orders, returns, payments, users, shipping, coupons, special-offers, hero-section, faqs, reviews, leads, settings`.
-- No `/cart`, `/login`, `/register`, `/search` routes (cart = drawer, auth = modal, search = `/products?search=`). `ScrollToTop` is global (instant `window.scrollTo(0,0)`). Page titles: store default from settings; PDP claims the tab. No lazy loading, no error routes.
-- Link builders: `productPath(product)` (`src/utils/helpers.js`) → `/products/<slug|id>`; `categoryParam(cat)` (`src/utils/categories.js`) → `?category=<slug>`; `ROUTES` constants in `src/utils/constants.js`.
+**Rewritten by Prompt 08.** The Meghali route map is gone; every one of its URLs
+now redirects. Route-level code splitting, a real 404 and a dependency-free SEO
+hook arrived with it.
+
+### 9.1 The route table
+
+Storefront routes live inside `StorefrontShell` (`DealsConfigProvider` →
+`FaqProvider` → skip link → `Header` → `<main id="main-content">` →
+`AnimatePresence` keyed on `pathname` → `<Suspense fallback={<RouteFallback />}>`
+→ `<Routes>` → `Footer` → `BottomNav`). Paths come from `ROUTES`
+(`src/utils/constants.js`) — nothing types a path inline.
+
+| Path | Element | Owner of the real page |
+|---|---|---|
+| `/` | `pages/Home/Home` (**eagerly imported** — the LCP page) | 14–22 |
+| `/shop` | `pages/Products/Products` | 23 → `pages/Shop/Shop` |
+| `/category/:slug` | `pages/Products/Products` via `CategoryRoute` (passes `categorySlug`) | 24 → `<Shop mode="category" />` |
+| `/category/rituals` | `<Navigate to="/rituals" replace />` | — |
+| `/product/:slug` | `pages/ProductDetails/ProductDetails` (numeric id resolves, then rewrites to the slug) | 25–27 |
+| `/rituals`, `/rituals/:slug` | `ComingSoon prompt="24"` | 24 |
+| `/about` | `pages/AboutUs/AboutUs` | 28 → `pages/About/About` |
+| `/why-lamikaa` | `ComingSoon prompt="28"` | 28 |
+| `/faq` | `pages/HelpCenter/HelpCenter` | 28 → `pages/Faq/Faq` |
+| `/contact` | `pages/Support/Support` | 28 → `pages/Contact/Contact` |
+| `/policies/privacy` | `pages/PrivacyPolicy/PrivacyPolicy` | 28 → `pages/Policies/PolicyPage` |
+| `/policies/terms` | `pages/TermsOfService/TermsOfService` | 28 |
+| `/policies/shipping-returns` | `pages/RefundPolicy/RefundPolicy` | 28 |
+| `/policies/cookies` | `pages/CookiePolicy/CookiePolicy` | 28 |
+| `/cart` | `ComingSoon prompt="29"` (the drawer is still the cart) | 29 |
+| `/checkout` | `pages/Checkout/Checkout` | 29 |
+| `/order-confirmation/:orderNumber` | `pages/OrderConfirmation/OrderConfirmation` | 31 |
+| `/special-offers` | `pages/SpecialOffers/SpecialOffers` | 31 |
+| `/orders` | `pages/OrderHistory/OrderHistory` | 30 |
+| `/profile` | `pages/Profile/Profile` | 30 |
+| `/wishlist` | `pages/Wishlist/Wishlist` | 30 |
+| `/login`, `/register` | `components/routing/AuthRoute` — opens `AuthModal` on the `login`/`signup` tab, then `<Navigate to={state?.from \|\| "/"} replace />` | 30 |
+| `/search` | `ComingSoon prompt="11"` (reads `?q=`; the overlay still searches in place) | 11 |
+| `/_playground` | `pages/_Playground/Playground` — TEMPORARY | 35 deletes |
+| `*` | `pages/NotFound/NotFound` — a real 404, `noindex` | — |
+
+Admin routes are **unchanged**: `/admin` (`AdminLogin`, index) and `/admin/*`
+under `AdminLayout` — `dashboard, products, categories, orders, returns,
+payments, users, shipping, coupons, special-offers, hero-section, faqs, reviews,
+leads, settings`.
+
+### 9.2 Legacy redirects (`src/components/routing/LegacyRedirects.js`)
+
+Every Meghali-era URL is written down **once**, in this module, and the default
+export is an ARRAY of `<Route>` elements spread into `<Routes>` (React Router 6
+rejects a wrapper component there). All redirects `replace`.
+
+| Old | New |
+|---|---|
+| `/products` | `/shop` |
+| `/products?search=<q>` | `/search?q=<q>` (wins over `?category=`) |
+| `/products?category=<slug>` | `/category/<slug>` |
+| `/products?category=muga-silk\|pat-silk\|eri-silk` | `/shop` (retired catalogue) |
+| `/products?sort=` `?highlight=` `?page=` … | dropped → `/shop` |
+| `/products/:slug` | `/product/:slug` |
+| `/help` | `/faq` |
+| `/support` | `/contact` |
+| `/privacy` `/terms` `/refund` `/cookies` | `/policies/privacy` `/policies/terms` `/policies/shipping-returns` `/policies/cookies` |
+| `/sarees`, `/collections`, `/collections/*` | `/shop` |
+
+### 9.3 Link builders
+
+- `productPath(product)` (`utils/helpers.js`) → `/product/<slug\|productId\|id>`; `/shop` for a missing product.
+- `categoryPath(cat)` (`utils/categories.js`) → `/category/<slug>`; a `kind: "rituals"` category → `/rituals`.
+- `ritualPath(ritual\|slug)` → `/rituals/<slug>`.
+- `concernPath(slug)` → `/shop?concern=<slug>` (a concern is a facet of the shop, not a place).
+- `categoryParam(cat)` survives as the listing's **filter token** builder only — it is no longer a URL builder.
+- `ROUTES` (`utils/constants.js`) is the one route table; `ROUTES.NOT_FOUND` is the `*` pattern, not a URL.
+
+### 9.4 Code splitting and the fallback
+
+`React.lazy` on every page except `Home` — 34 dynamic imports (18 storefront +
+16 admin) producing 51 JS chunks. Both `<Routes>` blocks sit inside
+`<Suspense fallback={<RouteFallback />}>`; the storefront's is INSIDE the keyed
+`motion.div`, so the skeleton fades exactly like a page.
+`components/routing/RouteFallback.js` is a `role="status" aria-label="Loading"`
+glass skeleton (heading bar + three `Skeleton` blocks, `min-height: 70svh`).
+
+### 9.5 Scroll restoration (`components/ScrollToTop/ScrollToTop.js`)
+
+Instant `window.scrollTo({ top: 0, behavior: "auto" })` on a `pathname` change —
+the page fade covers it. Three exceptions: a `hash` (the target is looked up by
+id across up to 30 frames, so a lazily-loaded chunk still gets the jump, then
+`scrollIntoView` — smooth, or instant under `prefers-reduced-motion` — and takes
+focus with `preventScroll`); `location.state.preserveScroll`; and a query-only
+change, which never fires the effect.
+
+### 9.6 `useSeo` (`src/hooks/useSeo.js`)
+
+`useSeo({ title, description, canonical, image, type, noindex, jsonLd })` owns
+the head of a page: the tab (through the `setPageTitle`/`releasePageTitle` claim
+protocol in `utils/documentTitle.js`, so the store default from Admin → Settings
+stands aside and comes back), `meta[name=description]`, `og:title|description|
+type|url|image`, `twitter:title|description|image`, `meta[name=robots]`
+(`noindex,nofollow`, only when asked), `link[rel=canonical]`, and a
+`script[type="application/ld+json"]`. No library.
+
+Every element it writes carries `data-seo="page"`. A tag it did not create (the
+static `og:*` block in `public/index.html`) is **borrowed**: the original value
+is restored and the mark removed on unmount, so the head never carries two
+`og:title` tags and a route without a `useSeo()` call still finds the site-wide
+defaults. Canonical origin = `brand.seo.siteUrl` when it is not a placeholder,
+else `window.location.origin` (`{{LAMIKAA_DOMAIN}}` is unresolved; Prompt 38
+revisits).
+
+Applied by Prompt 08 to: Home (site defaults), Products (`Shop`, or the category
+name under `/category/:slug`), Wishlist, Orders, Profile, Checkout,
+OrderConfirmation, HelpCenter (`FAQ`), Support (`Contact`), AboutUs,
+SpecialOffers, the four policy pages, NotFound and ComingSoon. Orders, Profile,
+Wishlist, Checkout, OrderConfirmation, NotFound and ComingSoon carry `noindex`.
+The PDP still runs its own hand-rolled title/description effect — Prompt 25
+moves it onto this hook.
+
+`public/robots.txt` allows everything except `/admin`, `/checkout`,
+`/order-confirmation`, `/profile`, `/orders`, `/cart`, `/_playground`, and names
+`https://{{LAMIKAA_DOMAIN}}/sitemap.xml` (Prompt 38 generates the sitemap and
+resolves or removes that line).
 
 ## 10. Cross-cutting facts the prompts rely on
 

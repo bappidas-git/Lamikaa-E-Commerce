@@ -15,13 +15,13 @@
 //   3. THE FIBRE      — Muga, Pat and Eri as a hairline list, closed by the
 //      Mekhela Chador: what the drape is and how it arrives.
 //   4. THE COLLECTION — one large 4:5 feature against a short column →
-//      /products.
+//      /shop.
 //   5. THE LOOM       — a full-bleed image band, presented AS an image.
 //   6. WHAT WE HOLD TO— four values as a numbered hairline list.
 //   7. THE JOURNEY    — 2010 / 2014 / 2019 / 2023 down a single vertical rule.
 //   8. THE LINE       — the pull-quote, full width, on the heritage ground.
 //   9. IN NUMBERS     — three quiet serif figures over tracked labels.
-//  10. THE CLOSE      — Experience the heritage → /products + /support.
+//  10. THE CLOSE      — Experience the heritage → /shop + /contact.
 //
 // WHAT THE REBUILD CORRECTED
 //   • THE STORY WAS THE WRONG ONE. The old copy sold "Bengal handloom",
@@ -59,6 +59,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { reveal as sharedReveal } from "../../theme/motion";
 import { onImageError } from "../../utils/helpers";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import { ROUTES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
 import styles from "./AboutUs.module.css";
 
 // ---- Imagery --------------------------------------------------------------
@@ -214,6 +216,12 @@ const Arrow = () => (
 );
 
 const AboutUs = () => {
+  useSeo({
+    title: "About",
+    description:
+      "LAMIKAA Naturals is owned by Bokakhat Agro Organic Producer Co. Ltd., a Farmer Producer Company — indigenous wisdom, modern science and farmer ownership.",
+  });
+
   const prefersReducedMotion = useReducedMotion();
   const { storeName } = useStoreSettings();
 
@@ -408,7 +416,7 @@ const AboutUs = () => {
                   measurements wherever they were supplied.
                 </p>
               </div>
-              <Link to="/products" className={styles.textLink}>
+              <Link to={ROUTES.SHOP} className={styles.textLink}>
                 See the collection
                 <Arrow />
               </Link>
@@ -530,13 +538,13 @@ const AboutUs = () => {
           </p>
           <div className={styles.closeActions}>
             <Link
-              to="/products"
+              to={ROUTES.SHOP}
               className={`sf-btn sf-btn--emerald sf-btn--lg ${styles.closeBtn}`}
             >
               Explore the collection
             </Link>
             <Link
-              to="/support"
+              to={ROUTES.CONTACT}
               className={`sf-btn sf-btn--lg ${styles.closeGhost}`}
             >
               Talk to us

@@ -12,6 +12,8 @@ import {
   PLACEHOLDER_IMG,
 } from "../../utils/helpers";
 import ReviewModal from "../../components/ReviewModal/ReviewModal";
+import { ROUTES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
 import styles from "./OrderHistory.module.css";
 
 // Short, privacy-friendly display name for a review, e.g. "Bappi D." — matches
@@ -49,7 +51,7 @@ const STATUS_CONFIG = {
 
 const FILTER_OPTIONS = ["All", "Processing", "Shipped", "Delivered", "Cancelled"];
 const ORDERS_PER_PAGE = 5;
-const RETURN_WINDOW_DAYS = 7; // per the 7-day return policy (see /refund-policy)
+const RETURN_WINDOW_DAYS = 7; // per the 7-day return policy (/policies/shipping-returns)
 const TIMELINE_STEPS = ["Placed", "Shipped", "Delivered"];
 
 // Orders carry paymentStatus / fulfillmentStatus / shippingStatus (the shape
@@ -220,6 +222,12 @@ const AlertMark = () => (
 );
 
 const OrderHistory = () => {
+  useSeo({
+    title: "Orders",
+    description: "Track your LAMIKAA Naturals orders, returns and refunds.",
+    noindex: true,
+  });
+
   const navigate = useNavigate();
   const { addToCart, setIsCartOpen } = useCart();
   const { user, isAuthenticated, isLoading: authLoading, openAuthModal } = useAuth();
@@ -848,7 +856,7 @@ const OrderHistory = () => {
                       <button
                         type="button"
                         className={`${styles.action} ${styles.actionAccent}`}
-                        onClick={() => navigate("/support")}
+                        onClick={() => navigate(ROUTES.CONTACT)}
                       >
                         Return / Exchange
                       </button>

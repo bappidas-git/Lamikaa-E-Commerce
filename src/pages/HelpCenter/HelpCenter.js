@@ -1,22 +1,23 @@
 // =============================================================================
-// HELP CENTRE  —  LAMIKAA NATURALS, route `/help`
+// HELP CENTRE  —  LAMIKAA NATURALS, route `/faq` (Prompt 28 → pages/Faq/Faq)
 // =============================================================================
-// The reference shelf next door to the care desk. Where `/support` is a letter
+// The reference shelf next door to the care desk. Where `/contact` is a letter
 // you write, this is a book you look something up in — so it is set as one:
 // a search line, a contents page, and the answers themselves.
 //
 //   1. THE OPENING — eyebrow, serif question, and the search field. Typing
 //      filters the FAQ set live on question AND answer text (unchanged), and
 //      the number of matches is announced.
-//   2. THE CONTENTS — the same six destinations as before (/orders, /refund,
-//      /support, /profile, /special-offers, /privacy), now drawn identically.
+//   2. THE CONTENTS — the same six destinations as before (/orders,
+//      /policies/shipping-returns, /contact, /profile, /special-offers,
+//      /policies/privacy), now drawn identically.
 //      The old rainbow `--sf-cat-*` accent per card is retired: six colours for
 //      six equal topics was decoration pretending to be information.
 //   3. THE ANSWERS — the Prompt 16 hairline accordion: tracked ordinal, the
 //      question in reading size, a thin plus that loses its upright when open.
 //      An empty result set says so and points at the care desk.
 //   4. THE CLOSING BAND — hours, the two live channels, and the way through to
-//      `/support`.
+//      `/contact`.
 //
 // THE COPY IS NOT WRITTEN HERE
 //   Every answer comes from the admin's FAQ set (Admin > Storefront > FAQs),
@@ -30,8 +31,9 @@ import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { useFaqs } from "../../context/FaqContext";
-import { SUPPORT_HOURS } from "../../utils/constants";
+import { ROUTES, SUPPORT_HOURS } from "../../utils/constants";
 import { resolveOrNull } from "../../utils/placeholders";
+import useSeo from "../../hooks/useSeo";
 import styles from "./HelpCenter.module.css";
 
 // Care-desk hours are a {{SUPPORT_HOURS}} placeholder until the owner supplies
@@ -135,13 +137,13 @@ const TOPICS = [
     glyph: "refund",
     title: "Returns & refunds",
     desc: "The seven-day window, how to send a piece back, when money returns",
-    to: "/refund",
+    to: ROUTES.POLICY_SHIPPING_RETURNS,
   },
   {
     glyph: "card",
     title: "Payments",
     desc: "Cards, UPI, net banking, wallets and Cash on Delivery",
-    to: "/support",
+    to: ROUTES.CONTACT,
   },
   {
     glyph: "account",
@@ -159,11 +161,17 @@ const TOPICS = [
     glyph: "shield",
     title: "Privacy & security",
     desc: "What we hold, how it is kept, and how to have it removed",
-    to: "/privacy",
+    to: ROUTES.POLICY_PRIVACY,
   },
 ];
 
 const HelpCenter = () => {
+  useSeo({
+    title: "FAQ",
+    description:
+      "Answers about ordering, delivery, returns and the LAMIKAA Naturals Black Rice range.",
+  });
+
   // The care desk's own address and number, as set in Settings > General.
   const {
     email: supportEmail,
@@ -271,7 +279,7 @@ const HelpCenter = () => {
             <p className={styles.noResults}>
               Nothing here matches “{query.trim()}”. Write to us instead — the
               care desk answers questions this page has not learned yet.{" "}
-              <Link to="/support">Contact us</Link>.
+              <Link to={ROUTES.CONTACT}>Contact us</Link>.
             </p>
           ) : (
             <div className={styles.faqList}>
@@ -345,7 +353,7 @@ const HelpCenter = () => {
               </p>
             </div>
             <div className={styles.bandActions}>
-              <Link to="/support" className={styles.primaryBtn}>
+              <Link to={ROUTES.CONTACT} className={styles.primaryBtn}>
                 Contact support
               </Link>
               {supportEmail && (
