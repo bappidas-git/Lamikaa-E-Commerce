@@ -13,7 +13,8 @@ import {
   ChevronRight,
   SearchOutlined,
 } from "@mui/icons-material";
-import { categoryParam } from "../../utils/categories";
+import { categoryPath } from "../../utils/categories";
+import { ROUTES } from "../../utils/constants";
 import {
   DURATION,
   RISE,
@@ -232,7 +233,7 @@ const CategoriesDrawer = ({
   const toggleGroup = (id) =>
     setExpanded((prev) => (prev === String(id) ? null : String(id)));
 
-  const catTo = (cat) => `/products?category=${categoryParam(cat)}`;
+  const catTo = (cat) => categoryPath(cat);
 
   // ---------------------------------------------------------------------------
   // MOTION — the shared drawer treatment (theme/motion.js).
@@ -485,7 +486,7 @@ const CategoriesDrawer = ({
               <button
                 type="button"
                 className={styles.viewAll}
-                onClick={() => handleNavigate("/products")}
+                onClick={() => handleNavigate(ROUTES.SHOP)}
               >
                 View all products
                 <ChevronRight className={styles.viewAllIcon} aria-hidden="true" />

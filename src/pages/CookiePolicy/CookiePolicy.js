@@ -1,7 +1,7 @@
 // =============================================================================
-// COOKIE POLICY  —  LAMIKAA NATURALS, route `/cookies`
+// COOKIE POLICY  —  LAMIKAA NATURALS, route `/policies/cookies`
 // =============================================================================
-// One of the four policy pages (/privacy, /terms, /cookies, /refund) that share
+// One of the four policy pages under /policies/* that share
 // a single typeset "document" treatment: a tracked gold kicker, a serif title
 // over a hairline, the revision stamp, a standfirst, then numbered clauses down
 // a ~70-character measure with their numbers hung out into the left gutter. See
@@ -37,8 +37,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { reveal as sharedReveal } from "../../theme/motion";
 import {
   POLICY_LAST_UPDATED,
+  ROUTES,
 } from "../../utils/constants";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import useSeo from "../../hooks/useSeo";
 import styles from "./CookiePolicy.module.css";
 
 // The four families of cookie the site sets, in descending order of necessity.
@@ -74,6 +76,11 @@ const COOKIE_TYPES = [
 ];
 
 const CookiePolicy = () => {
+  useSeo({
+    title: "Cookie policy",
+    description: "The cookies this storefront sets, and what each one is for.",
+  });
+
   // Store name and contact details are whatever the admin last saved in
   // Settings > General, so the policy never names a store that no longer exists.
   const { storeName, email: supportEmail, emailHref } = useStoreSettings();
@@ -133,7 +140,7 @@ const CookiePolicy = () => {
                 Cookies cannot read the rest of your device, and ours hold
                 identifiers rather than personal details. What we do with the
                 data behind those identifiers is set out in our{" "}
-                <Link to="/privacy" className={styles.link}>
+                <Link to={ROUTES.POLICY_PRIVACY} className={styles.link}>
                   Privacy Policy
                 </Link>
                 .

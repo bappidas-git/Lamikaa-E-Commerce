@@ -53,7 +53,7 @@ import {
 //
 //   PRODUCT PAGES  the "FAQs" tab on the product page — the accordion beside
 //                  Description / Specifications / Reviews
-//   HELP CENTRE    the searchable list at /help
+//   HELP CENTRE    the searchable list at /faq
 //   SHARED BLOCK   the reusable Frequently Asked Questions section
 //
 // A row can also be aimed at particular products, in which case it is read only

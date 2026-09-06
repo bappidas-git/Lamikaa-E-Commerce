@@ -103,7 +103,7 @@ export const DEFAULT_SOCIAL_LINKS = {
 
 // An admin typing into a plain text field will not always type a URL. Rather
 // than publish a link the browser resolves against our own origin
-// (`instagram.com/x` would navigate to /products/instagram.com/x), the value is
+// (`instagram.com/x` would navigate to /product/instagram.com/x), the value is
 // repaired here — once, on the way out of the record, so every surface renders
 // the same href.
 const PHONE_ONLY = /^\+?[\d\s\-().]{6,}$/;

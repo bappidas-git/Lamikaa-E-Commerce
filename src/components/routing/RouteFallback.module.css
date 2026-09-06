@@ -1,0 +1,22 @@
+/* =============================================================================
+ * RouteFallback — the loading shape of a page
+ * ========================================================================== */
+
+.fallback {
+  /* A minimum height, so a short chunk load cannot collapse the footer up the
+     viewport and then push it back down when the page arrives. */
+  min-height: 70svh;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-6);
+}
+
+/* The heading block: one wide bar where an eyebrow + headline will be. */
+.spacer {
+  height: var(--sf-space-16);
+  max-width: 420px;
+  border-radius: var(--sf-radius-md);
+}

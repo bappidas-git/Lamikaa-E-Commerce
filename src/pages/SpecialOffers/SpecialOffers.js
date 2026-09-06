@@ -20,6 +20,8 @@ import {
 } from "../../utils/helpers";
 import { resolveCountdownTarget, diffToParts } from "../../utils/dealsConfig";
 import { RISE, reveal } from "../../theme/motion";
+import { ROUTES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
 import styles from "./SpecialOffers.module.css";
 
 // =============================================================================
@@ -581,6 +583,11 @@ const HeadSkeleton = () => (
 // ── Main Component ───────────────────────────────────────────────────────────
 
 const SpecialOffers = () => {
+  useSeo({
+    title: "Special offers",
+    description: "Current offers across the LAMIKAA Naturals Black Rice range.",
+  });
+
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -749,7 +756,7 @@ const SpecialOffers = () => {
               The offers desk is quiet for the moment. When the next markdowns are ready they
               will be posted here — the full collection stays open in the meantime.
             </p>
-            <Link className={`sf-btn sf-btn--emerald ${styles.stateBtn}`} to="/products">
+            <Link className={`sf-btn sf-btn--emerald ${styles.stateBtn}`} to={ROUTES.SHOP}>
               Browse the Collection
             </Link>
           </section>
@@ -969,7 +976,7 @@ const SpecialOffers = () => {
             <button
               type="button"
               className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
-              onClick={() => navigate("/products")}
+              onClick={() => navigate(ROUTES.SHOP)}
             >
               Browse the Collection
             </button>

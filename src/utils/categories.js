@@ -2,22 +2,32 @@
 // Category helpers — single source of truth for the storefront category system
 // =============================================================================
 //
-// Every storefront entry point that links to the product listing (the header
-// top menu, the "All Categories" dropdown, the mobile sidebar, the homepage
-// "Shop by Category" cards, the hero category bar and the product breadcrumb)
-// builds its `?category=` link through `categoryParam()` here, and the listing
-// page resolves the param back to a category through `resolveCategory()`. That
-// keeps ONE canonical URL scheme across the whole app so a category expressed in
-// one place can always be understood in another.
+// Every storefront entry point that links into the catalogue (the header top
+// menu, the "All Categories" dropdown, the mobile sidebar, the homepage "Shop
+// by Category" cards, the hero category bar and the product breadcrumb) builds
+// its link through `categoryPath()` here, and the listing page resolves the
+// slug back to a category through `resolveCategory()`. That keeps ONE canonical
+// URL scheme across the whole app so a category expressed in one place can
+// always be understood in another.
 //
-// CANONICAL URL SCHEME = SLUG  (e.g. /products?category=home-garden)
-// ------------------------------------------------------------------
+// CANONICAL URL SCHEME = A PATH OF SLUGS  (Prompt 08)
+// ---------------------------------------------------
+//   /category/<slug>     a product category      categoryPath(cat)
+//   /rituals             the rituals index       categoryPath(ritualsCat)
+//   /rituals/<slug>      one ritual              ritualPath(ritual)
+//   /shop?concern=<slug> the shop, one concern   concernPath(slug)
+//
 // Slugs make for readable, shareable URLs and never change when ids are
 // reseeded. The numeric id is only ever used as a defensive fallback for a
 // category that is somehow missing a slug, and the listing page still resolves
-// a legacy numeric-id deep link (?category=3) for backward compatibility,
-// rewriting it to the slug form in place.
+// a legacy numeric-id deep link for backward compatibility, rewriting it to the
+// slug form in place. The Meghali-era `/products?category=<slug>` form is
+// redirected to `/category/<slug>` by components/routing/LegacyRedirects.js.
+//
+// `categoryParam()` survives as the FILTER TOKEN builder (the checkbox value in
+// the listing's category facet) — it is no longer a URL builder.
 // =============================================================================
+import { ROUTES } from "./constants";
 
 /**
  * Build the canonical `?category=` token for a category. Returns the slug
@@ -26,6 +36,39 @@
 export const categoryParam = (cat) => {
   if (!cat) return "";
   return String(cat.slug || cat.id || "");
+};
+
+/**
+ * The canonical storefront URL for a category (Prompt 08).
+ *
+ * A category carries a `kind`: "products" categories are listings under
+ * /category/<slug>; the single "rituals" category IS the rituals index, which
+ * has a route of its own. Returns /shop for a category with no usable token, so
+ * a link is never dead.
+ */
+export const categoryPath = (cat) => {
+  if (!cat) return ROUTES.SHOP;
+  if (cat.kind === "rituals") return ROUTES.RITUALS;
+  const token = categoryParam(cat);
+  return token ? `/category/${token}` : ROUTES.SHOP;
+};
+
+/** The canonical URL for one ritual — accepts a ritual object or a slug. */
+export const ritualPath = (ritual) => {
+  const token =
+    typeof ritual === "string" ? ritual : String(ritual?.slug || ritual?.id || "");
+  return token ? `${ROUTES.RITUALS}/${token}` : ROUTES.RITUALS;
+};
+
+/**
+ * The shop, narrowed to one concern. Concerns are a facet of the shop rather
+ * than a place of their own, so they stay a query param on /shop — the
+ * chaptered listing reads it in Prompt 23.
+ */
+export const concernPath = (concern) => {
+  const token =
+    typeof concern === "string" ? concern : String(concern?.slug || concern?.id || "");
+  return token ? `${ROUTES.SHOP}?concern=${encodeURIComponent(token)}` : ROUTES.SHOP;
 };
 
 /**

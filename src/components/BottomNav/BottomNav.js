@@ -9,6 +9,7 @@ import {
   PersonOutline,
 } from "@mui/icons-material";
 import SearchModal from "../SearchModal/SearchModal";
+import { ROUTES } from "../../utils/constants";
 import styles from "./BottomNav.module.css";
 
 // Thin-stroke outlined glyphs in BOTH states: the active tab is marked by ink
@@ -25,7 +26,7 @@ const NAV_ITEMS = [
     key: "categories",
     label: "Categories",
     Icon: GridViewOutlined,
-    path: "/products",
+    path: ROUTES.SHOP,
   },
   { key: "search", label: "Search", Icon: SearchOutlined, path: null },
   {
@@ -62,13 +63,18 @@ const BottomNav = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Keep the original getActiveKey() route rules: /products and /products/... →
-  // categories, /categories → categories, /account → account. NavLink's default
-  // matching is exact for "/" and prefix otherwise, which already mirrors these
-  // rules; the extra alias routes are covered by the resolver below.
+  // The catalogue tab covers the whole catalogue, not just /shop: a category
+  // page, a ritual and a product detail are all "Categories" as far as the bar
+  // is concerned, so the tab stays lit while a visitor browses down into one.
+  // (Prompt 08 moved these paths; /categories is kept as a defensive alias.)
+  // NavLink's default matching is exact for "/" and prefix otherwise, which
+  // already mirrors the simple rules; the aliases are resolved below.
   const isCategoriesActive = (pathname) =>
-    pathname === "/products" ||
-    pathname.startsWith("/products/") ||
+    pathname === ROUTES.SHOP ||
+    pathname.startsWith("/category/") ||
+    pathname.startsWith("/product/") ||
+    pathname === ROUTES.RITUALS ||
+    pathname.startsWith("/rituals/") ||
     pathname === "/categories";
   const isAccountActive = (pathname) =>
     pathname === "/profile" || pathname === "/account";

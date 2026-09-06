@@ -11,7 +11,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 05 | Shared UI primitives and media helpers | complete | 2026-09-06 | (this commit) | 13 components in `src/components/ui` (+12 CSS modules), 3 hooks, `utils/{product,contentBlocks}.js` with 2 test suites. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` = **2 suites passed / 1 skipped** (20 passed, 45 skipped). `grep -rn "dangerouslySetInnerHTML" src` → **0** (whole tree). `normalizeProduct` verified against **all 6 current db.json products** (images-only shape: `images[]` identical round-trip, one primary, `image === images[0]`) and against the seeded `media[]` shape. Browser QA on `/_playground` at **360 / 390 / 414 / 768 / 1024 / 1280 / 1440**: no horizontal overflow, **zero React console warnings** (no `fetchPriority` warning). Focus traps, Escape, focus restore, `body[data-scroll-lock]` and `body[data-drawer-open]` all verified in Chromium; accordion ↑/↓/Home/End verified; VideoPlayer Space/K/M/←/→ verified against a range-serving host. Reduced motion measured: every transition 0s, `sf-breathe` and the skeleton shimmer `animation-name: none`. One real defect found and fixed on the way (`.sf-card--hover` and `.sf-glow` fighting over one `::before`) — see the record below. `/_playground` is **temporary**; Prompt 35 deletes it. |
 | 06 | Data model and seed (db.json) | complete | 2026-09-06 | (this commit) | `db.json` rewritten from 20 Meghali collections to **23 LAMIKAA collections** (96 KB → 118 KB): 8 products with `media[]`, 7 categories, 11 concerns, 3 rituals, 8 grouped FAQs, `siteContent` (7 blocks), 3 `announcements` (ex-`banners`), a product-driven `heroConfig`, tokenised `settings`, and neutral fixtures for every commerce collection. All **8 cover URLs verified character-exact** against `PRODUCTS.md` §2 by parsing that table. `grep -c "meghali\|Meghali\|silk\|Silk\|mekhela\|saree\|Sualkuchi\|Kolkata, West Bengal" db.json` → **0** (the single `Asia/Kolkata` is the timezone). A 150-assertion validation script passed every check, and **all 48 distinct URLs in the seed returned 206** — **no host swap was needed**. JSON Server starts clean; all 24 collection endpoints answer 200; `DELETE /reviews/2` → **200** (not the old 500) and a re-`POST` restored the file byte-identical, on a `JSON_SERVER_DB` copy so the committed seed stayed untouched. `CI=true npm run build` exit 0, no warnings; `npm test` exit 0 (2 suites / 20 passed, the live suite skipped as in every prior baseline). Browser QA over 16 routes: **no runtime crashes**, the only 404 is the expected `GET /banners` (Prompt 07). `server.js` unchanged. See "Prompt 06 record" below. |
 | 07 | api.js contract extension in both modes | complete | 2026-09-06 | (this commit) | `api.js` 2 797 → 3 314 lines. **`banners` is gone from `src/` entirely** — `grep -rn "banners\|Banner" src --include=*.js` → **0** (was 51), and `grep -rni "banners" src` over every file type → **0**. Every product read in both namespaces now goes through `normalizeProduct()` and every product write through `syncProductMedia()`. New: `products.{getHeroProducts,getByCategorySlug,getByConcern}`, a re-tiered `getRelated`, a gated `getReviews(id, {includeSample})`, the `concerns`/`rituals`/`siteContent`/`announcements` namespaces (+ the exported pure `resolveRitualSteps`), and 19 admin functions (concerns ×4, rituals ×5, site content ×2, announcements ×5, `setHeroOrder`, plus normalised product reads). **No existing signature changed** — the two additions are optional parameters — and `extractData/extractMeta/isVisibleProduct/visibleProducts/getErrorMessage` plus the wallet/refund/return/cancel cascades are untouched. Mock mode was exercised for real against JSON Server through the actual module: **21 assertions, all passing**, covering every acceptance check (8 ordered hero products, `serums` → 1, `hydration` → 3, `morning-glow` → 4 resolved steps with the body ritual's alternative product, `siteContent.get("about")`, 3 announcements, `getReviews(1)` → `[]` / `[1 sample]`, `setHeroOrder` reversed and restored, `updateProduct` rewriting `images[]` from `media[]`) plus the schedule window, the draft gate, the CRUD round-trips and the site-content merge. Browser QA in Chromium: the home hero renders **all eight products** through the shim (eight distinct headlines, eight `Explore the …` CTAs on the right `productPath`), **zero console errors** on `/`, `/products`, a PDP, `/admin/hero-section` and `/admin/settings`; no horizontal overflow at 390. `CI=true npm run build` exit 0 with no warnings; `npm test -- --watchAll=false` exit 0 (2 suites / 20 passed, live suite skipped). `db.json` unchanged (`git diff --stat db.json` empty). `REPO_MAP.md` §3 rewritten as the final contract with §3.4 "Laravel endpoints to implement" (20 routes + the product payload). See "Prompt 07 record" below. |
-| 08 | Routing, IA, lazy loading and SEO hook | pending | | | |
+| 08 | Routing, IA, lazy loading and SEO hook | complete | 2026-09-06 | (this commit) | The LAMIKAA route map is live: 25 storefront paths + the 16 unchanged admin paths, **every** Meghali URL redirected (16/16 verified in Chromium), a real 404 instead of `<Navigate to="/">`, `React.lazy` on all 34 pages but Home (**51 JS chunks**, was 2), and a dependency-free `useSeo` on 15 pages. Link sweep: 26 files; `grep -rn -E '"/(products|help|support|privacy|terms|cookies|refund)("|\?)' src --include=*.js` → **18, and not one is a link**: 16 are `api.get("/products")` REST endpoint paths in `services/api.js` and 2 are the new `utils/routes.test.js` assertions that those paths are gone. Zero in `LegacyRedirects.js`'s own exclusion, zero storefront links (see the Decisions log). New: `hooks/useSeo.js`, `components/routing/{LegacyRedirects,RouteFallback,AuthRoute}.js`, `pages/NotFound/*`, `pages/_ComingSoon/ComingSoon.js`, `utils/routes.test.js` (14 tests). `CI=true npm run build` exit 0 **no warnings**; `npm test` exit 0 (3 suites / 34 passed). |
 | 09 | Header, mega panel and announcement bar | pending | | | |
 | 10 | Mobile navigation drawer and bottom nav | pending | | | |
 | 11 | Search overlay and search results | pending | | | |
@@ -120,6 +120,16 @@ Record every decision a prompt had to make that the reference files did not sett
 - `07 · 2026-09-06 · The mock-mode acceptance checks were run as a TEMPORARY jest suite driving the real api.js against JSON Server, not as browser-console pokes behind a temporary window.apiService · The prompt suggests exposing apiService from index.js for the run. The suite loads the same module against the same server and asserts every result instead of printing it, which is strictly stronger evidence and leaves no temporary export to forget. src/services/api.mock.check.test.js was deleted after the run (21/21 passing) and is not in the commit; `git status` is clean and no window.apiService exists anywhere in src. The two acceptance items that genuinely need a browser — the hero rendering eight product slides and /admin/hero-section opening — were done in Chromium.`
 - `07 · 2026-09-06 · JSON Server ran against a scratchpad COPY of db.json (JSON_SERVER_DB), as in Prompt 01 · The verification writes: setHeroOrder rewrites eight products, the CRUD checks create and delete rows, updateProduct rewrites media. The prompt states db.json is unchanged by Prompt 07, so the tracked seed stayed byte-identical (verified: `git diff --stat db.json` empty) while the flows were still exercised for real. One finding from the copy worth recording: syncProductMedia ADDS an `image` key to products that go through admin.updateProduct — the seed has none, since `image` is a derived mirror `normalizeProduct` supplies on read. That is the documented contract (REPO_MAP §3.4, "Product payload"), not drift.`
 
+- `08 · 2026-09-06 · The acceptance grep cannot literally reach 0, and is reported as "0 LINKS" instead · The prompt's own command matches the bare string "/products", which is also the REST RESOURCE path the JSON Server / Laravel client calls sixteen times (api.get("/products", …), api.post("/products", …)). Those are the API's URLs, not the site's; renaming them would break both api modes. Full result: 18 hits — 16 in src/services/api.js and 2 in the new src/utils/routes.test.js, whose whole job is to assert that no ROUTES entry is one of those paths. Excluding LegacyRedirects.js, services/api.js and routes.test.js the grep returns **nothing**: every storefront link is swept.`
+- `08 · 2026-09-06 · /category/:slug renders pages/Products/Products with a new `categorySlug` prop rather than redirecting to /shop?category=<slug> · The route table puts the category in the PATH; redirecting back to a query string would undo the URL the sweep just introduced (and /products?category=<slug> redirects the other way, so the two would loop). The prop LOCKS the listing: the category facet and its chip group step aside, "Clear all" clears back to the route rather than out of it, the active-filter count ignores it, and syncUrlParams never writes `category` (which would produce /category/face-care?category=face-care). ~25 lines, all removed with the page by Prompt 24.`
+- `08 · 2026-09-06 · useSeo BORROWS the static og:* tags from public/index.html instead of adding a second set · The prompt asks for `data-seo`-tagged elements; creating them unconditionally would leave two og:title tags in the head on every page (index.html's plus the hook's) and a crawler picking whichever it saw first. The hook now records the original content, stamps the element while it holds it, and restores it on unmount — so a route with no useSeo() call (today: /_playground) finds the site-wide defaults intact. Verified in Chromium: /checkout has 11 `[data-seo]` elements, one og:title and one description; navigating away leaves 0 and restores the static values.`
+- `08 · 2026-09-06 · Canonical origin falls back to window.location.origin · brand.seo.siteUrl is still `{{LAMIKAA_DOMAIN}}`, and a canonical pointing at a literal placeholder is worse than none. `seoOrigin()` (exported from the hook) uses the configured host the moment it stops being a placeholder — the switch is one edit in brand.js, no page changes. robots.txt keeps the token in its Sitemap line, which Prompt 38 resolves or removes.`
+- `08 · 2026-09-06 · The three `?sort=` editorial links (New Arrivals / Bestsellers / Sale) were COLLAPSED, not repointed one-for-one · The LAMIKAA shop has no sort (the owner's decision, brief §7.3), so all three resolve to the same page. Three identical links with three different names is worse than one: the header's editorial group becomes a single "Shop all", and the mobile drawer's whole "Discover" group is gone because the drawer already carries "Shop All" at the top. The footer's shop column lost the same two duplicates. Prompts 09, 10 and 13 rebuild all three navigations.`
+- `08 · 2026-09-06 · /orders, /profile and /wishlist carry `noindex` too, beyond the three the prompt names · They are one visitor's own pages and robots.txt already disallows two of the three; a Disallow stops the crawl but not the indexing of a URL someone else links to, so the meta tag is the belt to that braces. No acceptance criterion is affected (the three the prompt names — NotFound, Checkout, OrderConfirmation — all carry it).`
+- `08 · 2026-09-06 · The Meghali body copy in AboutUs.js (72 references), the FABRIC_FAMILIES facet in Products.js and the "All Silk" heading were NOT rewritten wholesale · The guardrail bars Meghali copy being LEFT BEHIND in a touched file, but this prompt touched those files for links and a useSeo call only, and both pages are DELETED by their own prompts (23 deletes pages/Products, 28 deletes pages/AboutUs and writes pages/About from siteContent). Rewriting an About page now would be Prompt 28's deliverable, discarded when 28 lands. What WAS fixed is every string this prompt's own edits sat on: the "All Silk" results heading → "All products", the listing breadcrumb → Home / Shop, SearchModal's "Try another weave — Muga, Pat or Eri" empty hint, and CartDrawer's "The looms of Sualkuchi are waiting" + "Explore the collection" → "Continue shopping". The rest is logged as an Open TODO against 23/28.`
+- `08 · 2026-09-06 · Home's two `?highlight=` rails were repointed to /shop?highlight=…, not flattened to /shop · The facet still works (the /shop element IS the old listing until Prompt 23), so flattening would have LOST a working destination — the opposite of the ?sort= case, where the destination no longer exists. Prompt 23 retires the param with the page.`
+
+
 ## Open TODOs
 
 Carry-overs that a later prompt (or the developer/owner) must pick up (format: `NN · item · owner · target prompt`).
@@ -164,6 +174,17 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `07 · products.search() is still json-server's `?q=` in mock mode, which matches ANY field of a record (a query can hit an ingredient list or a meta description and rank as highly as a name). Ranking is deliberately left to the caller — src/utils/search.js does not exist yet. · Prompt 11 · 11`
 - `07 · admin.setHeroOrder clears `heroOrder` on every product not in the list it is given. That is the documented contract (dropping a product out of the carousel is the same gesture as reordering it), but it means a caller that passes a PARTIAL list silently empties the rest of the hero. The Prompt 34 editor must always send the full order. · Prompt 34 · 34`
 
+- `08 · ComingSoon stubs are live at /rituals, /rituals/:slug, /why-lamikaa, /cart and /search. Each renders "This page is being built (Prompt NN)" and is noindex. Prompt 35 verifies no route still points at pages/_ComingSoon and deletes the folder (Prompt 31 in the index's plan). · Prompts 24, 28, 29, 11 · 11`
+- `08 · /search is a stub, so the search OVERLAY is the only search surface until Prompt 11: it still lists live results in place, but "see all results" (Enter, or the submit button) now lands on the stub instead of the old /products?search= listing. This is the one storefront capability that is temporarily reduced, and it is the route table's own instruction. · Prompt 11 · 11`
+- `08 · pages/AboutUs/AboutUs.js still carries the Meghali silk story end to end (72 matches for silk/saree/weave/Sualkuchi/Mekhela/loom — headline "Three silks, one river, and the families who weave them", the SILKS table, META ["Est. 2010", "Kolkata", …], the placehold.co loom imagery). Prompt 08 touched it for links + useSeo only. Prompt 28 deletes the folder and writes pages/About/About from siteContent. · Prompt 28 · 28`
+- `08 · pages/Products/Products.js still carries FABRIC_FAMILIES (Muga/Pat/Eri/Toss Silk) and its "Fabric" facet. It renders NOTHING with the LAMIKAA seed (availableFabrics is empty, so the chip group and the drawer section are both hidden) — it is dead code that Prompt 23 deletes with the page. · Prompt 23 · 23`
+- `08 · The temporary `categorySlug` prop on pages/Products/Products (and the CategoryRoute wrapper in App.js) exists only to make /category/:slug real before the Shop page lands. Both go when the element becomes `<Shop mode="category" />`. · Prompt 24 · 24`
+- `08 · RouteFallback is a STOREFRONT-token skeleton and it is also what the admin's <Suspense> shows while an admin chunk loads. It reads correctly (the tokens are global) but it is not the admin's own idiom. Give the admin its own fallback when the shell is rebuilt. · Prompt 32 · 32`
+- `08 · The PDP still runs its own hand-rolled title + meta[name=description] effect (ProductDetails.js), which is NOT `data-seo`-tagged and so is the one writer outside useSeo. The prompt says to leave it; Prompt 25 replaces it (and Prompt 27 adds the product JSON-LD). Until then the PDP has no canonical, no og:* and no JSON-LD. · Prompt 25 · 25`
+- `08 · /_playground has no useSeo call, so it shows the store title from settings and the static index.html og:* set. Deliberate — it is scaffolding, and Prompt 35 deletes it. · Prompt 35 · 35`
+- `08 · Home's ?highlight= rails and the shop's ?sort=/?page=/?per_page= params still work because /shop IS the old listing. Prompt 23's chaptered shop has no sort, filters or pagination — it must also decide what happens to a bookmarked /shop?sort=newest (drop the param, or 404 it). · Prompt 23 · 23`
+- `08 · The AnnouncementBar still reads "COMPLIMENTARY GIFT WRAPPING" and the TrustStrip still reads "AUTHENTIC SILK" in mock mode (both are seeded/component copy in files this prompt did not touch). Visible on every route in the QA screenshots. · Prompts 09 / 15 · 09`
+
 ## Placeholders introduced / resolved
 
 Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token · introduced|resolved · where`).
@@ -184,6 +205,7 @@ Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token 
 - `06 · {{DISPATCH_SLA}} · introduced · db.json → shipping_methods[0].estimatedDays ("") and siteContent.policies.shippingReturns §01 ("Our dispatch time is {{DISPATCH_SLA}}.").`
 - `06 · {{TAX_RATE_PERCENT}} · introduced · db.json → settings.store.taxRate = 0 with taxIncluded: true, and taxAmount: 0 on all three seeded orders. No token string is stored — the 0/true pair IS the unresolved state, and fillStoreCopy's {taxNote} already prints "inclusive of all taxes" for it.`
 - `06 · {{LAMIKAA_EMAIL}} / {{LAMIKAA_PHONE}} / {{LAMIKAA_ADDRESS}} · carried into data · settings.store.{email,phone,address} plus settings.notifications.{adminEmail,lowStockEmail} and the contact clause of all four policies. normalizeStoreSettings blanks the first three; the policy sentences are dropped by stripPlaceholderSentences.`
+- `08 · {{LAMIKAA_DOMAIN}} · carried into public/robots.txt · The Sitemap: line is seeded as https://{{LAMIKAA_DOMAIN}}/sitemap.xml for Prompt 38 to resolve or remove. Nothing RENDERED carries the token: useSeo's seoOrigin() uses brand.seo.siteUrl only when it stops being a placeholder and falls back to window.location.origin, so every canonical, og:url and twitter URL is a real absolute URL today.`
 - `06 · {{LAMIKAA_FACEBOOK_URL}} / {{LAMIKAA_INSTAGRAM_URL}} / {{LAMIKAA_YOUTUBE_URL}} / {{LAMIKAA_WHATSAPP_URL}} · carried into data · settings.social.*. twitter is "" (deliberately absent, not unknown).`
 - `06 · {{SUPPORT_HOURS}} · carried into data · siteContent.contact.hoursNote.`
 - `06 · {{GSTIN}} / {{CIN}} · carried into data · siteContent.policies.terms §01, one per sentence so each is dropped independently.`
@@ -625,3 +647,111 @@ Every sentence in `siteContent` traces to `BRAND.md` §3 or to packaging text. T
 - **Live mode.** Not executed — no staging host exists (see the Decisions log). Each live branch was read against the §3 table, and the live suite now asserts the new contract for whenever a host appears.
 - `CI=true npm run build` exit 0, **no warnings**. `npm test -- --watchAll=false` exit 0 — 2 suites passed / 1 skipped, 20 passed / 50 skipped (45 live tests before, 50 now).
 - `git diff --stat db.json` **empty**: the seed is byte-identical. JSON Server ran against a scratchpad copy via `JSON_SERVER_DB`.
+
+
+## Prompt 08 record (2026-09-06)
+
+### What the route map now is
+
+25 storefront paths, all built from `ROUTES` (`src/utils/constants.js`) — the old
+table typed its paths inline, which is how `/products?sort=…` links survived in
+five files after the sort they pointed at was retired.
+
+`/` Home (**eager**) · `/shop` · `/category/:slug` · `/category/rituals` →
+`/rituals` · `/product/:slug` · `/rituals` · `/rituals/:slug` · `/about` ·
+`/why-lamikaa` · `/faq` · `/contact` · `/policies/{privacy,terms,
+shipping-returns,cookies}` · `/cart` · `/checkout` ·
+`/order-confirmation/:orderNumber` · `/orders` · `/profile` · `/wishlist` ·
+`/special-offers` · `/login` · `/register` · `/search` · `/_playground` · `*` →
+`NotFound`. The sixteen admin paths are byte-identical.
+
+Five of those are `ComingSoon` stubs (`/rituals`, `/rituals/:slug`,
+`/why-lamikaa`, `/cart`, `/search`) and three are bridges to a page a later
+prompt replaces (`/shop` and `/category/:slug` → `pages/Products`, the four
+`/policies/*` → the four old policy pages). Full table in `REPO_MAP.md` §9.
+
+### The four new modules
+
+- **`src/hooks/useSeo.js`** — title (through the `documentTitle` claim protocol),
+  description, `og:title|description|type|url|image`, `twitter:title|
+  description|image`, `robots` (only when `noindex`), `link[rel=canonical]` and
+  an `application/ld+json` block. Everything it writes is stamped `data-seo="page"`;
+  a tag it did not create is borrowed and restored on unmount. No dependency —
+  no react-helmet, as the guardrail requires.
+- **`src/components/routing/LegacyRedirects.js`** — the ONLY place an old path is
+  written down. Exports `LEGACY_PATH_REDIRECTS` (data), `RETIRED_CATEGORY_SLUGS`,
+  `useLegacyQueryRedirect()` for the `/products?…` cases, and by default an ARRAY
+  of `<Route>` elements (React Router 6's `createRoutesFromChildren` accepts
+  `<Route>` and fragments of them, and throws on a wrapper component).
+- **`src/components/routing/RouteFallback.js`** (+ module) — `role="status"
+  aria-label="Loading"` glass skeleton, `min-height: 70svh`.
+- **`src/components/routing/AuthRoute.js`** — `/login` and `/register` open the
+  existing `AuthModal` on the right tab and `<Navigate to={state?.from || "/"}
+  replace />`, so Back never returns to the door.
+
+Plus `pages/NotFound/NotFound.{js,module.css}`, `pages/_ComingSoon/ComingSoon.js`
+(which borrows NotFound's stylesheet — scaffolding should not leave a stylesheet
+behind) and a rewritten `components/ScrollToTop/ScrollToTop.js`.
+
+### Link builders
+
+`productPath()` → `/product/<slug>`; new `categoryPath()` → `/category/<slug>`
+(`kind: "rituals"` → `/rituals`), `ritualPath()`, `concernPath()` →
+`/shop?concern=<slug>`. `categoryParam()` survives as the listing's filter-token
+builder only. `src/utils/routes.test.js` pins all of it plus the redirect table
+(14 tests).
+
+### The sweep — 26 files
+
+Components: `Header`, `SidebarMenu`, `BottomNav` (path + the active-alias list,
+which now lights the tab for `/shop`, `/category/*`, `/product/*` and
+`/rituals*`), `Footer`, `CartDrawer`, `SearchModal`, `CategoriesDrawer`,
+`AuthModal`, `HeroSection`, `FeaturedProducts`, `CTASection`.
+Pages: `Home`, `Products`, `ProductDetails`, `Wishlist`, `OrderHistory`,
+`Profile`, `Checkout`, `HelpCenter`, `Support`, `AboutUs`, `SpecialOffers`, the
+four policy pages, `Admin/AdminHeroSection` (chip default + the helper text, now
+`e.g. /category/face-care`). Utils: `constants`, `helpers`, `categories`,
+`heroConfig`, `faqs`, `socialLinks`. `AdminLayout`'s "Back to Store" stays `/`.
+
+### Verification (Chromium 1194, mock mode, dev server)
+
+- **Route table — 25/25 render.** Titles all follow `"%s · LAMIKAA NATURALS"`
+  (Home and `/_playground` excepted by design: Home takes `brand.seo.defaultTitle`,
+  `/_playground` has no `useSeo`). `/category/face-care` titles itself from the
+  API's category name ("Face Care · LAMIKAA NATURALS"). No duplicate
+  `description`/`og:title` on any route; no `{{TOKEN}}` in any body.
+- **Redirects — 16/16.** `/products`→`/shop`; `?category=face-care`→
+  `/category/face-care`; `?category=muga-silk`→`/shop`; `?search=serum`→
+  `/search?q=serum`; `?sort=newest` and `?highlight=featured`→`/shop`;
+  `/products/black-rice-face-wash` and `/products/1` (numeric) →
+  `/product/black-rice-face-wash`; `/help`→`/faq`; `/support`→`/contact`;
+  the four policies; `/sarees` and `/collections/muga`→`/shop`.
+- **Back after a redirect** lands on the page before it (`/` after `/help`) — no
+  bounce loop, because every redirect is `replace`.
+- **Hash scroll** `/faq#help-faqs` → `scrollY 1324`; under
+  `prefers-reduced-motion: reduce` the same 1324 at 400 ms and at 2 s (instant,
+  not animated). An in-app navigation resets to 0.
+- **RouteFallback** seen for 117 consecutive polls while the `/orders` chunk
+  loaded over a 50 kbps / 2 s-latency CDP throttle, then `/orders` rendered.
+- **`useSeo` hand-back**: `/checkout` carries 11 `[data-seo]` elements, one
+  `og:title`, `robots: noindex,nofollow`; navigating to `/_playground` leaves
+  **0** and restores index.html's own `og:title` and description.
+- **Auth doors**: `/login` → `/` with the dialog open on "Sign in"; `/register` →
+  `/` on "Create account"; Back does not re-open.
+- **Layout**: NotFound and ComingSoon at 390 px and 1280 px — 0 px horizontal
+  overflow at both; the card is full-width with 24 px padding at 390 and 560 px
+  centred above 480.
+- **Admin** `/admin` loads its (now lazily-loaded) login screen; the sixteen
+  paths are untouched.
+- The only console errors are `ERR_CONNECTION_RESET` on `res.cloudinary.com`,
+  `fonts.googleapis.com`, `api.iconify.design` and `placehold.co` — this
+  sandbox's egress proxy, as recorded for Prompts 04–07.
+
+### Gates
+
+`CI=true npm run build` exit 0, **no warnings**; **51 JS chunks** (53 files in
+`build/static/js`), was 2. `npm test -- --watchAll=false` exit 0 — 3 suites
+passed / 1 skipped, 34 passed / 50 skipped. `grep -c "React.lazy" src/App.js` →
+**34** — every page but Home (18 storefront + 16 admin).
+`db.json` untouched; no dependency added.
+

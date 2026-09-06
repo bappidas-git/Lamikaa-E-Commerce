@@ -15,7 +15,8 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import apiService from "../../services/api";
-import { categoryParam } from "../../utils/categories";
+import { categoryPath } from "../../utils/categories";
+import { ROUTES } from "../../utils/constants";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../brand/Logo";
 import TrustStrip from "../TrustStrip";
@@ -52,13 +53,11 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
-// The quiet secondary group under the serif links. Mirrors the header's
-// editorial links exactly, so the two navigations never drift apart.
-const DISCOVER_LINKS = [
-  { label: "New Arrivals", to: "/products?sort=newest" },
-  { label: "Bestsellers", to: "/products?sort=popular" },
-  { label: "Sale", to: "/products?sort=discount" },
-];
+// NOTE (Prompt 08): the "Discover" group used to hold three `?sort=` deep links
+// into the old listing — New Arrivals, Bestsellers, Sale. The LAMIKAA shop has
+// no sort (the owner's decision, brief §7.3), so all three now resolve to the
+// "Shop All" link already at the top of this drawer; the duplicate group is gone
+// rather than repeated three times. Prompt 10 rebuilds this drawer.
 
 const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   const navigate = useNavigate();
@@ -235,7 +234,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
             type="button"
             className={styles.catChild}
             style={{ "--menu-indent": `${(level - 1) * 14}px` }}
-            onClick={() => handleNavigate(`/products?category=${categoryParam(kid)}`)}
+            onClick={() => handleNavigate(categoryPath(kid))}
           >
             <span className={styles.catChildRule} aria-hidden="true" />
             <span className={styles.catChildLabel}>{kid.name || kid.title}</span>
@@ -419,7 +418,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                   nav already claim those, and identically-named landmarks are
                   indistinguishable in a screen reader's landmark list. */}
               <nav className={styles.primaryNav} aria-label="Menu">
-                {renderPrimaryLink({ label: "Shop All", to: "/products" })}
+                {renderPrimaryLink({ label: "Shop All", to: ROUTES.SHOP })}
 
                 {/* Collections — the lazy category tree lives under here. */}
                 {renderPrimaryLink({
@@ -456,7 +455,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                                     hasKids
                                       ? toggleCat(cat.id)
                                       : handleNavigate(
-                                          `/products?category=${categoryParam(cat)}`
+                                          categoryPath(cat)
                                         )
                                   }
                                   aria-expanded={hasKids ? isOpen : undefined}
@@ -490,7 +489,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                                           className={styles.catShopAll}
                                           onClick={() =>
                                             handleNavigate(
-                                              `/products?category=${categoryParam(cat)}`
+                                              categoryPath(cat)
                                             )
                                           }
                                         >
@@ -508,7 +507,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                           <button
                             type="button"
                             className={styles.catViewAll}
-                            onClick={() => handleNavigate("/products")}
+                            onClick={() => handleNavigate(ROUTES.SHOP)}
                           >
                             View all products
                             <ChevronRight />
@@ -525,16 +524,8 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                     to: "/special-offers",
                   })}
                 {renderPrimaryLink({ label: "Our Story", to: "/about" })}
-                {renderPrimaryLink({ label: "Support", to: "/support" })}
+                {renderPrimaryLink({ label: "Support", to: ROUTES.CONTACT })}
               </nav>
-
-              {/* ---- Discover ---- */}
-              <section className={styles.group} aria-labelledby="menu-discover">
-                <h2 className={styles.groupLabel} id="menu-discover">
-                  Discover
-                </h2>
-                {DISCOVER_LINKS.map((link) => renderMetaRow(link))}
-              </section>
 
               {/* ---- Account ---- */}
               <section className={styles.group} aria-labelledby="menu-account">
@@ -595,7 +586,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                     >
                       <div className={styles.subInner}>
                         {renderMetaRow(
-                          { label: "Help centre", to: "/help", Icon: HelpOutline },
+                          { label: "Help centre", to: ROUTES.FAQ, Icon: HelpOutline },
                           false
                         )}
                       </div>
@@ -613,7 +604,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                   <button
                     type="button"
                     className={styles.footerLink}
-                    onClick={() => handleNavigate("/terms")}
+                    onClick={() => handleNavigate(ROUTES.POLICY_TERMS)}
                   >
                     Terms of Service
                   </button>
@@ -621,7 +612,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                   <button
                     type="button"
                     className={styles.footerLink}
-                    onClick={() => handleNavigate("/privacy")}
+                    onClick={() => handleNavigate(ROUTES.POLICY_PRIVACY)}
                   >
                     Privacy Policy
                   </button>

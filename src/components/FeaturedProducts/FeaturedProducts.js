@@ -11,6 +11,7 @@ import {
   PLACEHOLDER_IMG,
   onImageError,
 } from "../../utils/helpers";
+import { ROUTES } from "../../utils/constants";
 import styles from "./FeaturedProducts.module.css";
 
 const ProductCard = ({ product, onAddToCart, onToggleWishlist, isWishlisted, onClick }) => {
@@ -62,7 +63,7 @@ const ProductCard = ({ product, onAddToCart, onToggleWishlist, isWishlisted, onC
   );
 };
 
-const FeaturedProducts = ({ products = [], title = "Featured Products", viewAllLink = "/products" }) => {
+const FeaturedProducts = ({ products = [], title = "Featured Products", viewAllLink = ROUTES.SHOP }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();

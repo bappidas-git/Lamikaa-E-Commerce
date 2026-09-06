@@ -1,5 +1,5 @@
 // =============================================================================
-// CONTACT  —  LAMIKAA NATURALS, route `/support`
+// CONTACT  —  LAMIKAA NATURALS, route `/contact` (Prompt 28 → pages/Contact)
 // =============================================================================
 // The care desk, written as a page. The old screen opened with a fabricated
 // scoreboard — "4.9 Rating · 10K+ Customers · 500+ Designs · 15+ Years" — none
@@ -40,9 +40,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
-import { SUPPORT_HOURS, WHY_CHOOSE_US } from "../../utils/constants";
+import { ROUTES, SUPPORT_HOURS, WHY_CHOOSE_US } from "../../utils/constants";
 import { resolveOrNull } from "../../utils/placeholders";
 import { isEmailValid, isValidPhone } from "../../utils/helpers";
+import useSeo from "../../hooks/useSeo";
 import styles from "./Support.module.css";
 
 // Showroom hours are a {{SUPPORT_HOURS}} placeholder until the owner supplies
@@ -191,6 +192,12 @@ const EMPTY_LEAD = {
 };
 
 const Support = () => {
+  useSeo({
+    title: "Contact",
+    description:
+      "Talk to the LAMIKAA Naturals care desk about an order, a product or the farmer-owned enterprise behind the brand.",
+  });
+
   const { user } = useAuth();
   // Phone, email, the showroom address and the social marks are whatever the
   // admin last saved. `socialLinks` arrives filtered to the platforms that have
@@ -512,7 +519,7 @@ const Support = () => {
                   </button>
                   <p className={styles.formNote}>
                     Your details are used to answer this message and nothing
-                    else. <Link to="/privacy">Privacy policy</Link>.
+                    else. <Link to={ROUTES.POLICY_PRIVACY}>Privacy policy</Link>.
                   </p>
                 </div>
               </form>
@@ -595,7 +602,7 @@ const Support = () => {
 
             <p className={styles.railFoot}>
               Looking for an answer straight away?{" "}
-              <Link to="/help">Read the Help Centre</Link>.
+              <Link to={ROUTES.FAQ}>Read the FAQ</Link>.
             </p>
           </aside>
         </div>

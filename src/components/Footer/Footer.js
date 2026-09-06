@@ -6,6 +6,7 @@ import apiService from "../../services/api";
 import {
   FREE_SHIPPING_THRESHOLD,
   POLICY_LAST_UPDATED,
+  ROUTES,
   SUPPORT_HOURS,
 } from "../../utils/constants";
 import brand from "../../config/brand";
@@ -162,40 +163,42 @@ const Footer = () => {
     }
   };
 
-  // Every target below resolves to a real route in App.js — no path here hits
-  // the catch-all redirect to "/". "Deals" / "Special Offers" share the deals
-  // hub and are dropped when the admin disables it; New Arrivals / Best Sellers
-  // are sort deep-links the Products page understands (newest / popular).
+  // Every target below resolves to a real route in App.js — nothing here falls
+  // through to the 404. "Deals" / "Special Offers" share the deals hub and are
+  // dropped when the admin disables it.
+  //
+  // Prompt 08 retired the two `?sort=` deep-links (New Arrivals, Best Sellers):
+  // the LAMIKAA shop has no sort, so both resolved to the same page as "Shop
+  // All" and the column repeated itself three times. Prompt 13 rebuilds the
+  // footer around the new information architecture.
   const shopLinks = [
-    { label: "All Products", path: "/products" },
-    { label: "New Arrivals", path: "/products?sort=newest" },
-    { label: "Best Sellers", path: "/products?sort=popular" },
-    { label: "Deals", path: "/special-offers", deals: true },
+    { label: "Shop All", path: ROUTES.SHOP },
+    { label: "Deals", path: ROUTES.SPECIAL_OFFERS, deals: true },
   ].filter((link) => dealsEnabled || !link.deals);
 
   // Company column — Our Story is the About page; Special Offers is deals-gated.
   const companyLinks = [
-    { label: "Our Story", path: "/about" },
-    { label: "Special Offers", path: "/special-offers", deals: true },
-    { label: "Wishlist", path: "/wishlist" },
+    { label: "Our Story", path: ROUTES.ABOUT },
+    { label: "Special Offers", path: ROUTES.SPECIAL_OFFERS, deals: true },
+    { label: "Wishlist", path: ROUTES.WISHLIST },
   ].filter((link) => dealsEnabled || !link.deals);
 
-  // Support column — Help Center covers shipping/FAQ topics; Returns maps to the
-  // Refund Policy page. All paths exist in App.js.
+  // Support column — the FAQ covers shipping/FAQ topics; Returns maps to the
+  // Shipping & Returns policy. All paths exist in App.js.
   const supportLinks = [
-    { label: "Support", path: "/support" },
-    { label: "Help Center", path: "/help" },
-    { label: "Order Tracking", path: "/orders" },
-    { label: "My Account", path: "/profile" },
-    { label: "Returns & Exchange", path: "/refund" },
+    { label: "Contact", path: ROUTES.CONTACT },
+    { label: "FAQ", path: ROUTES.FAQ },
+    { label: "Order Tracking", path: ROUTES.ORDERS },
+    { label: "My Account", path: ROUTES.PROFILE },
+    { label: "Returns & Exchange", path: ROUTES.POLICY_SHIPPING_RETURNS },
   ];
 
   // Legal column — exact paths that all resolve in App.js.
   const legalColumnLinks = [
-    { label: "Privacy Policy", path: "/privacy" },
-    { label: "Terms of Service", path: "/terms" },
-    { label: "Cookie Policy", path: "/cookies" },
-    { label: "Refund Policy", path: "/refund" },
+    { label: "Privacy Policy", path: ROUTES.POLICY_PRIVACY },
+    { label: "Terms of Service", path: ROUTES.POLICY_TERMS },
+    { label: "Cookie Policy", path: ROUTES.POLICY_COOKIES },
+    { label: "Shipping & Returns", path: ROUTES.POLICY_SHIPPING_RETURNS },
   ];
 
   const currentYear = new Date().getFullYear();
@@ -456,13 +459,13 @@ const Footer = () => {
                 with no way to tell them apart. The links stay; the duplicate
                 signpost goes. */}
             <div className={styles.legalLinks}>
-              <Link to="/terms" className={styles.legalLink}>
+              <Link to={ROUTES.POLICY_TERMS} className={styles.legalLink}>
                 Terms of Service
               </Link>
-              <Link to="/privacy" className={styles.legalLink}>
+              <Link to={ROUTES.POLICY_PRIVACY} className={styles.legalLink}>
                 Privacy Policy
               </Link>
-              <Link to="/cookies" className={styles.legalLink}>
+              <Link to={ROUTES.POLICY_COOKIES} className={styles.legalLink}>
                 Cookie Policy
               </Link>
             </div>

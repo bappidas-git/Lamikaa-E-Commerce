@@ -15,6 +15,7 @@ import {
   t,
   tween,
 } from "../../theme/motion";
+import { ROUTES } from "../../utils/constants";
 import styles from "./AuthModal.module.css";
 
 /* One wordmark on a TRANSPARENT ground, so it sits straight on the dialog.
@@ -607,7 +608,7 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
                   <motion.div className={styles.infoNote} {...noteMotion} role="status">
                     <div className={styles.noteInner}>
                       {infoMessage}{" "}
-                      <Link to="/support" className={styles.infoNoteLink} onClick={onClose}>
+                      <Link to={ROUTES.CONTACT} className={styles.infoNoteLink} onClick={onClose}>
                         Contact support
                       </Link>
                     </div>
@@ -986,7 +987,7 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
                           <span>
                             I agree to the{" "}
                             <Link
-                              to="/terms"
+                              to={ROUTES.POLICY_TERMS}
                               target="_blank"
                               className={styles.linkBtn}
                               onClick={(e) => e.stopPropagation()}
@@ -995,7 +996,7 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
                             </Link>{" "}
                             and{" "}
                             <Link
-                              to="/privacy"
+                              to={ROUTES.POLICY_PRIVACY}
                               target="_blank"
                               className={styles.linkBtn}
                               onClick={(e) => e.stopPropagation()}

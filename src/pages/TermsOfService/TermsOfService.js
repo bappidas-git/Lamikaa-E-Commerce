@@ -1,7 +1,7 @@
 // =============================================================================
-// TERMS OF SERVICE  —  LAMIKAA NATURALS, route `/terms`
+// TERMS OF SERVICE  —  LAMIKAA NATURALS, route `/policies/terms`
 // =============================================================================
-// One of the four policy pages (/privacy, /terms, /cookies, /refund) that share
+// One of the four policy pages under /policies/* that share
 // a single typeset "document" treatment: a tracked gold kicker, a serif title
 // over a hairline, the revision stamp, a standfirst, then numbered clauses down
 // a ~70-character measure with their numbers hung out into the left gutter. See
@@ -41,15 +41,22 @@ import { reveal as sharedReveal } from "../../theme/motion";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import {
   POLICY_LAST_UPDATED,
+  ROUTES,
 } from "../../utils/constants";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { SUPPORTED_CURRENCIES } from "../../utils/storeSettings";
 import { formatCurrency } from "../../utils/helpers";
+import useSeo from "../../hooks/useSeo";
 import styles from "./TermsOfService.module.css";
 
 const RETURN_DAYS = STOREFRONT_CONFIG.returnsWindowDays;
 
 const TermsOfService = () => {
+  useSeo({
+    title: "Terms of service",
+    description: "The terms you agree to when you shop with LAMIKAA Naturals.",
+  });
+
   // Store name and contact details are whatever the admin last saved in
   // Settings > General, so the policy never names a store that no longer exists.
   const {
@@ -154,7 +161,7 @@ const TermsOfService = () => {
         <>
           What qualifies, what does not, and how long each payment method takes
           are set out in full in our{" "}
-          <Link to="/refund" className={styles.link}>
+          <Link to={ROUTES.POLICY_SHIPPING_RETURNS} className={styles.link}>
             Return &amp; Refund Policy
           </Link>
           , which forms part of these terms.
@@ -261,7 +268,7 @@ const TermsOfService = () => {
                 {supportEmail}
               </a>
               , or read the{" "}
-              <Link to="/privacy" className={styles.link}>
+              <Link to={ROUTES.POLICY_PRIVACY} className={styles.link}>
                 Privacy Policy
               </Link>{" "}
               for how we handle your data.

@@ -12,6 +12,8 @@ import {
   buildCartItem,
 } from "../../utils/helpers";
 import { DURATION, RISE, staggerDelay, t, tween } from "../../theme/motion";
+import { ROUTES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
 import styles from "./Wishlist.module.css";
 
 // =============================================================================
@@ -137,6 +139,13 @@ const SkeletonCell = ({ withAction = false }) => (
 // Main Component
 // ---------------------------------------------------------------------------
 const Wishlist = () => {
+  useSeo({
+    title: "Wishlist",
+    description: "The LAMIKAA Naturals pieces you have saved for later.",
+    // A signed-in visitor's own list — never an index entry.
+    noindex: true,
+  });
+
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
   const {
@@ -357,7 +366,7 @@ const Wishlist = () => {
             <button
               type="button"
               className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
-              onClick={() => navigate("/products")}
+              onClick={() => navigate(ROUTES.SHOP)}
             >
               Explore the collection
             </button>

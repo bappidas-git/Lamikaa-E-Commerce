@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { formatCurrency, getProductMinPrice, productPath } from "../../utils/helpers";
+import { ROUTES } from "../../utils/constants";
 import StarRating from "../storefront/StarRating";
 import { DURATION, RISE, overlay, staggerDelay, t } from "../../theme/motion";
 import styles from "./SearchModal.module.css";
@@ -491,7 +492,7 @@ const SearchModal = ({ open, onClose }) => {
     if (!trimmed) return;
     setRecentSearches(saveRecentSearch(trimmed));
     onClose();
-    navigate(`/products?search=${encodeURIComponent(trimmed)}`);
+    navigate(`${ROUTES.SEARCH}?q=${encodeURIComponent(trimmed)}`);
   };
 
   const handleSubmit = (e) => {
@@ -686,10 +687,10 @@ const SearchModal = ({ open, onClose }) => {
                     <div className={styles.empty}>
                       <p className={styles.emptyTitle}>Nothing yet for “{trimmedQuery}”</p>
                       <p className={styles.emptyHint}>
-                        Try another weave — Muga, Pat or Eri — or browse the whole collection.
+                        Try another word — a product, an ingredient or a concern — or browse the whole range.
                       </p>
-                      <Link to="/products" className={styles.emptyLink} onClick={onClose}>
-                        View all pieces
+                      <Link to={ROUTES.SHOP} className={styles.emptyLink} onClick={onClose}>
+                        View the whole range
                         <Icon.Arrow />
                       </Link>
                     </div>

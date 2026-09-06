@@ -53,6 +53,7 @@ import {
   normalizeHeroSlide,
   normalizeHeroSlides,
 } from "../../utils/heroConfig";
+import { ROUTES } from "../../utils/constants";
 
 // =============================================================================
 // Admin → Storefront → Hero Section
@@ -376,7 +377,7 @@ const SlideRow = ({
               <Chip
                 size="small"
                 icon={<Icon icon="mdi:link-variant" />}
-                label={slide.link || "/products"}
+                label={slide.link || ROUTES.SHOP}
               />
             </Box>
           </Grid>
@@ -1298,7 +1299,7 @@ const AdminHeroSection = () => {
                 label="Button link"
                 value={form.link}
                 onChange={(e) => setField("link", e.target.value)}
-                helperText="e.g. /products?category=mekhela-chador"
+                helperText="e.g. /category/face-care"
               />
             </Grid>
             <Grid item xs={12} sm={6}>

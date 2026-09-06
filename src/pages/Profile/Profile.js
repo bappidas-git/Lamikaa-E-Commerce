@@ -7,6 +7,8 @@ import { useWishlist } from "../../context/WishlistContext";
 import apiService from "../../services/api";
 import { formatDate, formatCurrency, getInitials, generateId, isValidPhone } from "../../utils/helpers";
 import { collapse, reveal } from "../../theme/motion";
+import { ROUTES } from "../../utils/constants";
+import useSeo from "../../hooks/useSeo";
 import styles from "./Profile.module.css";
 
 // Orders carry paymentStatus / fulfillmentStatus / shippingStatus (the shape
@@ -152,6 +154,12 @@ const Seal = () => (
 );
 
 const Profile = () => {
+  useSeo({
+    title: "Profile",
+    description: "Your LAMIKAA Naturals account, addresses and preferences.",
+    noindex: true,
+  });
+
   const navigate = useNavigate();
   // This page used to run its fades unconditionally — the one storefront
   // surface that never asked. Every motion prop below now goes through the
@@ -1351,7 +1359,7 @@ const Profile = () => {
                   <button
                     type="button"
                     className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
-                    onClick={() => navigate("/products")}
+                    onClick={() => navigate(ROUTES.SHOP)}
                   >
                     Browse the collection
                   </button>

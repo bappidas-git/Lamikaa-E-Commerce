@@ -1,7 +1,7 @@
 // =============================================================================
-// PRIVACY POLICY  —  LAMIKAA NATURALS, route `/privacy`
+// PRIVACY POLICY  —  LAMIKAA NATURALS, route `/policies/privacy`
 // =============================================================================
-// The first of the four policy pages (/privacy, /terms, /cookies, /refund),
+// The first of the four policy pages under /policies/*,
 // which share one typeset "document" treatment: a tracked gold kicker, a serif
 // title over a hairline, the revision stamp, a standfirst, then numbered
 // clauses down a ~70-character measure with their numbers hung out into the
@@ -36,11 +36,18 @@ import { motion, useReducedMotion } from "framer-motion";
 import { reveal as sharedReveal } from "../../theme/motion";
 import {
   POLICY_LAST_UPDATED,
+  ROUTES,
 } from "../../utils/constants";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import useSeo from "../../hooks/useSeo";
 import styles from "./PrivacyPolicy.module.css";
 
 const PrivacyPolicy = () => {
+  useSeo({
+    title: "Privacy policy",
+    description: "How LAMIKAA Naturals collects, uses and protects your data.",
+  });
+
   // Store name and contact details are whatever the admin last saved in
   // Settings > General, so the policy never names a store that no longer exists.
   const { storeName, email: supportEmail, address: supportAddress, emailHref } = useStoreSettings();
@@ -92,7 +99,7 @@ const PrivacyPolicy = () => {
       trailing: (
         <>
           What each cookie does and how long it lives is set out in our{" "}
-          <Link to="/cookies" className={styles.link}>
+          <Link to={ROUTES.POLICY_COOKIES} className={styles.link}>
             Cookie Policy
           </Link>
           . You can clear or block them from your browser at any time, though
