@@ -1,61 +1,64 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { FREE_SHIPPING_THRESHOLD } from "../../utils/constants";
-import { useStoreSettings } from "../../context/StoreSettingsContext";
+import apiService from "../../services/api";
+import brand from "../../config/brand";
+import { isPlaceholder } from "../../utils/placeholders";
 import { DURATION, tween } from "../../theme/motion";
 import styles from "./AnnouncementBar.module.css";
 
-/**
- * AnnouncementBar — the storefront's utility hairline, pinned above the masthead.
- *
- * ONE calm treatment: a slim ivory-on-ink band carrying a single line of small,
- * tracked uppercase copy. It replaces the old three-gradient promo bar — the
- * `--sf-gradient-announce-*` tokens still exist for any component that wants
- * them, but this bar no longer paints a different background per message.
- *
- * Messages crossfade (opacity only — no travel, no colour change), pause on
- * hover/focus, and hold on the first message when the user prefers reduced
- * motion. Dismissible, with the choice persisted in localStorage.
- *
- * It renders in normal flow, ABOVE the sticky <header>, so it scrolls away and
- * the pinned masthead + nav stay inside their ~120px budget.
- *
- * Presentation only — no fetch, no shipping logic. Copy is store-attested: the
- * shipping figure reads from FREE_SHIPPING_THRESHOLD (the same constant the cart
- * drawer's progress bar uses) so the two can never drift apart.
- */
-// Kept short on purpose: set in tracked uppercase these have to survive a 375px
-// band without ellipsising, and a caption reads more editorial than a sentence.
-const ANNOUNCEMENTS = [
-  // {amount} is filled in at render in the store's own currency.
-  { id: "shipping", text: "Complimentary shipping above {amount}" },
-  { id: "giftwrap", text: "Complimentary gift wrapping" },
-  { id: "origin", text: "Handwoven in Sualkuchi, Assam" },
-];
+// =============================================================================
+// AnnouncementBar — the utility band above the masthead
+// =============================================================================
+//
+// DATA. The rows come from Admin → Announcements through
+// `apiService.announcements.getAll()`, which already hides the rows that are
+// switched off or outside their scheduling window. `brand.announcements` is the
+// fallback the bar falls back to when the API answers with nothing or fails, so
+// a store whose backend is unreachable still says who it is.
+//
+// PLACEHOLDERS. A row whose `text` still carries a `{{TOKEN}}` is DROPPED
+// (PLACEHOLDERS.md: an announcement is hidden while unresolved, never printed
+// raw). Two of the three seeded rows are tokens today — the free-shipping
+// threshold and the launch offer — so the bar honestly shows one line until the
+// owner fills them in, and starts rotating the moment they do.
+//
+// ROTATION. A 6s crossfade (opacity only, no travel), paused on hover/focus and
+// while the tab is in the background, held on the first row under reduced
+// motion. `role="status" aria-live="polite"` so the swap is announced once.
+//
+// DISMISSAL is remembered for the SESSION (`sessionStorage`), not forever: the
+// brief asks for "remembered per session", so a new tab gets the announcement
+// back while a walk across the storefront does not.
+//
+// THE BAND CARRIES NO BLUR. It is the glass recipe (DESIGN_SYSTEM §4) at 4%
+// white with the backdrop filter left off, because it sits directly above the
+// blurred header and the budget is two blurred layers in view — the header and
+// whatever overlay is open. It renders in NORMAL FLOW above the sticky header,
+// so it scrolls away and the pinned chrome stays at 64px (100px including this
+// band before the first scroll).
+// =============================================================================
 
-const STORAGE_KEY = "sf_announcement_dismissed";
+const STORAGE_KEY = "lk-announcement-dismissed";
 const ROTATE_MS = 6000;
 
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  typeof window.matchMedia === "function" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** A row the bar can actually print: real text, no unresolved token. */
+const isPrintable = (row) =>
+  typeof row?.text === "string" &&
+  row.text.trim() !== "" &&
+  !isPlaceholder(row.text);
 
-const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
-  const { formatPrice } = useStoreSettings();
-  // FREE_SHIPPING_THRESHOLD is null until the owner sets a `freeAbove` on a
-  // shipping method. A message that quotes {amount} is DROPPED while it is
-  // unknown — quoting "above ₹0" would promise something the store has not.
-  const hasThreshold =
-    Number.isFinite(FREE_SHIPPING_THRESHOLD) && FREE_SHIPPING_THRESHOLD > 0;
-  const shippingThreshold = hasThreshold
-    ? formatPrice(FREE_SHIPPING_THRESHOLD, { decimals: 0 })
-    : "";
-  const list = (messages && messages.length ? messages : ANNOUNCEMENTS)
-    .filter((m) => hasThreshold || !m.text.includes("{amount}"))
-    .map((m) => ({ ...m, text: m.text.replace("{amount}", shippingThreshold) }));
+/** Normalise an API row and a brand-config row into the one shape rendered. */
+const toRow = (row, index) => ({
+  id: String(row.id ?? row.text ?? index),
+  text: row.text.trim(),
+  // A blank/absent link is "no link", not a dead href to "".
+  link: typeof row.link === "string" && row.link.trim() ? row.link.trim() : "",
+});
 
+const AnnouncementBar = ({ className = "" }) => {
+  const [rows, setRows] = useState([]);
   const [dismissed, setDismissed] = useState(false);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -63,16 +66,40 @@ const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
   const [hidden, setHidden] = useState(false);
   const timerRef = useRef(null);
 
-  // On mount, respect a persisted dismissal.
+  // ---- Data --------------------------------------------------------------
+  // The API never throws (it returns [] on failure), so "empty" covers both an
+  // unreachable backend and a merchant who has switched every row off. The
+  // brand fallback then answers, and the placeholder filter runs over both.
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      let data = [];
+      try {
+        data = await apiService.announcements.getAll();
+      } catch (err) {
+        console.error("Failed to fetch announcements:", err);
+      }
+      const source =
+        Array.isArray(data) && data.length ? data : brand.announcements;
+      const printable = (source || []).filter(isPrintable).map(toRow);
+      if (active) setRows(printable);
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // ---- Dismissal (per session) -------------------------------------------
   useEffect(() => {
     try {
-      if (localStorage.getItem(STORAGE_KEY) === "1") setDismissed(true);
+      if (sessionStorage.getItem(STORAGE_KEY) === "1") setDismissed(true);
     } catch (e) {
-      /* localStorage may be unavailable (private mode) — fail open. */
+      /* sessionStorage may be unavailable (private mode) — fail open. */
     }
   }, []);
 
-  // Track the reduced-motion preference (and updates to it).
+  // ---- Reduced motion ----------------------------------------------------
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return undefined;
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -97,34 +124,46 @@ const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
     return () => document.removeEventListener("visibilitychange", update);
   }, []);
 
-  // Auto-rotate, unless paused, off-screen, reduced-motion, dismissed, or a
-  // single message.
+  // ---- Rotation ----------------------------------------------------------
+  const count = rows.length;
   useEffect(() => {
-    if (paused || hidden || reduceMotion || dismissed || list.length <= 1) {
+    if (paused || hidden || reduceMotion || dismissed || count <= 1) {
       return undefined;
     }
     timerRef.current = setInterval(() => {
-      setIndex((i) => (i + 1) % list.length);
+      setIndex((i) => (i + 1) % count);
     }, ROTATE_MS);
     return () => clearInterval(timerRef.current);
-  }, [paused, hidden, reduceMotion, dismissed, list.length]);
+  }, [paused, hidden, reduceMotion, dismissed, count]);
 
   const handleDismiss = useCallback(() => {
     setDismissed(true);
     try {
-      localStorage.setItem(STORAGE_KEY, "1");
+      sessionStorage.setItem(STORAGE_KEY, "1");
     } catch (e) {
       /* ignore persistence failures */
     }
   }, []);
 
-  // An empty list is reachable now that a message can be filtered out: a caller
-  // passing only threshold-quoting messages leaves nothing to say, so the bar
-  // renders nothing rather than an empty band.
-  if (dismissed || !list.length) return null;
+  const active = useMemo(
+    () => (count ? rows[index % count] : null),
+    [rows, index, count]
+  );
 
-  const active = list[index % list.length];
-  const animate = !reduceMotion && !prefersReducedMotion();
+  // Nothing to say (every row a placeholder, or the merchant switched them all
+  // off) renders nothing at all rather than an empty band.
+  if (dismissed || !active) return null;
+
+  // The dot is the band's marker, not a word: it punctuates the line without
+  // adding copy nobody wrote. The message ITSELF carries `row.link` — a second
+  // "Shop now" affordance would be invented copy (BRAND.md §3.9).
+  const message = active.link ? (
+    <Link to={active.link} className={styles.messageLink}>
+      {active.text}
+    </Link>
+  ) : (
+    active.text
+  );
 
   return (
     <div
@@ -137,10 +176,15 @@ const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
       onBlurCapture={() => setPaused(false)}
     >
       <div className={styles.inner}>
-        {/* Both messages share the cell during the crossfade, so the bar height
-            never twitches as one replaces the other. */}
+        {/* Both messages share the cell during the crossfade, so the band
+            height never twitches as one replaces the other. */}
         <div className={styles.messageWrap}>
-          {animate ? (
+          {reduceMotion ? (
+            <span className={styles.message}>
+              <span className={styles.dot} aria-hidden="true" />
+              {message}
+            </span>
+          ) : (
             <AnimatePresence initial={false}>
               <motion.span
                 key={active.id}
@@ -150,11 +194,10 @@ const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
                 exit={{ opacity: 0 }}
                 transition={tween(DURATION.slow)}
               >
-                {active.text}
+                <span className={styles.dot} aria-hidden="true" />
+                {message}
               </motion.span>
             </AnimatePresence>
-          ) : (
-            <span className={styles.message}>{active.text}</span>
           )}
         </div>
       </div>
@@ -165,7 +208,7 @@ const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
         onClick={handleDismiss}
         aria-label="Dismiss announcement"
       >
-        <Icon icon="mdi:close" aria-hidden="true" />
+        <Icon icon="mdi:close" className={styles.closeIcon} aria-hidden="true" />
       </button>
     </div>
   );

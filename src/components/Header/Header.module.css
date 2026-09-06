@@ -1,64 +1,135 @@
-/* ==========================================================================
-   Header — Meghali's Silk editorial masthead
-   Three bands, top to bottom:
-     1. utility line   — <AnnouncementBar>, in normal flow (scrolls away)
-     2. masthead       — wordmark · search · actions          } the sticky
-     3. primary nav    — tracked uppercase links under a rule } ~120px total
-   …with the promises hairline (<TrustStrip>) capping the page below it.
+/* =============================================================================
+ * Header — the LAMIKAA sticky glass masthead
+ * =============================================================================
+ * ONE row, three zones:
+ *   left    hamburger (≤1024) + the wordmark
+ *   centre  four nav entries, "Shop" carrying the mega panel (≥1025)
+ *   right   search · account · wishlist · cart
+ *
+ * 64px tall, 56px at 768px and below. The announcement band renders above it in
+ * normal flow (its own module), so the PINNED height is this row alone and the
+ * page chrome before the first scroll is 100px.
+ *
+ * The surface is the `.sf-glass` / `.sf-glass--strong` primitive applied from
+ * Header.js — this module never restates the recipe, it only says where the
+ * blur has to stop (the two-layer budget) and what the transparent state looks
+ * like over the hero.
+ *
+ * Fully token-driven: no hardcoded colour, radius, shadow or duration.
+ * ========================================================================== */
 
-   Everything sits on the page ivory (--sf-color-bg), so the chrome reads as
-   part of the page rather than as a bar bolted on top of it. Fully token-driven
-   (storefront-tokens.css); no hardcoded hex, no hardcoded type.
-   ========================================================================== */
-
-/* ---- Sticky wrapper ---------------------------------------------------- */
-/* Only the masthead + nav pin. The closing hairline is always drawn and only
-   deepens when scrolled, so pinning never shifts the page by a pixel. */
 .header {
   position: sticky;
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--sf-z-sticky);
-  background: var(--sf-color-bg);
+  z-index: var(--sf-z-header);
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
-  border-bottom: 1px solid var(--sf-color-border);
-  transition: border-color var(--sf-transition),
+  /* The glass primitive draws a full border; the masthead wants a hairline
+     under it only. */
+  border-inline: 0;
+  border-top: 0;
+  transition: background var(--sf-transition), border-color var(--sf-transition),
     box-shadow var(--sf-transition);
 }
 
-/* A hairline settling in, not a shadow popping out. */
-.header.scrolled {
+/* Over the hero the header is nothing at all: no ground, no blur, no hairline.
+   The type stays warm white because the hero ground is --sf-color-bg. */
+.transparent {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+/* Scrolled: `.sf-glass--strong` takes the ground from 6% to 8% white, and this
+   firms the hairline under it to the emphasised token. NOT a second shadow —
+   `.sf-glass` already carries --sf-shadow-1 at rest, so restating it here would
+   have made the scrolled state a class that changes nothing you can see. */
+.strong {
   border-bottom-color: var(--sf-color-border-strong);
-  box-shadow: var(--sf-shadow-xs);
 }
 
-/* ==========================================================================
-   1. MASTHEAD
-   ========================================================================== */
-
-.masthead {
-  width: 100%;
+/* THE BLUR BUDGET (DESIGN_SYSTEM §4). A drawer over a blurred header is two
+   blurred layers; a drawer that also blurs its own scrim would be three. The
+   header yields, because the drawer is the thing being read.
+   `body[data-drawer-open]` is the flag ui/Drawer reference-counts; `.noBlur` is
+   the same withdrawal for the four legacy overlays this header still mounts. */
+:global(body[data-drawer-open]) .header,
+.noBlur {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-.mastheadInner {
-  width: 100%;
-  max-width: var(--sf-container-max);
-  min-height: 72px;
-  margin: 0 auto;
-  padding: var(--sf-space-3) var(--sf-space-6);
+.inner {
   display: flex;
   align-items: center;
   gap: var(--sf-space-4);
+  min-height: 64px;
 }
 
-/* ---- Wordmark ---------------------------------------------------------- */
-/* Transparent-ground artwork on the ivory ground — no panel, no plate. */
+/* ---- Left zone ---------------------------------------------------------- */
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+/* The hamburger is a bare 44px mark, not a glass circle: it sits beside the
+   wordmark and a filled disc there competes with the lockup. */
+.menuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--sf-color-text);
+  font-size: var(--sf-text-xl);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast),
+    background var(--sf-transition-fast), transform var(--sf-transition-fast);
+}
+
+.menuButton:hover {
+  color: var(--sf-color-gold);
+  background: var(--sf-color-surface-hover);
+}
+
+.menuButton:active {
+  transform: scale(0.98);
+}
+
+.menuButton:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* Belt and braces with the JS gate in Header.js: a viewport that widens before
+   React re-renders must not paint a hamburger beside the desktop nav. */
+@media (min-width: 1025px) {
+  .menuButton {
+    display: none;
+  }
+}
+
+/* ---- Wordmark ----------------------------------------------------------- */
+/* Transparent-ground artwork directly on the ground — no plate, no glow; the
+   logo's own keyline carries it on #0B0B0D and on glass (PACKAGING_NOTES §1). */
 .logoLink {
   display: inline-flex;
   align-items: center;
-  flex-shrink: 0;
+  flex: none;
+  min-width: 0;
   text-decoration: none;
   color: inherit;
   border-radius: var(--sf-radius-sm);
@@ -77,116 +148,136 @@
 
 .logoImg {
   display: block;
-  height: 44px;
-  width: auto;
+  width: 168px;
+  height: auto;
+  max-width: 100%;
   object-fit: contain;
 }
 
-/* ---- Right-side actions ------------------------------------------------ */
+/* ---- Centre: primary nav ------------------------------------------------ */
+
+.nav {
+  display: flex;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.navList {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* NOT position: relative. The mega panel lives inside the Shop <li> for the tab
+   order and positions against the <header>, which is the nearest positioned
+   ancestor precisely because nothing between them claims that job. */
+.navItem {
+  display: flex;
+  align-items: center;
+}
+
+/* Manrope 500 at 15px, warm white, with the ghost button's underline technique:
+   the signature gradient IS the background, sized from 0 to full width, so
+   nothing is added to the box and no label ever shifts. */
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-1);
+  min-height: var(--sf-tap-target);
+  padding: 0;
+  background-color: transparent;
+  background-image: var(--sf-gradient-signature);
+  background-repeat: no-repeat;
+  background-position: 0 calc(100% - 12px);
+  background-size: 0 1px;
+  border: 0;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: 0.9375rem; /* 15px — between the scale's sm and base steps */
+  font-weight: var(--sf-font-medium);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast),
+    background-size var(--sf-transition-fast);
+}
+
+.navLink:hover,
+.navLink[aria-expanded="true"] {
+  color: var(--sf-color-gold);
+  background-size: 100% 1px;
+}
+
+.navLinkActive {
+  color: var(--sf-color-gold);
+  background-size: 100% 1px;
+}
+
+.navLink:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* The trigger's affordance, not a word: it turns over when the panel is up. */
+.navChevron {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--sf-transition-fast);
+}
+
+.navLink[aria-expanded="true"] .navChevron {
+  transform: rotate(180deg);
+}
+
+/* ---- Right: utility actions --------------------------------------------- */
+
 .actions {
   display: flex;
   align-items: center;
-  gap: var(--sf-space-1);
+  gap: var(--sf-space-2);
   margin-left: auto;
-  flex-shrink: 0;
+  flex: none;
 }
 
-/* Thin-line icon buttons: no fill, no ring, the ink lightening to gold. */
-.actionIcon {
-  color: var(--sf-color-text) !important;
-  min-width: var(--sf-tap-target);
-  min-height: var(--sf-tap-target);
-  border-radius: var(--sf-radius-sm) !important;
-  transition: color var(--sf-transition-fast),
-    transform var(--sf-transition-fast),
-    opacity var(--sf-transition-fast) !important;
+/* The icon buttons are ui/Button variant="icon" — the 44px glass circle the
+   design system already defines, taken as it comes. All this class adds is the
+   positioning context the count badge hangs off. */
+.action {
+  position: relative;
 }
 
-.actionIcon:hover {
-  color: var(--sf-color-accent) !important;
-  background: transparent !important;
-}
-
-/* The shared icon-button press: the mark settles a hair under the finger. */
-.actionIcon:active {
-  transform: scale(0.98);
-  opacity: 0.85;
-}
-
-.actionIcon svg {
-  font-size: 22px;
-}
-
-.actionIcon:focus-visible {
-  outline: 2px solid transparent;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-/* No ripple: the editorial masthead does not splash. */
-.actionIcon :global(.MuiTouchRipple-root) {
-  display: none;
-}
-
-/* ---- Search trigger ---------------------------------------------------- */
-/* ONE affordance, honestly labelled: an outlined field-button that opens the
-   search modal. It is not an input, so it does not pretend to be one. */
-.searchTrigger {
+/* The badge is positioned against the button, so the button is the box. */
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
   display: inline-flex;
   align-items: center;
-  gap: var(--sf-space-2);
-  min-height: 38px;
-  margin-right: var(--sf-space-2);
-  padding: 0 var(--sf-space-4);
-  background: transparent;
-  border: 1px solid var(--sf-color-border-strong);
-  border-radius: var(--sf-radius-sm);
-  color: var(--sf-color-text-secondary);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  line-height: 1;
-  cursor: pointer;
-  transition: border-color var(--sf-transition-fast),
-    color var(--sf-transition-fast);
-}
-
-.searchTrigger:hover {
-  border-color: var(--sf-color-accent);
-  color: var(--sf-color-text);
-}
-
-.searchTrigger:focus-visible {
-  outline: 2px solid transparent;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-.searchTriggerIcon {
-  font-size: var(--sf-text-lg) !important;
-}
-
-.searchTriggerLabel {
-  padding-right: var(--sf-space-8);
-}
-
-/* ---- Badges & avatar --------------------------------------------------- */
-/* The emerald pair is ink-on-ivory in light mode and ivory-on-charcoal in dark,
-   so one rule keeps the count legible against both grounds. */
-.badge :global(.MuiBadge-badge) {
-  background: var(--sf-color-emerald) !important;
-  color: var(--sf-color-emerald-contrast) !important;
-  font-size: 0.625rem !important;
-  font-weight: var(--sf-font-semibold);
-  min-width: 16px;
-  height: 16px;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
   padding: 0 4px;
-  /* MUI ships this badge its own 195ms Material curve; the count is a
-     storefront surface, so it arrives on the house one instead. */
-  transition: transform var(--sf-transition-fast) !important;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-gold);
+  color: var(--sf-color-primary-contrast);
+  font-family: var(--sf-font-family);
+  font-size: 0.625rem;
+  font-weight: var(--sf-font-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .avatar {
+  width: 28px !important;
+  height: 28px !important;
   background: var(--sf-color-primary) !important;
   color: var(--sf-color-primary-contrast) !important;
   font-family: var(--sf-font-family) !important;
@@ -195,315 +286,9 @@
 }
 
 /* ==========================================================================
-   2. PRIMARY NAV
-   ========================================================================== */
-
-.navBar {
-  position: relative;
-  width: 100%;
-  border-top: 1px solid var(--sf-color-border);
-}
-
-/* NB: not position:relative — the collection panel inside the list positions
-   against .navBar so it can span the whole band; the measuring list below
-   positions against .navBar for the same reason. */
-.navInner {
-  width: 100%;
-  max-width: var(--sf-container-max);
-  margin: 0 auto;
-  padding: 0 var(--sf-space-6);
-}
-
-/* Centred, one line, and deliberately NOT an overflow scroller. The collection
-   panel is a child of a nav item (so the sub-collections follow their trigger
-   in the tab order, which is the only way a keyboard user ever reaches them),
-   and any overflow here would clip both that panel and the focus ring. When a
-   catalogue carries more labels than the line holds, Header.js measures the
-   row (see .navMeasure) and shows only the entries that fit, followed by the
-   "All collections" button that opens the CategoriesDrawer — so nothing wraps,
-   nothing clips, and everything stays reachable. */
-.navList {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: center;
-  gap: var(--sf-space-4);
-  min-height: 44px;
-  margin: 0;
-  padding: var(--sf-space-1) 0;
-  list-style: none;
-}
-
-/* The measuring twin of .navList: every entry at its natural width, laid out
-   on one unclipped line, never painted and never in the accessibility tree.
-   It shares the link classes so its widths are the visible row's widths. */
-.navMeasure {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: max-content;
-  max-width: none;
-  height: 0;
-  min-height: 0;
-  padding: 0;
-  overflow: hidden;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* ---- "All collections" overflow button --------------------------------- */
-/* An outlined mark with the hidden count beside it, the same height as a link
-   and the same tracked type, so it reads as the row's last entry rather than
-   as a control bolted on. */
-.navMore {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sf-space-1);
-  min-height: 32px;
-  padding: 0 var(--sf-space-2) 0 var(--sf-space-2);
-  border: 1px solid var(--sf-color-border-strong);
-  border-radius: var(--sf-radius-sm);
-  background: transparent;
-  color: var(--sf-color-text-secondary);
-  font-family: var(--sf-font-family);
-  font-size: 0.6875rem;
-  font-weight: var(--sf-font-medium);
-  letter-spacing: 0.06em;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color var(--sf-transition-fast),
-    border-color var(--sf-transition-fast),
-    background var(--sf-transition-fast);
-}
-
-.navMore:hover,
-.navMore[aria-expanded="true"] {
-  color: var(--sf-color-text);
-  border-color: var(--sf-color-accent);
-  background: var(--sf-color-surface-hover);
-}
-
-.navMore:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-.navMoreIcon {
-  font-size: 18px !important;
-}
-
-.navMoreCount {
-  font-variant-numeric: tabular-nums;
-}
-
-.navItem {
-  flex: none;
-  display: flex;
-  align-items: center;
-}
-
-/* A hairline tick between the category group and the editorial group. */
-.navSep {
-  flex: none;
-  width: 1px;
-  height: 14px;
-  background: var(--sf-color-border-strong);
-}
-
-/* Tracked uppercase text links — the gold underline is the only state colour. */
-.navLink {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 0;
-  color: var(--sf-color-text-secondary);
-  font-size: 0.6875rem;
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color var(--sf-transition-fast);
-}
-
-/* Touch: clear the 44px minimum (WCAG 2.5.5), as the button primitives do. */
-@media (pointer: coarse) {
-  .navLink {
-    min-height: var(--sf-tap-target);
-  }
-
-  /* The lockup is an inline-flex wrapper around the logo image, so its box was
-     only as tall as the artwork (34px) — the first target on every page and the
-     one under the thumb. Growing the box, not the mark. */
-  .logoLink {
-    min-height: var(--sf-tap-target);
-  }
-}
-
-.navLink::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 8px;
-  height: 1px;
-  background: var(--sf-color-gold);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform var(--sf-transition);
-}
-
-.navLink:hover {
-  color: var(--sf-color-text);
-}
-
-.navLink:hover::after {
-  transform: scaleX(1);
-}
-
-.navLinkActive {
-  color: var(--sf-color-text);
-}
-
-.navLinkActive::after {
-  transform: scaleX(1);
-}
-
-.navLink:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-/* ---- Collection panel -------------------------------------------------- */
-/* Restrained on purpose: an eyebrow, a "view all", and the child collections as
-   text links. It is rendered inside its trigger's <li> (for tab order) but its
-   containing block is .navBar, so it still spans the whole band. */
-.collectionPanel {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--sf-color-surface);
-  border-top: 1px solid var(--sf-color-border);
-  border-bottom: 1px solid var(--sf-color-border);
-  box-shadow: var(--sf-shadow-sm);
-  animation: panelIn var(--sf-duration) var(--sf-ease);
-}
-
-@keyframes panelIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .collectionPanel {
-    animation: none;
-  }
-
-  /* The press dims but no longer moves. */
-  .actionIcon:active {
-    transform: none;
-  }
-}
-
-.collectionInner {
-  width: 100%;
-  max-width: var(--sf-container-max);
-  margin: 0 auto;
-  padding: var(--sf-space-5) var(--sf-space-6);
-  display: flex;
-  align-items: baseline;
-  gap: var(--sf-space-10);
-}
-
-.collectionHead {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sf-space-2);
-  min-width: 180px;
-}
-
-.collectionEyebrow {
-  color: var(--sf-color-text-muted);
-  font-size: var(--sf-text-xs);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-}
-
-.collectionAll {
-  color: var(--sf-color-accent);
-  font-size: var(--sf-text-sm);
-  text-decoration: none;
-  text-underline-offset: 4px;
-}
-
-.collectionAll:hover {
-  text-decoration: underline;
-}
-
-.collectionAll:focus-visible {
-  outline: 2px solid transparent;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-.collectionList {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--sf-space-3) var(--sf-space-8);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.collectionLink {
-  display: inline-block;
-  padding: var(--sf-space-1) 0;
-  color: var(--sf-color-text);
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  line-height: var(--sf-leading-tight);
-  text-decoration: none;
-  text-underline-offset: 6px;
-  transition: color var(--sf-transition-fast);
-}
-
-.collectionLink:hover {
-  color: var(--sf-color-accent);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-}
-
-.collectionLink:focus-visible {
-  outline: 2px solid transparent;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-/* ==========================================================================
-   3. PROMISES LINE (TrustStrip host)
-   The strip paints no ground of its own, so the bounding hairline lives here.
-   ========================================================================== */
-.promises {
-  width: 100%;
-  background: var(--sf-color-bg);
-  border-bottom: 1px solid var(--sf-color-border);
-}
-
-/* ==========================================================================
-   USER DROPDOWN MENU (MUI)
-   Ivory sheet, hairline border, no glow — the MUI elevation is switched off in
-   Header.js and replaced with a soft token shadow.
+   ACCOUNT DROPDOWN (MUI Menu)
+   Glass sheet with a hairline; the MUI elevation is switched off in
+   HeaderActions.js and replaced with the token shadow.
    ========================================================================== */
 
 .userMenu {
@@ -511,15 +296,25 @@
 }
 
 .userMenuPaper {
-  /* MUI's own .MuiPopover-paper min-width lands after this sheet, so the
-     override has to shout to be heard. */
+  /* MUI's own .MuiPopover-paper rules land after this sheet, so the overrides
+     have to shout to be heard. */
   min-width: 244px !important;
   overflow: hidden;
-  background: var(--sf-color-surface) !important;
+  background: var(--sf-glass-bg-strong) !important;
+  -webkit-backdrop-filter: blur(var(--sf-glass-blur));
+  backdrop-filter: blur(var(--sf-glass-blur));
   color: var(--sf-color-text) !important;
-  border: 1px solid var(--sf-color-border);
+  border: 1px solid var(--sf-glass-border);
   border-radius: var(--sf-radius-md) !important;
-  box-shadow: var(--sf-shadow-md) !important;
+  box-shadow: var(--sf-shadow-2) !important;
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .userMenuPaper {
+    background: var(--sf-glass-fallback) !important;
+  }
 }
 
 .menuGreeting {
@@ -585,97 +380,60 @@
    RESPONSIVE
    ========================================================================== */
 
-/* Laptops / small desktops — tighten the nav tracking before it ever scrolls. */
+/* Narrow desktops — the nav closes up before anything can crowd the actions. */
 @media (max-width: 1200px) {
   .navList {
-    gap: var(--sf-space-3);
-  }
-  .navLink {
-    letter-spacing: 0.06em;
-  }
-  .collectionInner {
     gap: var(--sf-space-6);
   }
 }
 
-/* Tablet — the search trigger drops its label (see isTablet in Header.js). */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .mastheadInner {
-    min-height: 68px;
-    padding: var(--sf-space-3) var(--sf-space-4);
-    gap: var(--sf-space-3);
-  }
-  .navInner {
-    padding: 0 var(--sf-space-3);
-  }
-  /* Ten links have to clear 1024 without the scroller kicking in, so the row
-     trades tracking and gap rather than truncating "Today's Deals". */
-  .navList {
-    gap: var(--sf-space-2);
-  }
-  .navLink {
-    letter-spacing: 0.04em;
-  }
-  .searchTrigger {
-    min-width: var(--sf-tap-target);
-    justify-content: center;
-    padding: 0 var(--sf-space-3);
-    margin-right: var(--sf-space-1);
-  }
-  .logoImg {
-    height: 38px;
-  }
-  .collectionHead {
-    min-width: 140px;
-  }
-}
-
-/* Mobile — one compact row: hamburger · wordmark · search/cart/account. */
-@media (max-width: 768px) {
-  .mastheadInner {
-    min-height: 56px;
-    padding: var(--sf-space-2) var(--sf-space-2);
-    gap: var(--sf-space-1);
-  }
-  .logoImg {
-    height: 34px;
-    /* Last resort so the row can never push past the viewport: the wordmark
-       yields (object-fit keeps its ratio) before the actions overflow. */
-    max-width: 100%;
-  }
-  .logoLink {
-    min-width: 0;
-  }
-  .actions {
-    gap: 0;
-  }
-  .actionIcon svg {
-    font-size: 21px;
-  }
-  /* The wide masthead's search field-button is JS-gated (isMobile renders the
-     icon instead), but that gate is a matchMedia listener while this one is
-     plain CSS. A viewport that narrows before React re-renders would drop the
-     153px trigger into a 320px row and shove the actions ~138px past the edge,
-     so the mismatch is closed here rather than left to a race. */
-  .searchTrigger {
+/* Tablet (769-1024): the same 64px header, the nav collapsed into the
+   hamburger. Header.js does not render the nav or the panel at all here. */
+@media (max-width: 1024px) {
+  .nav {
     display: none;
   }
 }
 
-/* Small phones — 320px and under (iPhone SE, fold cover screens).
-   The compact row needs 309px: 44px hamburger + 109px wordmark + three 44px
-   actions + padding. At 320px that clears by 11px and anything narrower
-   overflows. Search is the one masthead action with a second permanent home
-   on mobile — the BottomNav's Search tab, which is always on screen — so it
-   steps out here instead of any button shrinking below the 44px WCAG 2.5.5
-   target. The cut is at 340px, not 360px, because 360px (the common Android
-   width) has 51px to spare and no reason to lose the affordance. */
+/* Phones: 56px, a 140px wordmark, and only search + cart in the actions —
+   account and wishlist live in the drawer and the bottom nav. The cut is CSS,
+   not a matchMedia hook, so a viewport that narrows mid-render can never flash
+   a five-button row into a 360px masthead. */
+@media (max-width: 768px) {
+  .inner {
+    min-height: 56px;
+    gap: var(--sf-space-2);
+  }
+
+  .logoImg {
+    width: 140px;
+  }
+
+  .actionAccount,
+  .actionWishlist {
+    display: none;
+  }
+}
+
+/* Small phones — below 340px the wordmark's tagline stops being legible
+   (PACKAGING_NOTES §1: switch to the icon under ~120px of lockup), so Header.js
+   renders <Logo variant="mark"> and the slot squares off with it. */
 @media (max-width: 340px) {
-  /* !important because MUI's emotion class for the IconButton is injected
-     after this sheet and carries the same specificity — the same reason the
-     .actionIcon and .userMenuPaper overrides above have to shout. */
-  .actionSearch {
-    display: none !important;
+  .logoImg {
+    width: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .navLink,
+  .navChevron,
+  .menuButton {
+    transition: none;
+  }
+
+  .menuButton:active {
+    transform: none;
   }
 }
 
@@ -683,8 +441,7 @@
    PRINT — hide the chrome
    ========================================================================== */
 @media print {
-  .header,
-  .promises {
+  .header {
     display: none !important;
   }
 }

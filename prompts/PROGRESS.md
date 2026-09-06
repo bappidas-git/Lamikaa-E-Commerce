@@ -12,7 +12,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 06 | Data model and seed (db.json) | complete | 2026-09-06 | (this commit) | `db.json` rewritten from 20 Meghali collections to **23 LAMIKAA collections** (96 KB → 118 KB): 8 products with `media[]`, 7 categories, 11 concerns, 3 rituals, 8 grouped FAQs, `siteContent` (7 blocks), 3 `announcements` (ex-`banners`), a product-driven `heroConfig`, tokenised `settings`, and neutral fixtures for every commerce collection. All **8 cover URLs verified character-exact** against `PRODUCTS.md` §2 by parsing that table. `grep -c "meghali\|Meghali\|silk\|Silk\|mekhela\|saree\|Sualkuchi\|Kolkata, West Bengal" db.json` → **0** (the single `Asia/Kolkata` is the timezone). A 150-assertion validation script passed every check, and **all 48 distinct URLs in the seed returned 206** — **no host swap was needed**. JSON Server starts clean; all 24 collection endpoints answer 200; `DELETE /reviews/2` → **200** (not the old 500) and a re-`POST` restored the file byte-identical, on a `JSON_SERVER_DB` copy so the committed seed stayed untouched. `CI=true npm run build` exit 0, no warnings; `npm test` exit 0 (2 suites / 20 passed, the live suite skipped as in every prior baseline). Browser QA over 16 routes: **no runtime crashes**, the only 404 is the expected `GET /banners` (Prompt 07). `server.js` unchanged. See "Prompt 06 record" below. |
 | 07 | api.js contract extension in both modes | complete | 2026-09-06 | (this commit) | `api.js` 2 797 → 3 314 lines. **`banners` is gone from `src/` entirely** — `grep -rn "banners\|Banner" src --include=*.js` → **0** (was 51), and `grep -rni "banners" src` over every file type → **0**. Every product read in both namespaces now goes through `normalizeProduct()` and every product write through `syncProductMedia()`. New: `products.{getHeroProducts,getByCategorySlug,getByConcern}`, a re-tiered `getRelated`, a gated `getReviews(id, {includeSample})`, the `concerns`/`rituals`/`siteContent`/`announcements` namespaces (+ the exported pure `resolveRitualSteps`), and 19 admin functions (concerns ×4, rituals ×5, site content ×2, announcements ×5, `setHeroOrder`, plus normalised product reads). **No existing signature changed** — the two additions are optional parameters — and `extractData/extractMeta/isVisibleProduct/visibleProducts/getErrorMessage` plus the wallet/refund/return/cancel cascades are untouched. Mock mode was exercised for real against JSON Server through the actual module: **21 assertions, all passing**, covering every acceptance check (8 ordered hero products, `serums` → 1, `hydration` → 3, `morning-glow` → 4 resolved steps with the body ritual's alternative product, `siteContent.get("about")`, 3 announcements, `getReviews(1)` → `[]` / `[1 sample]`, `setHeroOrder` reversed and restored, `updateProduct` rewriting `images[]` from `media[]`) plus the schedule window, the draft gate, the CRUD round-trips and the site-content merge. Browser QA in Chromium: the home hero renders **all eight products** through the shim (eight distinct headlines, eight `Explore the …` CTAs on the right `productPath`), **zero console errors** on `/`, `/products`, a PDP, `/admin/hero-section` and `/admin/settings`; no horizontal overflow at 390. `CI=true npm run build` exit 0 with no warnings; `npm test -- --watchAll=false` exit 0 (2 suites / 20 passed, live suite skipped). `db.json` unchanged (`git diff --stat db.json` empty). `REPO_MAP.md` §3 rewritten as the final contract with §3.4 "Laravel endpoints to implement" (20 routes + the product payload). See "Prompt 07 record" below. |
 | 08 | Routing, IA, lazy loading and SEO hook | complete | 2026-09-06 | (this commit) | The LAMIKAA route map is live: 25 storefront paths + the 16 unchanged admin paths, **every** Meghali URL redirected (16/16 verified in Chromium), a real 404 instead of `<Navigate to="/">`, `React.lazy` on all 34 pages but Home (**51 JS chunks**, was 2), and a dependency-free `useSeo` on 15 pages. Link sweep: 26 files; `grep -rn -E '"/(products|help|support|privacy|terms|cookies|refund)("|\?)' src --include=*.js` → **18, and not one is a link**: 16 are `api.get("/products")` REST endpoint paths in `services/api.js` and 2 are the new `utils/routes.test.js` assertions that those paths are gone. Zero in `LegacyRedirects.js`'s own exclusion, zero storefront links (see the Decisions log). New: `hooks/useSeo.js`, `components/routing/{LegacyRedirects,RouteFallback,AuthRoute}.js`, `pages/NotFound/*`, `pages/_ComingSoon/ComingSoon.js`, `utils/routes.test.js` (14 tests). `CI=true npm run build` exit 0 **no warnings**; `npm test` exit 0 (3 suites / 34 passed). |
-| 09 | Header, mega panel and announcement bar | pending | | | |
+| 09 | Header, mega panel and announcement bar | complete | 2026-09-06 | (this commit) | The masthead is the LAMIKAA sticky glass header: one 64px row (56px ≤768px) inside `.sf-container`, `transparent` over `#hero-sentinel` → `.sf-glass` → `.sf-glass--strong` past 24px, blur withdrawn while any overlay is up. `Header.js` 683 → 437 lines; the priority-nav machinery (hidden twin list, `ResizeObserver`, `measureOverflow`, overflow count) and the per-category collection panels are **gone** — `grep -rn "navMeasure\|measureOverflow" src` → **0**. `CategoriesDrawer/` deleted (2 files, 1 071 lines); `grep -rn "CategoriesDrawer\|TrustStrip" src/components/Header` → **0**. New: `MegaPanel.{js,module.css}` (7 categories with real product thumbnails + counts, 11 concern chips, a featured glow card, module-level data cache) and `HeaderActions.js` (search · account · wishlist · cart, the MUI account menu moved verbatim). `AnnouncementBar` is data-driven (`announcements.getAll` → `brand.announcements` fallback), drops placeholder rows and remembers dismissal in **`sessionStorage`** — `grep -rn "localStorage\|FREE_SHIPPING_THRESHOLD" src/components/AnnouncementBar` → **0**. axe (axe-core 4.x, wcag2a/2aa/21a/21aa + best-practice) on the header at 1280 (closed and panel-open) and 390: **0 violations**. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). Browser QA at 320/360/390/414/768/1024/1280/1440 — 0px horizontal overflow at every width, 0 console errors. See "Prompt 09 record" below. |
 | 10 | Mobile navigation drawer and bottom nav | pending | | | |
 | 11 | Search overlay and search results | pending | | | |
 | 12 | Cart drawer with cross-sell | pending | | | |
@@ -129,6 +129,18 @@ Record every decision a prompt had to make that the reference files did not sett
 - `08 · 2026-09-06 · The Meghali body copy in AboutUs.js (72 references), the FABRIC_FAMILIES facet in Products.js and the "All Silk" heading were NOT rewritten wholesale · The guardrail bars Meghali copy being LEFT BEHIND in a touched file, but this prompt touched those files for links and a useSeo call only, and both pages are DELETED by their own prompts (23 deletes pages/Products, 28 deletes pages/AboutUs and writes pages/About from siteContent). Rewriting an About page now would be Prompt 28's deliverable, discarded when 28 lands. What WAS fixed is every string this prompt's own edits sat on: the "All Silk" results heading → "All products", the listing breadcrumb → Home / Shop, SearchModal's "Try another weave — Muga, Pat or Eri" empty hint, and CartDrawer's "The looms of Sualkuchi are waiting" + "Explore the collection" → "Continue shopping". The rest is logged as an Open TODO against 23/28.`
 - `08 · 2026-09-06 · Home's two `?highlight=` rails were repointed to /shop?highlight=…, not flattened to /shop · The facet still works (the /shop element IS the old listing until Prompt 23), so flattening would have LOST a working destination — the opposite of the ?sort= case, where the destination no longer exists. Prompt 23 retires the param with the page.`
 
+- `09 · 2026-09-06 · The mega panel is rendered INSIDE the Shop <li>, not as a sibling of the nav list · The prompt asks for two keyboard behaviours — Tab order categories → concerns → featured, and Shift+Tab from the first link returning to the Shop button. Both are free when the panel follows its trigger in the DOM, and both need JS to fake when it does not (the panel would otherwise sit after the four nav links and the four actions). It still spans the full width because its containing block is the sticky `<header>`: nothing between the two claims `position`, which is why `.navItem` deliberately does NOT set `position: relative`. Verified in Chromium: Enter on Shop then six Tabs walks the seven category rows; six Shift+Tabs return to "Shop".`
+- `09 · 2026-09-06 · Hover intent is 200ms, opened on the Shop <li> and dismissed on the <header>'s mouseleave · 200ms is long enough that a pointer crossing the row on its way to the cart never opens the panel and short enough to read as a hover rather than a wait (measured: closed at 120ms, open at 520ms). The CLOSE has to be bound to the header rather than the item because the sheet hangs below the row — the gap between the button's bottom edge and the panel's top belongs to neither, so a `mouseleave` on the item would fire mid-journey. The panel is a descendant of the header, so travelling into it is not leaving. Hovering a sibling entry ("Rituals") also dismisses it. Every hover path is gated on `matchMedia("(pointer: fine)")`; touch gets click only.`
+- `09 · 2026-09-06 · The mark replaces the wordmark at ≤340px, and the breakpoint is enforced twice · PACKAGING_NOTES §1 puts the tagline's legibility floor at ~150px of lockup and says to switch to the icon below ~120px; the masthead's 140px mobile wordmark clears that until the row itself runs out of width, which is at 340px (44px hamburger + 140px wordmark + two 44px actions + gutters = 316px, and 320px is the narrowest screen in the QA set). `useMediaQuery("(max-width:340px)")` picks the `variant`, and a `@media (max-width: 340px)` rule sizes the slot — the JS gate is a matchMedia listener and the CSS one is not, so a viewport that narrows before React re-renders cannot paint a 140px wordmark into a 320px row. Verified at 320px: 40px mark, 0px overflow.`
+- `09 · 2026-09-06 · A category with no product in the hero-ordered catalogue shows the BARE plate, with no fallback image · `Rituals` (`kind: "rituals"`) is a route, not a product home: no product lists it in `categoryIds`, so `stageSrc()` has nothing to render. The obvious fallback — the category's own `image` field — is a picsum placeholder for all seven rows (PLACEHOLDER_ASSETS.md), and a random stock photograph in the masthead is worse than a quiet `--sf-color-surface` square. The plate is the empty state. It fills itself the moment a product joins the category or the owner uploads real category art.`
+- `09 · 2026-09-06 · The category count chip counts HERO-ORDERED products, which is every product in the catalogue today · The prompt's data budget for this panel is five reads and `products.getHeroProducts` is the only product one; adding `products.getAll` for a count would double the panel's payload for a number. All eight seeded products carry a `heroOrder`, so the counts (6·2·3·1·2·2) are exact. If a future product ships without one the chip undercounts by one rather than lying about a category — and the chip is `aria-hidden`, so no screen reader is told a total it could hold against the listing.`
+- `09 · 2026-09-06 · The panel wears `.sf-glass--strong` but lays its own 97% near-black wash under the content, and carries NO `backdrop-filter` · 8% white is a surface when something dims the page beneath it; a modal has its scrim and this sheet has nothing — it opens straight over the hero, and the hero's 56px headline read straight through it. `.sf-glass` was tried and is INERT here: the panel is a descendant of the blurred header, so its backdrop root is the header's already-filtered result rather than the page, and the sheet stayed exactly as sharp with the declaration as without it (verified by screenshot, both ways). A blur that cannot blur is a promise in the stylesheet and a cost on the compositor, so it is not shipped. What a SHARP ghost behind menu text needs is opacity: `color-mix(in srgb, var(--sf-color-bg) 97%, transparent)` on a `z-index: -1` pseudo-element, between the glass ground and every child. One blurred layer, in the header, is also the budget (DESIGN_SYSTEM §4).`
+- `09 · 2026-09-06 · The announcement band does NOT wear `.sf-glass`; it restates the recipe at 4% white with the blur left off · The prompt asks for "`.sf-glass` at 4% white, no blur". Applying the class and then un-declaring its background, blur, border and shadow would leave four overrides whose winner depends on CSS-module bundle order (the same trap `Logo.module.css` documents with `:where()`). Four honest declarations in the module are deterministic and shorter. The ground is `color-mix(in srgb, var(--sf-color-text) 4%, transparent)` — the brand's warm white rather than a pure one — over a `--sf-glass-border` hairline. This also closes the Prompt 03 TODO: the bar is no longer a full-bleed champagne-gold strip and the §2 balance budget is back within its 10% gold.`
+- `09 · 2026-09-06 · The rotating message ITSELF carries `row.link`; the gold dot is a leading decorative marker, not a separator between two affordances · `announcements[]` has a `link` but no label for it, so a "Shop now" beside the message would be copy nobody wrote (BRAND.md §3.9). Making the sentence the link keeps one affordance and the store's own words. The dot is `aria-hidden` punctuation that holds the line's left edge steady across the crossfade.`
+- `09 · 2026-09-06 · The featured card's product name is a `<p>`, not a heading · The panel is a MENU that exists on every page; an `<h3>` there put "Black Rice Face Wash" at the top of the storefront's whole heading outline, ahead of each page's own `<h1>` (observed: the first heading in the document was the card, not the hero). The region's `aria-label="Shop menu"` is what makes it findable. Verified after the change: the home page's heading list starts `H1 Begin again, every morning.`
+- `09 · 2026-09-06 · The header's own four overlays get the same blur withdrawal as `body[data-drawer-open]` · Only `ui/Drawer` sets that flag, and the CartDrawer, SidebarMenu, AuthModal and SearchModal this header mounts keep their own traps until Prompts 10-12 migrate them. The header therefore ORs its own `isCartOpen || sidebarOpen || searchModalOpen || authModalOpen` into a `.noBlur` class beside the `:global(body[data-drawer-open])` rule, rather than writing to the shared attribute and fighting `ui/Drawer`'s reference count. Verified: opening the cart drawer takes the header's `backdrop-filter` from `blur(20px)` to `none` with `body.dataset.drawerOpen` still unset.`
+- `09 · 2026-09-06 · `sheet()` supplies the panel's shape and reduced-motion behaviour; its durations are re-tiered to 320ms in / 160ms out · The factory animates on `DURATION.slow` (600ms), and the prompt's design spec asks for 320ms. Rather than hand-write a second set of variants, the component spreads `sheet(reduce)` and replaces the two transitions with `t(reduce, DURATION.base)` and `t(reduce, DURATION.fast)` — slower in than out, which is the house rule that makes a sheet feel placed. Under `prefers-reduced-motion` the factory already returns zero travel and zero duration; verified in Chromium with `reducedMotion: "reduce"`, the panel's first frame is `opacity: 1, transform: none`.`
+- `09 · 2026-09-06 · The icon actions keep `ui/Button variant="icon"`'s glass circle instead of being flattened to bare marks · A first pass overrode the fill to `transparent`, which put `Header.module.css` and `Button.module.css` at identical specificity and let CSS bundle order decide the masthead's look. The design system already defines the variant as a 44px glass circle (§7), the discs carry no backdrop filter of their own (`--sf-glass-bg` is a plain rgba), and over the transparent-on-hero state they are what keeps the marks legible against a photograph. Taken as it comes; `.action` adds only the positioning context the count badge hangs off.`
 
 ## Open TODOs
 
@@ -141,7 +153,7 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `02 · Eight files still carry the literal "Meghali" in a comment or a header docblock: AuthModal.module.css:12, BottomNav.module.css:2, ErrorBoundary.js:42, Footer.module.css:2, Header.module.css:2, SidebarMenu.module.css:2, storefront/ProductCard.js:17, theme/tokens.js:59. None was touched by Prompt 02 (the prompt's own verification grep excludes them), and each belongs to the prompt that rewrites its file — but Prompt 35's sweep must close all eight. storefront-tokens.css keeps two more (palette headings) which Prompt 03 rewrites. · Prompt 35 · 35`
 - `02 · db.json still seeds the old identity, so mock mode shows Meghali contact rows, tagline, store name and social marks, and the document title comes from settings.seo.metaTitle. Every one of those resolves to the brand.js values (or hides) the moment the API is unreachable, which is how it was verified. · Prompt 06 · 06`
 - `02 · TrustStrip and the Home promises row still render the old four badges rather than brand.trustBadges (TrustStrip keeps its own list; Home maps TRUST_BADGES, which is now the three LAMIKAA badges). The Footer promise row was switched to brand.trustBadges[0] in this prompt. · Prompt 15 · 15`
-- `03 · The AnnouncementBar is now a full-bleed CHAMPAGNE GOLD band (it paints --sf-color-primary with --sf-color-primary-contrast type). That is the token mapping DESIGN_SYSTEM §2 mandates and it reads at 13.4:1, but a gold strip across the top of every page overspends the §2 balance budget (gold ≈ 10%). --sf-gradient-announce is already declared for it; re-point AnnouncementBar.module.css:15-16 at that gradient + --sf-color-text when the bar is rebuilt. · Prompt 09 · 09`
+- ~~`03 · The AnnouncementBar is now a full-bleed CHAMPAGNE GOLD band …` · **RESOLVED by Prompt 09**~~ — the bar is a 36px 4%-white glass band on `--sf-color-text-secondary` type with one gold dot, so gold is back inside the §2 balance budget. `--sf-gradient-announce` stays declared and unused; Prompt 35 can retire it.
 - `03 · Eight files still carry the literal "Meghali" in a comment or docblock, down from the sixteen Prompt 02 recorded: AuthModal.module.css and ErrorBoundary.js and theme/tokens.js and the five module headers listed there are now clean (this prompt touched them). What remains is in files this prompt did not touch — Header.module.css:2, storefront/ProductCard.js:17 and the six page docblocks under src/pages that carry no theme code. Prompt 35's sweep still owns them. · Prompt 35 · 35`
 - `03 · adminTheme.js still builds the indigo/slate admin palette from a (mode) ternary whose light half is now unreachable. Prompt 32 recolours the palette to LAMIKAA and should drop the parameter at the same time (both callers pass the literal "dark"). · Prompt 32 · 32`
 - `03 · Two aliases exist only to keep un-rebuilt components compiling and must die with them: --sf-color-brand-green-deep (Footer, HeroSection, CTASection, Newsletter) and --brand-logo-bg (declared, currently consumed by nothing). --sf-gradient-heritage, --sf-gradient-announce-1/2/3 and --sf-cat-* are in the same position. · Prompt 35 · 35`
@@ -154,7 +166,7 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `04 · The QA in this prompt ran against a build made with REACT_APP_USE_MOCK_API=true forced in the shell, because CRA loads .env.production over .env for `npm run build` and the committed .env.production points at the live Laravel API (unreachable from here). The tree ships unchanged — the final verification build used the normal config. Worth knowing before anyone tries to reproduce the screenshots. · developer · —`
 
 - `05 · `/_playground` (route in App.js + `src/pages/_Playground/`) is TEMPORARY scaffolding and must be deleted with its route and its import. · Prompt 35 · 35`
-- `05 · Nothing has been migrated onto the primitives yet, deliberately (prompt guardrail) — only `PriceBlock` was touched. `CartDrawer`, `SidebarMenu`, `CategoriesDrawer`, `AuthModal`, `ReviewModal` and `SearchModal` still carry five hand-rolled copies of the focus trap that `useFocusTrap` now owns, and their own scroll locks (`document.body.style.overflow`) rather than `useScrollLock`'s reference-counted `body[data-scroll-lock]`. Each migrates in its own feature prompt. · Prompts 09–12, 30 · 09`
+- `05 · Nothing has been migrated onto the primitives yet, deliberately (prompt guardrail) — only `PriceBlock` was touched. `CartDrawer`, `SidebarMenu`, `AuthModal`, `ReviewModal` and `SearchModal` still carry four hand-rolled copies of the focus trap (`CategoriesDrawer`'s went with the file in Prompt 09) that `useFocusTrap` now owns, and their own scroll locks (`document.body.style.overflow`) rather than `useScrollLock`'s reference-counted `body[data-scroll-lock]`. Each migrates in its own feature prompt. · Prompts 09–12, 30 · 09`
 - `05 · `body[data-drawer-open]` is SET by `ui/Drawer` but nothing reads it yet — the header must drop its backdrop blur while it is present, which is what keeps the two-blurred-layers budget (DESIGN_SYSTEM §4). · Prompt 09 · 09`
 - `05 · The three storefront `@iconify/react` icon sets used by the new primitives (`mdi:close`, `mdi:chevron-down`, `mdi:play`, `mdi:pause`, `mdi:volume-off`, `mdi:volume-high`, `mdi:fullscreen`, `mdi:check`) are fetched from the Iconify API at runtime, like every existing consumer. In an offline or restricted network the icon simply does not paint — every icon-only control already carries an `srLabel`/`aria-label`, so nothing loses its accessible name, but the audit prompt should decide whether to bundle the set. · Prompt 38 · 38`
 - `05 · `Modal`/`Drawer` release the scroll lock the instant `open` goes false, so the page can move for the ~320ms of the exit animation. Imperceptible in QA; revisit only if it shows up on a long page. · Prompt 37 · 37`
@@ -184,6 +196,8 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `08 · /_playground has no useSeo call, so it shows the store title from settings and the static index.html og:* set. Deliberate — it is scaffolding, and Prompt 35 deletes it. · Prompt 35 · 35`
 - `08 · Home's ?highlight= rails and the shop's ?sort=/?page=/?per_page= params still work because /shop IS the old listing. Prompt 23's chaptered shop has no sort, filters or pagination — it must also decide what happens to a bookmarked /shop?sort=newest (drop the param, or 404 it). · Prompt 23 · 23`
 - `08 · The AnnouncementBar still reads "COMPLIMENTARY GIFT WRAPPING" and the TrustStrip still reads "AUTHENTIC SILK" in mock mode (both are seeded/component copy in files this prompt did not touch). Visible on every route in the QA screenshots. · Prompts 09 / 15 · 09`
+- `09 · `.sf-chip` never declares `text-decoration: none` — it was written for the inert `<span>` a badge usually is — so a chip rendered as a link (`as={Link}`) arrives underlined. Corrected locally on `MegaPanel.module.css .concernChip`; the primitive itself is Prompt 05's file and every later chip-as-link will hit the same thing. · Prompt 35 · 35`
+- `09 · Two `nav` landmarks are named "Shop": the header's (`aria-label="Shop"`, which this prompt's spec mandates) and the Footer's shop link column (`aria-labelledby` → its own `<h2>Shop</h2>`). axe flags `landmark-unique` (moderate) on the WHOLE document; scoped to the header it is clean, and the pair predates this prompt — the old masthead used the same label. The Footer is rewritten by Prompt 13, which should name its columns something a landmark list can tell apart (e.g. "Footer — Shop"). · Prompt 13 · 13`
 
 ## Placeholders introduced / resolved
 
@@ -755,3 +769,119 @@ passed / 1 skipped, 34 passed / 50 skipped. `grep -c "React.lazy" src/App.js` �
 **34** — every page but Home (18 storefront + 16 admin).
 `db.json` untouched; no dependency added.
 
+
+## Prompt 09 record (2026-09-06)
+
+### The masthead, top to bottom
+
+| Band | What | Height | Pinned? |
+|---|---|---|---|
+| `AnnouncementBar` | one data-driven line, gold dot, dismiss | 36px | no — normal flow, scrolls away |
+| `Header` | hamburger (≤1024) + wordmark · nav (≥1025) · actions | 64px / 56px ≤768 | **yes**, `position: sticky; top: 0; z-index: var(--sf-z-header)` |
+| `MegaPanel` | full-width sheet under the header, `role="region" aria-label="Shop menu"` | `max-height: calc(100vh - 100px)` | with the header |
+
+Page chrome before the first scroll = **100px**; pinned chrome after it =
+**64px** (measured 65px and 57px including the 1px hairline). The guardrail
+("never more than 100px of pinned height including the announcement bar") holds
+with 36px to spare, because the band is in flow rather than pinned.
+
+### Files
+
+| File | Change |
+|---|---|
+| `components/Header/Header.js` | rewritten, 683 → 437 lines |
+| `components/Header/Header.module.css` | rewritten, 690 → 444 lines |
+| `components/Header/MegaPanel.js` | **new** |
+| `components/Header/MegaPanel.module.css` | **new** |
+| `components/Header/HeaderActions.js` | **new** (uses `Header.module.css`, as the prompt's file list implies) |
+| `components/AnnouncementBar/AnnouncementBar.js` | rewritten |
+| `components/AnnouncementBar/AnnouncementBar.module.css` | rewritten |
+| `components/CategoriesDrawer/` | **deleted** (2 files, 1 071 lines) |
+| `App.css` | `.main-content` spacer comment corrected (there is no spacer — the header is sticky, in flow); skip-link comments rewritten for the new masthead |
+| `index.css` | new base-layer rule `:where([id]) { scroll-margin-top: 80px }` |
+| `App.js` | unchanged — the skip link already targets `#main-content`, verified |
+| `components/brand/Logo.js` | unchanged, as expected |
+
+### Contracts a later prompt depends on
+
+- `MegaPanel` exports **`loadMegaPanelData()`** — a module-level promise over
+  `categories.getAll` + `concerns.getAll` + `products.getHeroProducts` +
+  `rituals.getAll`, the same shape as `SearchModal`'s `loadSearchData`. The
+  header calls it on the Shop button's `pointerenter`/`focus` so the panel is
+  drawn from memory on the first hover. A rejection clears the promise, so the
+  next open retries.
+- `MegaPanel` props: `id` (default `"mega-panel"`, which the trigger's
+  `aria-controls` names) and `onNavigate` (called by every link, closes the
+  panel).
+- `HeaderActions` props: `cartCount`, `wishlistCount`, `onSearch`, `onCart`.
+  Auth comes from `useAuth()` directly — the account menu owns its own anchor
+  state and nothing else.
+- `#hero-sentinel` is the id the hero must render (Prompt 14) for the
+  transparent state. Absent, the header is glass from the first pixel. The
+  lookup retries for up to 30 animation frames after each route change, so a
+  lazily-loaded chunk still gets the observer.
+- The four overlay mounts (`CartDrawer`, `SidebarMenu`, `AuthModal`,
+  `SearchModal`) keep their existing props exactly, so Prompts 10-12 can
+  migrate them one at a time.
+
+### Verification (Chromium 141, mock mode, real Cloudinary art and Google fonts)
+
+- **Widths 320 / 360 / 390 / 414 / 768 / 1024 / 1280 / 1440** — header 57px up
+  to 768 and 65px from 1024; wordmark 140px ≤768, 168px ≥1024, the 40px **mark**
+  at 320; **0px horizontal document overflow at every width**; 0 console errors,
+  0 page errors.
+- **Nav** — `["Shop","Rituals","Our Story","Why LAMIKAA"]` at 1280/1440; not
+  rendered at all at 768/1024 (`header nav` count 0, `#mega-panel` count 0), the
+  hamburger opens `SidebarMenu` there. With `dealsConfig.enabled` stubbed true
+  the row becomes `[…,"Offers"]` → `/special-offers`; the seed has it **false**,
+  so the entry is correctly absent by default.
+- **Mega panel at 1280** — `grid-template-columns: 392px 356.4px 427.6px`
+  (1.1 : 1 : 1.2), 40px block padding, `max-height: 850px` at a 950px viewport
+  (`100vh - 100px`), `role="region"`, `aria-label="Shop menu"`. 7 category rows
+  (6 with a 96×96 product thumbnail, `Rituals` with the bare plate) + counts
+  6·2·3·1·2·2 + **All products** → `/shop`; **11** concern chips →
+  `/shop?concern=<slug>`; the featured card at 600×600 with the eyebrow, name,
+  promise, ₹390.00 and **Explore** → `/product/black-rice-face-wash`.
+- **Open/close** — closed at 120ms of hover, open at 520ms (the 200ms intent);
+  click toggles; Enter opens; Escape closes and focus returns to **Shop**;
+  outside click closes; a panel link closes it and navigates; hovering a sibling
+  entry closes it.
+- **Keyboard** — Enter then six Tabs walks the seven category rows in order; six
+  Shift+Tabs return to "Shop"; one more leaves the header at the wordmark.
+- **Header states** — no sentinel → `sf-glass` (`rgba(255,255,255,.06)`,
+  `blur(20px)`); sentinel on screen → `.transparent` (`rgba(0,0,0,0)`,
+  `backdrop-filter: none`, transparent hairline); scrolled past →
+  `sf-glass sf-glass--strong` (`rgba(255,255,255,.08)`). Opening the cart drawer
+  takes the blur to **none** (with `body[data-drawer-open]` still unset, which
+  is why the header ORs in its own overlay state).
+- **Announcement bar** — 36px, `"Farmer-owned. Assam-grown."`; dismissal writes
+  `sessionStorage["lk-announcement-dismissed"] = "1"` and **nothing** to
+  `localStorage`; it survives a route change and a reload and comes back in a
+  new context (a new tab). With the API stubbed to `[]` it falls back to
+  `brand.announcements`; fed two token rows and one real row it shows only the
+  real one, `hasToken: false`, and honours its `link`. Two real rows rotate
+  within 6.5s and hold while hovered.
+- **Skip link** — first Tab stop, `:focus-visible`, slides to `top: 8px`;
+  Enter focuses `#main-content`, whose top lands at **80px** — exactly the
+  header's bottom edge, so the sticky header does not cover the target.
+  `scroll-margin-top: 80px` computed on `#main-content`.
+- **Reduced motion** — with `reducedMotion: "reduce"` the panel's first frame is
+  `opacity: 1, transform: none`: no sheet motion at all.
+- **API unreachable** — header, nav and the brand-fallback announcement all
+  render; the mega panel shows "The catalogue could not be loaded just now." and
+  a **Go to the shop** button; 0 page errors.
+- **axe-core** (`wcag2a, wcag2aa, wcag21a, wcag21aa, best-practice`) on the
+  header — **0 violations** at 1280 closed, 1280 with the panel open, and 390;
+  the announcement bar 0 at both widths. Whole-document: one pre-existing
+  `landmark-unique` (moderate) from the header/footer "Shop" pair, logged as an
+  Open TODO against Prompt 13.
+- **Greps** — `CategoriesDrawer` 0 in `src`; `CategoriesDrawer|TrustStrip` 0 in
+  `src/components/Header`; `navMeasure|measureOverflow` 0 in `src`;
+  `FREE_SHIPPING_THRESHOLD` 0 and `localStorage` 0 in
+  `src/components/AnnouncementBar`; no Meghali-era string in any touched file.
+
+### Gates
+
+`CI=true npm run build` exit 0, **no warnings**. `npm test -- --watchAll=false`
+exit 0 — 3 suites passed / 1 skipped, 34 passed / 50 skipped. `db.json`
+untouched; no dependency added; `src/services/api.js` untouched (reads only).
