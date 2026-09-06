@@ -1,2963 +1,1975 @@
 {
-  "banners": [
+  "products": [
     {
       "id": 1,
-      "title": "The Bridal Muga Edit",
-      "subtitle": "Heirloom Mekhela Chador woven to order in undyed Sualkuchi Muga",
-      "cta": "Shop Bridal",
-      "link": "/products?category=muga-silk",
-      "gradient": "linear-gradient(135deg,#1D1A16 0%,#3A2E1B 60%,#8A6118 100%)",
-      "eyebrow": "",
-      "secondaryCtaLabel": "",
-      "secondaryCtaLink": "",
-      "backgroundType": "gradient",
-      "image": "",
-      "imagePosition": "right center",
-      "videoUrl": "",
-      "videoPoster": "",
-      "overlayOpacity": null,
-      "textAlign": "left",
-      "durationMs": 0,
+      "slug": "black-rice-face-wash",
+      "name": "Black Rice Face Wash",
+      "shortName": "Face Wash",
+      "sku": "LK-BR-FW-001",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 1,
+      "categoryIds": [
+        1,
+        3
+      ],
+      "concerns": [
+        "cleansing",
+        "brightening"
+      ],
+      "ritualStep": {
+        "order": 1,
+        "label": "Cleanse",
+        "frequency": "Morning and evening"
+      },
+      "heroHeadline": "Begin again, every morning.",
+      "heroSubtext": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant.",
+      "heroOrder": 1,
+      "promise": "A gentle daily cleanse that leaves skin clean, refreshed and quietly bright.",
+      "shortDescription": "A gentle daily cleanse that leaves skin clean, refreshed and quietly bright.",
+      "description": "Enriched with black rice and antioxidant-rich botanicals, this gentle face wash lifts away dirt, excess oil and impurities while helping your skin keep its natural moisture balance. Use it morning and evening and let clean feel calm.",
+      "price": 390,
+      "priceSource": "packaging-mrp",
+      "priceTBA": false,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "200 ml",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
+      "keyIngredients": [
+        {
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich, traditionally valued in Northeast India"
+        },
+        {
+          "name": "Aloe Vera",
+          "benefit": "soothing hydration"
+        },
+        {
+          "name": "Green Tea",
+          "benefit": "antioxidant-rich"
+        },
+        {
+          "name": "Neem",
+          "benefit": "traditionally used for clarifying"
+        },
+        {
+          "name": "Turmeric",
+          "benefit": "traditionally valued for a radiant look"
+        }
+      ],
+      "benefits": [
+        "Deeply cleanses",
+        "Helps brighten the look of skin",
+        "Hydrates",
+        "Refreshes"
+      ],
+      "howToUse": [
+        "Apply on wet face.",
+        "Massage gently in circular motions.",
+        "Rinse thoroughly with water.",
+        "Use morning and evening for best results."
+      ],
+      "ingredientsList": "Aqua, Black Rice Extract, Aloe Vera Extract, Green Tea Extract, Turmeric Extract, Neem Extract, Tulsi Extract, Glycerin, Cocamidopropyl Betaine, Decyl Glucoside, Propanediol, Panthenol, Allantoin, Xanthan Gum, Sodium Chloride, Citric Acid, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.",
+      "packClaims": [
+        "Enriched with Anti-Ageing Antioxidants",
+        "Deeply Cleanses · Brightens Skin · Hydrates · Refreshes",
+        "Mild Sandalwood Fragrance",
+        "Net Vol. 200 ml"
+      ],
+      "fragranceNote": "Mild sandalwood fragrance",
+      "caution": "For external use only. Avoid direct contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children. Store in a cool, dry place away from direct sunlight.",
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
+      "media": [
+        {
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
+          "alt": "Black Rice Face Wash by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 1050,
+            "y": 100,
+            "w": 1500,
+            "h": 3200
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-wash-2/1200/1500",
+          "alt": "Black Rice Face Wash — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-wash-3/1200/1500",
+          "alt": "Black Rice Face Wash — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://res.cloudinary.com/demo/video/upload/sea_turtle.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
+          "title": "Brand story (placeholder video)",
+          "placeholder": true
+        }
+      ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-wash-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-wash-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "How often should I use the face wash?",
+          "a": "Morning and evening, as printed on the pack. Massage gently on a wet face and rinse thoroughly."
+        },
+        {
+          "q": "Does it have a fragrance?",
+          "a": "The pack prints a mild sandalwood fragrance."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "face wash",
+        "cleanser",
+        "face care"
+      ],
+      "relatedProductIds": [
+        5,
+        7,
+        8
+      ],
+      "frequentlyBoughtTogetherIds": [
+        5,
+        8
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "sortOrder": 0,
-      "updatedAt": "2026-09-01T00:00:00.000Z"
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Face Wash · LAMIKAA NATURALS",
+      "metaDescription": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 2,
-      "title": "Mekhela Chador from Sualkuchi",
-      "subtitle": "Muga, Pat, Eri and Nuni — the Assamese drape, woven on village looms",
-      "cta": "Explore Mekhela Chador",
-      "link": "/products",
-      "gradient": "linear-gradient(135deg,#322C25 0%,#6B5030 55%,#C8912A 100%)",
-      "eyebrow": "",
-      "secondaryCtaLabel": "",
-      "secondaryCtaLink": "",
-      "backgroundType": "gradient",
-      "image": "",
-      "imagePosition": "right center",
-      "videoUrl": "",
-      "videoPoster": "",
-      "overlayOpacity": null,
-      "textAlign": "left",
-      "durationMs": 0,
+      "slug": "black-rice-goat-milk-soap",
+      "name": "Black Rice Goat Milk Soap",
+      "shortName": "Goat Milk Soap",
+      "sku": "LK-BR-GS-002",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 2,
+      "categoryIds": [
+        2,
+        3
+      ],
+      "concerns": [
+        "nourishing",
+        "cleansing"
+      ],
+      "ritualStep": {
+        "order": 1,
+        "label": "Body cleanse",
+        "frequency": "Daily"
+      },
+      "heroHeadline": "Softness, handed down.",
+      "heroSubtext": "Black rice and goat milk, pressed into a bar that treats your skin the way tradition always meant to.",
+      "heroOrder": 2,
+      "promise": "A luxurious cleansing bar that nourishes as it cleans.",
+      "shortDescription": "A luxurious cleansing bar that nourishes as it cleans.",
+      "description": "Goat milk and black rice extract, pressed into a bar that gently cleanses while helping to nourish and moisturise your skin. Antioxidants help it feel soft, smooth and healthy-looking after every wash.",
+      "price": 90,
+      "priceSource": "packaging-mrp",
+      "priceTBA": false,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "100 g",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
+      "keyIngredients": [
+        {
+          "name": "Goat Milk",
+          "benefit": "gentle, nourishing cleanse"
+        },
+        {
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich, traditionally valued in Northeast India"
+        },
+        {
+          "name": "Shea Butter",
+          "benefit": "softening"
+        },
+        {
+          "name": "Coconut Oil",
+          "benefit": "conditioning"
+        }
+      ],
+      "benefits": [
+        "Nourishes",
+        "Cleanses",
+        "Softens skin"
+      ],
+      "howToUse": [
+        "Wet the soap and work into a rich lather.",
+        "Massage gently over the skin.",
+        "Rinse thoroughly with water."
+      ],
+      "ingredientsList": "Aqua, Glycerin, Goat Milk, Black Rice Extract, Rice Extract, Coconut Oil, Shea Butter, Aloe Vera Extract, Turmeric Extract, Liquorice Extract, Vitamin E, Sodium Chloride, Fragrance.",
+      "packClaims": [
+        "Enriched With Anti-Ageing Antioxidants",
+        "Suitable for all skin types",
+        "With the goodness of Goat Milk & Black Rice Extract",
+        "Nourishes · Cleanses · Softens Skin",
+        "Mild Sandalwood Fragrance",
+        "Net weight 100 g"
+      ],
+      "fragranceNote": "Mild sandalwood fragrance",
+      "caution": "For external use only. Avoid contact with eyes. Keep out of reach of children. Store in a cool, dry place after use.",
+      "suitableFor": [
+        "All skin types (as printed)"
+      ],
+      "media": [
+        {
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg",
+          "alt": "Black Rice Goat Milk Soap by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 216,
+            "y": 522,
+            "w": 1377,
+            "h": 1269
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-2/1200/1500",
+          "alt": "Black Rice Goat Milk Soap — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-3/1200/1500",
+          "alt": "Black Rice Goat Milk Soap — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
+        }
+      ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "Is the soap suitable for all skin types?",
+          "a": "The pack prints “Suitable for all skin types”. Avoid contact with eyes and discontinue use if irritation occurs."
+        },
+        {
+          "q": "How do I use the bar?",
+          "a": "Wet the soap and work into a rich lather, massage gently over the skin, then rinse thoroughly with water."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "soap bar",
+        "cleanser",
+        "body care",
+        "goat milk"
+      ],
+      "relatedProductIds": [
+        3,
+        5,
+        1
+      ],
+      "frequentlyBoughtTogetherIds": [
+        5,
+        1
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "sortOrder": 1,
-      "updatedAt": "2026-09-01T00:00:00.000Z"
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Goat Milk Soap · LAMIKAA NATURALS",
+      "metaDescription": "Black rice and goat milk, pressed into a bar that treats your skin the way tradition always meant to. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 3,
-      "title": "Bihu Offers",
-      "subtitle": "A short list of genuinely reduced weaves — everything else stays at its honest price",
-      "cta": "View Offers",
-      "link": "/special-offers",
-      "gradient": "linear-gradient(135deg,#0F0D0A 0%,#5C554A 50%,#8A6118 100%)",
-      "eyebrow": "",
-      "secondaryCtaLabel": "",
-      "secondaryCtaLink": "",
-      "backgroundType": "gradient",
-      "image": "",
-      "imagePosition": "right center",
-      "videoUrl": "",
-      "videoPoster": "",
-      "overlayOpacity": null,
-      "textAlign": "left",
-      "durationMs": 0,
+      "slug": "black-rice-body-wash",
+      "name": "Black Rice Body Wash",
+      "shortName": "Body Wash",
+      "sku": "LK-BR-BW-003",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 2,
+      "categoryIds": [
+        2,
+        3
+      ],
+      "concerns": [
+        "hydration",
+        "refresh"
+      ],
+      "ritualStep": {
+        "order": 1,
+        "label": "Body cleanse",
+        "frequency": "Daily"
+      },
+      "heroHeadline": "Let the day wash off you.",
+      "heroSubtext": "A nourishing black rice and sandalwood body wash that turns a quick shower into a slow, fragrant ritual.",
+      "heroOrder": 3,
+      "promise": "A nourishing wash that turns a quick shower into a slow, fragrant ritual.",
+      "shortDescription": "A nourishing wash that turns a quick shower into a slow, fragrant ritual.",
+      "description": "Black rice and sandalwood extracts in a gentle cleansing formula that helps remove dirt and impurities while leaving your skin feeling soft, fresh and hydrated.",
+      "price": null,
+      "priceSource": null,
+      "priceTBA": true,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "250 ml",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
+      "keyIngredients": [
+        {
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich"
+        },
+        {
+          "name": "Sandalwood",
+          "benefit": "traditionally valued in India for a calm, fragrant finish"
+        },
+        {
+          "name": "Shea Butter & Squalane",
+          "benefit": "softening"
+        },
+        {
+          "name": "Niacinamide",
+          "benefit": "helps skin look smooth"
+        }
+      ],
+      "benefits": [
+        "Nourishes",
+        "Cleanses",
+        "Hydrates"
+      ],
+      "howToUse": [
+        "Apply to wet skin.",
+        "Massage gently to create a rich lather.",
+        "Rinse thoroughly with water."
+      ],
+      "ingredientsList": "Aqua, Glycerin, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Caprylic/Capric Triglyceride, Cetearyl Alcohol, Glyceryl Stearate, Shea Butter, Squalane, Dimethicone, Niacinamide, Panthenol, Sodium Hyaluronate, Tocopherol, Carbomer, Xanthan Gum, Triethanolamine, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.",
+      "packClaims": [
+        "With Black Rice & Sandalwood Extract",
+        "Full of Anti-Ageing Antioxidants",
+        "Nourishes • Cleanses • Hydrates",
+        "Mild Sandalwood Fragrance",
+        "250 mL"
+      ],
+      "fragranceNote": "Mild sandalwood fragrance",
+      "caution": "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children.",
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
+      "media": [
+        {
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg",
+          "alt": "Black Rice Body Wash by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 715,
+            "y": 30,
+            "w": 395,
+            "h": 710
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-body-wash-2/1200/1500",
+          "alt": "Black Rice Body Wash — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-body-wash-3/1200/1500",
+          "alt": "Black Rice Body Wash — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
+        }
+      ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-body-wash-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-body-wash-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "How do I use the body wash?",
+          "a": "Apply to wet skin, massage gently to create a rich lather, then rinse thoroughly with water."
+        },
+        {
+          "q": "How much is in a bottle?",
+          "a": "250 ml, as printed on the pack."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "body wash",
+        "cleanser",
+        "body care",
+        "sandalwood"
+      ],
+      "relatedProductIds": [
+        2,
+        5,
+        1
+      ],
+      "frequentlyBoughtTogetherIds": [
+        5,
+        1
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "sortOrder": 2
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Body Wash · LAMIKAA NATURALS",
+      "metaDescription": "A nourishing black rice and sandalwood body wash that turns a quick shower into a slow, fragrant ritual. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 4,
-      "title": "New In: Eri Shawls & Stoles",
-      "subtitle": "Handspun Eri — matte, warm and softer with every wash",
-      "cta": "Shop Stoles",
-      "link": "/products?category=eri-silk",
-      "gradient": "linear-gradient(135deg,#1D1A16 0%,#4A3F31 55%,#AF7E26 100%)",
-      "eyebrow": "",
-      "secondaryCtaLabel": "",
-      "secondaryCtaLink": "",
-      "backgroundType": "gradient",
-      "image": "",
-      "imagePosition": "right center",
-      "videoUrl": "",
-      "videoPoster": "",
-      "overlayOpacity": null,
-      "textAlign": "left",
-      "durationMs": 0,
-      "isActive": true,
-      "sortOrder": 3,
-      "updatedAt": "2026-09-01T00:00:00.000Z"
-    },
-    {
-      "title": "none",
-      "subtitle": "none###",
-      "eyebrow": "",
-      "cta": "Shop the Collection",
-      "link": "/products",
-      "secondaryCtaLabel": "",
-      "secondaryCtaLink": "",
-      "backgroundType": "image",
-      "gradient": "linear-gradient(135deg,#1D1A16 0%,#3A2E1B 60%,#8A6118 100%)",
-      "image": "https://i0.wp.com/picjumbo.com/wp-content/uploads/dark-portrait-of-woman-with-hair-over-her-face-free-image.jpeg?h=800&quality=80",
-      "imagePosition": "right center",
-      "videoUrl": "",
-      "videoPoster": "",
-      "overlayOpacity": null,
-      "textAlign": "left",
-      "durationMs": 0,
-      "isActive": false,
-      "sortOrder": 4,
-      "updatedAt": "2026-09-01T12:38:36.399Z",
-      "id": 5
-    },
-    {
-      "title": "none (copy)",
-      "subtitle": "none###",
-      "eyebrow": "",
-      "cta": "Shop the Collection",
-      "link": "/products",
-      "secondaryCtaLabel": "",
-      "secondaryCtaLink": "",
-      "backgroundType": "image",
-      "gradient": "linear-gradient(135deg,#1D1A16 0%,#3A2E1B 60%,#8A6118 100%)",
-      "image": "https://i0.wp.com/picjumbo.com/wp-content/uploads/dark-portrait-of-woman-with-hair-over-her-face-free-image.jpeg?h=800&quality=80",
-      "imagePosition": "right center",
-      "videoUrl": "",
-      "videoPoster": "",
-      "overlayOpacity": null,
-      "textAlign": "left",
-      "durationMs": 0,
-      "isActive": false,
-      "sortOrder": 5,
-      "createdAt": "2026-09-01T12:38:38.851Z",
-      "updatedAt": "2026-09-01T12:38:38.851Z",
-      "id": 6
-    }
-  ],
-  "heroConfig": {
-    "enabled": true,
-    "autoplay": true,
-    "intervalMs": 1500,
-    "transition": "fade",
-    "pauseOnHover": true,
-    "showControls": true,
-    "showCounter": false,
-    "showProgress": true,
-    "showArrows": true,
-    "overlayOpacity": 100,
-    "heights": {
-      "desktop": {
-        "min": 520,
-        "vh": 78,
-        "max": 780
+      "slug": "black-rice-face-mask",
+      "name": "Black Rice Face Mask",
+      "shortName": "Face Mask",
+      "sku": "LK-BR-FM-004",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 1,
+      "categoryIds": [
+        1,
+        6
+      ],
+      "concerns": [
+        "glow",
+        "revive"
+      ],
+      "ritualStep": {
+        "order": 3,
+        "label": "Treat",
+        "frequency": "Weekly"
       },
-      "tablet": {
-        "min": 480,
-        "vh": 70,
-        "max": 640
-      },
-      "mobile": {
-        "min": 460,
-        "vh": 66,
-        "max": 600
-      }
-    },
-    "secondaryCta": {
-      "enabled": true,
-      "label": "Our Story",
-      "link": "/about"
-    },
-    "openers": {
-      "enabled": true,
-      "label": "Collections",
-      "limit": 8
-    },
-    "updatedAt": "2026-09-01T12:31:51.228Z"
-  },
-  "faqs": [
-    {
-      "question": "How should I care for Muga, Pat and Eri silk?###",
-      "answer": "Dry-clean for the first couple of years, then a gentle cold hand wash with a mild detergent — Muga in particular grows softer and deepens in lustre each time it is washed. Dry in the shade, never in direct sun, and press on the reverse with a warm iron. Store the piece folded in unbleached muslin rather than plastic, refold it along a different line every few months so no crease ever sets, and keep perfume and deodorant off the fabric.####bhbhhjh",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "heroHeadline": "Ten quiet minutes. Visibly yours.",
+      "heroSubtext": "A black rice clay mask that gives tired skin its freshness back, one unhurried evening at a time.",
+      "heroOrder": 4,
+      "promise": "Ten quiet minutes for skin that looks refreshed and smooth.",
+      "shortDescription": "Ten quiet minutes for skin that looks refreshed and smooth.",
+      "description": "A purifying clay mask with black rice, sandalwood, kaolin and bentonite. It helps absorb excess oil and impurities while aloe vera and skin-conditioning ingredients leave your skin feeling refreshed and smooth.",
+      "price": null,
+      "priceSource": null,
+      "priceTBA": true,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "100 g",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
       ],
-      "productIds": [],
-      "isActive": true,
-      "sortOrder": 0,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T18:24:18.228Z",
-      "id": 1
-    },
-    {
-      "id": 2,
-      "question": "Is the silk really handwoven in Assam?",
-      "answer": "Yes. Every piece is woven on a handloom and bought directly from weaving families in and around Sualkuchi, the weaving village on the north bank of the Brahmaputra. Undyed Muga is sold undyed — the deep honey gold is the fibre's own colour and not a dye — and Eri is handspun before it is woven. Each product page carries the details the weaver gave us for that particular piece.",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "keyIngredients": [
+        {
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich"
+        },
+        {
+          "name": "Sandalwood",
+          "benefit": "calming fragrance"
+        },
+        {
+          "name": "Kaolin & Bentonite",
+          "benefit": "purifying clays"
+        },
+        {
+          "name": "Aloe Vera",
+          "benefit": "soothing"
+        }
       ],
-      "productIds": [],
-      "isActive": true,
-      "sortOrder": 1,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T00:00:00.000Z"
-    },
-    {
-      "question": "What is the difference between Muga, Pat, Eri and Nuni silk?",
-      "answer": "Muga is the golden silk unique to Assam — undyed, unusually strong, and it only improves with age. Pat is the bright ivory-to-white mulberry silk, the one most often woven with zari for weddings and festivals. Eri is soft, matte and handspun; it behaves more like a fine wool and is warm to wear, which is why it is used for shawls and stoles. Nuni is a mulberry silk with a quieter, everyday finish. Every listing states which of them the piece is woven in.",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "benefits": [
+        "Helps absorb excess oil",
+        "Refreshes",
+        "Smooths the feel of skin"
       ],
-      "productIds": [],
-      "isActive": true,
-      "sortOrder": 2,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T18:24:16.974Z",
-      "id": 3
-    },
-    {
-      "id": 4,
-      "question": "What comes in a Mekhela Chador set, and does it arrive stitched?",
-      "answer": "A set is the two-piece drape: the mekhela, worn as the lower wrap, and the chador that goes over it. Both arrive unstitched and unpleated so your tailor can pleat, hem and finish them to your own measurements. A matching blouse piece is listed separately where one has been woven for the set. Lengths and widths appear on the product page wherever the weaver has supplied them — if a measurement you need is not listed, write to us before you order.",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "howToUse": [
+        "Apply an even layer to clean, dry face, avoiding the eye area.",
+        "Leave for 10–15 minutes.",
+        "Rinse thoroughly with water."
       ],
-      "productIds": [],
+      "ingredientsList": "Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Kaolin, Bentonite, Glycerin, Aloe Barbadensis Leaf Juice, Niacinamide, Panthenol, Allantoin, Sodium Hyaluronate, Xanthan Gum, Hydroxyethylcellulose, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.",
+      "packClaims": [
+        "With Black Rice, Sandalwood & Kaolin",
+        "Full of Anti-Ageing Antioxidants",
+        "Mild Sandalwood Fragrance",
+        "Net wt. 100 g"
+      ],
+      "fragranceNote": "Mild sandalwood fragrance",
+      "caution": "For external use only. Avoid contact with eyes. Patch test before use. Discontinue if irritation occurs.",
+      "suitableFor": [
+        "All skin types — patch test before use (as printed)"
+      ],
+      "media": [
+        {
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg",
+          "alt": "Black Rice Face Mask by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 480,
+            "y": 0,
+            "w": 370,
+            "h": 401
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mask-2/1200/1500",
+          "alt": "Black Rice Face Mask — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mask-3/1200/1500",
+          "alt": "Black Rice Face Mask — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://res.cloudinary.com/demo/video/upload/elephants.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg",
+          "title": "The ritual (placeholder video)",
+          "placeholder": true
+        }
+      ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-mask-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-mask-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "How long do I leave the mask on?",
+          "a": "Apply an even layer to a clean, dry face avoiding the eye area, leave for 10–15 minutes, then rinse thoroughly with water."
+        },
+        {
+          "q": "Should I patch test first?",
+          "a": "The pack asks for a patch test before use, and for the mask to be kept away from the eye area."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "face mask",
+        "clay mask",
+        "face care",
+        "kaolin"
+      ],
+      "relatedProductIds": [
+        1,
+        6,
+        7
+      ],
+      "frequentlyBoughtTogetherIds": [
+        7,
+        8
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "sortOrder": 3,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T00:00:00.000Z"
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Face Mask · LAMIKAA NATURALS",
+      "metaDescription": "A black rice clay mask that gives tired skin its freshness back, one unhurried evening at a time. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 5,
-      "question": "How long does delivery take, and is shipping free?",
-      "answer": "Standard delivery reaches most of India in 5-7 business days and is free on orders above {freeShipping}. Express delivery arrives in 2-3 business days, and same-day delivery is available within select Kolkata pin codes. Every order is packed in insured silk packaging, and the exact delivery charge for your address is shown at checkout before you pay.",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "slug": "black-rice-face-mist",
+      "name": "Black Rice Face Mist",
+      "shortName": "Face Mist",
+      "sku": "LK-BR-MI-005",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 1,
+      "categoryIds": [
+        1,
+        5
       ],
-      "productIds": [],
+      "concerns": [
+        "hydration",
+        "refresh"
+      ],
+      "ritualStep": {
+        "order": 2,
+        "label": "Refresh",
+        "frequency": "Whenever skin needs it"
+      },
+      "heroHeadline": "A breath of Assam, anywhere.",
+      "heroSubtext": "Hydrating black rice mist to wake, refresh and settle your skin whenever the day asks for a pause.",
+      "heroOrder": 5,
+      "promise": "An instant refresh you can reach for anywhere.",
+      "shortDescription": "An instant refresh you can reach for anywhere.",
+      "description": "A refreshing facial mist with black rice, sandalwood, aloe vera, niacinamide and hyaluronic acid. It instantly refreshes the skin and helps keep it feeling soft, hydrated and comfortable.",
+      "price": null,
+      "priceSource": null,
+      "priceTBA": true,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "100 ml",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
+      "keyIngredients": [
+        {
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich"
+        },
+        {
+          "name": "Aloe Vera",
+          "benefit": "soothing hydration"
+        },
+        {
+          "name": "Hyaluronic Acid (Sodium Hyaluronate)",
+          "benefit": "helps skin feel hydrated"
+        },
+        {
+          "name": "Niacinamide",
+          "benefit": "helps skin look smooth"
+        }
+      ],
+      "benefits": [
+        "Refreshes",
+        "Hydrates",
+        "Revitalizes the feel of skin"
+      ],
+      "howToUse": [
+        "Close eyes and mist evenly over the face from a comfortable distance.",
+        "Allow to absorb naturally.",
+        "Use whenever skin needs a refreshing boost."
+      ],
+      "ingredientsList": "Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Glycerin, Propanediol, Aloe Barbadensis Leaf Juice, Niacinamide, Panthenol, Betaine, Sodium Hyaluronate, Allantoin, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Citric Acid, Sodium Citrate, Fragrance.",
+      "packClaims": [
+        "With Black Rice, Sandalwood & Aloe Vera",
+        "Full of Anti-Ageing Antioxidants",
+        "Refreshes • Hydrates • Revitalizes",
+        "Mild Sandalwood Fragrance",
+        "Net vol. 100 ml"
+      ],
+      "fragranceNote": "Mild sandalwood fragrance",
+      "caution": "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children.",
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
+      "media": [
+        {
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg",
+          "alt": "Black Rice Face Mist by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 320,
+            "y": 20,
+            "w": 410,
+            "h": 710
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mist-2/1200/1500",
+          "alt": "Black Rice Face Mist — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mist-3/1200/1500",
+          "alt": "Black Rice Face Mist — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
+        }
+      ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-mist-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-mist-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "When should I use the mist?",
+          "a": "Whenever skin needs a refreshing boost — close your eyes, mist evenly over the face from a comfortable distance and allow it to absorb naturally."
+        },
+        {
+          "q": "What size is the bottle?",
+          "a": "Net vol. 100 ml, as printed on the pack."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "face mist",
+        "hydrating mist",
+        "face care",
+        "aloe vera"
+      ],
+      "relatedProductIds": [
+        1,
+        7,
+        8
+      ],
+      "frequentlyBoughtTogetherIds": [
+        7,
+        8
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "sortOrder": 4,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T00:00:00.000Z"
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Face Mist · LAMIKAA NATURALS",
+      "metaDescription": "Hydrating black rice mist to wake, refresh and settle your skin whenever the day asks for a pause. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 6,
-      "question": "What is your return policy?",
-      "answer": "We offer a 7-day return. Request one from My Orders within 7 days of delivery and send the piece back unworn, unwashed and with its original tags and packaging intact. Once it reaches us and passes inspection, the refund is processed to your original payment method within 5-7 business days. Blouses stitched to measure and made-to-order pieces cannot be returned, since they were finished to your own measurements.",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "slug": "black-rice-exfoliating-face-scrub",
+      "name": "Black Rice Exfoliating Face Scrub",
+      "shortName": "Exfoliating Face Scrub",
+      "sku": "LK-BR-SC-006",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 1,
+      "categoryIds": [
+        1,
+        6
       ],
-      "productIds": [],
+      "concerns": [
+        "exfoliation",
+        "texture"
+      ],
+      "ritualStep": {
+        "order": 2,
+        "label": "Polish",
+        "frequency": "2–3 times weekly"
+      },
+      "heroHeadline": "Reveal what was always there.",
+      "heroSubtext": "Fine black rice exfoliation that gently polishes away dullness and lets your natural light through.",
+      "heroOrder": 6,
+      "promise": "A fine polish that reveals smoother, brighter-looking skin.",
+      "shortDescription": "A fine polish that reveals smoother, brighter-looking skin.",
+      "description": "Black rice, rice powder and walnut shell powder gently remove dead skin cells and help unclog pores, revealing smoother, brighter-looking skin without over-drying.",
+      "price": 349,
+      "priceSource": "packaging-mrp",
+      "priceTBA": false,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "100 g",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
+      "keyIngredients": [
+        {
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich"
+        },
+        {
+          "name": "Rice Powder & Walnut Shell Powder",
+          "benefit": "gentle physical exfoliants"
+        },
+        {
+          "name": "Jojoba & Almond Oil",
+          "benefit": "conditioning"
+        },
+        {
+          "name": "Green Tea & Cucumber",
+          "benefit": "refreshing"
+        }
+      ],
+      "benefits": [
+        "Gently exfoliates",
+        "Helps unclog pores",
+        "Reveals smoother, brighter-looking skin"
+      ],
+      "howToUse": [
+        "Apply on damp face.",
+        "Massage gently for 1–2 minutes.",
+        "Rinse thoroughly.",
+        "Use 2–3 times weekly."
+      ],
+      "ingredientsList": "Aqua, Black Rice Extract, Glycerin, Aloe Vera Extract, Rice Powder, Walnut Shell Powder, Kaolin Clay, Jojoba Oil, Almond Oil, Coconut Oil, Shea Butter, Niacinamide, Vitamin E, Liquorice Extract, Green Tea Extract, Cucumber Extract, Xanthan Gum, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.",
+      "packClaims": [
+        "Exfoliating Face Scrub with the goodness of Black Rice",
+        "Enriched With Anti-Ageing Antioxidants",
+        "100 gm"
+      ],
+      "fragranceNote": "",
+      "caution": "For external use only. Avoid contact with eyes and broken skin. Discontinue use if irritation occurs.",
+      "suitableFor": [
+        "All skin types — avoid broken skin; patch test recommended"
+      ],
+      "media": [
+        {
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg",
+          "alt": "Black Rice Exfoliating Face Scrub by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 1700,
+            "y": 0,
+            "w": 1600,
+            "h": 744
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-2/1200/1500",
+          "alt": "Black Rice Exfoliating Face Scrub — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-3/1200/1500",
+          "alt": "Black Rice Exfoliating Face Scrub — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
+        }
+      ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "How often should I use the scrub?",
+          "a": "Two to three times weekly, as printed on the pack. Apply on a damp face, massage gently for one to two minutes and rinse thoroughly."
+        },
+        {
+          "q": "Can I use it on broken skin?",
+          "a": "No — the pack cautions to avoid contact with eyes and broken skin, and to discontinue use if irritation occurs."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "face scrub",
+        "exfoliator",
+        "face care",
+        "rice powder"
+      ],
+      "relatedProductIds": [
+        1,
+        4,
+        7
+      ],
+      "frequentlyBoughtTogetherIds": [
+        4,
+        7
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "sortOrder": 5,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T00:00:00.000Z"
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Exfoliating Face Scrub · LAMIKAA NATURALS",
+      "metaDescription": "Fine black rice exfoliation that gently polishes away dullness and lets your natural light through. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 7,
-      "question": "Which payments do you accept, and is Cash on Delivery available?",
-      "answer": "UPI, credit and debit cards, net banking and wallets are all accepted, and every payment is handled over an encrypted connection by the payment gateway. {codSentence} Prices are shown {taxNote}.",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "slug": "black-rice-face-serum",
+      "name": "Black Rice Face Serum",
+      "shortName": "Face Serum",
+      "sku": "LK-BR-SE-007",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 1,
+      "categoryIds": [
+        1,
+        4
       ],
-      "productIds": [],
+      "concerns": [
+        "brightening",
+        "even-tone"
+      ],
+      "ritualStep": {
+        "order": 4,
+        "label": "Treat",
+        "frequency": "Daily"
+      },
+      "heroHeadline": "The glow that grows with you.",
+      "heroSubtext": "A lightweight black rice serum for skin that looks rested, even and luminous, day after day.",
+      "heroOrder": 7,
+      "promise": "A daily drop of light for skin that looks rested, even and luminous.",
+      "shortDescription": "A daily drop of light for skin that looks rested, even and luminous.",
+      "description": "A lightweight serum combining black rice extract, niacinamide and alpha-arbutin with hyaluronic acid and panthenol. It helps improve the appearance of dull, uneven-looking skin while supporting a soft, hydrated and smooth look.",
+      "price": null,
+      "priceSource": null,
+      "priceTBA": true,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "30 ml",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
+      "keyIngredients": [
+        {
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich"
+        },
+        {
+          "name": "Niacinamide",
+          "benefit": "helps skin look even and smooth"
+        },
+        {
+          "name": "Alpha-Arbutin",
+          "benefit": "helps brighten the look of skin"
+        },
+        {
+          "name": "Hyaluronic Acid",
+          "benefit": "hydration"
+        },
+        {
+          "name": "Panthenol",
+          "benefit": "comfort"
+        }
+      ],
+      "benefits": [
+        "Helps improve the look of dull, uneven skin",
+        "Hydrates",
+        "Leaves skin feeling soft and smooth"
+      ],
+      "howToUse": [
+        "Apply 2–3 drops to cleansed face and neck.",
+        "Gently massage until absorbed.",
+        "Follow with moisturizer.",
+        "Use daily."
+      ],
+      "ingredientsList": "Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Glycerin, Propanediol, Niacinamide, Alpha-Arbutin, Panthenol, Sodium Hyaluronate, Betaine, Allantoin, Tocopherol, Hydroxyethylcellulose, Carbomer, Tromethamine, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.",
+      "packClaims": [
+        "With Black Rice, Niacinamide & Alpha-Arbutin",
+        "Full of Anti-Ageing Antioxidants",
+        "Mild Sandalwood Fragrance",
+        "Net vol. 30 mL"
+      ],
+      "fragranceNote": "Mild sandalwood fragrance",
+      "caution": "For external use only. Avoid contact with eyes. Patch test before use.",
+      "suitableFor": [
+        "All skin types — patch test before use (as printed)"
+      ],
+      "media": [
+        {
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg",
+          "alt": "Black Rice Face Serum by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 460,
+            "y": 15,
+            "w": 410,
+            "h": 530
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-serum-2/1200/1500",
+          "alt": "Black Rice Face Serum — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-serum-3/1200/1500",
+          "alt": "Black Rice Face Serum — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://res.cloudinary.com/demo/video/upload/dog.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg",
+          "title": "The ritual (placeholder video)",
+          "placeholder": true
+        }
+      ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-serum-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-face-serum-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "How many drops should I use?",
+          "a": "Two to three drops on a cleansed face and neck, massaged in gently, then follow with moisturizer. The pack directs daily use."
+        },
+        {
+          "q": "Should I patch test first?",
+          "a": "The pack asks for a patch test before use, and for the serum to be kept away from the eyes."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "face serum",
+        "serum",
+        "face care",
+        "niacinamide"
+      ],
+      "relatedProductIds": [
+        1,
+        5,
+        8
+      ],
+      "frequentlyBoughtTogetherIds": [
+        8,
+        5
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "sortOrder": 6,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T00:00:00.000Z"
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Face Serum · LAMIKAA NATURALS",
+      "metaDescription": "A lightweight black rice serum for skin that looks rested, even and luminous, day after day. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 8,
-      "question": "How do I track my order?",
-      "answer": "You will receive an email with a tracking number as soon as your order is dispatched. You can also follow it at any time from the My Orders section of your account, where the current stage of every order is shown.",
-      "placements": [
-        "product",
-        "help",
-        "home"
+      "slug": "black-rice-moisturizer-gel",
+      "name": "Black Rice Moisturizer Gel",
+      "shortName": "Moisturizer Gel",
+      "sku": "LK-BR-MG-008",
+      "brand": "LAMIKAA Naturals",
+      "categoryId": 1,
+      "categoryIds": [
+        1,
+        5
       ],
-      "productIds": [],
-      "isActive": true,
-      "sortOrder": 7,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T00:00:00.000Z"
-    }
-  ],
-  "users": [
-    {
-      "id": 1,
-      "email": "user@example.com",
-      "password": "password123",
-      "firstName": "John",
-      "lastName": "Doe",
-      "phone": "+91 9876543210",
-      "avatar": null,
-      "addresses": [
+      "concerns": [
+        "hydration",
+        "comfort"
+      ],
+      "ritualStep": {
+        "order": 5,
+        "label": "Moisturise",
+        "frequency": "Morning and evening"
+      },
+      "heroHeadline": "Weightless. Endless. Hydration.",
+      "heroSubtext": "A featherlight black rice gel that drinks in fast and keeps skin soft, smooth and comfortable all day.",
+      "heroOrder": 8,
+      "promise": "Weightless hydration that keeps skin soft, smooth and comfortable all day.",
+      "shortDescription": "Weightless hydration that keeps skin soft, smooth and comfortable all day.",
+      "description": "A lightweight moisturising gel with black rice extract, niacinamide, aloe vera and hyaluronic acid. Its refreshing texture helps replenish moisture and leaves your skin feeling soft, smooth and hydrated.",
+      "price": null,
+      "priceSource": null,
+      "priceTBA": true,
+      "comparePrice": 0,
+      "costPrice": 0,
+      "currency": "INR",
+      "size": "100 ml",
+      "stock": 100,
+      "lowStockThreshold": 10,
+      "weight": 0,
+      "dimensions": null,
+      "variants": [],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
+      "keyIngredients": [
         {
-          "id": 1,
-          "label": "Home",
-          "firstName": "John",
-          "lastName": "Doe",
-          "phone": "+91 9876543210",
-          "addressLine1": "123 Main Street",
-          "addressLine2": "Apt 4B",
-          "city": "Mumbai",
-          "state": "Maharashtra",
-          "postalCode": "400001",
-          "country": "India",
-          "isDefault": true
+          "name": "Black Rice",
+          "benefit": "antioxidant-rich"
+        },
+        {
+          "name": "Hyaluronic Acid",
+          "benefit": "hydration"
+        },
+        {
+          "name": "Aloe Vera",
+          "benefit": "soothing"
+        },
+        {
+          "name": "Niacinamide",
+          "benefit": "helps skin look smooth"
         }
       ],
-      "isActive": true,
-      "createdAt": "2025-01-15T10:00:00.000Z",
-      "updatedAt": "2025-01-15T10:00:00.000Z",
-      "storeCredit": 0
-    },
-    {
-      "id": 2,
-      "email": "jane@example.com",
-      "password": "password123",
-      "firstName": "Jane",
-      "lastName": "Smith",
-      "phone": "+91 9123456789",
-      "avatar": null,
-      "addresses": [],
-      "isActive": true,
-      "createdAt": "2025-02-01T09:00:00.000Z",
-      "updatedAt": "2025-02-01T09:00:00.000Z",
-      "storeCredit": 0
-    },
-    {
-      "id": 3,
-      "email": "mail4bappidas@gmail.com",
-      "password": "Bappi@12345",
-      "firstName": "Bappi",
-      "lastName": "Das",
-      "phone": "",
-      "avatar": null,
-      "addresses": [
+      "benefits": [
+        "Hydrates",
+        "Softens",
+        "Refreshes"
+      ],
+      "howToUse": [
+        "Apply a small amount evenly over cleansed face and neck.",
+        "Gently massage until absorbed.",
+        "Use morning and evening."
+      ],
+      "ingredientsList": "Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Glycerin, Propanediol, Niacinamide, Panthenol, Sodium Hyaluronate, Aloe Barbadensis Leaf Juice, Betaine, Carbomer, Hydroxyethylcellulose, Tromethamine, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.",
+      "packClaims": [
+        "With Black Rice, Niacinamide & Hyaluronic Acid",
+        "Full of Anti-Ageing Antioxidants",
+        "Hydrates • Softens • Refreshes",
+        "Mild Sandalwood Fragrance",
+        "Net vol. 100 ml"
+      ],
+      "fragranceNote": "Mild sandalwood fragrance",
+      "caution": "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children.",
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
+      "media": [
         {
-          "id": 1,
-          "label": "Home",
-          "firstName": "Bappi",
-          "lastName": "Das",
-          "phone": "+919707112233",
-          "addressLine1": "Moutupuri, Barpeta",
-          "addressLine2": "Near BH College",
-          "city": "Howly",
-          "state": "Assam",
-          "postalCode": "781316",
-          "country": "India",
-          "isDefault": true
+          "type": "image",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg",
+          "alt": "Black Rice Moisturizer Gel by LAMIKAA Naturals — label",
+          "primary": true,
+          "crop": {
+            "x": 240,
+            "y": 40,
+            "w": 330,
+            "h": 680
+          }
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-2/1200/1500",
+          "alt": "Black Rice Moisturizer Gel — placeholder lifestyle image",
+          "placeholder": true
+        },
+        {
+          "type": "image",
+          "url": "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-3/1200/1500",
+          "alt": "Black Rice Moisturizer Gel — placeholder texture image",
+          "placeholder": true
+        },
+        {
+          "type": "video",
+          "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
+          "poster": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg",
+          "title": "How to use (placeholder video)",
+          "placeholder": true
         }
       ],
+      "images": [
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg",
+        "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-2/1200/1500",
+        "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-3/1200/1500"
+      ],
+      "faqs": [
+        {
+          "q": "When should I apply the gel?",
+          "a": "Morning and evening, as printed on the pack: a small amount evenly over a cleansed face and neck, massaged in until absorbed."
+        },
+        {
+          "q": "Where does it sit in the routine?",
+          "a": "Last. The serum's pack directs you to follow with moisturizer, so the gel goes on after it."
+        }
+      ],
+      "tags": [
+        "black rice",
+        "moisturizer",
+        "gel moisturizer",
+        "face care",
+        "hyaluronic acid"
+      ],
+      "relatedProductIds": [
+        1,
+        5,
+        7
+      ],
+      "frequentlyBoughtTogetherIds": [
+        7,
+        5
+      ],
+      "featured": true,
+      "trending": false,
+      "hot": false,
+      "isNew": true,
       "isActive": true,
-      "createdAt": "2025-06-01T10:00:00.000Z",
-      "updatedAt": "2026-09-01T14:02:12.081Z",
-      "storeCredit": 3918
-    },
-    {
-      "firstName": "Shubendu",
-      "lastName": "Das",
-      "email": "shubendu@assamdigitaxcvbbl.com",
-      "phone": "+916901608721",
-      "password": "Zxcvbnm",
-      "avatar": null,
-      "addresses": [],
-      "isActive": true,
-      "createdAt": "2026-09-01T10:29:45.022Z",
-      "updatedAt": "2026-09-01T10:29:45.022Z",
-      "id": 4
-    }
-  ],
-  "admins": [
-    {
-      "id": 1,
-      "email": "admin@store.com",
-      "password": "admin123",
-      "firstName": "Admin",
-      "lastName": "User",
-      "role": "super_admin",
-      "isActive": true,
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "rating": 0,
+      "totalReviews": 0,
+      "metaTitle": "Black Rice Moisturizer Gel · LAMIKAA NATURALS",
+      "metaDescription": "A featherlight black rice gel that drinks in fast and keeps skin soft, smooth and comfortable all day. Farmer-owned, rooted in Assam.",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     }
   ],
   "categories": [
     {
       "id": 1,
-      "name": "Muga Silk",
-      "slug": "muga-silk",
-      "description": "Assam's own golden silk, undyed — the honey colour is the fibre's, not a dye. Strong, lustrous, and it deepens with every wash.",
-      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289312/muga_2_V1.png",
+      "slug": "face-care",
+      "name": "Face Care",
+      "displayName": "Face Care",
+      "description": "Cleanse, refresh, treat and moisturise — the Black Rice face routine.",
+      "image": "https://picsum.photos/seed/lamikaa-cat-face-care/1600/1000",
+      "heroImage": "https://picsum.photos/seed/lamikaa-cat-face-care/1600/1000",
+      "kind": "products",
       "parentId": null,
       "isActive": true,
       "sortOrder": 1,
       "showInMainMenu": true,
       "menuOrder": 1,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:12:50.877Z"
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 2,
-      "name": "Pat Silk",
-      "slug": "pat-silk",
-      "description": "Bright ivory-to-white mulberry silk, the weave most often carried with zari for weddings and Bihu.",
-      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289300/pat_2_v1.png",
+      "slug": "body-care",
+      "name": "Body Care",
+      "displayName": "Body Care",
+      "description": "Everyday cleansing bars and washes with black rice and sandalwood.",
+      "image": "https://picsum.photos/seed/lamikaa-cat-body-care/1600/1000",
+      "heroImage": "https://picsum.photos/seed/lamikaa-cat-body-care/1600/1000",
+      "kind": "products",
       "parentId": null,
       "isActive": true,
       "sortOrder": 2,
       "showInMainMenu": true,
       "menuOrder": 2,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:13:18.790Z"
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 3,
-      "name": "Eri Silk",
-      "slug": "eri-silk",
-      "description": "Handspun, matte and warm — Eri behaves more like a fine wool than a silk, which is why it makes the shawls.",
-      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289291/Eri_1-V3.png",
+      "slug": "cleansers",
+      "name": "Cleansers",
+      "displayName": "Cleansers",
+      "description": "Face wash, body wash and the goat milk bar.",
+      "image": "https://picsum.photos/seed/lamikaa-cat-cleansers/1600/1000",
+      "heroImage": "https://picsum.photos/seed/lamikaa-cat-cleansers/1600/1000",
+      "kind": "products",
       "parentId": null,
       "isActive": true,
       "sortOrder": 3,
       "showInMainMenu": true,
       "menuOrder": 3,
-      "createdAt": "2026-09-01T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:13:43.681Z"
-    }
-  ],
-  "products": [
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    },
     {
-      "id": 1,
-      "name": "Sualkuchi Muga Mekhela Chador — Natural Gold",
-      "slug": "sualkuchi-muga-mekhela-chador-natural-gold",
-      "sku": "MEK-MUG-001",
-      "shortDescription": "A two-piece Muga Mekhela Chador in undyed golden yarn, handwoven on Sualkuchi looms.",
-      "description": "Woven in Sualkuchi, the weaving village on the north bank of the Brahmaputra where Muga has been worked for generations. The yarn is undyed — the deep honey gold is the fibre's own colour, drawn from the Muga silkworm and nothing else. Both the mekhela and the chador are woven as a matched pair on the same loom so the sheen runs continuously across the drape. A fine kesa border edges the chador, and the anchal carries a narrow woven band rather than applied work. Muga is famously durable and its lustre deepens each time it is washed. Dry clean for the first two years, then a gentle cold hand wash. Store folded in unbleached muslin, away from direct light.",
-      "categoryId": 1,
-      "brand": "Meghali's Silk",
-      "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289312/muga_1_V1.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289308/muga_1_V2.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289311/muga_1_V3.png"
-      ],
-      "price": 41,
-      "comparePrice": 380000000000,
-      "costPrice": 22400,
-      "stock": 9,
-      "lowStockThreshold": 3,
-      "weight": 1.15,
-      "dimensions": {
-        "length": 38,
-        "width": 28,
-        "height": 8
-      },
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Natural Gold",
-          "price": 3250000000,
-          "stock": 5,
-          "sku": "MEK-MUG-001-NGD"
-        },
-        {
-          "id": "v2",
-          "name": "Gold with Rust Border",
-          "price": 335000000000,
-          "stock": 4,
-          "sku": "MEK-MUG-001-GRB"
-        }
-      ],
-      "tags": [
-        "mekhela chador",
-        "muga",
-        "assam silk",
-        "sualkuchi",
-        "handloom",
-        "undyed",
-        "heirloom"
-      ],
-      "featured": true,
-      "trending": true,
-      "hot": false,
+      "id": 4,
+      "slug": "serums",
+      "name": "Serums",
+      "displayName": "Serums",
+      "description": "Concentrated daily care for a rested, even-looking complexion.",
+      "image": "https://picsum.photos/seed/lamikaa-cat-serums/1600/1000",
+      "heroImage": "https://picsum.photos/seed/lamikaa-cat-serums/1600/1000",
+      "kind": "products",
+      "parentId": null,
       "isActive": true,
-      "rating": 4.8,
-      "totalReviews": 41,
-      "metaTitle": "Sualkuchi Muga Mekhela Chador — Natural Gold | Meghali's Silk",
-      "metaDescription": "A two-piece Muga Mekhela Chador in undyed golden yarn, handwoven on Sualkuchi looms.",
-      "createdAt": "2025-03-12T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:03:30.628Z",
-      "frequentlyBoughtTogetherIds": [
-        28,
-        19
-      ],
-      "relatedProductIds": [
-        13,
-        6,
-        10,
-        35
-      ]
+      "sortOrder": 4,
+      "showInMainMenu": true,
+      "menuOrder": 4,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "slug": "moisturizers",
+      "name": "Moisturizers",
+      "displayName": "Moisturizers & Mists",
+      "description": "Featherlight gel and an instant mist.",
+      "image": "https://picsum.photos/seed/lamikaa-cat-moisturizers/1600/1000",
+      "heroImage": "https://picsum.photos/seed/lamikaa-cat-moisturizers/1600/1000",
+      "kind": "products",
+      "parentId": null,
+      "isActive": true,
+      "sortOrder": 5,
+      "showInMainMenu": true,
+      "menuOrder": 5,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 6,
-      "name": "Pat Silk Mekhela Chador — Ivory & Gold",
-      "slug": "pat-silk-mekhela-chador-ivory-and-gold",
-      "sku": "MEK-PAT-006",
-      "shortDescription": "Ivory Pat silk with a gold zari border — the drape worn at Bihu across Assam.",
-      "description": "Pat is Assam's mulberry silk: brighter and finer than Muga, and traditionally kept in ivory and white. This is the drape you see on stage at Bihu — an ivory body, a gold zari border and anchal, nothing else competing with it. Handwoven in Sualkuchi. The chador is generous enough to pleat properly at the shoulder, and the mekhela is supplied unpleated. Pat holds a crisp fall straight off the loom and softens over the first few wears. Dry clean. Store away from damp, which is what dulls zari.",
-      "categoryId": 2,
-      "brand": "Meghali's Silk",
-      "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289295/Pat_2_V2.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289300/pat_2_v1.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289299/pat_2_V3.png"
-      ],
-      "price": 18500,
-      "comparePrice": 22000,
-      "costPrice": 12700,
-      "stock": 12,
-      "lowStockThreshold": 4,
-      "weight": 0.95,
-      "dimensions": {
-        "length": 38,
-        "width": 28,
-        "height": 8
-      },
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Ivory",
-          "price": 18500,
-          "stock": 7,
-          "sku": "MEK-PAT-006-IVY"
-        },
-        {
-          "id": "v2",
-          "name": "Off White",
-          "price": 18500,
-          "stock": 5,
-          "sku": "MEK-PAT-006-OFW"
-        }
-      ],
-      "tags": [
-        "mekhela chador",
-        "pat",
-        "mulberry",
-        "assam silk",
-        "sualkuchi",
-        "handloom",
-        "bihu",
-        "zari"
-      ],
-      "featured": true,
-      "trending": false,
-      "hot": false,
+      "slug": "masks",
+      "name": "Masks",
+      "displayName": "Masks & Scrubs",
+      "description": "Weekly treats: a clay mask and a fine rice scrub.",
+      "image": "https://picsum.photos/seed/lamikaa-cat-masks/1600/1000",
+      "heroImage": "https://picsum.photos/seed/lamikaa-cat-masks/1600/1000",
+      "kind": "products",
+      "parentId": null,
       "isActive": true,
-      "rating": 4.7,
-      "totalReviews": 47,
-      "metaTitle": "Pat Silk Mekhela Chador — Ivory & Gold | Meghali's Silk",
-      "metaDescription": "Ivory Pat silk with a gold zari border — the drape worn at Bihu across Assam.",
-      "createdAt": "2025-01-28T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:06:10.418Z",
-      "frequentlyBoughtTogetherIds": [
-        28,
-        19
-      ],
-      "relatedProductIds": [
-        16,
-        1,
-        10,
-        36
-      ]
+      "sortOrder": 6,
+      "showInMainMenu": true,
+      "menuOrder": 6,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    },
+    {
+      "id": 7,
+      "slug": "rituals",
+      "name": "Rituals",
+      "displayName": "Rituals",
+      "description": "Curated routines, step by step.",
+      "image": "https://picsum.photos/seed/lamikaa-cat-rituals/1600/1000",
+      "heroImage": "https://picsum.photos/seed/lamikaa-cat-rituals/1600/1000",
+      "kind": "rituals",
+      "parentId": null,
+      "isActive": true,
+      "sortOrder": 7,
+      "showInMainMenu": true,
+      "menuOrder": 7,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    }
+  ],
+  "concerns": [
+    {
+      "id": 1,
+      "slug": "cleansing",
+      "name": "Cleansing",
+      "order": 1
+    },
+    {
+      "id": 2,
+      "slug": "brightening",
+      "name": "Brightening",
+      "order": 2
+    },
+    {
+      "id": 3,
+      "slug": "hydration",
+      "name": "Hydration",
+      "order": 3
+    },
+    {
+      "id": 4,
+      "slug": "refresh",
+      "name": "Refresh",
+      "order": 4
+    },
+    {
+      "id": 5,
+      "slug": "glow",
+      "name": "Glow",
+      "order": 5
+    },
+    {
+      "id": 6,
+      "slug": "revive",
+      "name": "Revive",
+      "order": 6
+    },
+    {
+      "id": 7,
+      "slug": "exfoliation",
+      "name": "Exfoliation",
+      "order": 7
+    },
+    {
+      "id": 8,
+      "slug": "texture",
+      "name": "Texture",
+      "order": 8
+    },
+    {
+      "id": 9,
+      "slug": "even-tone",
+      "name": "Even tone",
+      "order": 9
     },
     {
       "id": 10,
-      "name": "Eri Silk Mekhela Chador — Undyed Natural",
-      "slug": "eri-silk-mekhela-chador-undyed-natural",
-      "sku": "MEK-ERI-010",
-      "shortDescription": "Undyed Eri in its own oatmeal colour — matte, warm and made for wearing often.",
-      "description": "Eri is the quiet member of the Assamese silk family. The cocoon is left to open before the yarn is reeled, so the filament is spun rather than drawn, and the cloth comes out matte and slightly textured instead of shiny. It is warmer than it looks and forgiving in a way Muga and Pat are not: it creases less, it hangs softer, and it wants to be worn rather than kept. Handwoven undyed in the natural oatmeal of the fibre. Gentle cold hand wash, dry in shade. It softens with every wash, which is the point.",
-      "categoryId": 3,
-      "brand": "Meghali's Silk",
-      "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289289/Eri_1_v2.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289293/Eri_1_v1.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289291/Eri_1-V3.png"
-      ],
-      "price": 11500,
-      "comparePrice": 0,
-      "costPrice": 7900,
-      "stock": 16,
-      "lowStockThreshold": 5,
-      "weight": 0.85,
-      "dimensions": {
-        "length": 38,
-        "width": 28,
-        "height": 8
-      },
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Natural Oatmeal",
-          "price": 11500,
-          "stock": 9,
-          "sku": "MEK-ERI-010-NAT"
-        },
-        {
-          "id": "v2",
-          "name": "Natural with Rust",
-          "price": 11500,
-          "stock": 7,
-          "sku": "MEK-ERI-010-RST"
-        }
-      ],
-      "tags": [
-        "mekhela chador",
-        "eri",
-        "ahimsa",
-        "assam silk",
-        "handloom",
-        "undyed",
-        "everyday"
-      ],
-      "featured": false,
-      "trending": true,
-      "hot": false,
-      "isActive": true,
-      "rating": 4.6,
-      "totalReviews": 38,
-      "metaTitle": "Eri Silk Mekhela Chador — Undyed Natural | Meghali's Silk",
-      "metaDescription": "Undyed Eri in its own oatmeal colour — matte, warm and made for wearing often.",
-      "createdAt": "2025-04-25T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:07:12.707Z",
-      "frequentlyBoughtTogetherIds": [
-        28,
-        36
-      ],
-      "relatedProductIds": [
-        19,
-        6,
-        36,
-        1
-      ]
+      "slug": "comfort",
+      "name": "Comfort",
+      "order": 10
     },
     {
-      "id": 13,
-      "name": "Muga Silk Saree — Assam Golden",
-      "slug": "muga-silk-saree-assam-golden",
-      "sku": "SAR-MUG-013",
-      "shortDescription": "Six yards of undyed Muga with a woven border — the drape, in saree form.",
-      "description": "The same Sualkuchi Muga we weave into Mekhela Chador, run to six and a quarter yards for those who prefer a saree. Undyed golden yarn throughout, a woven border on both edges, and a plain anchal finished with a fine band. Muga's reputation for lasting is not marketing: pieces of it are handed down, and the sheen improves rather than fades with washing. Comes with an unstitched Muga blouse piece. Dry clean for the first two years, then a gentle cold hand wash. Store folded in unbleached muslin.",
-      "categoryId": 1,
-      "brand": "Meghali's Silk",
-      "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289307/Muga_2_V2.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289312/muga_2_V1.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289308/muga_2_v3.png"
-      ],
-      "price": 27500,
-      "comparePrice": 32000,
-      "costPrice": 19000,
-      "stock": 10,
-      "lowStockThreshold": 3,
-      "weight": 0.85,
-      "dimensions": {
-        "length": 35,
-        "width": 25,
-        "height": 5
-      },
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Natural Gold",
-          "price": 27500,
-          "stock": 6,
-          "sku": "SAR-MUG-013-NGD"
-        },
-        {
-          "id": "v2",
-          "name": "Gold with Black Border",
-          "price": 27500,
-          "stock": 4,
-          "sku": "SAR-MUG-013-BLK"
-        }
-      ],
-      "tags": [
-        "saree",
-        "muga",
-        "assam silk",
-        "sualkuchi",
-        "handloom",
-        "undyed",
-        "heirloom"
-      ],
-      "featured": true,
-      "trending": true,
-      "hot": false,
-      "isActive": true,
-      "rating": 4.8,
-      "totalReviews": 52,
-      "metaTitle": "Muga Silk Saree — Assam Golden | Meghali's Silk",
-      "metaDescription": "Six yards of undyed Muga with a woven border — the drape, in saree form.",
-      "createdAt": "2025-02-05T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:04:19.225Z",
-      "frequentlyBoughtTogetherIds": [
-        28,
-        19
-      ],
-      "relatedProductIds": [
-        1,
-        16,
-        34,
-        19
-      ]
-    },
-    {
-      "id": 16,
-      "name": "Pat Silk Saree — Ivory Zari",
-      "slug": "pat-silk-saree-ivory-zari",
-      "sku": "SAR-PAT-016",
-      "shortDescription": "Ivory Pat silk with a gold zari border and anchal — the Assamese festive standard.",
-      "description": "Ivory and gold is the combination Assam reaches for at Bihu, at weddings, at anything that calls for silk. This saree keeps to it strictly: an ivory Pat ground, a gold zari border on both edges, and an anchal of woven zari bands. Handwoven in Sualkuchi. Pat has a brighter, finer surface than Muga and holds a crisp pleat, which is why it photographs so well under lights. Comes with an unstitched blouse piece. Dry clean, and keep it dry — damp is what tarnishes zari.",
-      "categoryId": 2,
-      "brand": "Meghali's Silk",
-      "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289303/Pat_1_V1.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289300/Pat_1_v2.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289301/Pat_1_v3.png"
-      ],
-      "price": 14500,
-      "comparePrice": 17500,
-      "costPrice": 9900,
-      "stock": 14,
-      "lowStockThreshold": 5,
-      "weight": 0.7,
-      "dimensions": {
-        "length": 35,
-        "width": 25,
-        "height": 5
-      },
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Ivory",
-          "price": 14500,
-          "stock": 8,
-          "sku": "SAR-PAT-016-IVY"
-        },
-        {
-          "id": "v2",
-          "name": "Ivory with Red Border",
-          "price": 14500,
-          "stock": 6,
-          "sku": "SAR-PAT-016-RED"
-        }
-      ],
-      "tags": [
-        "saree",
-        "pat",
-        "mulberry",
-        "assam silk",
-        "sualkuchi",
-        "handloom",
-        "zari",
-        "bihu"
-      ],
-      "featured": true,
-      "trending": false,
-      "hot": false,
-      "isActive": true,
-      "rating": 4.7,
-      "totalReviews": 44,
-      "metaTitle": "Pat Silk Saree — Ivory Zari | Meghali's Silk",
-      "metaDescription": "Ivory Pat silk with a gold zari border and anchal — the Assamese festive standard.",
-      "createdAt": "2025-01-18T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:08:07.763Z",
-      "frequentlyBoughtTogetherIds": [
-        28,
-        36
-      ],
-      "relatedProductIds": [
-        6,
-        13,
-        19,
-        35
-      ]
-    },
-    {
-      "id": 19,
-      "name": "Eri Silk Shawl — Undyed Ivory",
-      "slug": "eri-silk-shawl-undyed-ivory",
-      "sku": "STO-ERI-019",
-      "shortDescription": "A handspun Eri shawl in undyed ivory, warm enough for a Guwahati winter evening.",
-      "description": "Eri is spun rather than reeled, which gives it a soft, slightly irregular surface and a warmth closer to fine wool than to silk. This shawl is left undyed in the fibre's own pale ivory, with a plain hand-knotted fringe at both ends and no border. It is the piece to keep in a bag from November onwards. Handspun and handwoven in Assam. Gentle cold hand wash with a mild detergent, dry flat in shade. Eri gets softer and slightly fuller with each wash.",
-      "categoryId": 3,
-      "brand": "Meghali's Silk",
-      "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289290/Eri_2_v1.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289288/ERI_2_V2.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788289288/ERI_2_v3.png"
-      ],
-      "price": 4800,
-      "comparePrice": 0,
-      "costPrice": 3300,
-      "stock": 30,
-      "lowStockThreshold": 8,
-      "weight": 0.32,
-      "dimensions": {
-        "length": 30,
-        "width": 22,
-        "height": 4
-      },
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Undyed Ivory",
-          "price": 4800,
-          "stock": 16,
-          "sku": "STO-ERI-019-IVY"
-        },
-        {
-          "id": "v2",
-          "name": "Natural Oatmeal",
-          "price": 4800,
-          "stock": 14,
-          "sku": "STO-ERI-019-NAT"
-        }
-      ],
-      "tags": [
-        "stole",
-        "shawl",
-        "eri",
-        "ahimsa",
-        "assam silk",
-        "handloom",
-        "handspun",
-        "undyed"
-      ],
-      "featured": true,
-      "trending": true,
-      "hot": false,
-      "isActive": true,
-      "rating": 4.7,
-      "totalReviews": 58,
-      "metaTitle": "Eri Silk Shawl — Undyed Ivory | Meghali's Silk",
-      "metaDescription": "A handspun Eri shawl in undyed ivory, warm enough for a Guwahati winter evening.",
-      "createdAt": "2025-01-09T00:00:00.000Z",
-      "updatedAt": "2026-09-01T19:08:45.403Z",
-      "frequentlyBoughtTogetherIds": [
-        28,
-        36
-      ],
-      "relatedProductIds": [
-        10,
-        28,
-        36,
-        13
-      ]
+      "id": 11,
+      "slug": "nourishing",
+      "name": "Nourishing",
+      "order": 11
     }
   ],
-  "cart": [
-    {
-      "productId": 19,
-      "variantId": "v1",
-      "variantName": "Undyed Ivory",
-      "name": "Eri Silk Shawl — Undyed Ivory",
-      "image": "https://placehold.co/600x800/FAF6EC/5C554A?text=Eri+Shawl",
-      "price": 4800,
-      "comparePrice": 0,
-      "currency": "INR",
-      "quantity": 1,
-      "stock": 16,
-      "userId": 1,
-      "id": 1
-    }
-  ],
-  "orders": [
+  "rituals": [
     {
       "id": 1,
-      "orderNumber": "ORD-20250310-0001",
-      "userId": 1,
-      "items": [
+      "slug": "morning-glow",
+      "name": "The Morning Glow Ritual",
+      "tagline": "Clear, refreshed, quietly radiant.",
+      "story": "Four unhurried steps to start the day clear, refreshed and quietly radiant — the Black Rice range in the order it was designed to be used. Black rice is the thread running through all four, paired each time with botanicals chosen for that step of your routine.",
+      "image": "https://picsum.photos/seed/lamikaa-ritual-morning/1200/1500",
+      "duration": "About five minutes",
+      "steps": [
         {
+          "order": 1,
+          "productId": 1,
+          "note": "Begin with a clean slate",
+          "frequency": "Morning and evening"
+        },
+        {
+          "order": 2,
+          "productId": 5,
+          "note": "Wake the skin",
+          "frequency": "Whenever skin needs it"
+        },
+        {
+          "order": 3,
+          "productId": 7,
+          "note": "A few drops, pressed in",
+          "frequency": "Daily"
+        },
+        {
+          "order": 4,
+          "productId": 8,
+          "note": "Seal it in, weightlessly",
+          "frequency": "Morning and evening"
+        }
+      ],
+      "isActive": true,
+      "sortOrder": 1,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "slug": "evening-renewal",
+      "name": "The Evening Renewal Ritual",
+      "tagline": "Undo the day, one unhurried step at a time.",
+      "story": "Five steps to undo the day: cleanse, polish, treat, then finish with the serum and the gel. The scrub and the mask are weekly pleasures rather than nightly ones — the rest belongs to every evening.",
+      "image": "https://picsum.photos/seed/lamikaa-ritual-evening/1200/1500",
+      "duration": "About fifteen minutes",
+      "steps": [
+        {
+          "order": 1,
+          "productId": 1,
+          "note": "Take the day off first",
+          "frequency": "Morning and evening"
+        },
+        {
+          "order": 2,
           "productId": 6,
-          "variantId": "v1",
-          "name": "Pure Tussar Silk Saree — Indigo Block Print - Indigo",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Tussar+Indigo",
-          "sku": "SAR-TUS-006-IND",
-          "price": 8999,
-          "quantity": 1,
-          "subtotal": 8999
+          "note": "A fine polish, two or three evenings a week",
+          "frequency": "2–3 times weekly"
+        },
+        {
+          "order": 3,
+          "productId": 4,
+          "note": "Ten unhurried minutes, once a week",
+          "frequency": "Weekly"
+        },
+        {
+          "order": 4,
+          "productId": 7,
+          "note": "A few drops, pressed in",
+          "frequency": "Daily"
+        },
+        {
+          "order": 5,
+          "productId": 8,
+          "note": "Seal it in, weightlessly",
+          "frequency": "Morning and evening"
         }
       ],
-      "billingAddress": {
-        "firstName": "John",
-        "lastName": "Doe",
-        "phone": "+91 9876543210",
-        "addressLine1": "123 Main Street",
-        "addressLine2": "Apt 4B",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "postalCode": "400001",
-        "country": "India"
-      },
-      "shippingAddress": {
-        "firstName": "John",
-        "lastName": "Doe",
-        "phone": "+91 9876543210",
-        "addressLine1": "123 Main Street",
-        "addressLine2": "Apt 4B",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "postalCode": "400001",
-        "country": "India"
-      },
-      "subtotal": 8999,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 0,
-      "taxAmount": 1440,
-      "total": 10439,
-      "paymentStatus": "refunded",
-      "paymentMethod": "upi",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "shipped",
-      "trackingNumber": "SHIP123456789IN",
-      "trackingUrl": "https://shiprocket.co/tracking/SHIP123456789IN",
-      "shiprocketOrderId": null,
-      "notes": "",
-      "createdAt": "2026-01-15T10:30:00.000Z",
-      "updatedAt": "2026-06-12T07:14:06.552Z",
-      "statusHistory": [
-        {
-          "at": "2026-01-15T10:30:00.000Z",
-          "by": "Customer",
-          "action": "Order placed"
-        },
-        {
-          "at": "2026-01-15T10:31:00.000Z",
-          "by": "System",
-          "action": "Payment captured",
-          "note": "UPI via Razorpay"
-        },
-        {
-          "at": "2026-01-16T09:00:00.000Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped",
-          "note": "Tracking SHIP123456789IN"
-        },
-        {
-          "at": "2026-01-22T14:30:00.000Z",
-          "by": "Admin User",
-          "action": "Return refund processed (RET-20260120-0001)",
-          "note": "₹10,439 refunded"
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "orderNumber": "ORD-20250318-0002",
-      "userId": 1,
-      "items": [
-        {
-          "productId": 22,
-          "variantId": "v1",
-          "name": "Bridal Silk Lehenga — Crimson Zardozi - Crimson / M",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Bridal+Lehenga",
-          "sku": "LEH-SLK-022-CRM-M",
-          "price": 74999,
-          "quantity": 1,
-          "subtotal": 74999
-        },
-        {
-          "productId": 19,
-          "variantId": "v1",
-          "name": "Pure Silk Unstitched Suit Set — Wine Floral - Wine / Free Size",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Silk+Suit",
-          "sku": "SUT-SLK-019-WIN-FS",
-          "price": 3499,
-          "quantity": 1,
-          "subtotal": 3499
-        }
-      ],
-      "billingAddress": {
-        "firstName": "John",
-        "lastName": "Doe",
-        "phone": "+91 9876543210",
-        "addressLine1": "123 Main Street",
-        "addressLine2": "Apt 4B",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "postalCode": "400001",
-        "country": "India"
-      },
-      "shippingAddress": {
-        "firstName": "John",
-        "lastName": "Doe",
-        "phone": "+91 9876543210",
-        "addressLine1": "123 Main Street",
-        "addressLine2": "Apt 4B",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "postalCode": "400001",
-        "country": "India"
-      },
-      "subtotal": 78498,
-      "discountAmount": 5000,
-      "couponCode": "WELCOME500",
-      "shippingAmount": 0,
-      "taxAmount": 11759,
-      "total": 85257,
-      "paymentStatus": "paid",
-      "paymentMethod": "card",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "shipped",
-      "trackingNumber": "SHIP987654321IN",
-      "trackingUrl": "https://shiprocket.co/tracking/SHIP987654321IN",
-      "shiprocketOrderId": "SR-78923",
-      "notes": "Please leave at reception",
-      "createdAt": "2026-02-01T14:20:00.000Z",
-      "updatedAt": "2026-02-03T09:00:00.000Z",
-      "statusHistory": [
-        {
-          "at": "2026-02-01T14:20:00.000Z",
-          "by": "Customer",
-          "action": "Order placed"
-        },
-        {
-          "at": "2026-02-01T14:21:00.000Z",
-          "by": "System",
-          "action": "Payment captured",
-          "note": "Card via Razorpay"
-        },
-        {
-          "at": "2026-02-03T09:00:00.000Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped",
-          "note": "Tracking SHIP987654321IN"
-        }
-      ]
+      "isActive": true,
+      "sortOrder": 2,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 3,
-      "orderNumber": "ORD-20260310-0003",
-      "userId": 2,
-      "items": [
+      "slug": "black-rice-body",
+      "name": "The Black Rice Body Ritual",
+      "tagline": "The same black rice, from the shower out.",
+      "story": "The same hero ingredient, carried from the face to the rest of you. Choose the bar or the wash, then finish with a mist — everyday care that takes no longer than it already does.",
+      "image": "https://picsum.photos/seed/lamikaa-ritual-body/1200/1500",
+      "duration": "About five minutes",
+      "steps": [
         {
-          "productId": 16,
-          "variantId": "v1",
-          "name": "Baluchari Silk Saree — Maroon Narrative Pallu - Maroon",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Baluchari+Silk",
-          "sku": "SAR-BAL-016-MRN",
-          "price": 16999,
-          "quantity": 1,
-          "subtotal": 16999
-        }
-      ],
-      "billingAddress": {
-        "firstName": "Jane",
-        "lastName": "Smith",
-        "phone": "+91 9123456789",
-        "addressLine1": "456 Park Avenue",
-        "city": "Delhi",
-        "state": "Delhi",
-        "postalCode": "110001",
-        "country": "India"
-      },
-      "shippingAddress": {
-        "firstName": "Jane",
-        "lastName": "Smith",
-        "phone": "+91 9123456789",
-        "addressLine1": "456 Park Avenue",
-        "city": "Delhi",
-        "state": "Delhi",
-        "postalCode": "110001",
-        "country": "India"
-      },
-      "subtotal": 16999,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 99,
-      "taxAmount": 2720,
-      "total": 19818,
-      "paymentStatus": "refunded",
-      "paymentMethod": "card",
-      "fulfillmentStatus": "unfulfilled",
-      "shippingStatus": "pending",
-      "trackingNumber": null,
-      "shiprocketOrderId": null,
-      "notes": "",
-      "createdAt": "2026-03-10T08:45:00.000Z",
-      "updatedAt": "2026-06-13T06:13:05.821Z",
-      "statusHistory": [
-        {
-          "at": "2026-03-10T08:45:00.000Z",
-          "by": "Customer",
-          "action": "Order placed"
-        },
-        {
-          "at": "2026-03-10T08:46:00.000Z",
-          "by": "System",
-          "action": "Payment captured",
-          "note": "Card via Razorpay"
-        },
-        {
-          "at": "2026-06-13T06:13:05.821Z",
-          "by": "Admin User",
-          "action": "Refund issued (₹19,818)",
-          "note": "Refunded from order"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "orderNumber": "ORD-20260315-0004",
-      "userId": 1,
-      "items": [
-        {
-          "productId": 29,
-          "variantId": "v1",
-          "name": "Mulberry Silk Stole — Pastel Set - Mint",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Mulberry+Stole",
-          "sku": "STO-MUL-029-MNT",
-          "price": 899,
-          "quantity": 3,
-          "subtotal": 2697
-        }
-      ],
-      "billingAddress": {
-        "firstName": "John",
-        "lastName": "Doe",
-        "phone": "+91 9876543210",
-        "addressLine1": "123 Main Street",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "postalCode": "400001",
-        "country": "India"
-      },
-      "shippingAddress": {
-        "firstName": "John",
-        "lastName": "Doe",
-        "phone": "+91 9876543210",
-        "addressLine1": "123 Main Street",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "postalCode": "400001",
-        "country": "India"
-      },
-      "subtotal": 2697,
-      "discountAmount": 270,
-      "couponCode": "FLAT10",
-      "shippingAmount": 49,
-      "taxAmount": 398,
-      "total": 2874,
-      "paymentStatus": "pending",
-      "paymentMethod": "cod",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "shipped",
-      "trackingNumber": null,
-      "shiprocketOrderId": null,
-      "notes": "",
-      "createdAt": "2026-03-15T16:00:00.000Z",
-      "updatedAt": "2026-06-12T14:17:08.244Z",
-      "statusHistory": [
-        {
-          "at": "2026-03-15T16:00:00.000Z",
-          "by": "Customer",
-          "action": "Order placed",
-          "note": "Cash on delivery"
-        },
-        {
-          "at": "2026-06-12T14:17:08.244Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped"
-        }
-      ]
-    },
-    {
-      "items": [
-        {
-          "productId": 17,
-          "variantId": "v1",
-          "name": "Baluchari Silk Saree — Midnight Blue - Midnight Blue",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Baluchari+Blue",
-          "sku": "SAR-BAL-017-BLU",
-          "price": 14999,
-          "quantity": 1,
-          "subtotal": 14999
-        }
-      ],
-      "shippingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "billingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "subtotal": 14999,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 0,
-      "taxAmount": 2700,
-      "total": 17699,
-      "paymentMethod": "cod",
-      "paymentStatus": "pending",
-      "fulfillmentStatus": "cancelled",
-      "shippingStatus": "pending",
-      "trackingNumber": null,
-      "notes": "",
-      "userId": 3,
-      "orderNumber": "ORD-MMYJ01ED-ZR26",
-      "createdAt": "2026-03-20T06:36:26.005Z",
-      "updatedAt": "2026-06-12T01:46:10.397Z",
-      "id": 5,
-      "cancelledAt": "2026-06-12T01:46:10.397Z",
-      "statusHistory": [
-        {
-          "at": "2026-03-20T06:36:26.005Z",
-          "by": "Customer",
-          "action": "Order placed",
-          "note": "Cash on delivery"
-        },
-        {
-          "at": "2026-06-12T01:46:10.397Z",
-          "by": "Customer",
-          "action": "Order cancelled",
-          "note": "Cancelled by customer"
-        }
-      ],
-      "cancelReason": "Cancelled by customer"
-    },
-    {
-      "items": [
-        {
-          "productId": 17,
-          "variantId": "v1",
-          "name": "Baluchari Silk Saree — Midnight Blue - Midnight Blue",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Baluchari+Blue",
-          "sku": "SAR-BAL-017-BLU",
-          "price": 14999,
-          "quantity": 1,
-          "subtotal": 14999
-        }
-      ],
-      "shippingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "billingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "subtotal": 14999,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 0,
-      "taxAmount": 2700,
-      "total": 17699,
-      "paymentMethod": "cod",
-      "paymentStatus": "paid",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "shipped",
-      "trackingNumber": "TEST63452634532563242346",
-      "trackingUrl": "https://www.delhivery.com/track/package/TEST63452634532563242346",
-      "notes": "Delivered",
-      "userId": 3,
-      "orderNumber": "ORD-MQA9I6E7-0IR2",
-      "shiprocketOrderId": null,
-      "createdAt": "2026-06-12T01:42:57.247Z",
-      "updatedAt": "2026-06-12T01:49:56.924Z",
-      "id": 6,
-      "statusHistory": [
-        {
-          "at": "2026-06-12T01:42:57.247Z",
-          "by": "Customer",
-          "action": "Order placed",
-          "note": "Cash on delivery"
-        },
-        {
-          "at": "2026-06-12T01:48:30.000Z",
-          "by": "Admin User",
-          "action": "Payment marked as paid"
-        },
-        {
-          "at": "2026-06-12T01:49:56.924Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped",
-          "note": "Tracking TEST63452634532563242346"
-        }
-      ]
-    },
-    {
-      "items": [
-        {
-          "productId": 3,
-          "variantId": "v1",
-          "name": "Banarasi Georgette Silk Saree — Wine - Wine",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Georgette+Silk",
-          "sku": "SAR-BAN-003-WIN",
-          "price": 8999,
-          "quantity": 1,
-          "subtotal": 8999
-        }
-      ],
-      "shippingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "billingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "subtotal": 8999,
-      "discountAmount": 500,
-      "couponCode": "WELCOME500",
-      "shippingAmount": 0,
-      "taxAmount": 1530,
-      "total": 10029,
-      "paymentMethod": "cod",
-      "paymentStatus": "paid",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "delivered",
-      "trackingNumber": "12331231212",
-      "notes": "Test Notes",
-      "userId": 3,
-      "orderNumber": "ORD-MQB0JHUB-9KL6",
-      "shiprocketOrderId": null,
-      "createdAt": "2026-06-12T14:19:48.371Z",
-      "updatedAt": "2026-06-12T14:49:17.688Z",
-      "id": 7,
-      "statusHistory": [
-        {
-          "at": "2026-06-12T14:19:48.371Z",
-          "by": "Customer",
-          "action": "Order placed",
-          "note": "Cash on delivery"
-        },
-        {
-          "at": "2026-06-12T14:47:54.035Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped"
-        },
-        {
-          "at": "2026-06-12T14:48:06.179Z",
-          "by": "Admin User",
-          "action": "Tracking updated"
-        },
-        {
-          "at": "2026-06-12T14:48:34.835Z",
-          "by": "Admin User",
-          "action": "Tracking updated",
-          "note": "Tracking 12331231212"
-        },
-        {
-          "at": "2026-06-12T14:49:04.101Z",
-          "by": "Admin User",
-          "action": "Marked delivered"
-        },
-        {
-          "at": "2026-06-12T14:49:17.716Z",
-          "by": "Admin User",
-          "action": "Payment marked as paid"
-        }
-      ],
-      "deliveredAt": "2026-06-12T14:49:04.053Z"
-    },
-    {
-      "items": [
-        {
-          "productId": 18,
-          "variantId": "v1",
-          "name": "Bengal Handloom Silk Saree — Dhakai Jamdani - White / Red",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Dhakai+Jamdani",
-          "sku": "SAR-BEN-018-WHR",
-          "price": 3999,
-          "quantity": 1,
-          "subtotal": 3999
-        }
-      ],
-      "shippingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "billingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "subtotal": 3999,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 199,
-      "taxAmount": 720,
-      "total": 4918,
-      "paymentMethod": "cod",
-      "paymentStatus": "refunded",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "delivered",
-      "trackingNumber": "532352353252",
-      "notes": "Order Shipped",
-      "userId": 3,
-      "orderNumber": "ORD-MQC1HWSZ-CAN8",
-      "shiprocketOrderId": null,
-      "createdAt": "2026-06-13T07:34:20.243Z",
-      "updatedAt": "2026-06-13T12:57:28.282Z",
-      "statusHistory": [
-        {
-          "at": "2026-06-13T07:34:20.243Z",
-          "by": "Customer",
-          "action": "Order placed"
-        },
-        {
-          "at": "2026-06-13T07:36:12.080Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped",
-          "note": "Tracking 532352353252 · tracking link added"
-        },
-        {
-          "at": "2026-06-13T07:38:00.486Z",
-          "by": "Admin User",
-          "action": "Tracking updated",
-          "note": "Tracking 532352353252 · tracking link added"
-        },
-        {
-          "at": "2026-06-13T12:49:23.385Z",
-          "by": "Admin User",
-          "action": "Marked delivered"
-        },
-        {
-          "at": "2026-06-13T12:49:44.526Z",
-          "by": "Admin User",
-          "action": "Payment marked as paid"
-        },
-        {
-          "at": "2026-06-13T12:55:11.832Z",
-          "by": "Admin User",
-          "action": "Refund initiated",
-          "note": "₹4,918 via store credit · ref ORDER ID - ORD-MQC1HWSZ-CAN8 — settlement pending"
-        },
-        {
-          "at": "2026-06-13T12:57:28.351Z",
-          "by": "Admin User",
-          "action": "Refund completed",
-          "note": "₹4,918 via store credit settled to customer"
-        }
-      ],
-      "id": 8,
-      "trackingUrl": "https://www.indiapost.com/tracking",
-      "deliveredAt": "2026-06-13T12:49:23.351Z",
-      "refundStatus": "completed",
-      "refundMethod": "store_credit",
-      "pendingRefund": null,
-      "refundedAmount": 4918,
-      "refundCompletedAt": "2026-06-13T12:57:28.282Z"
-    },
-    {
-      "items": [
-        {
-          "productId": 22,
-          "variantId": "v1",
-          "name": "Bridal Silk Lehenga — Crimson Zardozi - Crimson / M",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Bridal+Lehenga",
-          "sku": "LEH-SLK-022-CRM-M",
-          "price": 64999,
-          "quantity": 1,
-          "subtotal": 64999
-        }
-      ],
-      "shippingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "billingAddress": {
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India"
-      },
-      "subtotal": 64999,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 0,
-      "taxAmount": 11700,
-      "total": 76699,
-      "storeCreditUsed": 1000,
-      "amountPayable": 75699,
-      "paymentMethod": "upi",
-      "paymentStatus": "refunded",
-      "fulfillmentStatus": "unfulfilled",
-      "shippingStatus": "pending",
-      "trackingNumber": null,
-      "notes": "",
-      "userId": 3,
-      "orderNumber": "ORD-MQCGV6OM-Z965",
-      "shiprocketOrderId": null,
-      "createdAt": "2026-06-13T14:44:33.814Z",
-      "updatedAt": "2026-09-01T10:50:15.454Z",
-      "statusHistory": [
-        {
-          "at": "2026-06-13T14:44:33.814Z",
-          "by": "Customer",
-          "action": "Order placed"
-        },
-        {
-          "at": "2026-09-01T10:50:15.454Z",
-          "by": "Admin User",
-          "action": "Refund issued (₹75,699)"
-        }
-      ],
-      "id": 9
-    },
-    {
-      "items": [
-        {
-          "productId": 22,
-          "variantId": "v1",
-          "name": "Bridal Silk Lehenga — Crimson Zardozi - Crimson / M",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Bridal+Lehenga",
-          "sku": "LEH-SLK-022-CRM-M",
-          "price": 64999,
-          "quantity": 1,
-          "subtotal": 64999
-        },
-        {
-          "productId": 17,
-          "variantId": "v1",
-          "name": "Baluchari Silk Saree — Midnight Blue - Midnight Blue",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Baluchari+Blue",
-          "sku": "SAR-BAL-017-BLU",
-          "price": 14999,
-          "quantity": 1,
-          "subtotal": 14999
-        }
-      ],
-      "shippingAddress": {
-        "id": 1,
-        "label": "Home",
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India",
-        "isDefault": true
-      },
-      "billingAddress": {
-        "id": 1,
-        "label": "Home",
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India",
-        "isDefault": true
-      },
-      "subtotal": 79998,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 0,
-      "taxAmount": 14400,
-      "total": 94398,
-      "storeCreditUsed": 0,
-      "amountPayable": 94398,
-      "paymentMethod": "upi",
-      "paymentStatus": "paid",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "shipped",
-      "trackingNumber": null,
-      "notes": "",
-      "userId": 3,
-      "orderNumber": "ORD-MQDUWC74-RUVY",
-      "shiprocketOrderId": null,
-      "createdAt": "2026-06-14T14:05:08.416Z",
-      "updatedAt": "2026-09-01T14:03:10.408Z",
-      "statusHistory": [
-        {
-          "at": "2026-06-14T14:05:08.416Z",
-          "by": "Customer",
-          "action": "Order placed"
-        },
-        {
-          "at": "2026-09-01T10:45:21.383Z",
-          "by": "Admin User",
-          "action": "Refund initiated",
-          "note": "₹94,398 via original payment · ref mdbcmndzdc kjdcb — settlement pending"
-        },
-        {
-          "at": "2026-09-01T14:03:10.442Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped"
-        }
-      ],
-      "id": 10,
-      "refundStatus": "processing",
-      "refundMethod": "original_payment",
-      "pendingRefund": {
-        "amount": 94398,
-        "method": "original_payment",
-        "reason": "dasbzkufhsfkjnds",
-        "reference": "mdbcmndzdc kjdcb",
-        "initiatedAt": "2026-09-01T10:45:21.382Z",
-        "by": "Admin User"
-      },
-      "trackingUrl": null
-    },
-    {
-      "items": [
-        {
-          "productId": 3,
-          "variantId": "v1",
-          "name": "Banarasi Georgette Silk Saree — Wine - Wine",
-          "image": "https://placehold.co/600x800/0B3B2E/CBA35A?text=Georgette+Silk",
-          "sku": "SAR-BAN-003-WIN",
-          "price": 8999,
-          "quantity": 1,
-          "subtotal": 8999
-        }
-      ],
-      "shippingAddress": {
-        "id": 1,
-        "label": "Home",
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India",
-        "isDefault": true
-      },
-      "billingAddress": {
-        "id": 1,
-        "label": "Home",
-        "firstName": "Bappi",
-        "lastName": "Das",
-        "phone": "+919707112233",
-        "addressLine1": "Moutupuri, Barpeta",
-        "addressLine2": "Near BH College",
-        "city": "Howly",
-        "state": "Assam",
-        "postalCode": "781316",
-        "country": "India",
-        "isDefault": true
-      },
-      "subtotal": 8999,
-      "discountAmount": 0,
-      "couponCode": null,
-      "shippingAmount": 0,
-      "taxAmount": 1620,
-      "total": 10619,
-      "storeCreditUsed": 1000,
-      "amountPayable": 9619,
-      "paymentMethod": "upi",
-      "paymentStatus": "paid",
-      "fulfillmentStatus": "cancelled",
-      "shippingStatus": "recalled",
-      "trackingNumber": "4423243243243244",
-      "notes": "Test Note",
-      "userId": 3,
-      "orderNumber": "ORD-MQDVIQCV-30A9",
-      "shiprocketOrderId": null,
-      "createdAt": "2026-06-14T14:22:33.199Z",
-      "updatedAt": "2026-09-01T14:03:01.389Z",
-      "statusHistory": [
-        {
-          "at": "2026-06-14T14:22:33.200Z",
-          "by": "Customer",
-          "action": "Order placed"
-        },
-        {
-          "at": "2026-06-20T06:23:53.963Z",
-          "by": "Admin User",
-          "action": "Fulfilled & shipped",
-          "note": "Tracking 4423243243243244 · tracking link added"
-        },
-        {
-          "at": "2026-06-20T06:24:29.157Z",
-          "by": "Admin User",
-          "action": "Marked delivered"
-        },
-        {
-          "at": "2026-09-01T14:01:53.064Z",
-          "by": "Admin User",
-          "action": "Tracking updated",
-          "note": "Tracking 4423243243243244 · tracking link added"
-        },
-        {
-          "at": "2026-09-01T14:02:11.882Z",
-          "by": "Admin User",
-          "action": "Order cancelled",
-          "note": "mmm"
-        },
-        {
-          "at": "2026-09-01T14:02:11.882Z",
-          "by": "Admin User",
-          "action": "Shipment recall initiated",
-          "note": "Return tracking 4423243243243244"
-        },
-        {
-          "at": "2026-09-01T14:02:11.883Z",
-          "by": "Admin User",
-          "action": "Refund initiated",
-          "note": "₹9,619 via original payment — settlement pending"
-        },
-        {
-          "at": "2026-09-01T14:02:12.133Z",
-          "by": "Admin User",
-          "action": "Store credit returned",
-          "note": "₹1,000 added back to your wallet"
-        },
-        {
-          "at": "2026-09-01T14:02:22.119Z",
-          "by": "Admin User",
-          "action": "Refund failed",
-          "note": "Settlement failed — re-initiate the refund"
-        },
-        {
-          "at": "2026-09-01T14:03:01.389Z",
-          "by": "Admin User",
-          "action": "Refund initiated",
-          "note": "₹9,619 via original payment — settlement pending"
-        }
-      ],
-      "id": 11,
-      "trackingUrl": "https://www.google.com",
-      "deliveredAt": "2026-06-20T06:24:29.130Z",
-      "cancelReason": "mmm",
-      "cancelledAt": "2026-09-01T14:02:11.882Z",
-      "recall": {
-        "trackingNumber": "4423243243243244",
-        "trackingUrl": "https://www.google.com",
-        "carrier": null,
-        "scheduledAt": "2026-09-01T14:02:11.882Z",
-        "by": "Admin User"
-      },
-      "refundStatus": "processing",
-      "refundMethod": "original_payment",
-      "pendingRefund": {
-        "amount": 9619,
-        "method": "original_payment",
-        "reason": "hghmbnmb",
-        "reference": null,
-        "initiatedAt": "2026-09-01T14:03:01.389Z",
-        "by": "Admin User"
-      },
-      "storeCreditReturned": true
-    }
-  ],
-  "returns": [
-    {
-      "id": 1,
-      "returnNumber": "RET-20260120-0001",
-      "orderId": 1,
-      "orderNumber": "ORD-20250310-0001",
-      "userId": 1,
-      "items": [
-        {
+          "order": 1,
           "productId": 2,
-          "variantId": "v1",
-          "name": "SoundWave Pro Wireless Earbuds - Midnight Black",
-          "sku": "AUD-SWP-TWS-BLK",
-          "price": 8999,
-          "quantity": 1,
-          "subtotal": 8999
-        }
-      ],
-      "reason": "defective",
-      "reasonDetails": "Left earbud has no sound",
-      "status": "approved",
-      "refundAmount": 8999,
-      "refundStatus": "processed",
-      "refundMethod": "original_payment",
-      "images": [],
-      "notes": "Refund processed to original UPI account",
-      "createdAt": "2026-01-20T10:00:00.000Z",
-      "updatedAt": "2026-01-22T14:30:00.000Z",
-      "statusHistory": [
-        {
-          "at": "2026-01-20T10:00:00.000Z",
-          "by": "Customer",
-          "action": "Return created",
-          "note": "Reason: defective"
+          "alternativeProductId": 3,
+          "note": "Choose the bar or the wash",
+          "frequency": "Daily"
         },
         {
-          "at": "2026-01-21T11:00:00.000Z",
-          "by": "Admin User",
-          "action": "Return approved"
-        },
-        {
-          "at": "2026-01-22T10:00:00.000Z",
-          "by": "Admin User",
-          "action": "Items received"
-        },
-        {
-          "at": "2026-01-22T14:30:00.000Z",
-          "by": "Admin User",
-          "action": "Refund processed (₹10,439)",
-          "note": "Refund processed to original UPI account"
+          "order": 2,
+          "productId": 5,
+          "note": "Finish with a refreshing mist",
+          "frequency": "Whenever skin needs it"
         }
       ],
-      "deductionAmount": 0,
-      "restocked": true,
-      "returnTrackingNumber": "RETN-SR-1029384",
-      "returnTrackingUrl": "https://shiprocket.co/tracking/RETN-SR-1029384",
-      "returnCarrier": "Shiprocket",
-      "pickupScheduledAt": "2026-01-21T11:30:00.000Z"
-    },
-    {
-      "id": 2,
-      "returnNumber": "RET-20260612-0002",
-      "orderId": 6,
-      "orderNumber": "ORD-MQA9I6E7-0IR2",
-      "userId": 3,
-      "items": [
-        {
-          "productId": 3,
-          "variantId": "v1",
-          "name": "FitPulse Smartwatch Series 5 - Black / Rubber Band",
-          "sku": "ELC-FPS-SW5-BLK-R",
-          "price": 14999,
-          "quantity": 1,
-          "subtotal": 14999
-        }
-      ],
-      "reason": "not_as_described",
-      "reasonDetails": "Strap quality is not as shown in the product photos.",
-      "status": "approved",
-      "refundAmount": 14999,
-      "refundStatus": "pending",
-      "refundMethod": "original_payment",
-      "deductionAmount": 0,
-      "restocked": false,
-      "returnTrackingNumber": null,
-      "returnTrackingUrl": null,
-      "returnCarrier": null,
-      "pickupScheduledAt": null,
-      "images": [],
-      "notes": "",
-      "statusHistory": [
-        {
-          "at": "2026-06-12T05:30:00.000Z",
-          "by": "Customer",
-          "action": "Return created",
-          "note": "Reason: not_as_described"
-        },
-        {
-          "at": "2026-09-01T10:46:31.832Z",
-          "by": "Admin User",
-          "action": "Return approved"
-        }
-      ],
-      "createdAt": "2026-06-12T05:30:00.000Z",
-      "updatedAt": "2026-09-01T10:46:31.801Z"
-    },
-    {
-      "returnNumber": "RET-20260901-DYDT",
-      "status": "approved",
-      "refundStatus": "pending",
-      "refundMethod": "original_payment",
-      "deductionAmount": 0,
-      "restocked": false,
-      "returnTrackingNumber": null,
-      "returnTrackingUrl": null,
-      "returnCarrier": null,
-      "pickupScheduledAt": null,
-      "images": [],
-      "notes": "",
-      "orderId": 2,
-      "orderNumber": "ORD-20250318-0002",
-      "userId": 1,
-      "items": [
-        {
-          "productId": 22,
-          "variantId": "v1",
-          "name": "Bridal Silk Lehenga — Crimson Zardozi - Crimson / M",
-          "sku": "LEH-SLK-022-CRM-M",
-          "price": 74999,
-          "quantity": 1,
-          "subtotal": 74999
-        },
-        {
-          "productId": 19,
-          "variantId": "v1",
-          "name": "Pure Silk Unstitched Suit Set — Wine Floral - Wine / Free Size",
-          "sku": "SUT-SLK-019-WIN-FS",
-          "price": 3499,
-          "quantity": 1,
-          "subtotal": 3499
-        }
-      ],
-      "reason": "defective",
-      "reasonDetails": "",
-      "refundAmount": 73498,
-      "statusHistory": [
-        {
-          "at": "2026-09-01T10:49:38.840Z",
-          "by": "Admin User",
-          "action": "Return created",
-          "note": "Reason: defective"
-        },
-        {
-          "at": "2026-09-01T14:00:26.871Z",
-          "by": "Admin User",
-          "action": "Return approved"
-        }
-      ],
-      "createdAt": "2026-09-01T10:49:38.840Z",
-      "updatedAt": "2026-09-01T14:00:26.840Z",
-      "id": 3
-    },
-    {
-      "returnNumber": "RET-20260901-3EP8",
-      "status": "approved",
-      "refundStatus": "pending",
-      "refundMethod": "original_payment",
-      "deductionAmount": 0,
-      "restocked": false,
-      "returnTrackingNumber": null,
-      "returnTrackingUrl": null,
-      "returnCarrier": null,
-      "pickupScheduledAt": null,
-      "images": [],
-      "notes": "",
-      "orderId": 11,
-      "orderNumber": "ORD-MQDVIQCV-30A9",
-      "userId": 3,
-      "items": [
-        {
-          "productId": 3,
-          "variantId": "v1",
-          "name": "Banarasi Georgette Silk Saree — Wine - Wine",
-          "sku": "SAR-BAN-003-WIN",
-          "price": 8999,
-          "quantity": 1,
-          "subtotal": 8999
-        }
-      ],
-      "reason": "defective",
-      "reasonDetails": "",
-      "refundAmount": 8999,
-      "statusHistory": [
-        {
-          "at": "2026-09-01T14:00:11.679Z",
-          "by": "Admin User",
-          "action": "Return created",
-          "note": "Reason: defective"
-        },
-        {
-          "at": "2026-09-01T14:00:29.662Z",
-          "by": "Admin User",
-          "action": "Return approved"
-        }
-      ],
-      "createdAt": "2026-09-01T14:00:11.678Z",
-      "updatedAt": "2026-09-01T14:00:29.633Z",
-      "id": 4
+      "isActive": true,
+      "sortOrder": 3,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     }
   ],
-  "payments": [
+  "faqs": [
     {
       "id": 1,
-      "orderId": 1,
-      "orderNumber": "ORD-20250310-0001",
-      "userId": 1,
-      "amount": 10439,
-      "currency": "INR",
-      "paymentMethod": "upi",
-      "gateway": "razorpay",
-      "transactionId": "pay_RZP123456789",
-      "gatewayOrderId": "order_RZP987654321",
-      "status": "refunded",
-      "gatewayResponse": {
-        "code": "SUCCESS",
-        "bank": null,
-        "wallet": "PhonePe"
-      },
-      "createdAt": "2026-01-15T10:31:00.000Z",
-      "updatedAt": "2026-06-12T07:12:56.342Z",
-      "refundAmount": 10439,
-      "refundReason": "Return RET-20260120-0001",
-      "refunds": [
-        {
-          "id": "ref_seed0001",
-          "amount": 10439,
-          "reason": "Return RET-20260120-0001",
-          "at": "2026-01-22T14:30:00.000Z",
-          "by": "Admin User"
-        }
-      ]
+      "question": "Who owns LAMIKAA Naturals?",
+      "answer": "LAMIKAA Naturals is owned by Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company owned by its farmer members. The value created through LAMIKAA contributes to the farmer-owned enterprise, and profits distributed by BAOPCL can reach its member farmers as dividends, subject to applicable laws and the company's dividend declaration.",
+      "group": "brand",
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 0,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 2,
-      "orderId": 2,
-      "orderNumber": "ORD-20250318-0002",
-      "userId": 1,
-      "amount": 85257,
-      "currency": "INR",
-      "paymentMethod": "card",
-      "gateway": "razorpay",
-      "transactionId": "pay_RZP234567890",
-      "gatewayOrderId": "order_RZP876543210",
-      "status": "captured",
-      "gatewayResponse": {
-        "code": "SUCCESS",
-        "bank": "HDFC",
-        "last4": "4242"
-      },
-      "createdAt": "2026-02-01T14:21:00.000Z",
-      "updatedAt": "2026-02-01T14:21:45.000Z"
+      "question": "Does buying LAMIKAA products benefit farmers?",
+      "answer": "LAMIKAA Naturals is part of a farmer-owned value chain: farmer, FPC, value addition, LAMIKAA Naturals, consumer. When the business succeeds and profits are distributed by BAOPCL, its farmer members can benefit through dividends, subject to applicable laws and the company's dividend declaration. Your choice of LAMIKAA can help create value beyond the product — value that may ultimately return to the farming community.",
+      "group": "brand",
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 1,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 3,
-      "orderId": 3,
-      "orderNumber": "ORD-20260310-0003",
-      "userId": 2,
-      "amount": 19818,
-      "currency": "INR",
-      "paymentMethod": "card",
-      "gateway": "razorpay",
-      "transactionId": "pay_RZP345678901",
-      "gatewayOrderId": "order_RZP765432109",
-      "status": "refunded",
-      "gatewayResponse": {
-        "code": "SUCCESS",
-        "bank": "ICICI",
-        "last4": "1234"
-      },
-      "createdAt": "2026-03-10T08:46:00.000Z",
-      "updatedAt": "2026-06-13T06:13:05.674Z",
-      "refundAmount": 19818,
-      "refundReason": "Refunded from order",
-      "refunds": [
-        {
-          "id": "ref_mqbylfkanpi6",
-          "amount": 19818,
-          "reason": "Refunded from order",
-          "at": "2026-06-13T06:13:05.674Z",
-          "by": "Admin User"
-        }
-      ]
+      "question": "Why is black rice in every product?",
+      "answer": "Black rice is the hero ingredient of the range: antioxidant-rich and traditionally valued in Northeast India. Each product pairs it with botanicals chosen for a specific step of your routine.",
+      "group": "products",
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 2,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 4,
-      "orderId": 6,
-      "orderNumber": "ORD-MQA9I6E7-0IR2",
-      "userId": 3,
-      "amount": 17699,
-      "currency": "INR",
-      "paymentMethod": "cod",
-      "gateway": "cod",
-      "transactionId": "cod_MQA9I6E7",
-      "gatewayOrderId": null,
-      "status": "captured",
-      "gatewayResponse": {},
-      "refunds": [],
-      "refundAmount": 0,
-      "refundReason": "",
-      "createdAt": "2026-06-12T01:48:30.000Z",
-      "updatedAt": "2026-06-12T01:48:30.000Z"
+      "question": "Are the products suitable for all skin types?",
+      "answer": "The range is formulated for everyday use. As printed on the packs, do a patch test before first use, keep away from the eyes and discontinue use if irritation occurs.",
+      "group": "products",
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 3,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 5,
-      "orderId": 7,
-      "orderNumber": "ORD-MQB0JHUB-9KL6",
-      "userId": 3,
-      "amount": 10029,
-      "currency": "INR",
-      "paymentMethod": "cod",
-      "gateway": "cod",
-      "transactionId": null,
-      "gatewayOrderId": null,
-      "status": "pending",
-      "gatewayResponse": {},
-      "refunds": [],
-      "refundAmount": 0,
-      "refundReason": "",
-      "createdAt": "2026-06-12T14:19:48.371Z",
-      "updatedAt": "2026-06-12T14:19:48.371Z"
+      "question": "Do the products have a fragrance?",
+      "answer": "The Black Rice range carries a mild sandalwood fragrance, as printed on the packs.",
+      "group": "products",
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 4,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
-      "orderId": 8,
-      "orderNumber": "ORD-MQC1HWSZ-CAN8",
-      "userId": 3,
-      "amount": 4918,
-      "currency": "INR",
-      "paymentMethod": "cod",
-      "gateway": "cod",
-      "transactionId": null,
-      "gatewayOrderId": null,
-      "status": "refunded",
-      "gatewayResponse": {},
-      "createdAt": "2026-06-13T07:34:20.277Z",
-      "updatedAt": "2026-06-13T12:57:28.314Z",
       "id": 6,
-      "refundAmount": 4918,
-      "refundReason": "Bengal Handloom Silk Saree — Dhakai Jamdani - White / Red is returned",
-      "refunds": [
-        {
-          "id": "ref_mqcd1gqipep7",
-          "amount": 4918,
-          "reason": "AirStride Running Shoes - UK 7 - Black is returned",
-          "at": "2026-06-13T12:57:28.314Z",
-          "by": "Admin User"
-        }
+      "question": "How long does delivery take, and is shipping free?",
+      "answer": "Dispatch and delivery times are shown at checkout for your address. Shipping is free on orders above {freeShipping}.",
+      "group": "orders",
+      "placements": [
+        "help",
+        "product"
       ],
-      "pendingRefund": null
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 5,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
-      "orderId": 9,
-      "orderNumber": "ORD-MQCGV6OM-Z965",
-      "userId": 3,
-      "amount": 75699,
-      "currency": "INR",
-      "paymentMethod": "upi",
-      "gateway": "razorpay",
-      "transactionId": "pay_MOCKMQCGV6Q2",
-      "gatewayOrderId": "order_MOCKMQCGV6Q2",
-      "status": "refunded",
-      "storeCreditApplied": 1000,
-      "gatewayResponse": {},
-      "createdAt": "2026-06-13T14:44:33.866Z",
-      "updatedAt": "2026-09-01T10:50:15.351Z",
       "id": 7,
-      "refundAmount": 75699,
-      "refundReason": "",
-      "refunds": [
-        {
-          "id": "ref_mtijq0fr6c2d",
-          "amount": 75699,
-          "reason": "",
-          "at": "2026-09-01T10:50:15.351Z",
-          "by": "Admin User"
-        }
+      "question": "What is your return policy?",
+      "answer": "You can request a return from My Orders within {{RETURN_WINDOW_DAYS}} days of delivery for unopened products in their original packaging. Opened skincare cannot be returned for hygiene reasons unless it arrived damaged.",
+      "group": "orders",
+      "placements": [
+        "help",
+        "product"
       ],
-      "pendingRefund": null
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 6,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
-      "orderId": 10,
-      "orderNumber": "ORD-MQDUWC74-RUVY",
-      "userId": 3,
-      "amount": 94398,
-      "currency": "INR",
-      "paymentMethod": "upi",
-      "gateway": "razorpay",
-      "transactionId": "pay_MOCKMQDUWC82",
-      "gatewayOrderId": "order_MOCKMQDUWC82",
-      "status": "refund_pending",
-      "storeCreditApplied": 0,
-      "gatewayResponse": {},
-      "createdAt": "2026-06-14T14:05:08.450Z",
-      "updatedAt": "2026-09-01T10:45:21.468Z",
       "id": 8,
-      "pendingRefund": {
-        "amount": 94398,
-        "method": "original_payment",
-        "reason": "dasbzkufhsfkjnds",
-        "initiatedAt": "2026-09-01T10:45:21.468Z",
-        "by": "Admin User"
+      "question": "How do I track my order?",
+      "answer": "You will receive an email with a tracking number as soon as your order is dispatched. You can also follow it at any time from the My Orders section of your account, where the current stage of every order is shown.",
+      "group": "orders",
+      "placements": [
+        "help",
+        "product"
+      ],
+      "productIds": [],
+      "isActive": true,
+      "sortOrder": 7,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    }
+  ],
+  "siteContent": {
+    "about": {
+      "heroImage": "https://picsum.photos/seed/lamikaa-assam-landscape/1920/1080",
+      "image2": "https://picsum.photos/seed/lamikaa-farmers/1600/1000",
+      "eyebrow": "Our Story",
+      "title": "A beauty brand owned by farmers",
+      "lede": "LAMIKAA Naturals is a farmer-owned beauty brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company (FPC) established to create greater value and better opportunities for farmers.",
+      "body": "Rooted in the indigenous knowledge and rich natural heritage of Assam and Northeast India, LAMIKAA Naturals combines traditional wisdom with modern cosmetic science to create conscious, nature-inspired beauty products.\n\nBut LAMIKAA is more than a beauty brand. It is a farmer-owned enterprise where the success of the brand is connected directly to the prosperity of its farmer members.\n\nLAMIKAA Naturals is owned by Bokakhat Agro Organic Producer Co. Ltd., an FPC owned by its farmer members. Therefore, the value created through LAMIKAA contributes to the farmer-owned enterprise, and profits distributed by BAOPCL can reach its member farmers as dividends, subject to applicable laws and the company's dividend declaration.\n\nWhen LAMIKAA grows, our farmers grow with us.\n\nEvery product carries a bigger purpose — to create value from nature, strengthen the farmer-owned value chain and contribute to a better quality of life for farming families.\n\n## The farmer-owned value chain\n\n::steps\n- Farmer\n- FPC\n- Value Addition\n- LAMIKAA Naturals\n- Consumer\n- Profit\n- Farmer Members\n::\n\n::callout The LAMIKAA Difference\nLAMIKAA Naturals is different because behind the brand is not simply a corporate ownership structure. Behind LAMIKAA are farmers.\n\nThis is the heart of our story. When you choose LAMIKAA, you are choosing beauty with a purpose. You are supporting a farmer-owned enterprise that seeks to transform natural resources into higher-value products, create economic opportunities and build a more prosperous future for farming families.\n::\n\n> To build a globally respected Indian beauty brand where indigenous knowledge, modern science and farmer ownership come together to create beauty, prosperity and a better future.",
+      "ctaLabel": "Shop the Black Rice Range",
+      "ctaTo": "/shop"
+    },
+    "whyLamikaa": {
+      "heroImage": "https://picsum.photos/seed/lamikaa-why/1920/1080",
+      "eyebrow": "Why LAMIKAA",
+      "title": "Indigenous Wisdom. Modern Science. Responsible Beauty.",
+      "body": "LAMIKAA Naturals believes that the future of beauty can be inspired by the wisdom of the past. For generations, communities across Assam and Northeast India have developed knowledge of plants, herbs and natural resources and their traditional uses. LAMIKAA seeks to respect this heritage and bring it into the modern world through contemporary cosmetic science, responsible sourcing and quality-focused product development.\n\nOur philosophy is built on four pillars:",
+      "pillars": [
+        {
+          "key": "indigenous-knowledge",
+          "title": "Indigenous Knowledge",
+          "text": "Respecting the traditional wisdom and natural heritage of our region."
+        },
+        {
+          "key": "modern-science",
+          "title": "Modern Cosmetic Science",
+          "text": "Combining traditional ingredients and knowledge with modern formulation, research and quality standards."
+        },
+        {
+          "key": "farmer-ownership",
+          "title": "Farmer Ownership",
+          "text": "Creating a business where farmers participate not only in supplying raw materials but also in the economic value created by the enterprise."
+        },
+        {
+          "key": "responsible-beauty",
+          "title": "Responsible Beauty",
+          "text": "Building products and processes that respect people, communities and the environment."
+        }
+      ],
+      "difference": "LAMIKAA Naturals is different because behind the brand is not simply a corporate ownership structure. Behind LAMIKAA are farmers.\n\n::steps\n- LAMIKAA Naturals\n- Owned by Bokakhat Agro Organic Producer Co. Ltd.\n- A Farmer Producer Company\n- Owned by Farmer Members\n- Profits can return to members through declared dividends\n- Greater opportunity for farmer income and improved quality of life\n::\n\nThis is the heart of our story. When you choose LAMIKAA, you are choosing beauty with a purpose. You are supporting a farmer-owned enterprise that seeks to transform natural resources into higher-value products, create economic opportunities and build a more prosperous future for farming families.\n\nLAMIKAA is where the wisdom of nature meets the science of modern beauty — and where beauty creates value for farmers.",
+      "vision": "To build a globally respected Indian beauty brand where indigenous knowledge, modern science and farmer ownership come together to create beauty, prosperity and a better future."
+    },
+    "impact": {
+      "eyebrow": "Our Impact",
+      "title": "Beauty That Creates Prosperity for Farmers",
+      "intro": "The fundamental motive behind LAMIKAA Naturals is simple: to create more value for the farmers who produce the natural resources behind our products.\n\nIn a conventional agricultural value chain, farmers often sell raw produce at commodity prices while greater value is created later through processing, branding and marketing. LAMIKAA Naturals seeks to change this equation. As a brand owned by Bokakhat Agro Organic Producer Co. Ltd., a Farmer Producer Company, LAMIKAA forms part of a farmer-owned value chain.\n\nThe journey is: **Farmer → FPC → Value Addition → LAMIKAA Naturals → Consumer → Profit → Farmer Members**\n\nWhen the business succeeds and profits are distributed by BAOPCL, its farmer members can benefit through dividends. This creates an important connection between consumer purchase and farmer prosperity. Your choice of LAMIKAA can help create value beyond the product — value that can ultimately return to the farming community.\n\nOur long-term ambition is to help farmers earn more from what they grow, participate in value addition and gradually improve their family's standard of living.",
+      "items": [
+        {
+          "key": "financial",
+          "title": "Financial — From Raw Produce to Shared Value",
+          "image": "https://picsum.photos/seed/lamikaa-impact-financial/1200/900",
+          "points": [
+            "Greater value realization from agricultural produce.",
+            "Farmers participate in value addition, not only in supply.",
+            "Farmers can benefit from the profitability of their own enterprise."
+          ],
+          "body": "LAMIKAA Naturals aims to help farmers move from being producers of raw materials to becoming participants in a higher-value business ecosystem. Instead of value ending at the farm gate, processing, branding and marketing create additional economic value. Because LAMIKAA Naturals is owned by BAOPCL, a Farmer Producer Company, the success of the brand contributes to the farmer-owned enterprise. Profits generated by the business, when declared for distribution in accordance with applicable laws and company decisions, can reach the member farmers through dividends.\n\nOur financial impact: creates opportunities for greater value realization from agricultural produce; enables farmers to participate in value addition; strengthens the farmer-owned business ecosystem; creates opportunities for higher farmer earnings; allows farmers to benefit from the profitability of their own enterprise; helps contribute to improved household income and living standards.\n\nOur goal is not simply to sell more products. Our goal is to create more value — and share that value with the farmers who own the enterprise."
+        },
+        {
+          "key": "social",
+          "title": "Social — When Farmers Prosper, Families Prosper",
+          "image": "https://picsum.photos/seed/lamikaa-impact-social/1200/900",
+          "points": [
+            "Better educational opportunities for farmer children.",
+            "Improved access to healthcare and family wellbeing.",
+            "Rural employment and entrepreneurship through value addition."
+          ],
+          "body": "The impact of LAMIKAA extends beyond income. Higher and more stable economic opportunities can help farmer families invest in the things that matter most — education, healthcare, housing, children's future and family wellbeing. LAMIKAA Naturals therefore aims to create a business model where commercial success can contribute to social development in farming communities. Through the farmer-owned structure of BAOPCL, the growth of LAMIKAA can contribute to strengthening the economic foundation of member farmers and their families.\n\nOur social vision includes: supporting better educational opportunities for farmer children; improving access to healthcare and family wellbeing; helping families become more financially secure; creating dignity and confidence among farming communities; encouraging younger generations to see agriculture and agribusiness as viable opportunities; creating rural employment and entrepreneurship opportunities through value addition.\n\nA successful brand should not only create customers — it should create better opportunities for the people who make the brand possible."
+        },
+        {
+          "key": "environmental",
+          "title": "Environmental — Beauty That Gives Back to Nature",
+          "image": "https://picsum.photos/seed/lamikaa-impact-environmental/1200/900",
+          "points": [
+            "Supporting organic and sustainable agriculture.",
+            "Promoting healthier agro-ecosystems and biodiversity-friendly farming.",
+            "Building a responsible farm-to-beauty value chain."
+          ],
+          "body": "LAMIKAA Naturals believes that the future of beauty must be connected to the future of agriculture and the environment. Our connection with farmers gives us an opportunity to encourage organic and sustainable farming practices and responsible use of natural resources. By creating value from agricultural and natural resources through responsible processing and value addition, we aim to build a business model that connects healthy farms, healthy ecosystems and responsible beauty.\n\nOur environmental priorities include: supporting organic and sustainable agriculture; encouraging responsible management of natural resources; promoting healthier agro-ecosystems; supporting biodiversity-friendly farming approaches; creating greater value from agricultural resources through value addition; building a responsible farm-to-beauty value chain.\n\nWe believe beauty should enhance our relationship with nature — not compromise it."
+        }
+      ]
+    },
+    "home": {
+      "aboutTeaser": {
+        "eyebrow": "About LAMIKAA",
+        "title": "When LAMIKAA grows, our farmers grow with us.",
+        "text": "LAMIKAA Naturals is a farmer-owned beauty brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company established to create greater value and better opportunities for farmers.\n\nRooted in the indigenous knowledge and rich natural heritage of Assam and Northeast India, we combine traditional wisdom with modern cosmetic science. Every product carries a bigger purpose — to create value from nature, strengthen the farmer-owned value chain and contribute to a better quality of life for farming families.",
+        "image": "https://picsum.photos/seed/lamikaa-farm/1600/1000",
+        "ctaLabel": "Our Story",
+        "ctaTo": "/about"
+      },
+      "whyBlackRice": {
+        "eyebrow": "The hero ingredient",
+        "title": "Why black rice?",
+        "points": [
+          "Antioxidant-rich, traditionally valued in Northeast India.",
+          "The one ingredient every product in the range is built around.",
+          "Paired with botanicals chosen for each step of your routine."
+        ],
+        "image": "https://picsum.photos/seed/lamikaa-black-rice/1200/1200"
+      },
+      "fullPageCta": {
+        "lines": [
+          "Beauty that creates value.",
+          "Value that reaches farmers.",
+          "Prosperity that reaches families."
+        ],
+        "primaryLabel": "Shop the Black Rice Range",
+        "primaryTo": "/shop",
+        "secondaryLabel": "Meet the farmer-owners",
+        "secondaryTo": "/about",
+        "image": "https://picsum.photos/seed/lamikaa-cta/1920/1080"
       }
     },
-    {
-      "orderId": 11,
-      "orderNumber": "ORD-MQDVIQCV-30A9",
-      "userId": 3,
-      "amount": 9619,
-      "currency": "INR",
-      "paymentMethod": "upi",
-      "gateway": "razorpay",
-      "transactionId": "pay_MOCKMQDVIQEE",
-      "gatewayOrderId": "order_MOCKMQDVIQEE",
-      "status": "refund_pending",
-      "storeCreditApplied": 1000,
-      "gatewayResponse": {},
-      "createdAt": "2026-06-14T14:22:33.254Z",
-      "updatedAt": "2026-09-01T14:03:01.448Z",
-      "id": 9,
-      "pendingRefund": {
-        "amount": 9619,
-        "method": "original_payment",
-        "reason": "hghmbnmb",
-        "initiatedAt": "2026-09-01T14:03:01.448Z",
-        "by": "Admin User"
+    "contact": {
+      "eyebrow": "Contact",
+      "title": "Write to us",
+      "lede": "Questions about a product, an order or the farmer-owned story — we read every message.",
+      "hoursNote": "{{SUPPORT_HOURS}}"
+    },
+    "policies": {
+      "privacy": {
+        "title": "Privacy Policy",
+        "updatedAt": "2026-09-06T00:00:00.000Z",
+        "body": "## 01. What this policy covers\n\nThis policy explains what LAMIKAA Naturals collects when you browse this store, place an order or write to us, why we hold it, and what you can ask us to do with it. LAMIKAA Naturals is a brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL).\n\n## 02. What we collect\n\n- **What you give us.** Your name, email address, phone number and delivery address when you create an account or place an order; the contents of any message you send us.\n- **What an order creates.** The items ordered, the amount, the delivery status and the returns or refunds attached to it.\n- **What your browser tells us.** Pages viewed, approximate location from your network address, device and browser type — used in aggregate to keep the store working.\n\nWe do not store full card numbers. Card and UPI details are entered with the payment provider at checkout and never reach our servers.\n\n## 03. Why we hold it\n\n- To take, pack, deliver and, where necessary, refund your order.\n- To answer your messages and keep a record of what was agreed.\n- To send order and delivery updates, and marketing email only where you have asked for it.\n- To keep the accounting, tax and audit records the law requires of us.\n\n## 04. Who else sees it\n\nOnly the parties that make an order happen: the payment provider that takes your money, the courier that carries the parcel, and the services that host this store and send its email. Each receives the minimum needed to do its part. We do not sell personal data.\n\nWe may also disclose information where the law, a court or a regulator requires it.\n\n## 05. How long we keep it\n\nOrder and tax records are kept for as long as the law requires. Account details are kept while your account is open; marketing consent is kept until you withdraw it. Anything else is deleted when it is no longer needed.\n\n## 06. Your choices\n\n- Ask for a copy of what we hold about you.\n- Ask us to correct anything that is wrong.\n- Ask us to delete your account and the data that is not part of a legal record.\n- Unsubscribe from marketing email at any time, from the link in the email or by writing to us.\n\n## 07. Children\n\nThis store is not intended for children under 18, and we do not knowingly collect their data. Where we learn that we have, we delete it.\n\n## 08. Changes\n\nWhen this policy changes, the revised version is published here with a new date. Material changes are announced on the site.\n\n## 09. Contact\n\nWe answer every message we receive. Write to {{LAMIKAA_EMAIL}} with any question about this policy or about the data we hold on you, or post to {{LAMIKAA_ADDRESS}}."
+      },
+      "terms": {
+        "title": "Terms of Service",
+        "body": "## 01. Who you are dealing with\n\nThis store is operated by Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company, under its brand LAMIKAA Naturals. Placing an order means you accept these terms.\n\nOur GSTIN is {{GSTIN}}. Our Corporate Identification Number is {{CIN}}.\n\n## 02. Your account\n\nYou are responsible for what happens under your account and for keeping your password to yourself. Tell us at once if you think someone else has used it. We may suspend an account used for fraud or abuse.\n\n## 03. Products and descriptions\n\nWe describe every product as accurately as we can, quoting the printed pack for volumes, ingredients, directions and cautions. Our products are cosmetics for external use. They are not medicines and are not offered to diagnose, treat or cure any condition. Read the caution on the pack, patch test before first use and stop using a product if irritation occurs.\n\nPhotographs are indicative. Colour and finish can vary a little between screens and between batches of a natural ingredient.\n\n## 04. Prices and payment\n\nPrices are in Indian Rupees and are inclusive of all taxes, as printed on the pack. A product shown without a price is not yet on sale and cannot be added to the cart. We may change prices before an order is placed; the price you see at checkout is the price that applies.\n\nAn order is an offer to buy. It is accepted when we confirm dispatch. If a product is out of stock or was listed at an obviously wrong price, we may decline the order and refund anything already paid.\n\n## 05. Delivery, returns and refunds\n\nDelivery, returns and refunds are governed by our Shipping & Returns policy, which forms part of these terms.\n\n## 06. Acceptable use\n\nDo not attempt to break, overload or gain unauthorised access to this store, scrape it at scale, or use it to post anything unlawful. Reviews and messages you submit must be your own honest experience.\n\n## 07. Our content\n\nThe LAMIKAA name and mark, the product photography, and the text on this site belong to BAOPCL and may not be reproduced for commercial use without written permission.\n\n## 08. Liability\n\nNothing here limits liability that cannot be limited in law. Beyond that, our liability for any order is limited to the amount you paid for it. We are not liable for indirect or consequential loss.\n\n## 09. Governing law\n\nThese terms are governed by the laws of India. The courts of {{JURISDICTION}} have exclusive jurisdiction over any dispute arising from them. Nothing in this clause affects a right you have as a consumer to bring a claim where the law allows it.\n\n## 10. Changes and contact\n\nWe may update these terms; the version published here at the time of your order is the one that applies. Write to {{LAMIKAA_EMAIL}} with any question about them. We answer every message we receive."
+      },
+      "shippingReturns": {
+        "title": "Shipping & Returns",
+        "body": "## 01. Dispatch\n\nOrders are packed and handed to the courier from Monday to Saturday. Our dispatch time is {{DISPATCH_SLA}}. The delivery estimate for your address is shown at checkout before you pay, and the charge, if any, is shown on the same screen.\n\n## 02. Tracking\n\nYou receive a tracking number by email as soon as the parcel leaves us, and the current stage of every order is shown in My Orders.\n\n## 03. If something arrives damaged\n\nTell us within 48 hours of delivery, with a photograph of the parcel and the product. A damaged or wrong item is replaced or refunded in full, and we pay the return leg.\n\n## 04. Returns\n\nA return is requested from My Orders. You have {{RETURN_WINDOW_DAYS}} days from delivery to ask for one. The product must be unused, unopened and in its original packaging, with the seal intact.\n\n**Opened skincare cannot be returned for hygiene reasons** unless it arrived damaged or is faulty. This is the one rule we cannot bend: a cosmetic that has been opened cannot be resold safely.\n\n## 05. How a return is processed\n\n- Request the return from My Orders and tell us why.\n- We arrange a pickup or, where a pickup is not available, ask you to send it back.\n- The product is inspected when it reaches us.\n- An approved return is refunded to the original payment method, or to your store credit if you prefer.\n\nRefunds are processed {{REFUND_TIMELINE}}. Your bank may take a few days more to show the money.\n\n## 06. Cancellations\n\nAn order can be cancelled from My Orders at any time before it is dispatched, and is refunded in full.\n\n## 07. Contact\n\nAnything to do with a delivery, a return or a refund can be raised from the order itself, in My Orders. You can also write to {{LAMIKAA_EMAIL}}."
+      },
+      "cookies": {
+        "title": "Cookie Policy",
+        "body": "## 01. What a cookie is\n\nA cookie is a small text file that a site asks your browser to keep. On the next page you open, the browser hands it back, and that is how a site remembers that the product you added is still in your cart and that you are the person who added it.\n\nCookies cannot read the rest of your device, and ours hold identifiers rather than personal details. What we do with the data behind those identifiers is set out in our [Privacy Policy](/privacy).\n\nSome of what is listed below is kept in your browser's local storage rather than in a cookie proper — your cart and the products you have recently looked at are held that way. It is the same bargain either way, so this policy covers both, and clearing your site data clears all of it.\n\n## 02. The cookies we set\n\nOnly the essential family is required for the store to work. Everything else can be refused without losing your cart or your order history.\n\n### Essential — always on\n\nHolds your cart between visits, keeps you signed in, and carries the security tokens that protect checkout. Lifetime: session to one year.\n\n### Functional — optional\n\nRemembers the choices you have made and the products you have recently looked at. Lifetime: one year.\n\n### Analytics — optional\n\nTells us, in aggregate, which pages and which products are being looked at, so we know what to photograph and stock. Lifetime: two years.\n\n### Marketing — optional\n\nMeasures how a campaign performed and lets us show our products to you on other sites. Lifetime: ninety days.\n\n## 03. Turning them off\n\nEvery browser lets you block or clear cookies, usually under Settings, then Privacy. You can refuse them for this site alone or for every site, and you can delete the ones already stored.\n\nBlocking the essential family will stop the cart and the sign-in from working — the store cannot remember you without it. Blocking the other three costs you nothing but the convenience of not setting your preferences again.\n\n## 04. Contact\n\nOur [Privacy Policy](/privacy) covers the wider question of what we do with the data behind these identifiers. Write to {{LAMIKAA_EMAIL}} and we will tell you exactly what a given cookie holds."
       }
-    }
-  ],
-  "refunds": [
-    {
-      "id": 1,
-      "refundNumber": "REF-20260122-7K2A",
-      "type": "return_refund",
-      "orderId": 1,
-      "orderNumber": "ORD-20250310-0001",
-      "returnId": 1,
-      "returnNumber": "RET-20260120-0001",
-      "paymentId": 1,
-      "amount": 10439,
-      "method": "original_payment",
-      "reason": "Return RET-20260120-0001",
-      "status": "completed",
-      "couponRestored": false,
-      "initiatedAt": "2026-01-22T14:30:00.000Z",
-      "settledAt": "2026-01-22T14:30:00.000Z",
-      "by": "Admin User",
-      "createdAt": "2026-01-22T14:30:00.000Z",
-      "updatedAt": "2026-01-22T14:30:00.000Z"
     },
-    {
-      "id": 2,
-      "refundNumber": "REF-20260613-9QM4",
-      "type": "order_refund",
-      "orderId": 3,
-      "orderNumber": "ORD-20260310-0003",
-      "returnId": null,
-      "returnNumber": null,
-      "paymentId": 3,
-      "amount": 19818,
-      "method": "original_payment",
-      "reason": "Refunded from order",
-      "status": "completed",
-      "couponRestored": false,
-      "initiatedAt": "2026-06-13T06:13:05.674Z",
-      "settledAt": "2026-06-13T06:13:05.674Z",
-      "by": "Admin User",
-      "createdAt": "2026-06-13T06:13:05.674Z",
-      "updatedAt": "2026-06-13T06:13:05.674Z"
-    },
-    {
-      "refundNumber": "REF-20260613-JQ3L",
-      "type": "order_refund",
-      "orderId": 8,
-      "orderNumber": "ORD-MQC1HWSZ-CAN8",
-      "returnId": null,
-      "returnNumber": null,
-      "paymentId": null,
-      "amount": 4918,
-      "method": "store_credit",
-      "reason": "AirStride Running Shoes - UK 7 - Black is returned",
-      "reference": "ORDER ID - ORD-MQC1HWSZ-CAN8",
-      "status": "completed",
-      "couponRestored": false,
-      "initiatedAt": "2026-06-13T12:55:11.910Z",
-      "settledAt": "2026-06-13T12:57:28.419Z",
-      "by": "Admin User",
-      "createdAt": "2026-06-13T12:55:11.910Z",
-      "updatedAt": "2026-06-13T12:57:28.419Z",
-      "id": 3
-    },
-    {
-      "refundNumber": "REF-20260901-J81K",
-      "type": "order_refund",
-      "orderId": 10,
-      "orderNumber": "ORD-MQDUWC74-RUVY",
-      "returnId": null,
-      "returnNumber": null,
-      "paymentId": null,
-      "amount": 94398,
-      "method": "original_payment",
-      "reason": "dasbzkufhsfkjnds",
-      "reference": "mdbcmndzdc kjdcb",
-      "status": "pending",
-      "couponRestored": false,
-      "initiatedAt": "2026-09-01T10:45:21.506Z",
-      "settledAt": null,
-      "by": "Admin User",
-      "createdAt": "2026-09-01T10:45:21.506Z",
-      "updatedAt": "2026-09-01T10:45:21.506Z",
-      "id": 4
-    },
-    {
-      "refundNumber": "REF-20260901-5ZUT",
-      "type": "payment_refund",
-      "orderId": 9,
-      "orderNumber": "ORD-MQCGV6OM-Z965",
-      "returnId": null,
-      "returnNumber": null,
-      "paymentId": 7,
-      "amount": 75699,
-      "method": "original_payment",
-      "reason": "Refund",
-      "reference": null,
-      "status": "completed",
-      "couponRestored": false,
-      "initiatedAt": "2026-09-01T10:50:15.505Z",
-      "settledAt": "2026-09-01T10:50:15.505Z",
-      "by": "Admin User",
-      "createdAt": "2026-09-01T10:50:15.505Z",
-      "updatedAt": "2026-09-01T10:50:15.505Z",
-      "id": 5
-    },
-    {
-      "refundNumber": "REF-20260901-OK9U",
-      "type": "recall_refund",
-      "orderId": 11,
-      "orderNumber": "ORD-MQDVIQCV-30A9",
-      "returnId": null,
-      "returnNumber": null,
-      "paymentId": null,
-      "amount": 9619,
-      "method": "original_payment",
-      "reason": "mmm",
-      "reference": null,
-      "status": "failed",
-      "couponRestored": false,
-      "initiatedAt": "2026-09-01T14:02:12.245Z",
-      "settledAt": null,
-      "by": "Admin User",
-      "createdAt": "2026-09-01T14:02:12.245Z",
-      "updatedAt": "2026-09-01T14:02:22.335Z",
-      "id": 6
-    },
-    {
-      "refundNumber": "REF-20260901-J80N",
-      "type": "order_refund",
-      "orderId": 11,
-      "orderNumber": "ORD-MQDVIQCV-30A9",
-      "returnId": null,
-      "returnNumber": null,
-      "paymentId": null,
-      "amount": 9619,
-      "method": "original_payment",
-      "reason": "hghmbnmb",
-      "reference": null,
-      "status": "pending",
-      "couponRestored": false,
-      "initiatedAt": "2026-09-01T14:03:01.489Z",
-      "settledAt": null,
-      "by": "Admin User",
-      "createdAt": "2026-09-01T14:03:01.489Z",
-      "updatedAt": "2026-09-01T14:03:01.489Z",
-      "id": 7
-    }
-  ],
-  "shipping_methods": [
-    {
-      "id": 1,
-      "name": "Standard Delivery",
-      "carrier": "Shiprocket",
-      "description": "Delivered in 5–7 business days in insured silk packaging",
-      "rateType": "flat",
-      "flatRate": 99,
-      "freeAbove": 999,
-      "estimatedDays": "5-7",
-      "isActive": true,
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "name": "Express Delivery",
-      "carrier": "Shiprocket",
-      "description": "Priority dispatch, delivered in 2–3 business days",
-      "rateType": "flat",
-      "flatRate": 199,
-      "freeAbove": 4999,
-      "estimatedDays": "2-3",
-      "isActive": true,
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    },
-    {
-      "id": 3,
-      "name": "Same Day Delivery",
-      "carrier": "Dunzo",
-      "description": "Delivered today within select Kolkata pin codes",
-      "rateType": "flat",
-      "flatRate": 499,
-      "freeAbove": null,
-      "estimatedDays": "0",
-      "isActive": true,
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    },
-    {
-      "id": 4,
-      "name": "Free Shipping",
-      "carrier": "Shiprocket",
-      "description": "Complimentary standard shipping on qualifying orders",
-      "rateType": "free",
-      "flatRate": 0,
-      "freeAbove": 0,
-      "estimatedDays": "5-7",
-      "isActive": false,
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    },
-    {
-      "name": "mmmm",
-      "carrier": "not zure",
-      "description": "xx[]]xmbxbxb",
-      "rateType": "flat",
-      "flatRate": 22,
-      "freeAbove": 555555,
-      "estimatedDays": "5-7",
-      "isActive": true,
-      "id": 5
-    }
-  ],
-  "coupons": [
-    {
-      "id": 1,
-      "code": "MUGA500",
-      "description": "₹500 off your Muga or Pat silk order above ₹5,000",
-      "type": "fixed",
-      "value": 500,
-      "minOrderAmount": 5000,
-      "maxDiscount": 500,
-      "usageLimit": 1000,
-      "usedCount": 0,
-      "perUserLimit": 1,
-      "isActive": true,
-      "expiresAt": "2027-03-31T23:59:59.000Z",
-      "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-08-25T00:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "code": "FIRSTLOOM",
-      "description": "10% off your first order above ₹3,000 — capped at ₹2,500",
-      "type": "percentage",
-      "value": 10,
-      "minOrderAmount": 3000,
-      "maxDiscount": 2500,
-      "usageLimit": null,
-      "usedCount": 0,
-      "perUserLimit": 1,
-      "isActive": true,
-      "expiresAt": "2027-12-31T23:59:59.000Z",
-      "createdAt": "2026-02-01T00:00:00.000Z",
-      "updatedAt": "2026-08-25T00:00:00.000Z"
-    },
-    {
-      "id": 3,
-      "code": "BRIDAL10",
-      "description": "10% off bridal Muga sets above ₹25,000 — capped at ₹5,000",
-      "type": "percentage",
-      "value": 10,
-      "minOrderAmount": 25000,
-      "maxDiscount": 5000,
-      "usageLimit": 500,
-      "usedCount": 0,
-      "perUserLimit": 1,
-      "isActive": true,
-      "expiresAt": "2027-06-30T23:59:59.000Z",
-      "createdAt": "2026-02-01T00:00:00.000Z",
-      "updatedAt": "2026-08-25T00:00:00.000Z"
-    },
-    {
-      "id": 4,
-      "code": "SUALKUCHI1000",
-      "description": "₹1,000 off handloom orders above ₹10,000",
-      "type": "fixed",
-      "value": 1000,
-      "minOrderAmount": 10000,
-      "maxDiscount": 1000,
-      "usageLimit": null,
-      "usedCount": 0,
-      "perUserLimit": 1,
-      "isActive": true,
-      "expiresAt": "2027-12-31T23:59:59.000Z",
-      "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-08-25T00:00:00.000Z"
-    },
-    {
-      "id": 5,
-      "code": "FREESHIP",
-      "description": "Free standard shipping on orders above ₹999",
-      "type": "fixed",
-      "value": 99,
-      "minOrderAmount": 999,
-      "maxDiscount": 99,
-      "usageLimit": null,
-      "usedCount": 0,
-      "perUserLimit": null,
-      "isActive": true,
-      "expiresAt": "2027-12-31T23:59:59.000Z",
-      "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-08-25T00:00:00.000Z"
-    },
-    {
-      "id": 6,
-      "code": "BIHU15",
-      "description": "15% off during Bihu on orders above ₹4,000 — capped at ₹3,000",
-      "type": "percentage",
-      "value": 15,
-      "minOrderAmount": 4000,
-      "maxDiscount": 3000,
-      "usageLimit": 300,
-      "usedCount": 0,
-      "perUserLimit": 1,
-      "isActive": true,
-      "expiresAt": "2026-12-31T23:59:59.000Z",
-      "createdAt": "2026-03-01T00:00:00.000Z",
-      "updatedAt": "2026-08-25T00:00:00.000Z"
-    },
-    {
-      "code": "NNNN",
-      "description": "none",
-      "type": "percentage",
-      "value": 1000,
-      "minOrderAmount": 400,
-      "maxDiscount": null,
-      "usageLimit": null,
-      "perUserLimit": null,
-      "isActive": true,
-      "expiresAt": null,
-      "usedCount": 0,
-      "createdAt": "2026-09-01T10:53:52.642Z",
-      "updatedAt": "2026-09-01T10:53:52.642Z",
-      "id": 7
-    }
-  ],
-  "reviews": [
-    {
-      "id": 2,
-      "productId": 1,
-      "userId": 2,
-      "userName": "Priya M.",
-      "rating": 4,
-      "title": "Beautiful drape, stiff for the first two wears",
-      "body": "Lovely weave and the kesa border is neatly finished. Muga is stiffer off the loom than I expected and it took two wears before the chador pleated properly at the shoulder. Worth knowing before a function rather than after. Four stars only for that; the silk itself is excellent.",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 11,
-      "createdAt": "2026-03-04T12:30:00.000Z",
-      "updatedAt": "2026-03-04T12:30:00.000Z"
-    },
-    {
-      "id": 3,
-      "productId": 13,
-      "userId": 2,
-      "userName": "Priya M.",
-      "rating": 5,
-      "title": "Bought it as a saree rather than a drape",
-      "body": "I am not from Assam and do not wear a mekhela, so a Muga saree was exactly what I wanted. Six and a quarter yards, blouse piece included, and the border is woven rather than stitched on. It has the weight of a real silk saree without being unwearable for a full evening.",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 33,
-      "photos": [
-        "https://placehold.co/300x300/F2ECE1/8A6118?text=Anchal",
-        "https://placehold.co/300x300/F2ECE1/8A6118?text=Border"
-      ],
-      "createdAt": "2026-02-22T15:10:00.000Z",
-      "updatedAt": "2026-02-22T15:10:00.000Z"
-    },
-    {
-      "id": 5,
-      "productId": 19,
-      "userId": 3,
-      "userName": "Ritu K.",
-      "rating": 5,
-      "title": "Warmer than it looks",
-      "body": "Handspun Eri is genuinely warm in a way I did not expect from silk — closer to a light wool. Undyed ivory goes with everything and the fringe is hand knotted, not machine finished. Washed it once by hand and it came out softer. This has replaced my winter scarf entirely.",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 27,
-      "photos": [
-        "https://placehold.co/300x300/FAF6EC/5C554A?text=Eri+Shawl"
-      ],
-      "createdAt": "2026-04-05T11:20:00.000Z",
-      "updatedAt": "2026-04-05T11:20:00.000Z"
-    },
-    {
-      "id": 6,
-      "productId": 6,
-      "userId": 3,
-      "userName": "Ritu K.",
-      "rating": 4,
-      "title": "Classic ivory and gold, wore it for Bihu",
-      "body": "Exactly the drape you see on stage at Bihu — ivory Pat, gold zari border, nothing extra. It holds a crisp pleat which is what I wanted. Slightly less generous at the chador than my old one, so if you drape with deep pleats do check the measurements first.",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 14,
-      "createdAt": "2026-04-12T14:45:00.000Z",
-      "updatedAt": "2026-04-12T14:45:00.000Z"
-    },
-    {
-      "id": 7,
-      "productId": 28,
-      "userId": 1,
-      "userName": "Sneha R.",
-      "rating": 5,
-      "title": "Ordered six pairs for Bohag Bihu",
-      "body": "Straightforward handwoven gamosas with the proper red border and woven buta at both ends. The listing is honest that they are cotton, which is what a gamosa should be. Packed as pairs in a kraft sleeve so I could give them without rewrapping. Washed one to check and it softened nicely.",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 9,
-      "photos": [
-        "https://placehold.co/300x300/F2ECE1/C8912A?text=Gamosa"
-      ],
-      "createdAt": "2026-05-14T16:00:00.000Z",
-      "updatedAt": "2026-05-14T16:00:00.000Z"
-    },
-    {
-      "id": 9,
-      "productId": 10,
-      "userId": 3,
-      "userName": "Ritu K.",
-      "rating": 3,
-      "title": "Lovely fibre, but the undyed shade was lighter than the photos",
-      "body": "No complaint about the Eri itself — it is soft, matte and exactly as described in the hand. But the natural oatmeal arrived noticeably paler than the listing images, closer to cream. Support explained that undyed Eri varies by batch, which I accept, though I would have liked that flagged more clearly on the page.",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 16,
-      "createdAt": "2026-05-02T09:30:00.000Z",
-      "updatedAt": "2026-05-02T09:30:00.000Z"
-    },
-    {
-      "id": 11,
-      "productId": 13,
-      "userId": 3,
-      "userName": "Ritu K.",
-      "rating": 5,
-      "title": "Second Muga from Meghali’s, consistent quality",
-      "body": "Bought a Mekhela Chador last year and this saree in June. Same depth of gold, same finish on the border, so whatever they are doing at the Sualkuchi end is consistent between orders. Posting early before the wedding photographs are back.",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 0,
-      "createdAt": "2026-06-24T10:30:00.000Z",
-      "updatedAt": "2026-09-01T13:55:45.447Z"
-    },
-    {
-      "productId": 13,
-      "userId": null,
-      "userName": "shubendu",
-      "rating": 4,
-      "title": "none",
-      "body": "none",
-      "status": "approved",
-      "isVerifiedPurchase": true,
-      "helpfulCount": 0,
-      "source": "admin",
-      "createdAt": "2026-09-01T17:15:12.518Z",
-      "updatedAt": "2026-09-01T17:15:16.770Z",
-      "id": 12
-    }
-  ],
-  "wishlist": [
-    {
-      "productId": 1,
-      "slug": "sualkuchi-muga-mekhela-chador-natural-gold",
-      "name": "Sualkuchi Muga Mekhela Chador — Natural Gold",
-      "image": "https://placehold.co/600x800/F2ECE1/8A6118?text=Muga+Mekhela",
-      "brand": "Meghali's Silk",
-      "price": 32500,
-      "comparePrice": 38000,
-      "rating": 4.8,
-      "totalReviews": 41,
-      "shortDescription": "A two-piece Muga Mekhela Chador in undyed golden yarn, handwoven on Sualkuchi looms.",
-      "variants": [
+    "faqPage": {
+      "eyebrow": "Help",
+      "title": "Frequently asked questions",
+      "groups": [
         {
-          "id": "v1",
-          "name": "Natural Gold",
-          "price": 32500,
-          "stock": 5,
-          "sku": "MEK-MUG-001-NGD",
-          "attributes": {
-            "Fabric": "Muga Silk",
-            "Color": "Natural Gold"
-          },
-          "swatchHex": "#C6A050"
+          "key": "brand",
+          "label": "The farmer-owned brand"
         },
         {
-          "id": "v2",
-          "name": "Gold with Rust Border",
-          "price": 33500,
-          "stock": 4,
-          "sku": "MEK-MUG-001-GRB",
-          "attributes": {
-            "Fabric": "Muga Silk",
-            "Color": "Gold Rust"
-          },
-          "swatchHex": "#A9682F"
-        }
-      ],
-      "stock": 9,
-      "trending": true,
-      "hot": false,
-      "addedAt": "2026-06-14T13:57:44.901Z",
-      "userId": 3,
-      "id": 1
-    },
-    {
-      "productId": 13,
-      "slug": "muga-silk-saree-assam-golden",
-      "name": "Muga Silk Saree — Assam Golden",
-      "image": "https://placehold.co/600x800/F2ECE1/8A6118?text=Muga+Saree",
-      "brand": "Meghali's Silk",
-      "price": 27500,
-      "comparePrice": 32000,
-      "rating": 4.8,
-      "totalReviews": 52,
-      "shortDescription": "Six yards of undyed Muga with a woven border — the drape, in saree form.",
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Natural Gold",
-          "price": 27500,
-          "stock": 6,
-          "sku": "SAR-MUG-013-NGD",
-          "attributes": {
-            "Fabric": "Muga Silk",
-            "Color": "Natural Gold"
-          },
-          "swatchHex": "#C6A050"
+          "key": "products",
+          "label": "Products & ingredients"
         },
         {
-          "id": "v2",
-          "name": "Gold with Black Border",
-          "price": 27500,
-          "stock": 4,
-          "sku": "SAR-MUG-013-BLK",
-          "attributes": {
-            "Fabric": "Muga Silk",
-            "Color": "Gold Black"
-          },
-          "swatchHex": "#2B2724"
-        }
-      ],
-      "stock": 10,
-      "trending": true,
-      "hot": false,
-      "addedAt": "2026-06-14T13:57:57.354Z",
-      "userId": 3,
-      "id": 2
-    },
-    {
-      "productId": 19,
-      "slug": "eri-silk-shawl-undyed-ivory",
-      "name": "Eri Silk Shawl — Undyed Ivory",
-      "image": "https://placehold.co/600x800/FAF6EC/5C554A?text=Eri+Shawl",
-      "brand": "Meghali's Silk",
-      "price": 4800,
-      "comparePrice": null,
-      "rating": 4.7,
-      "totalReviews": 58,
-      "shortDescription": "A handspun Eri shawl in undyed ivory, warm enough for a Guwahati winter evening.",
-      "variants": [
-        {
-          "id": "v1",
-          "name": "Undyed Ivory",
-          "price": 4800,
-          "stock": 16,
-          "sku": "STO-ERI-019-IVY",
-          "attributes": {
-            "Fabric": "Eri Silk",
-            "Color": "Undyed Ivory"
-          },
-          "swatchHex": "#E4DAC6"
+          "key": "orders",
+          "label": "Orders, shipping & returns"
         },
         {
-          "id": "v2",
-          "name": "Natural Oatmeal",
-          "price": 4800,
-          "stock": 14,
-          "sku": "STO-ERI-019-NAT",
-          "attributes": {
-            "Fabric": "Eri Silk",
-            "Color": "Natural Oatmeal"
-          },
-          "swatchHex": "#D9CDB8"
+          "key": "account",
+          "label": "Account"
         }
-      ],
-      "stock": 30,
-      "trending": true,
-      "hot": false,
-      "addedAt": "2026-06-14T13:57:59.358Z",
-      "userId": 3,
-      "id": 3
+      ]
     }
-  ],
-  "leads": [
+  },
+  "announcements": [
     {
       "id": 1,
-      "type": "contact",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "phone": "+91 9876543210",
-      "orderNumber": "ORD-20250310-0001",
-      "category": "shipping",
-      "subject": "Order delivery update",
-      "message": "Hi, I wanted to check on the delivery status of my order. The tracking shows it's been shipped but I haven't received an estimated delivery date.",
-      "status": "resolved",
-      "createdAt": "2026-01-16T11:00:00.000Z",
-      "updatedAt": "2026-01-16T14:30:00.000Z",
-      "notes": "Provided tracking details to customer"
+      "text": "Farmer-owned. Assam-grown.",
+      "link": "",
+      "isActive": true,
+      "sortOrder": 0,
+      "startsAt": null,
+      "endsAt": null,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 2,
-      "type": "newsletter",
-      "name": null,
-      "email": "subscriber@example.com",
-      "phone": null,
-      "orderNumber": null,
-      "category": null,
-      "subject": null,
-      "message": null,
-      "status": "subscribed",
-      "createdAt": "2026-02-10T09:00:00.000Z",
-      "updatedAt": "2026-02-10T09:00:00.000Z",
-      "notes": ""
+      "text": "Free shipping over ₹{{FREE_SHIPPING_THRESHOLD}}",
+      "link": "/shop",
+      "isActive": true,
+      "sortOrder": 1,
+      "startsAt": null,
+      "endsAt": null,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
       "id": 3,
-      "type": "contact",
-      "name": "Jane Smith",
-      "email": "jane@example.com",
-      "phone": "+91 9123456789",
-      "orderNumber": null,
-      "category": "product",
-      "subject": "Product availability inquiry",
-      "message": "Do you have the FitPulse Smartwatch in size 44mm? The website shows it's available but I wanted to confirm before ordering.",
-      "status": "contacted",
-      "createdAt": "2026-03-18T10:30:00.000Z",
-      "updatedAt": "2026-04-17T14:22:33.071Z",
-      "notes": "fdsadfsafwe"
-    },
-    {
-      "type": "contact",
-      "name": "Bappi Das",
-      "email": "mail4bappidas@gmail.com",
-      "phone": "+919707112233",
-      "orderNumber": "ORD-MQC1HWSZ-CAN8",
-      "category": "returns",
-      "subject": "Want to return this AirStride Running Shoes - UK 7 - Black",
-      "message": "AirStride Running Shoes - UK 7 - Black is does not fit properly",
-      "status": "resolved",
-      "createdAt": "2026-06-13T12:52:25.021Z",
-      "updatedAt": "2026-06-13T15:55:02.925Z",
-      "notes": "Need to Cancel this order. ",
-      "id": 4
-    },
-    {
-      "type": "newsletter",
-      "name": null,
-      "email": "shubendu@assamdigital.com",
-      "phone": null,
-      "orderNumber": null,
-      "category": null,
-      "subject": null,
-      "message": null,
-      "status": "subscribed",
-      "createdAt": "2026-09-01T11:05:17.021Z",
-      "updatedAt": "2026-09-01T11:05:17.021Z",
-      "notes": "",
-      "id": 5
-    },
-    {
-      "type": "contact",
-      "name": "dvvdv",
-      "email": "shubendu@assamdigitaxcvbbl.com",
-      "phone": "",
-      "orderNumber": "",
-      "category": "general",
-      "subject": "cvvv",
-      "message": "cxvxcvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv",
-      "status": "new",
-      "createdAt": "2026-09-01T11:11:24.536Z",
-      "updatedAt": "2026-09-01T11:11:24.536Z",
-      "notes": "",
-      "id": 6
+      "text": "{{LAUNCH_OFFER_TEXT}}",
+      "link": "/shop",
+      "isActive": true,
+      "sortOrder": 2,
+      "startsAt": null,
+      "endsAt": null,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     }
   ],
+  "heroConfig": {
+    "enabled": true,
+    "source": "products",
+    "autoplay": true,
+    "intervalMs": 6500,
+    "transition": "fade",
+    "pauseOnHover": true,
+    "showControls": true,
+    "showCounter": true,
+    "showProgress": true,
+    "showArrows": true,
+    "updatedAt": "2026-09-06T00:00:00.000Z"
+  },
   "settings": {
     "store": {
-      "name": "Meghali's Silk",
-      "tagline": "Handwoven Assamese silk from the looms of Sualkuchi",
-      "email": "care@meghalisilk.com",
-      "phone": "+91 33 4000 1100",
-      "address": "Galleria Producer Company Limited, Park Street, Kolkata, West Bengal 700016",
+      "name": "LAMIKAA NATURALS",
+      "tagline": "Indigenous Wisdom. Modern Beauty. Shared Prosperity.",
+      "email": "{{LAMIKAA_EMAIL}}",
+      "phone": "{{LAMIKAA_PHONE}}",
+      "address": "{{LAMIKAA_ADDRESS}}",
       "currency": "INR",
       "currencySymbol": "₹",
       "timezone": "Asia/Kolkata",
       "logo": null,
       "favicon": null,
-      "taxRate": 5,
-      "taxIncluded": false
+      "taxRate": 0,
+      "taxIncluded": true
     },
     "shipping": {
       "shiprocketEnabled": false,
@@ -2978,119 +1990,547 @@
       "codEnabled": true,
       "codFee": 0,
       "codMinOrder": 0,
-      "codMaxOrder": 50000
+      "codMaxOrder": 0
     },
     "notifications": {
       "orderConfirmationEmail": true,
       "shippingUpdateEmail": true,
       "adminNewOrderEmail": true,
-      "adminEmail": "admin@mystore.com",
+      "adminEmail": "{{LAMIKAA_EMAIL}}",
       "lowStockAlert": true,
-      "lowStockEmail": "admin@mystore.com"
+      "lowStockEmail": "{{LAMIKAA_EMAIL}}"
     },
     "seo": {
-      "metaTitle": "Meghali's Silk — Assamese Muga, Pat & Eri Silk Mekhela Chador and Sarees",
-      "metaDescription": "Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft matte Eri, woven to last generations.",
+      "metaTitle": "LAMIKAA NATURALS — Black Rice Skincare, Farmer-Owned",
+      "metaDescription": "Farmer-owned skincare rooted in the indigenous wisdom of Assam and Northeast India. The Black Rice range: cleanse, refresh, treat and moisturise — beauty that creates value for farmers.",
       "googleAnalyticsId": "",
       "facebookPixelId": ""
     },
     "social": {
-      "facebook": "https://facebook.com/meghalisilk",
-      "instagram": "https://instagram.com/meghalisilk",
-      "twitter": "https://twitter.com/meghalisilk",
-      "youtube": "https://youtube.com/@meghalisilk",
-      "whatsapp": "https://wa.me/913340001100"
+      "facebook": "{{LAMIKAA_FACEBOOK_URL}}",
+      "instagram": "{{LAMIKAA_INSTAGRAM_URL}}",
+      "twitter": "",
+      "youtube": "{{LAMIKAA_YOUTUBE_URL}}",
+      "whatsapp": "{{LAMIKAA_WHATSAPP_URL}}"
     }
   },
+  "dealsConfig": {
+    "enabled": false,
+    "hero": {
+      "tag": "Offers",
+      "title": "Offers",
+      "subtitle": "Launch offers will appear here."
+    },
+    "timer": {
+      "enabled": false,
+      "endAt": "",
+      "onExpiry": "hide"
+    },
+    "featuredCouponIds": [],
+    "dealOfTheDayIds": [],
+    "featuredProductIds": [],
+    "updatedAt": "2026-09-06T00:00:00.000Z"
+  },
+  "admins": [
+    {
+      "id": 1,
+      "email": "admin@store.com",
+      "password": "admin123",
+      "firstName": "Store",
+      "lastName": "Admin",
+      "role": "super_admin",
+      "isActive": true,
+      "createdAt": "2026-09-06T00:00:00.000Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "email": "sample.customer@example.com",
+      "password": "password123",
+      "firstName": "Sample",
+      "lastName": "Customer",
+      "phone": "+91 90000 00000",
+      "avatar": null,
+      "addresses": [
+        {
+          "id": 1,
+          "label": "Home",
+          "firstName": "Sample",
+          "lastName": "Customer",
+          "phone": "+91 90000 00000",
+          "addressLine1": "12 Sample Lane",
+          "addressLine2": "",
+          "city": "Guwahati",
+          "state": "Assam",
+          "postalCode": "781001",
+          "country": "India",
+          "isDefault": true
+        }
+      ],
+      "isActive": true,
+      "storeCredit": 390,
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    }
+  ],
+  "shipping_methods": [
+    {
+      "id": 1,
+      "name": "Standard Delivery",
+      "carrier": "",
+      "description": "Delivery time and charges will be confirmed before launch.",
+      "rateType": "flat",
+      "flatRate": 0,
+      "freeAbove": null,
+      "estimatedDays": "",
+      "isActive": true,
+      "createdAt": "2026-09-06T00:00:00.000Z"
+    }
+  ],
+  "coupons": [
+    {
+      "id": 1,
+      "code": "SAMPLE10",
+      "description": "Sample coupon — 10% off for testing. Replace before launch.",
+      "type": "percentage",
+      "value": 10,
+      "minOrderAmount": 0,
+      "maxDiscount": 100,
+      "usageLimit": 1000,
+      "usedCount": 0,
+      "perUserLimit": 0,
+      "isActive": true,
+      "expiresAt": "2027-12-31T23:59:59.000Z",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "discountAmount": 0,
+      "couponCode": null,
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "storeCreditUsed": 0,
+      "billingAddress": {
+        "firstName": "Sample",
+        "lastName": "Customer",
+        "phone": "+91 90000 00000",
+        "addressLine1": "12 Sample Lane",
+        "addressLine2": "",
+        "city": "Guwahati",
+        "state": "Assam",
+        "postalCode": "781001",
+        "country": "India"
+      },
+      "shippingAddress": {
+        "firstName": "Sample",
+        "lastName": "Customer",
+        "phone": "+91 90000 00000",
+        "addressLine1": "12 Sample Lane",
+        "addressLine2": "",
+        "city": "Guwahati",
+        "state": "Assam",
+        "postalCode": "781001",
+        "country": "India"
+      },
+      "shiprocketOrderId": null,
+      "notes": "",
+      "id": 1,
+      "orderNumber": "ORD-20260901-0001",
+      "userId": 1,
+      "items": [
+        {
+          "productId": 1,
+          "variantId": null,
+          "name": "Black Rice Face Wash",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
+          "sku": "LK-BR-FW-001",
+          "price": 390,
+          "quantity": 1,
+          "subtotal": 390
+        },
+        {
+          "productId": 2,
+          "variantId": null,
+          "name": "Black Rice Goat Milk Soap",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg",
+          "sku": "LK-BR-GS-002",
+          "price": 90,
+          "quantity": 2,
+          "subtotal": 180
+        }
+      ],
+      "subtotal": 570,
+      "total": 570,
+      "amountPayable": 570,
+      "paymentStatus": "paid",
+      "paymentMethod": "upi",
+      "fulfillmentStatus": "fulfilled",
+      "shippingStatus": "delivered",
+      "trackingNumber": "LK-TRACK-0001",
+      "trackingUrl": "",
+      "deliveredAt": "2026-09-04T14:20:00.000Z",
+      "statusHistory": [
+        {
+          "at": "2026-09-01T10:15:00.000Z",
+          "by": "Customer",
+          "action": "Order placed"
+        },
+        {
+          "at": "2026-09-01T10:16:00.000Z",
+          "by": "System",
+          "action": "Payment captured",
+          "note": "UPI via Razorpay"
+        },
+        {
+          "at": "2026-09-02T09:30:00.000Z",
+          "by": "Store Admin",
+          "action": "Fulfilled & shipped",
+          "note": "Tracking LK-TRACK-0001"
+        },
+        {
+          "at": "2026-09-04T14:20:00.000Z",
+          "by": "Store Admin",
+          "action": "Delivered"
+        }
+      ],
+      "createdAt": "2026-09-01T10:15:00.000Z",
+      "updatedAt": "2026-09-04T14:20:00.000Z"
+    },
+    {
+      "discountAmount": 0,
+      "couponCode": null,
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "storeCreditUsed": 0,
+      "billingAddress": {
+        "firstName": "Sample",
+        "lastName": "Customer",
+        "phone": "+91 90000 00000",
+        "addressLine1": "12 Sample Lane",
+        "addressLine2": "",
+        "city": "Guwahati",
+        "state": "Assam",
+        "postalCode": "781001",
+        "country": "India"
+      },
+      "shippingAddress": {
+        "firstName": "Sample",
+        "lastName": "Customer",
+        "phone": "+91 90000 00000",
+        "addressLine1": "12 Sample Lane",
+        "addressLine2": "",
+        "city": "Guwahati",
+        "state": "Assam",
+        "postalCode": "781001",
+        "country": "India"
+      },
+      "shiprocketOrderId": null,
+      "notes": "",
+      "id": 2,
+      "orderNumber": "ORD-20260904-0002",
+      "userId": 1,
+      "items": [
+        {
+          "productId": 6,
+          "variantId": null,
+          "name": "Black Rice Exfoliating Face Scrub",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg",
+          "sku": "LK-BR-SC-006",
+          "price": 349,
+          "quantity": 1,
+          "subtotal": 349
+        }
+      ],
+      "subtotal": 349,
+      "total": 349,
+      "amountPayable": 349,
+      "paymentStatus": "pending",
+      "paymentMethod": "cod",
+      "fulfillmentStatus": "unfulfilled",
+      "shippingStatus": "pending",
+      "trackingNumber": "",
+      "trackingUrl": "",
+      "statusHistory": [
+        {
+          "at": "2026-09-04T11:05:00.000Z",
+          "by": "Customer",
+          "action": "Order placed"
+        }
+      ],
+      "createdAt": "2026-09-04T11:05:00.000Z",
+      "updatedAt": "2026-09-04T11:05:00.000Z"
+    },
+    {
+      "discountAmount": 0,
+      "couponCode": null,
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "storeCreditUsed": 0,
+      "billingAddress": {
+        "firstName": "Sample",
+        "lastName": "Customer",
+        "phone": "+91 90000 00000",
+        "addressLine1": "12 Sample Lane",
+        "addressLine2": "",
+        "city": "Guwahati",
+        "state": "Assam",
+        "postalCode": "781001",
+        "country": "India"
+      },
+      "shippingAddress": {
+        "firstName": "Sample",
+        "lastName": "Customer",
+        "phone": "+91 90000 00000",
+        "addressLine1": "12 Sample Lane",
+        "addressLine2": "",
+        "city": "Guwahati",
+        "state": "Assam",
+        "postalCode": "781001",
+        "country": "India"
+      },
+      "shiprocketOrderId": null,
+      "notes": "",
+      "id": 3,
+      "orderNumber": "ORD-20260903-0003",
+      "userId": 1,
+      "items": [
+        {
+          "productId": 1,
+          "variantId": null,
+          "name": "Black Rice Face Wash",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
+          "sku": "LK-BR-FW-001",
+          "price": 390,
+          "quantity": 1,
+          "subtotal": 390
+        }
+      ],
+      "subtotal": 390,
+      "total": 390,
+      "amountPayable": 390,
+      "paymentStatus": "refunded",
+      "paymentMethod": "card",
+      "fulfillmentStatus": "cancelled",
+      "shippingStatus": "pending",
+      "trackingNumber": "",
+      "trackingUrl": "",
+      "cancelledAt": "2026-09-03T12:00:00.000Z",
+      "cancelReason": "Customer changed their mind",
+      "refundStatus": "completed",
+      "refundMethod": "store_credit",
+      "pendingRefund": null,
+      "refundedAmount": 390,
+      "refundCompletedAt": "2026-09-03T12:30:00.000Z",
+      "statusHistory": [
+        {
+          "at": "2026-09-03T08:40:00.000Z",
+          "by": "Customer",
+          "action": "Order placed"
+        },
+        {
+          "at": "2026-09-03T08:41:00.000Z",
+          "by": "System",
+          "action": "Payment captured",
+          "note": "Card via Razorpay"
+        },
+        {
+          "at": "2026-09-03T12:00:00.000Z",
+          "by": "Store Admin",
+          "action": "Order cancelled",
+          "note": "Customer changed their mind"
+        },
+        {
+          "at": "2026-09-03T12:01:00.000Z",
+          "by": "Store Admin",
+          "action": "Refund initiated",
+          "note": "₹390 via store credit — settlement pending"
+        },
+        {
+          "at": "2026-09-03T12:30:00.000Z",
+          "by": "Store Admin",
+          "action": "Refund completed",
+          "note": "₹390 via store credit settled to customer"
+        }
+      ],
+      "createdAt": "2026-09-03T08:40:00.000Z",
+      "updatedAt": "2026-09-03T12:30:00.000Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": 1,
+      "orderId": 1,
+      "orderNumber": "ORD-20260901-0001",
+      "userId": 1,
+      "amount": 570,
+      "currency": "INR",
+      "paymentMethod": "upi",
+      "gateway": "razorpay",
+      "transactionId": "pay_SEED0001",
+      "gatewayOrderId": "order_SEED0001",
+      "status": "captured",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "createdAt": "2026-09-01T10:16:00.000Z",
+      "updatedAt": "2026-09-01T10:16:00.000Z"
+    },
+    {
+      "id": 2,
+      "orderId": 2,
+      "orderNumber": "ORD-20260904-0002",
+      "userId": 1,
+      "amount": 349,
+      "currency": "INR",
+      "paymentMethod": "cod",
+      "gateway": "cod",
+      "transactionId": null,
+      "gatewayOrderId": null,
+      "status": "pending",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "createdAt": "2026-09-04T11:05:00.000Z",
+      "updatedAt": "2026-09-04T11:05:00.000Z"
+    },
+    {
+      "id": 3,
+      "orderId": 3,
+      "orderNumber": "ORD-20260903-0003",
+      "userId": 1,
+      "amount": 390,
+      "currency": "INR",
+      "paymentMethod": "card",
+      "gateway": "razorpay",
+      "transactionId": "pay_SEED0003",
+      "gatewayOrderId": "order_SEED0003",
+      "status": "refunded",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "refundAmount": 390,
+      "refundReason": "Order cancelled",
+      "refunds": [
+        {
+          "id": "ref_seed0001",
+          "amount": 390,
+          "reason": "Order cancelled",
+          "at": "2026-09-03T12:30:00.000Z",
+          "by": "Store Admin"
+        }
+      ],
+      "createdAt": "2026-09-03T08:41:00.000Z",
+      "updatedAt": "2026-09-03T12:30:00.000Z"
+    }
+  ],
+  "refunds": [
+    {
+      "id": 1,
+      "refundNumber": "REF-20260903-C001",
+      "type": "order_cancellation",
+      "orderId": 3,
+      "orderNumber": "ORD-20260903-0003",
+      "returnId": null,
+      "returnNumber": null,
+      "paymentId": 3,
+      "amount": 390,
+      "method": "store_credit",
+      "reason": "Order cancelled",
+      "reference": null,
+      "status": "completed",
+      "couponRestored": false,
+      "initiatedAt": "2026-09-03T12:01:00.000Z",
+      "settledAt": "2026-09-03T12:30:00.000Z",
+      "by": "Store Admin",
+      "createdAt": "2026-09-03T12:01:00.000Z",
+      "updatedAt": "2026-09-03T12:30:00.000Z"
+    }
+  ],
   "walletTransactions": [
     {
       "id": 1,
-      "userId": 3,
+      "userId": 1,
       "type": "credit",
-      "amount": 4918,
-      "reason": "Refund for order ORD-MQC1HWSZ-CAN8",
-      "orderId": 8,
-      "orderNumber": "ORD-MQC1HWSZ-CAN8",
-      "refundId": 3,
-      "refundNumber": "REF-20260613-JQ3L",
+      "amount": 390,
+      "reason": "Refund for order ORD-20260903-0003",
+      "orderId": 3,
+      "orderNumber": "ORD-20260903-0003",
+      "refundId": 1,
+      "refundNumber": "REF-20260903-C001",
       "balanceBefore": 0,
-      "balanceAfter": 4918,
-      "createdAt": "2026-06-13T12:57:28.419Z"
-    },
-    {
-      "userId": 3,
-      "type": "debit",
-      "amount": 1000,
-      "reason": "Applied to order ORD-MQCGV6OM-Z965",
-      "orderId": 9,
-      "orderNumber": "ORD-MQCGV6OM-Z965",
-      "refundId": null,
-      "refundNumber": null,
-      "balanceBefore": 4918,
-      "balanceAfter": 3918,
-      "createdAt": "2026-06-13T14:44:33.927Z",
-      "id": 2
-    },
-    {
-      "userId": 3,
-      "type": "debit",
-      "amount": 1000,
-      "reason": "Applied to order ORD-MQDVIQCV-30A9",
-      "orderId": 11,
-      "orderNumber": "ORD-MQDVIQCV-30A9",
-      "refundId": null,
-      "refundNumber": null,
-      "balanceBefore": 3918,
-      "balanceAfter": 2918,
-      "createdAt": "2026-06-14T14:22:33.343Z",
-      "id": 3
-    },
-    {
-      "userId": 3,
-      "type": "credit",
-      "amount": 1000,
-      "reason": "Store credit returned — ORD-MQDVIQCV-30A9 cancelled",
-      "orderId": 11,
-      "orderNumber": "ORD-MQDVIQCV-30A9",
-      "refundId": null,
-      "refundNumber": null,
-      "balanceBefore": 2918,
-      "balanceAfter": 3918,
-      "createdAt": "2026-09-01T14:02:12.035Z",
-      "id": 4
+      "balanceAfter": 390,
+      "createdAt": "2026-09-03T12:30:00.000Z"
     }
   ],
-  "dealsConfig": {
-    "enabled": true,
-    "hero": {
-      "tag": "Bihu Offers",
-      "title": "Honest Markdowns on Handwoven Assamese Silk",
-      "subtitle": "A short list of Muga, Pat and Eri pieces genuinely reduced from their original price. Everything else in the catalogue stays where it is."
+  "returns": [],
+  "reviews": [
+    {
+      "id": 1,
+      "productId": 1,
+      "userId": null,
+      "userName": "Sample reviewer",
+      "rating": 5,
+      "title": "Sample review — replace before launch",
+      "body": "Sample review — replace before launch. This placeholder row exists only so the admin Reviews screen has data to show; it is flagged isSample and never reaches the storefront.",
+      "status": "approved",
+      "source": "admin",
+      "isSample": true,
+      "isVerifiedPurchase": false,
+      "helpfulCount": 0,
+      "photos": [],
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
-    "timer": {
-      "enabled": true,
-      "endAt": "2026-09-01T11:04:00.000Z",
-      "onExpiry": "endOfDay"
+    {
+      "id": 2,
+      "productId": 7,
+      "userId": null,
+      "userName": "Sample reviewer",
+      "rating": 5,
+      "title": "Sample review — replace before launch",
+      "body": "Sample review — replace before launch. This placeholder row exists only so the admin Reviews screen has data to show; it is flagged isSample and never reaches the storefront.",
+      "status": "approved",
+      "source": "admin",
+      "isSample": true,
+      "isVerifiedPurchase": false,
+      "helpfulCount": 0,
+      "photos": [],
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    }
+  ],
+  "wishlist": [],
+  "cart": [],
+  "leads": [
+    {
+      "id": 1,
+      "type": "contact",
+      "name": "Sample Enquiry",
+      "email": "sample.enquiry@example.com",
+      "phone": "",
+      "orderNumber": "",
+      "category": "product",
+      "subject": "Sample enquiry",
+      "message": "Sample enquiry — replace before launch. Seeded so the admin Leads screen has a contact row to open.",
+      "status": "new",
+      "notes": "",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
     },
-    "featuredCouponIds": [
-      2,
-      3,
-      7
-    ],
-    "dealOfTheDayIds": [
-      1,
-      13,
-      34
-    ],
-    "featuredProductIds": [
-      1,
-      6,
-      13,
-      16,
-      34,
-      35,
-      36
-    ],
-    "updatedAt": "2026-09-01T00:00:00.000Z"
-  }
+    {
+      "id": 2,
+      "type": "newsletter",
+      "name": "",
+      "email": "sample.subscriber@example.com",
+      "phone": "",
+      "orderNumber": "",
+      "category": "",
+      "subject": "",
+      "message": "",
+      "status": "subscribed",
+      "notes": "",
+      "createdAt": "2026-09-06T00:00:00.000Z",
+      "updatedAt": "2026-09-06T00:00:00.000Z"
+    }
+  ]
 }
