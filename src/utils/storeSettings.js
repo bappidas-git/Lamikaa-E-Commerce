@@ -23,6 +23,7 @@ import {
   SUPPORT_ADDRESS,
   FREE_SHIPPING_THRESHOLD,
 } from "./constants";
+import { resolveOrNull, stripPlaceholderSentences } from "./placeholders";
 import { DEFAULT_SOCIAL_LINKS, normalizeSocialLinks } from "./socialLinks";
 
 // Currencies the admin can pick from. The symbol is what actually gets printed
@@ -68,6 +69,14 @@ const text = (value, fallback) => {
   return s || fallback;
 };
 
+// Same, but for the three contact fields that are still {{TOKENS}} before
+// launch. A token resolves to "" — the value every contact surface already
+// reads as "no such row", so an unsupplied email is a missing line rather than
+// a literal "{{LAMIKAA_EMAIL}}" on the page. Doing it once here means no
+// consumer (footer, help centre, contact page, checkout, invoice) can print
+// one by forgetting to check.
+const publishable = (value, fallback) => resolveOrNull(text(value, fallback)) || "";
+
 // A finite number clamped to >= 0, or the fallback. Guards against the strings
 // json-server hands back when a numeric field was typed into a text input.
 const num = (value, fallback) => {
@@ -87,9 +96,9 @@ export const normalizeStoreSettings = (raw) => {
     store: {
       name: text(store.name, d.store.name),
       tagline: text(store.tagline, d.store.tagline),
-      email: text(store.email, d.store.email),
-      phone: text(store.phone, d.store.phone),
-      address: text(store.address, d.store.address),
+      email: publishable(store.email, d.store.email),
+      phone: publishable(store.phone, d.store.phone),
+      address: publishable(store.address, d.store.address),
       currency,
       // An admin-typed symbol wins over the table, so currencies outside the
       // dropdown (or a store that prefers "Rs.") print exactly what was saved.
@@ -113,11 +122,32 @@ export const normalizeStoreSettings = (raw) => {
   };
 };
 
-// Shared copy (the FAQ answers, the promise strip) quotes figures the admin
-// owns. Rather than freeze them into the string, those lines carry a token and
-// this fills it in — so one edit in Settings > General re-words every surface
-// that renders the copy instead of leaving a contradiction on the page.
-export const fillStoreCopy = (text, settings) => {
+// A finite, positive threshold or null. Shared by the copy filler and by every
+// caller that has to decide between showing a free-shipping promise and hiding
+// it: a null threshold is "unknown", never "free from ₹0".
+const positive = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+// Shared copy (the FAQ answers, the promise strip, the policy pages) quotes
+// figures the admin owns. Rather than freeze them into the string, those lines
+// carry a token and this fills it in — so one edit in Settings > General
+// re-words every surface that renders the copy instead of leaving a
+// contradiction on the page.
+//
+// TWO KINDS OF TOKEN, TWO BEHAVIOURS
+//   {singleBrace}   a figure this function knows how to compute. Replaced.
+//   {{DOUBLE_BRACE}} a fact nobody has supplied yet. NEVER printed: the whole
+//                   sentence carrying it is dropped (see utils/placeholders.js),
+//                   which is also what happens to {freeShipping} when no
+//                   shipping method carries a free-shipping threshold.
+//
+// `options.freeAbove` lets a caller that has already read the live shipping
+// methods pass the real threshold in; `options.returnWindowDays` does the same
+// for the returns window (STOREFRONT_CONFIG owns it, and importing theme/tokens
+// here would close an import cycle through utils/helpers).
+export const fillStoreCopy = (text, settings, options = {}) => {
   if (typeof text !== "string" || !text.includes("{")) return text;
   const { store, payment } = settings;
   const money = (n) =>
@@ -135,14 +165,31 @@ export const fillStoreCopy = (text, settings) => {
       )} across most pin codes in India.`
     : "Cash on Delivery is available across most pin codes in India.";
 
+  // A tax-inclusive store with no rate on file is how the LAMIKAA packs read
+  // ("M.R.P incl. of all taxes") — stating a 0% rate there would be wrong.
   const taxNote = store.taxIncluded
-    ? `inclusive of ${store.taxRate}% tax`
+    ? store.taxRate
+      ? `inclusive of ${store.taxRate}% tax`
+      : "inclusive of all taxes"
     : `exclusive of ${store.taxRate}% tax, which is calculated at checkout`;
 
-  return text
-    .split("{freeShipping}").join(money(FREE_SHIPPING_THRESHOLD))
-    .split("{codSentence}").join(codSentence)
-    .split("{taxNote}").join(taxNote);
+  // Live methods first, then the (now null) constant. Unknown degrades to the
+  // placeholder token, which takes its sentence off the page below.
+  const threshold =
+    positive(options.freeAbove) ?? positive(FREE_SHIPPING_THRESHOLD);
+  const returnDays = positive(options.returnWindowDays);
+
+  const filled = text
+    .split("{freeShipping}")
+    .join(threshold == null ? "{{FREE_SHIPPING_THRESHOLD}}" : money(threshold))
+    .split("{codSentence}")
+    .join(codSentence)
+    .split("{taxNote}")
+    .join(taxNote)
+    .split("{{RETURN_WINDOW_DAYS}}")
+    .join(returnDays == null ? "{{RETURN_WINDOW_DAYS}}" : String(returnDays));
+
+  return stripPlaceholderSentences(filled);
 };
 
 // Indian numbering (1,00,000) for INR, Western grouping (100,000) otherwise.

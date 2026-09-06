@@ -32,18 +32,16 @@ import { Icon } from "@iconify/react";
 import { useAdmin } from "../../context/AdminContext";
 import { useThemeContext } from "../../context/ThemeContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import Logo from "../brand/Logo";
 import buildAdminTheme from "../../theme/adminTheme";
 import useAdminBodyClass from "../../hooks/useAdminBodyClass";
 import apiService from "../../services/api";
 import Swal from "sweetalert2";
 
-// Same byte-for-byte w_520 URLs the storefront serves (intrinsic art 1454×454),
-// so the drawer paints from cache. The logo slot sits on background.paper —
-// white in light mode, #111927 in dark — so the variant follows the mode.
-const LOGO_LIGHT =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";
-const LOGO_WHITE =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";
+// The same <Logo> the storefront renders, so the drawer paints from cache. One
+// wordmark on a transparent ground: it reads on background.paper in either
+// mode, so there is no longer a variant to pick.
+const LOGO_WIDTH = 130;
 
 const drawerWidth = 260;
 
@@ -369,8 +367,8 @@ const AdminLayout = () => {
             width: "100%",
           }}
         >
-          <img
-            src={mode === "dark" ? LOGO_WHITE : LOGO_LIGHT}
+          <Logo
+            width={LOGO_WIDTH}
             alt={`${storeName} Admin`}
             style={{ height: 36, width: "auto", maxWidth: "100%", display: "block" }}
           />

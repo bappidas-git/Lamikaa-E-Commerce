@@ -14,18 +14,17 @@
       rel="preload"
       as="image"
       fetchpriority="high"
-      href="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png"
+      href="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1788670626/logo.png"
     />
 
     <!--
-      Favicons. Every file referenced here exists in public/ — verified against
-      the shipped set (favicon.ico carries 16/32/48, plus the PNGs below).
-      NOTE ON THE ARTWORK: the shipped icons draw the gold Assamese silk motif on
-      the RETIRED deep-green ground (#0B3B2E), which Prompt 01 demoted out of the
-      palette. The mark itself is on-brand; only its ground is stale. Regenerating
-      icon artwork is out of scope — the files are used as shipped.
+      Favicons. Every file referenced here exists in public/ and every one of
+      them was generated from the LAMIKAA mark
+      (…/v1788670625/icon.png, 696x696 on a transparent ground) through
+      Cloudinary resizes — see prompts/PROGRESS.md for the exact commands.
+      favicon.ico carries a single 48x48 PNG payload.
     -->
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="48x48" />
     <link
       rel="icon"
       type="image/png"
@@ -45,64 +44,70 @@
     />
 
     <!--
-      Browser chrome colour. Mirrors --sf-color-bg from
-      src/theme/storefront-tokens.css: #14120F is the dark "evening gallery"
-      ground, which is the site's default theme regardless of the OS
-      preference. src/context/ThemeContext.js rewrites this meta to #FAF6EC
-      (the light ivory ground) when the visitor switches to light.
+      Browser chrome colour. Mirrors --lk-bg / --sf-color-bg: #0B0B0D is the
+      LAMIKAA page ground. Static — there is one theme.
     -->
-    <meta name="theme-color" content="#14120F" />
+    <meta name="theme-color" content="#0B0B0D" />
 
-    <!-- Copy is kept in sync with settings.seo in db.json. -->
+    <!--
+      Copy mirrors brand.seo in src/config/brand.js (and settings.seo in
+      db.json). {{LAMIKAA_DOMAIN}} is still unresolved: a placeholder is
+      tolerated in static HTML for now, and Prompt 36 verifies it has either
+      been resolved or removed before release.
+    -->
     <meta
       name="description"
-      content="Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft matte Eri, woven to last generations."
+      content="Farmer-owned skincare rooted in the indigenous wisdom of Assam and Northeast India. The Black Rice range: cleanse, refresh, treat and moisturise — beauty that creates value for farmers."
     />
     <meta
       name="keywords"
-      content="Assamese silk, Muga silk, Pat silk, Eri silk, Mekhela Chador, Sualkuchi silk, handwoven saree, Assam handloom, silk shawl, Meghali's Silk"
+      content="black rice skincare, farmer-owned beauty, Assam skincare, LAMIKAA Naturals, face serum, face wash, moisturizer gel, Northeast India"
     />
-    <meta name="author" content="Meghali's Silk" />
+    <meta name="author" content="LAMIKAA Naturals" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Meghali's Silk" />
+    <meta property="og:site_name" content="LAMIKAA NATURALS" />
     <meta property="og:locale" content="en_IN" />
-    <meta property="og:url" content="https://meghalissilk.com/" />
+    <meta property="og:url" content="https://{{LAMIKAA_DOMAIN}}/" />
     <meta
       property="og:title"
-      content="Meghali's Silk — Assamese Muga, Pat &amp; Eri Silk Mekhela Chador and Sarees"
+      content="LAMIKAA NATURALS — Black Rice Skincare, Farmer-Owned"
     />
     <meta
       property="og:description"
-      content="Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft matte Eri, woven to last generations."
+      content="Farmer-owned skincare rooted in the indigenous wisdom of Assam and Northeast India. The Black Rice range: cleanse, refresh, treat and moisturise — beauty that creates value for farmers."
     />
-    <meta property="og:image" content="%PUBLIC_URL%/android-chrome-512x512.png" />
+    <meta
+      property="og:image"
+      content="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_1200/v1788670626/logo.png"
+    />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <meta property="og:image:alt" content="Meghali's Silk" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="343" />
+    <meta property="og:image:alt" content="LAMIKAA NATURALS" />
 
     <!--
-      Twitter/X. The only shipped share image is the 512x512 icon, so this is a
-      `summary` card, not `summary_large_image` — the large card crops to 2:1 and
-      would slice the top and bottom off the circular mark.
+      Twitter/X. The share image is the wordmark on a transparent ground, which
+      the platforms composite onto their own card. `summary`, not
+      `summary_large_image`: the large card crops to 2:1 and would slice a
+      3.5:1 wordmark.
     -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:url" content="https://meghalissilk.com/" />
+    <meta name="twitter:url" content="https://{{LAMIKAA_DOMAIN}}/" />
     <meta
       name="twitter:title"
-      content="Meghali's Silk — Assamese Muga, Pat &amp; Eri Silk Mekhela Chador and Sarees"
+      content="LAMIKAA NATURALS — Black Rice Skincare, Farmer-Owned"
     />
     <meta
       name="twitter:description"
-      content="Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft matte Eri, woven to last generations."
+      content="Farmer-owned skincare rooted in the indigenous wisdom of Assam and Northeast India. The Black Rice range: cleanse, refresh, treat and moisturise — beauty that creates value for farmers."
     />
     <meta
       name="twitter:image"
-      content="%PUBLIC_URL%/android-chrome-512x512.png"
+      content="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_1200/v1788670626/logo.png"
     />
-    <meta name="twitter:image:alt" content="Meghali's Silk" />
+    <meta name="twitter:image:alt" content="LAMIKAA NATURALS" />
 
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -138,9 +143,9 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <!-- Mirrors settings.seo.metaTitle in db.json. Kept on one line: browsers
-         collapse whitespace inside <title>, but naive SEO scrapers do not. -->
-    <title>Meghali's Silk — Assamese Muga, Pat &amp; Eri Silk Mekhela Chador and Sarees</title>
+    <!-- Mirrors brand.seo.defaultTitle. Kept on one line: browsers collapse
+         whitespace inside <title>, but naive SEO scrapers do not. -->
+    <title>LAMIKAA NATURALS — Black Rice Skincare, Farmer-Owned</title>
 
     <!--
       Pre-mount shell styles: the loading screen ("quiet editorial arrival") and
@@ -149,21 +154,15 @@
       TOKEN DISCIPLINE — this stylesheet is inlined into public/index.html and is
       parsed long before the app bundle (and therefore before
       src/theme/storefront-tokens.css) exists, so it CANNOT use var(--sf-*).
-      Every literal below is copied from storefront-tokens.css and must be
-      re-copied if the palette moves:
+      Every literal below is the LAMIKAA dark palette and must be re-copied if
+      the palette moves. There is ONE theme, so there is one set:
 
-        #FAF6EC  --sf-color-bg              (light ground, ivory)
-        #FFFFFF  --sf-color-surface
-        #F2ECE1  --sf-color-surface-2
-        #E8DFCD  --sf-color-border          (light hairline)
-        #1D1A16  --sf-color-text            (warm ink)
-        #6E665A  --sf-color-text-muted      (light)
-        #C8912A  --sf-color-gold            (decorative only)
-        #14120F  --sf-color-bg              (body.dark ground)
-        #1B1815  --sf-color-surface         (body.dark)
-        #948B7D  --sf-color-text-muted      (body.dark)
-        #E3B95E  --sf-color-accent          (body.dark gold, lifted)
-        rgba(244, 239, 230, 0.10)  --sf-color-border (body.dark)
+        #0B0B0D  --sf-color-bg              (page ground)
+        #141416  --sf-color-surface
+        #F7F5F0  --sf-color-text            (warm white)
+        #B8B5B0  --sf-color-text-secondary
+        #F5D76E  --sf-color-gold            (champagne gold)
+        rgba(255, 255, 255, 0.08)           --sf-color-border (hairline)
         cubic-bezier(0.22, 1, 0.36, 1)      --sf-ease
     -->
     <style>
@@ -175,11 +174,10 @@
           "Helvetica Neue", sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        /* Dark ("evening gallery") is the default theme — this static rule
-           paints before the pre-mount script runs, so it must match the dark
-           branch there. The script overrides it inline when light is the
-           saved choice. */
-        background: linear-gradient(135deg, #14120f 0%, #1b1815 100%);
+        /* One theme. This static rule paints before the pre-mount script runs,
+           and the script sets exactly the same gradient, so no other ground can
+           ever flash. */
+        background: linear-gradient(135deg, #0b0b0d 0%, #141416 100%);
         min-height: 100vh;
       }
 
@@ -199,7 +197,7 @@
         height: 100%;
         /* Identical to the body ground above, so the fade-out reveals the page
            with no colour step. */
-        background: linear-gradient(135deg, #faf6ec 0%, #ffffff 100%);
+        background: linear-gradient(135deg, #0b0b0d 0%, #141416 100%);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -227,26 +225,12 @@
         padding: 0 24px;
       }
 
-      /* The brand lockup already carries the wordmark and a tracked caps line of
-         its own, so no wordmark is repeated beneath it. */
+      /* One wordmark, one theme — the transparent-ground artwork reads on the
+         dark splash, so there is no second asset and no swap. */
       .loader-logo {
         display: block;
         width: clamp(190px, 46vw, 260px);
         height: auto;
-        animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
-          backwards;
-      }
-
-      /* Dark-mode twin of .loader-logo, using the WHITE brand asset. It is a
-         CSS background rather than a second <img> on purpose: a display:none
-         <img> is still fetched, whereas a background on a display:none element
-         is not — so light-mode visitors never pay for this file. */
-      .loader-logo-dark {
-        display: none;
-        width: clamp(190px, 46vw, 260px);
-        aspect-ratio: 1454 / 454;
-        background: url("https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png")
-          center / contain no-repeat;
         animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
           backwards;
       }
@@ -258,7 +242,7 @@
         font-size: 17px;
         font-weight: 500;
         line-height: 1.5;
-        color: #6e665a;
+        color: #b8b5b0;
         animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
       }
 
@@ -270,7 +254,7 @@
         width: clamp(160px, 38vw, 220px);
         height: 1px;
         margin-top: 44px;
-        background: #e8dfcd;
+        background: rgba(255, 255, 255, 0.08);
         overflow: hidden;
         animation: loaderRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.35s
           backwards;
@@ -284,9 +268,9 @@
         height: 100%;
         background: linear-gradient(
           90deg,
-          rgba(200, 145, 42, 0) 0%,
-          #c8912a 50%,
-          rgba(200, 145, 42, 0) 100%
+          rgba(245, 215, 110, 0) 0%,
+          #f5d76e 50%,
+          rgba(245, 215, 110, 0) 100%
         );
         animation: loaderSweep 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
       }
@@ -311,39 +295,6 @@
         }
       }
 
-      /* ---- Dark saved theme -------------------------------------------------
-       * The pre-mount script adds body.dark before first paint, so the splash
-       * arrives in the evening-gallery ground with the white logo — no ivory
-       * flash for dark-mode visitors. */
-      body.dark #loading-screen {
-        background: linear-gradient(135deg, #14120f 0%, #1b1815 100%);
-      }
-
-      body.dark .loader-logo {
-        display: none;
-      }
-
-      body.dark .loader-logo-dark {
-        display: block;
-      }
-
-      body.dark .loader-tagline {
-        color: #948b7d;
-      }
-
-      body.dark .loader-rule {
-        background: rgba(244, 239, 230, 0.1);
-      }
-
-      body.dark .loader-rule-sweep {
-        background: linear-gradient(
-          90deg,
-          rgba(227, 185, 94, 0) 0%,
-          #e3b95e 50%,
-          rgba(227, 185, 94, 0) 100%
-        );
-      }
-
       /* ---- No-JS notice ---------------------------------------------------- */
       .noscript-note {
         position: relative;
@@ -353,9 +304,9 @@
         text-align: center;
         font-size: 14px;
         line-height: 1.5;
-        color: #1d1a16;
-        background: #f2ece1;
-        border-bottom: 1px solid #e8dfcd;
+        color: #f7f5f0;
+        background: #141416;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       /* ---- Responsive ------------------------------------------------------ */
@@ -380,7 +331,6 @@
         }
 
         .loader-logo,
-        .loader-logo-dark,
         .loader-tagline,
         .loader-rule {
           animation: none;
@@ -392,12 +342,7 @@
           animation: none;
           left: 0;
           width: 100%;
-          background: #c8912a;
-          opacity: 0.5;
-        }
-
-        body.dark .loader-rule-sweep {
-          background: #e3b95e;
+          background: #f5d76e;
           opacity: 0.5;
         }
       }
@@ -428,16 +373,13 @@
       <div class="loader-container">
         <img
           class="loader-logo"
-          src="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png"
-          alt="Meghali's Silk"
-          width="1454"
-          height="454"
+          src="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1788670626/logo.png"
+          alt="LAMIKAA NATURALS"
+          width="1400"
+          height="400"
         />
-        <!-- Dark-theme twin; swapped in by body.dark, see the stylesheet above.
-             Same accessible name, and only one of the two is ever exposed. -->
-        <div class="loader-logo-dark" role="img" aria-label="Meghali's Silk"></div>
         <p class="loader-tagline">
-          Handwoven Assamese silk from the looms of Sualkuchi
+          Indigenous Wisdom. Modern Beauty. Shared Prosperity.
         </p>
         <div class="loader-rule" aria-hidden="true">
           <span class="loader-rule-sweep"></span>
@@ -462,9 +404,11 @@
       // first paint already has the correct theme (matches src/context/ThemeContext.js,
       // which keys CSS off body.dark / body.light). Avoids a flash of the wrong theme.
       (function () {
-        // Dark ("evening gallery") is the default for Meghali's Silk — this
-        // MUST mirror src/context/ThemeContext.js: dark unless the user has
-        // explicitly chosen light.
+        // LAMIKAA has ONE theme. The body.dark/body.light class is still
+        // written because src/context/ThemeContext.js and a handful of CSS
+        // modules still read it — Prompt 03 removes both, and this whole block
+        // with them. Until then BOTH branches paint the same dark ground, so a
+        // stale localStorage.theme === "light" cannot flash an ivory page.
         var savedTheme = null;
         try {
           savedTheme = localStorage.getItem("theme");
@@ -474,11 +418,8 @@
         var isDark = savedTheme !== "light";
 
         document.body.classList.add(isDark ? "dark" : "light");
-        // Keep these two gradients in sync with LIGHT/DARK.bodyBackground in
-        // src/theme/colors.js, or the first paint won't match React's.
-        document.body.style.background = isDark
-          ? "linear-gradient(135deg, #14120F 0%, #1B1815 100%)"
-          : "linear-gradient(135deg, #FAF6EC 0%, #FFFFFF 100%)";
+        document.body.style.background =
+          "linear-gradient(135deg, #0B0B0D 0%, #141416 100%)";
       })();
 
       // Hide the loading screen once React has mounted. React signals readiness

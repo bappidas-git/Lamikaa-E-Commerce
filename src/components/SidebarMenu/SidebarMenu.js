@@ -20,6 +20,7 @@ import { useDealsConfig } from "../../context/DealsConfigContext";
 import apiService from "../../services/api";
 import { categoryParam } from "../../utils/categories";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import Logo from "../brand/Logo";
 import TrustStrip from "../TrustStrip";
 import {
   DURATION,
@@ -32,16 +33,11 @@ import {
 } from "../../theme/motion";
 import styles from "./SidebarMenu.module.css";
 
-// Both wordmarks are gold/white on a TRANSPARENT ground, so they sit straight on
-// the panel — the old deep-green logo plate is retired. The light art is the
-// byte-for-byte URL the masthead and the splash preload use, so opening the menu
-// paints it from cache; the white art is its dark-mode twin. Intrinsic 1454×454.
-const LOGO_LIGHT =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";
-const LOGO_WHITE =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";
-const LOGO_W = 520;
-const LOGO_H = 162;
+// One wordmark, on a TRANSPARENT ground, so it sits straight on the panel.
+// Same <Logo> (and therefore the same URL) the masthead and the splash screen
+// use, so opening the menu paints it from cache. The 38px slot in the module
+// still decides the rendered height.
+const LOGO_WIDTH = 148;
 
 // The panel's stagger is capped by index rather than by seconds so that the
 // leading 0.08s hand-off (the panel settling before its rows begin) is not
@@ -357,14 +353,10 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
           >
             {/* ---- Masthead: wordmark straight on the ivory + the close mark ---- */}
             <div className={styles.topBar}>
-              <img
+              <Logo
                 className={styles.logo}
-                src={isDarkMode ? LOGO_WHITE : LOGO_LIGHT}
+                width={LOGO_WIDTH}
                 alt={storeName}
-                width={LOGO_W}
-                height={LOGO_H}
-                loading="lazy"
-                decoding="async"
               />
               <button
                 type="button"

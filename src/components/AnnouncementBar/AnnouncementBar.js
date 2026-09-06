@@ -44,10 +44,17 @@ const prefersReducedMotion = () =>
 
 const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
   const { formatPrice } = useStoreSettings();
-  const shippingThreshold = formatPrice(FREE_SHIPPING_THRESHOLD, { decimals: 0 });
-  const list = (messages && messages.length ? messages : ANNOUNCEMENTS).map(
-    (m) => ({ ...m, text: m.text.replace("{amount}", shippingThreshold) })
-  );
+  // FREE_SHIPPING_THRESHOLD is null until the owner sets a `freeAbove` on a
+  // shipping method. A message that quotes {amount} is DROPPED while it is
+  // unknown — quoting "above ₹0" would promise something the store has not.
+  const hasThreshold =
+    Number.isFinite(FREE_SHIPPING_THRESHOLD) && FREE_SHIPPING_THRESHOLD > 0;
+  const shippingThreshold = hasThreshold
+    ? formatPrice(FREE_SHIPPING_THRESHOLD, { decimals: 0 })
+    : "";
+  const list = (messages && messages.length ? messages : ANNOUNCEMENTS)
+    .filter((m) => hasThreshold || !m.text.includes("{amount}"))
+    .map((m) => ({ ...m, text: m.text.replace("{amount}", shippingThreshold) }));
 
   const [dismissed, setDismissed] = useState(false);
   const [index, setIndex] = useState(0);
@@ -111,7 +118,10 @@ const AnnouncementBar = ({ messages = ANNOUNCEMENTS, className = "" }) => {
     }
   }, []);
 
-  if (dismissed) return null;
+  // An empty list is reachable now that a message can be filtered out: a caller
+  // passing only threshold-quoting messages leaves nothing to say, so the bar
+  // renders nothing rather than an empty band.
+  if (dismissed || !list.length) return null;
 
   const active = list[index % list.length];
   const animate = !reduceMotion && !prefersReducedMotion();

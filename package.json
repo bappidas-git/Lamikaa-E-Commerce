@@ -1,7 +1,9 @@
 {
-  "name": "ecommerce-boilerplate",
+  "name": "lamikaa-naturals-storefront",
   "version": "0.1.0",
   "private": true,
+  "description": "LAMIKAA NATURALS — farmer-owned Black Rice skincare storefront and admin (CRA + JSON Server / Laravel API)",
+  "author": "Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL)",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",

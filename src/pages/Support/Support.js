@@ -42,8 +42,13 @@ import { useAuth } from "../../context/AuthContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
 import { SUPPORT_HOURS, WHY_CHOOSE_US } from "../../utils/constants";
+import { resolveOrNull } from "../../utils/placeholders";
 import { isEmailValid, isValidPhone } from "../../utils/helpers";
 import styles from "./Support.module.css";
+
+// Showroom hours are a {{SUPPORT_HOURS}} placeholder until the owner supplies
+// them; unresolved, the clause that would quote them is not written at all.
+const supportHours = resolveOrNull(SUPPORT_HOURS);
 
 // ---- Inline icon set ------------------------------------------------------
 // Hairline weight (1.3), stroke = currentColor, no fills — the same drawing
@@ -352,8 +357,10 @@ const Support = () => {
                 Write to us
               </h2>
               <p className={styles.sectionLede}>
-                We read every message. Replies come from the desk during
-                showroom hours — {SUPPORT_HOURS}.
+                We read every message.
+                {supportHours
+                  ? ` Replies come from the desk during showroom hours — ${supportHours}.`
+                  : " Replies come from the care desk."}
               </p>
             </div>
 
@@ -366,8 +373,10 @@ const Support = () => {
                   Message sent
                 </h3>
                 <p className={styles.sentBody}>
-                  Your note is with the care desk. We answer during showroom
-                  hours — {SUPPORT_HOURS}.
+                  Your note is with the care desk.
+                  {supportHours
+                    ? ` We answer during showroom hours — ${supportHours}.`
+                    : ""}
                 </p>
                 <button
                   type="button"
@@ -514,32 +523,40 @@ const Support = () => {
 
           {/* ── 4. THE RAIL ─────────────────────────────────────────────── */}
           <aside className={styles.rail}>
-            <section className={styles.railCard} aria-labelledby="support-showroom">
-              <h2 className={styles.railTitle} id="support-showroom">
-                Visit the showroom
-              </h2>
-              <p className={styles.railLine}>
-                <span className={styles.railIcon}>
-                  <Glyph name="pin" size={16} />
-                </span>
-                <span>{supportAddress}</span>
-              </p>
-              <p className={styles.railLine}>
-                <span className={styles.railIcon}>
-                  <Glyph name="clock" size={16} />
-                </span>
-                <span>{SUPPORT_HOURS}</span>
-              </p>
-              <a
-                className={styles.railLink}
-                href={mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Get directions
-                <Glyph name="arrow" size={14} />
-              </a>
-            </section>
+            {(supportAddress || supportHours) && (
+              <section className={styles.railCard} aria-labelledby="support-showroom">
+                <h2 className={styles.railTitle} id="support-showroom">
+                  Visit us
+                </h2>
+                {supportAddress && (
+                  <p className={styles.railLine}>
+                    <span className={styles.railIcon}>
+                      <Glyph name="pin" size={16} />
+                    </span>
+                    <span>{supportAddress}</span>
+                  </p>
+                )}
+                {supportHours && (
+                  <p className={styles.railLine}>
+                    <span className={styles.railIcon}>
+                      <Glyph name="clock" size={16} />
+                    </span>
+                    <span>{supportHours}</span>
+                  </p>
+                )}
+                {supportAddress && (
+                  <a
+                    className={styles.railLink}
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Get directions
+                    <Glyph name="arrow" size={14} />
+                  </a>
+                )}
+              </section>
+            )}
 
             {socialLinks.length > 0 && (
               <section className={styles.railCard} aria-labelledby="support-social">

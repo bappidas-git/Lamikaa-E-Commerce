@@ -15,6 +15,7 @@ import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
 import { categoryParam, getMainMenuCategories } from "../../utils/categories";
+import Logo from "../brand/Logo";
 import AnnouncementBar from "../AnnouncementBar";
 import TrustStrip from "../TrustStrip";
 import CartDrawer from "../CartDrawer/CartDrawer";
@@ -48,15 +49,11 @@ import {
 } from "@mui/icons-material";
 import styles from "./Header.module.css";
 
-// The wordmark is gold on a TRANSPARENT ground, so it sits directly on the ivory
-// masthead — there is no logo panel any more. This is byte-for-byte the URL that
-// index.html preloads for the splash screen, so the masthead paints from cache
-// with no second request. Intrinsic art is 1454×454; the w_520 transform is
-// 520×162, ~3.7× the 44px render height, so it stays crisp on retina.
-const LOGO_SRC =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";
-const LOGO_W = 520;
-const LOGO_H = 162;
+// The wordmark is on a TRANSPARENT ground, so it sits directly on the masthead
+// — there is no logo panel. The artwork, its URL and its aspect ratio all live
+// in src/config/brand.js and reach the page through <Logo>; the 44px slot in
+// Header.module.css still decides the rendered height.
+const LOGO_WIDTH = 168;
 
 const Header = () => {
   const navigate = useNavigate();
@@ -163,11 +160,6 @@ const Header = () => {
   // ---------------------------------------------------------------------------
   // Two groups on one hairline row: the admin-curated main-menu categories
   // (API-driven, in `menuOrder`), then the curated editorial links.
-  //
-  // The old "Mega Silk" / "Bridal" chips bound themselves to a live category by
-  // regex with a ?search= fallback. The reseeded Assamese catalogue promotes
-  // those very collections — Mekhela Chador and Bridal & Occasion — into the
-  // main menu proper, so the regex slots are retired rather than rendered twice.
   const mainMenuCategories = useMemo(
     () => getMainMenuCategories(categories),
     [categories]
@@ -419,16 +411,12 @@ const Header = () => {
               </IconButton>
             )}
 
-            {/* Wordmark — transparent-ground artwork straight on the ivory. */}
+            {/* Wordmark — transparent-ground artwork straight on the ground. */}
             <Link to="/" className={styles.logoLink} aria-label={storeName}>
-              <img
+              <Logo
                 className={styles.logoImg}
-                src={LOGO_SRC}
+                width={LOGO_WIDTH}
                 alt={storeName}
-                width={LOGO_W}
-                height={LOGO_H}
-                loading="eager"
-                decoding="async"
               />
             </Link>
 

@@ -5,6 +5,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../context/ThemeContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { isEmailValid } from "../../utils/helpers";
+import Logo from "../brand/Logo";
 import {
   DURATION,
   INSTANT,
@@ -17,17 +18,11 @@ import {
 } from "../../theme/motion";
 import styles from "./AuthModal.module.css";
 
-/* Both wordmarks are gold/white on a TRANSPARENT ground, so they sit straight
-   on the dialog's ivory — the old deep-green logo plate is retired. The light
-   art is the byte-for-byte URL the masthead and SidebarMenu use, so opening the
-   dialog paints it from cache; the white art is its dark-mode twin.
-   Intrinsic 1454×454. */
-const LOGO_LIGHT =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";
-const LOGO_WHITE =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";
-const LOGO_W = 520;
-const LOGO_H = 162;
+/* One wordmark on a TRANSPARENT ground, so it sits straight on the dialog.
+   Same <Logo> — and therefore the same URL — the masthead and SidebarMenu
+   render, so opening the dialog paints it from cache. The 34px slot in the
+   module still decides the rendered height. */
+const LOGO_WIDTH = 132;
 
 /* How far the tab panes travel as they swap. Shorter than the old ±60px: the
    pane is answering a click on a tab six pixels away, not arriving from
@@ -548,14 +543,10 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
             <div className={styles.body}>
               {/* ---- Masthead: the wordmark straight on the ivory ---- */}
               <div className={styles.header}>
-                <img
+                <Logo
                   className={styles.logo}
-                  src={isDarkMode ? LOGO_WHITE : LOGO_LIGHT}
+                  width={LOGO_WIDTH}
                   alt={storeName}
-                  width={LOGO_W}
-                  height={LOGO_H}
-                  loading="lazy"
-                  decoding="async"
                 />
                 <h2 id="auth-modal-title" className={styles.title}>
                   {isLogin ? "Welcome back" : `Join ${storeName}`}
