@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# LAMIKAA rebuild: local visual baseline screenshots (Prompt 01)
+prompts/_baseline/
