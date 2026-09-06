@@ -1,0 +1,216 @@
+/* =============================================================================
+ * ContentBlocks — the reading column
+ * =============================================================================
+ * One measure, one rhythm, two densities. Everything is capped in `ch` rather
+ * than pixels so the column follows the font rather than the layout: 68
+ * characters is the long-standing comfortable line, and the editorial variant
+ * takes a few more because it is set larger.
+ * ========================================================================== */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  color: var(--sf-color-text-secondary);
+}
+
+.root > * {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.p {
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+}
+
+.h2 {
+  margin-top: var(--sf-space-4);
+  color: var(--sf-color-text);
+  font-size: var(--sf-text-xl);
+  line-height: var(--sf-leading-tight);
+}
+
+.h3 {
+  margin-top: var(--sf-space-2);
+  color: var(--sf-color-text);
+  font-size: var(--sf-text-lg);
+  line-height: var(--sf-leading-tight);
+}
+
+/* The first heading of a page has the section's own spacing above it already. */
+.root > .h2:first-child,
+.root > .h3:first-child {
+  margin-top: 0;
+}
+
+.list {
+  padding-left: var(--sf-space-5);
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+}
+
+.list li + li {
+  margin-top: var(--sf-space-2);
+}
+
+.list::marker,
+.list li::marker {
+  color: var(--sf-color-gold);
+}
+
+.ordered {
+  font-variant-numeric: tabular-nums;
+}
+
+.quote {
+  padding-left: var(--sf-space-5);
+  border-left: 2px solid var(--sf-color-border-strong);
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  line-height: var(--sf-leading-tight);
+}
+
+.rule {
+  width: 100%;
+  margin-block: var(--sf-space-3);
+}
+
+.root a {
+  color: var(--sf-color-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.root a:hover {
+  color: var(--sf-color-gold-light);
+}
+
+.root a:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.root strong {
+  color: var(--sf-color-text);
+  font-weight: var(--sf-font-semibold);
+}
+
+/* ---- callout ------------------------------------------------------------- */
+.callout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  padding: var(--sf-space-5);
+  border-radius: var(--sf-radius-lg);
+}
+
+.calloutTitle {
+  margin: 0;
+}
+
+.calloutBody {
+  margin: 0;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+}
+
+/* ---- steps — the value-chain stepper -------------------------------------
+   The connector is a gradient hairline drawn between one numeral and the next,
+   so the last step has none (`:last-child`) and nothing dangles off the end. */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: start;
+  gap: var(--sf-space-4);
+}
+
+.step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 32px;
+  left: 13px;
+  bottom: calc(var(--sf-space-5) * -1);
+  width: 1px;
+  background-image: var(--sf-gradient-signature);
+  opacity: 0.6;
+}
+
+.stepChip {
+  flex: none;
+}
+
+.stepText {
+  padding-top: var(--sf-space-1);
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+}
+
+/* ---- editorial ----------------------------------------------------------- */
+.editorial > * {
+  max-width: 76ch;
+}
+
+.editorial .p {
+  font-size: var(--sf-text-lg);
+  line-height: var(--sf-leading-relaxed);
+}
+
+/* The drop cap. `initial-letter` is the correct property and is still Safari-
+   only, so the float is the fallback that every engine draws — and because the
+   glyph is part of the paragraph's own text, a screen reader reads the word
+   whole either way. */
+.editorial .lead::first-letter {
+  float: left;
+  margin: 0.08em var(--sf-space-3) 0 0;
+  color: var(--sf-color-gold);
+  font-family: var(--sf-font-display);
+  font-size: 3.4em;
+  line-height: 0.82;
+  font-weight: var(--sf-font-medium);
+}
+
+@supports (initial-letter: 3) or (-webkit-initial-letter: 3) {
+  .editorial .lead::first-letter {
+    float: none;
+    margin-right: var(--sf-space-3);
+    font-size: inherit;
+    line-height: inherit;
+    -webkit-initial-letter: 3;
+    initial-letter: 3;
+  }
+}
+
+/* A pull-quote: no rule, set large and centred in the display face, standing
+   apart from the column rather than hanging off its edge. */
+.editorial .quote {
+  padding: var(--sf-space-6) 0;
+  border-left: 0;
+  text-align: center;
+  font-size: var(--sf-text-2xl);
+  line-height: var(--sf-leading-display);
+  color: var(--sf-color-text);
+  max-width: 24ch;
+  margin-inline: auto;
+}
+
+@media (max-width: 480px) {
+  .editorial .quote {
+    text-align: left;
+    margin-inline: 0;
+  }
+}

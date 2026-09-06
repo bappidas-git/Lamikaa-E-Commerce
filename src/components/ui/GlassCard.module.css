@@ -1,0 +1,67 @@
+/* =============================================================================
+ * GlassCard — padding scale and the glass ground
+ * =============================================================================
+ * `.sf-card` / `.sf-card--hover` in the primitives carry the surface and the
+ * hover gesture. Only the things a shared class cannot know are here.
+ * ========================================================================== */
+
+.card {
+  /* `.sf-card` sets `overflow: hidden` so a photograph cannot escape the
+     radius. A card is also a stacking context (`isolation: isolate` there), so
+     a glow tone applied to the same element paints behind its content and never
+     over it. */
+  display: block;
+  background-clip: padding-box;
+  -webkit-backdrop-filter: blur(var(--sf-glass-blur));
+  backdrop-filter: blur(var(--sf-glass-blur));
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .card {
+    background: var(--sf-glass-fallback);
+  }
+}
+
+/* An interactive card must be reachable and visibly focused — the hover
+   gesture on its own is a mouse-only affordance. */
+.interactive:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- padding ------------------------------------------------------------- */
+.padSm {
+  padding: var(--sf-space-4);
+}
+
+.padMd {
+  padding: var(--sf-space-6);
+}
+
+.padLg {
+  padding: var(--sf-space-8);
+}
+
+@media (max-width: 480px) {
+  .padLg {
+    padding: var(--sf-space-6);
+  }
+}
+
+/* ---- the tone glow -------------------------------------------------------
+   Its own node, laid over the card's background and under its content. The
+   card is a stacking context (`isolation: isolate` on `.sf-card`), so `z-index:
+   -1` here means "behind the content, in front of the card's own background" —
+   it cannot escape backwards past the card. `.sf-card`'s `overflow: hidden`
+   clips the lamp to the card, which is exactly what the hover lamp already
+   does; a card wants light inside it, not a halo around it. Content bleeding
+   past the card is what GlowWrap is for. */
+.glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}

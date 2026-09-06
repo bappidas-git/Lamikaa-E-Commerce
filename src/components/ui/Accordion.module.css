@@ -1,0 +1,125 @@
+/* =============================================================================
+ * Accordion
+ * ========================================================================== */
+
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.item:first-child {
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.itemOpen {
+  border-bottom-color: var(--sf-color-border-strong);
+}
+
+/* The heading element exists for the document outline; every visual property
+   belongs to the button inside it, so the level can change per page without
+   changing the look. */
+.heading {
+  margin: 0;
+  font: inherit;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  width: 100%;
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-5) 0;
+  background: none;
+  border: 0;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-semibold);
+  line-height: var(--sf-leading-normal);
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--sf-transition);
+}
+
+.trigger:hover {
+  color: var(--sf-color-gold);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+.title {
+  min-width: 0;
+}
+
+.chevron {
+  flex: none;
+  font-size: var(--sf-text-lg);
+  color: var(--sf-color-text-muted);
+  transition: transform var(--sf-transition), color var(--sf-transition);
+}
+
+.itemOpen .chevron {
+  transform: rotate(180deg);
+  color: var(--sf-color-gold);
+}
+
+/* ---- the height animation ------------------------------------------------
+   `grid-template-rows: 0fr -> 1fr` animates to the content's own height with no
+   JavaScript measurement at all — nothing to re-measure when the content
+   changes, and nothing to get wrong on a font swap. */
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--sf-transition);
+}
+
+.panelOpen {
+  grid-template-rows: 1fr;
+}
+
+/* `min-height: 0` is what lets a grid row actually shrink to 0fr.
+   `visibility` is the accessibility half: a collapsed panel's links and buttons
+   must leave the tab order, and visibility does that in every browser (unlike
+   `inert`). It flips only once the collapse has finished, so the content does
+   not vanish mid-animation. */
+.panelInner {
+  overflow: hidden;
+  min-height: 0;
+  visibility: hidden;
+  transition: visibility 0s linear var(--sf-duration);
+}
+
+.panelOpen .panelInner {
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.content {
+  padding-bottom: var(--sf-space-6);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  max-width: 68ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron,
+  .panel,
+  .trigger {
+    transition: none;
+  }
+  .panelInner {
+    transition-delay: 0s;
+  }
+}

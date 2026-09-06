@@ -1,0 +1,32 @@
+/* =============================================================================
+ * CloudinaryImage
+ * ========================================================================== */
+
+.wrap {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  /* The reserved box. Without an aspect-ratio the wrapper is transparent to
+     layout and the image sizes itself as it always would. */
+  width: 100%;
+}
+
+.img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* A wrapper with an aspect-ratio has a height to fill; one without does not,
+     and `height: 100%` on an auto-height parent resolves to auto. */
+}
+
+/* Product photography CONTAINS. This is the storefront default and the reason
+   `.sf-plate` exists: the pack is the product, and cropping it is a defect. */
+.contain {
+  object-fit: contain;
+}
+
+/* `cover` is for editorial and lifestyle imagery, where the frame is the
+   composition rather than the subject. */
+.cover {
+  object-fit: cover;
+}

@@ -1,0 +1,127 @@
+/* =============================================================================
+ * Button — only what the .sf-btn primitives cannot express
+ * =============================================================================
+ * Everything shared (pill, 44px floor, hover lift, press, focus ring, disabled)
+ * lives in theme/storefront-primitives.css and is applied by class name. What
+ * is here is the icon-only circle, the add-to-cart hairline and the loading
+ * state — three things with no reason to exist on every button in the system.
+ * ========================================================================== */
+
+/* ---- variant="icon" — a 44px glass circle -------------------------------- */
+.icon {
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  min-height: var(--sf-tap-target);
+  padding: 0;
+  flex: none;
+  border-radius: 50%;
+  background: var(--sf-glass-bg);
+  border-color: var(--sf-glass-border);
+  color: var(--sf-color-text);
+  font-size: var(--sf-text-lg);
+}
+
+.icon:hover:not(:disabled):not([aria-disabled="true"]) {
+  color: var(--sf-color-gold);
+  border-color: var(--sf-color-border-strong);
+  background: var(--sf-color-surface-hover);
+}
+
+/* An icon button presses INTO the surface rather than lifting — the storefront
+   press vocabulary for a mark, restated on this class because the shared
+   `.sf-btn:active` rule is a lift cancel, not a scale. */
+.icon:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+/* Compact and large circles still clear the touch target on coarse pointers,
+   which is why only the desktop sizes shrink. */
+.iconSm {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  font-size: var(--sf-text-base);
+}
+
+.iconLg {
+  width: 52px;
+  height: 52px;
+  min-height: 52px;
+  font-size: var(--sf-text-xl);
+}
+
+@media (pointer: coarse) {
+  .iconSm {
+    width: var(--sf-tap-target);
+    height: var(--sf-tap-target);
+    min-height: var(--sf-tap-target);
+  }
+}
+
+/* ---- variant="addToCart" — the secondary button whose hairline warms ------ */
+/* The gradient ring is a masked pseudo-element rather than a border-image: a
+   border-image cannot follow a pill radius on every engine, and the mask keeps
+   the 1px ring crisp at any width. It fades in, so nothing about the box
+   changes and no text reflows. */
+.addToCart {
+  position: relative;
+}
+
+.addToCart::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background-image: var(--sf-gradient-signature);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--sf-transition);
+  pointer-events: none;
+}
+
+.addToCart:hover::after,
+.addToCart:focus-visible::after {
+  opacity: 1;
+}
+
+/* Success holds the ring on and turns the label mint — the semantic success
+   token, not a fourth accent. */
+.success::after {
+  opacity: 1;
+}
+
+.success {
+  color: var(--sf-color-success);
+  border-color: color-mix(in srgb, var(--sf-color-success) 45%, transparent);
+}
+
+/* The live-region label. `min-width` is what stops the button resizing as it
+   walks "Add to cart" -> "Adding…" -> "Added" under the visitor's finger. */
+.state {
+  display: inline-block;
+  min-width: 6ch;
+  text-align: center;
+}
+
+/* ---- loading -------------------------------------------------------------
+   No spinner: the storefront does not use one as decoration, and the label has
+   already said "Adding…". The cursor and the dimmed label are the whole state,
+   which also means there is nothing here for reduced motion to switch off. */
+.loading {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .addToCart::after {
+    transition: none;
+  }
+  .icon:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: none;
+  }
+}
