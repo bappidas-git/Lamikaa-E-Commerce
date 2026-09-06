@@ -13,7 +13,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 07 | api.js contract extension in both modes | complete | 2026-09-06 | (this commit) | `api.js` 2 797 → 3 314 lines. **`banners` is gone from `src/` entirely** — `grep -rn "banners\|Banner" src --include=*.js` → **0** (was 51), and `grep -rni "banners" src` over every file type → **0**. Every product read in both namespaces now goes through `normalizeProduct()` and every product write through `syncProductMedia()`. New: `products.{getHeroProducts,getByCategorySlug,getByConcern}`, a re-tiered `getRelated`, a gated `getReviews(id, {includeSample})`, the `concerns`/`rituals`/`siteContent`/`announcements` namespaces (+ the exported pure `resolveRitualSteps`), and 19 admin functions (concerns ×4, rituals ×5, site content ×2, announcements ×5, `setHeroOrder`, plus normalised product reads). **No existing signature changed** — the two additions are optional parameters — and `extractData/extractMeta/isVisibleProduct/visibleProducts/getErrorMessage` plus the wallet/refund/return/cancel cascades are untouched. Mock mode was exercised for real against JSON Server through the actual module: **21 assertions, all passing**, covering every acceptance check (8 ordered hero products, `serums` → 1, `hydration` → 3, `morning-glow` → 4 resolved steps with the body ritual's alternative product, `siteContent.get("about")`, 3 announcements, `getReviews(1)` → `[]` / `[1 sample]`, `setHeroOrder` reversed and restored, `updateProduct` rewriting `images[]` from `media[]`) plus the schedule window, the draft gate, the CRUD round-trips and the site-content merge. Browser QA in Chromium: the home hero renders **all eight products** through the shim (eight distinct headlines, eight `Explore the …` CTAs on the right `productPath`), **zero console errors** on `/`, `/products`, a PDP, `/admin/hero-section` and `/admin/settings`; no horizontal overflow at 390. `CI=true npm run build` exit 0 with no warnings; `npm test -- --watchAll=false` exit 0 (2 suites / 20 passed, live suite skipped). `db.json` unchanged (`git diff --stat db.json` empty). `REPO_MAP.md` §3 rewritten as the final contract with §3.4 "Laravel endpoints to implement" (20 routes + the product payload). See "Prompt 07 record" below. |
 | 08 | Routing, IA, lazy loading and SEO hook | complete | 2026-09-06 | (this commit) | The LAMIKAA route map is live: 25 storefront paths + the 16 unchanged admin paths, **every** Meghali URL redirected (16/16 verified in Chromium), a real 404 instead of `<Navigate to="/">`, `React.lazy` on all 34 pages but Home (**51 JS chunks**, was 2), and a dependency-free `useSeo` on 15 pages. Link sweep: 26 files; `grep -rn -E '"/(products|help|support|privacy|terms|cookies|refund)("|\?)' src --include=*.js` → **18, and not one is a link**: 16 are `api.get("/products")` REST endpoint paths in `services/api.js` and 2 are the new `utils/routes.test.js` assertions that those paths are gone. Zero in `LegacyRedirects.js`'s own exclusion, zero storefront links (see the Decisions log). New: `hooks/useSeo.js`, `components/routing/{LegacyRedirects,RouteFallback,AuthRoute}.js`, `pages/NotFound/*`, `pages/_ComingSoon/ComingSoon.js`, `utils/routes.test.js` (14 tests). `CI=true npm run build` exit 0 **no warnings**; `npm test` exit 0 (3 suites / 34 passed). |
 | 09 | Header, mega panel and announcement bar | complete | 2026-09-06 | (this commit) | The masthead is the LAMIKAA sticky glass header: one 64px row (56px ≤768px) inside `.sf-container`, `transparent` over `#hero-sentinel` → `.sf-glass` → `.sf-glass--strong` past 24px, blur withdrawn while any overlay is up. `Header.js` 683 → 437 lines; the priority-nav machinery (hidden twin list, `ResizeObserver`, `measureOverflow`, overflow count) and the per-category collection panels are **gone** — `grep -rn "navMeasure\|measureOverflow" src` → **0**. `CategoriesDrawer/` deleted (2 files, 1 071 lines); `grep -rn "CategoriesDrawer\|TrustStrip" src/components/Header` → **0**. New: `MegaPanel.{js,module.css}` (7 categories with real product thumbnails + counts, 11 concern chips, a featured glow card, module-level data cache) and `HeaderActions.js` (search · account · wishlist · cart, the MUI account menu moved verbatim). `AnnouncementBar` is data-driven (`announcements.getAll` → `brand.announcements` fallback), drops placeholder rows and remembers dismissal in **`sessionStorage`** — `grep -rn "localStorage\|FREE_SHIPPING_THRESHOLD" src/components/AnnouncementBar` → **0**. axe (axe-core 4.x, wcag2a/2aa/21a/21aa + best-practice) on the header at 1280 (closed and panel-open) and 390: **0 violations**. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). Browser QA at 320/360/390/414/768/1024/1280/1440 — 0px horizontal overflow at every width, 0 console errors. See "Prompt 09 record" below. |
-| 10 | Mobile navigation drawer and bottom nav | pending | | | |
+| 10 | Mobile navigation drawer and bottom nav | complete | 2026-09-06 | (this commit) | `SidebarMenu` is the first feature on the `ui/Drawer` primitive — its hand-rolled focus trap, Escape handler, `body.style.overflow` lock and close-on-navigate effect are **deleted**, not duplicated (`grep useFocusTrap|useScrollLock` in the file → 0; the primitive owns all four). 632 → 521 lines of JS, the 725-line stylesheet replaced wholesale by 377 (`toggleTheme|Dark mode` → **0**, no `.dark`, no logo swap, no hex). Four labelled navs — Catalogue (a one-item accordion over the seven categories at 48px behind 32px `.sf-plate` thumbnails, default-open on `/shop` and `/category/*`), Brand, Account, Contact — over a pinned **"Shop the Black Rice Range"** CTA and the clamped legal note. `BottomNav` is a five-tab glass bar (64px + safe area, gold + a 20px gradient hairline for active, hide-on-scroll suspended while an overlay is up). `src/utils/catalogue.js` extracts the category-membership rule the mega panel and the drawer now share. **Browser QA: 109/109 checks at 360/390/414/768/1024/1280 + reduced motion + a simulated notch; axe-core 0 violations** on the drawer (open and closed), the bar and the whole document. One pre-existing defect fixed on the way: `AddToCartBar`'s raw `z-index: 1300` painted the PDP purchase bar over every drawer and modal — deleted, so the reserved order 40 < 60 < 1000 < 1100 is now real. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). `db.json` and `api.js` untouched — reads only. |
 | 11 | Search overlay and search results | pending | | | |
 | 12 | Cart drawer with cross-sell | pending | | | |
 | 13 | Footer | pending | | | |
@@ -141,6 +141,17 @@ Record every decision a prompt had to make that the reference files did not sett
 - `09 · 2026-09-06 · The header's own four overlays get the same blur withdrawal as `body[data-drawer-open]` · Only `ui/Drawer` sets that flag, and the CartDrawer, SidebarMenu, AuthModal and SearchModal this header mounts keep their own traps until Prompts 10-12 migrate them. The header therefore ORs its own `isCartOpen || sidebarOpen || searchModalOpen || authModalOpen` into a `.noBlur` class beside the `:global(body[data-drawer-open])` rule, rather than writing to the shared attribute and fighting `ui/Drawer`'s reference count. Verified: opening the cart drawer takes the header's `backdrop-filter` from `blur(20px)` to `none` with `body.dataset.drawerOpen` still unset.`
 - `09 · 2026-09-06 · `sheet()` supplies the panel's shape and reduced-motion behaviour; its durations are re-tiered to 320ms in / 160ms out · The factory animates on `DURATION.slow` (600ms), and the prompt's design spec asks for 320ms. Rather than hand-write a second set of variants, the component spreads `sheet(reduce)` and replaces the two transitions with `t(reduce, DURATION.base)` and `t(reduce, DURATION.fast)` — slower in than out, which is the house rule that makes a sheet feel placed. Under `prefers-reduced-motion` the factory already returns zero travel and zero duration; verified in Chromium with `reducedMotion: "reduce"`, the panel's first frame is `opacity: 1, transform: none`.`
 - `09 · 2026-09-06 · The icon actions keep `ui/Button variant="icon"`'s glass circle instead of being flattened to bare marks · A first pass overrode the fill to `transparent`, which put `Header.module.css` and `Button.module.css` at identical specificity and let CSS bundle order decide the masthead's look. The design system already defines the variant as a 44px glass circle (§7), the discs carry no backdrop filter of their own (`--sf-glass-bg` is a plain rgba), and over the transparent-on-hero state they are what keeps the marks legible against a photograph. Taken as it comes; `.action` adds only the positioning context the count badge hangs off.`
+
+- `10 · 2026-09-06 · The Shop group is ONE `Accordion` item, and it opens by default only on `/shop` and `/category/*` · `Accordion` is single-open by default, so a group that can only ever have one panel open is exactly one item — seven items would have promised six more panels that do not exist. The default-open rule is "open where the visitor already is": arriving at the menu from the shop or a category page, the seven category rows are what they came back for; on the home page, a policy page or an order page the menu opens as one short list of nine rows that fits a 360px screen without scrolling. `/product/*` deliberately does NOT open it — a shopper on a product page is more likely to be leaving the catalogue than moving sideways inside it, and the accordion is one tap away either way. The drawer unmounts on close (`AnimatePresence`), so `defaultOpen` is re-evaluated on every open rather than remembering the last one. Verified in Chromium: `aria-expanded` is `false` on `/`, `true` on `/shop` and on `/category/face-care`.`
+- `10 · 2026-09-06 · BottomNav tab activation: Home is exact, Shop covers the whole catalogue, Account is `/profile` alone, Search is lit by its own modal · `NavLink` can only match a tab against its OWN path, so "Shop" is resolved in JS: `/shop` OR `/category/*` OR `/product/*` OR `/rituals` OR `/rituals/*`. A visitor who taps Shop, opens a category and then a product must never watch the bar go dark under them — the tab says which SECTION you are in, not which URL. Home takes `end` so it is not lit by every path. Account is `/profile` only: Orders and Wishlist have their own homes (Wishlist has its own tab), and lighting Account for them would light two tabs at once. Search is a `<button>`, not a route, and marks itself active while its dialog is open so the bar always says where you are. `aria-current="page"` still comes from NavLink and appears on `/shop` and `/wishlist` etc., but NOT on `/category/*` or `/product/*` — the tab is visibly active there without claiming to BE that page, which is the honest reading of `aria-current`.`
+- `10 · 2026-09-06 · `ui/Drawer.module.css` gains five `--sf-drawer-*` custom properties rather than SidebarMenu reaching into the primitive's class names · The design spec asks for a 64px masthead, an 8px/20px body and `calc(16px + env(safe-area-inset-bottom))` under the CTA; the primitive ships 20px of air all round and `max(16px, env(...))`, which is right for the cart tray and wrong for a list of rows. The alternatives were both worse: forking the primitive duplicates the trap and the lock this prompt exists to delete, and matching its scoped classes by position (`.panel > :nth-child(2)`) breaks the first time a drawer renders a grab handle. Every hook DEFAULTS TO THE VALUE IT REPLACED, so `Drawer.js` is untouched and CartDrawer, and every drawer after it, are byte-identical in behaviour and in pixels. `max` → `calc` for the footer is the substantive change: the bar sits ON the home indicator rather than instead of it.`
+- `10 · 2026-09-06 · The dialog is named "Menu" by a visually-hidden span inside the `title` slot, not by `aria-label` · The prompt asks for both `title={<Logo/>}` and `aria-label="Menu"`, and they conflict: `Drawer` sets `aria-labelledby` from the title's id, which WINS over any `aria-label` spread in beside it. Passing `aria-labelledby={undefined}` to unset it would have been a trick that reads as a bug. Instead the `<h2>` carries `<span class="sf-visually-hidden">Menu</span>` plus a DECORATIVE `<Logo alt="">`, and `labelledBy` points at the span: the accessible name is exactly "Menu", the drawer's heading in the document outline is "Menu", and the wordmark is what you see. Verified: `document.getElementById(dialog.ariaLabelledBy).textContent === "Menu"`.`
+- `10 · 2026-09-06 · The four body sections are labelled `Catalogue`, `Brand`, `Account`, `Contact` — not `Shop` · The masthead's desktop nav is already `aria-label="Shop"` and BottomNav is `aria-label="Primary"`; two navigation landmarks with the same name are indistinguishable in a screen reader's landmark list, which is the `landmark-unique` finding Prompt 09 logged against the header/footer pair. "Shop" survives as the accordion's visible header row, which is what the copy spec pins. axe-core reports 0 violations on the whole document with the drawer open.`
+- `10 · 2026-09-06 · `BottomNav` wears `.sf-glass--scrim` on top of `.sf-glass--strong` · DESIGN_SYSTEM §4's own rule: "text on glass over imagery gets `.sf-glass--scrim`". Unlike the drawer, this bar has NO `--sf-color-overlay` behind it — the live page scrolls directly under 8% white and a 12px blur, and the home page's gold "WHERE TO BEGIN" heading read straight through the 11px labels (screenshot before/after in the QA run). The scrim is the primitive's inert `::before` at 35% of `--sf-color-bg`, so the tabs stay clickable (`pointer-events: none`, verified by clicking Shop through it) and the bar still reads as glass.`
+- `10 · 2026-09-06 · The legal note is clamped with `-webkit-line-clamp: 3`, which is the prompt's own CSS value; its prose says "two lines max" · The two do not agree, and the concrete declaration wins because it is the one that can be checked. Three lines is also the right number for this sentence: `brand.legalNote` is 253 characters and renders in five lines at 360px, so a two-line clamp would cut it mid-clause after "…a Farmer Producer Company. Profits" while three carries the ownership statement whole and truncates only the dividend qualifier — which the footer (Prompt 13) states in full. `line-clamp` is declared beside the prefixed property.`
+- `10 · 2026-09-06 · The catalogue is fetched on the FIRST OPEN and refetched on window focus, not fetched on mount · `SidebarMenu` is mounted on every storefront route and most visits never open it, so two requests on mount would be two requests wasted on every page load. The old file fetched lazily too (on expanding "Collections"), but the accordion now opens by default on `/shop` and `/category/*`, so the trigger moved up to the drawer's own open. The focus refetch is the freshness rule `StoreSettingsContext` already applies: a category renamed or retired in the admin in another tab is right the next time the menu is opened. A failed load leaves the accordion empty and every other section untouched — the drawer is still the way to the shop.`
+- `10 · 2026-09-06 · `AddToCartBar.module.css`'s `@media (max-width: 768px) { z-index: 1300 }` was deleted · Task 6 asks this prompt to "reserve the z-index order now: bottom nav `--sf-z-sticky`, sticky bar `--sf-z-stickybar`". The tokens already said 40 < 60, but the PDP bar overrode itself to 1300 on phones — above `--sf-z-overlay` (1000) and `--sf-z-modal` (1100) — so on a product page the new navigation drawer and the cart drawer both opened UNDERNEATH a floating "Buy now" (reproduced: `elementFromPoint` at the foot of the screen with the drawer open returned `AddToCartBar_buyNow`). The comment justifying it cited "the global BottomNav (z 1200)", which no BottomNav in this repository has ever been. Removing the override leaves the base `var(--sf-z-stickybar)`, which still puts the bar above the tab bar — its actual purpose, verified by hit test — and under every dialog. Add to cart from the bar still works (cart line created). Prompt 25 rebuilds the bar and inherits a correct order.`
+- `10 · 2026-09-06 · `TrustStrip` is removed from the drawer and now has no consumer at all · The prompt forbids it here and Prompt 15 gives it a home page section, so the component and its stylesheet are left in place, unimported, rather than deleted and re-created three prompts later. Only the import was removed, so `CI=true npm run build` stays warning-free.`
 
 ## Open TODOs
 
@@ -885,3 +896,145 @@ with 36px to spare, because the band is in flow rather than pinned.
 `CI=true npm run build` exit 0, **no warnings**. `npm test -- --watchAll=false`
 exit 0 — 3 suites passed / 1 skipped, 34 passed / 50 skipped. `db.json`
 untouched; no dependency added; `src/services/api.js` untouched (reads only).
+
+
+## Prompt 10 record (2026-09-06)
+
+### What the mobile navigation now is
+
+`SidebarMenu` is the FIRST feature to sit on the `ui/Drawer` primitive Prompt 05
+built. Everything the old file hand-rolled is deleted rather than duplicated:
+
+| Was, in `SidebarMenu.js` | Is, in `ui/Drawer` |
+|---|---|
+| a 60-line `keydown` handler cycling Tab and catching Escape | `useFocusTrap(panelRef, { active, onEscape })` |
+| `document.body.style.overflow = "hidden"` | `useScrollLock(open)` — reference-counted, so the auth modal opening over the drawer cannot unlock early |
+| `opener.focus()` in the effect's cleanup | the hook's own restore |
+| nothing (the drawer stayed open across a navigation unless a handler closed it) | `pathAtOpen` vs `location.pathname` |
+| a hand-drawn `motion.div` backdrop + panel | `overlay(reduce)` + `panel(reduce, "left")` at 600ms in / 320ms out, on a `--sf-color-overlay` scrim |
+| nothing | `body[data-drawer-open]`, which is how the sticky header drops its blur |
+
+`grep -n "useFocusTrap\|useScrollLock\|Drawer" src/components/SidebarMenu/SidebarMenu.js`
+returns only the `ui` import, the comment block and the `<Drawer>` element — the
+hooks are not named in the file because it does not need to name them.
+
+### The drawer, top to bottom
+
+- **Masthead 64px** (10 + a 44px close target + 10, over a 1px hairline):
+  `<Logo width={132} alt="">` on the left, `Button variant="icon"` on the right.
+  The close button is the FIRST TAB STOP (it precedes the body in the DOM);
+  verified by pressing Tab once from the freshly-opened panel.
+- **`<nav aria-label="Catalogue">`** — a one-item `ui/Accordion`, header row
+  "Shop" in Fraunces 22px at 52px, `aria-expanded` on a real `<button>`,
+  expanding to the seven categories at 48px each behind a 32px `.sf-plate`
+  (`stageSrc(firstProductForCategory(heroProducts, cat), { w: 64 })`, requested
+  at 2x) and closing on **All products** → `/shop`. Six of the seven plates
+  carry a product; **Rituals** has none by design (`kind: "rituals"` is an
+  editorial index, no product lists it) and shows the bare plate — the same
+  empty state the mega panel settled on in Prompt 09.
+- **`<nav aria-label="Brand">`** — Rituals · Our Story · Why LAMIKAA · Offers
+  (only while `useDealsConfig().enabled`; verified BOTH ways against the mock
+  API) · FAQ · Contact. Fraunces 22px, 52px rows, hairline separators, gold
+  `aria-current="page"`.
+- **`<nav aria-label="Account">`** — signed out: `Log in` (`onOpenAuth`) and
+  `Create account` (`openAuthModal("signup")`); signed in: a 40px initials
+  avatar, the name, the email, then My Profile · My Orders · My Wishlist (gold
+  count disc, `aria-hidden`, the number spoken by a visually-hidden sentence so
+  the visible name stays "My Wishlist" — WCAG 2.5.3) · Log out.
+- **`<nav aria-label="Contact">`** — the email and phone rows and the
+  `socialLinks` marks, each gated on a resolved value. Today all three are
+  `{{TOKENS}}`, so the whole nav is absent and `innerText` contains no `{{`.
+- **Pinned footer** — `Button variant="primary" block` **"Shop the Black Rice
+  Range"** at 52px over `brand.legalNote` at 12px `--sf-color-text-muted`,
+  clamped to three lines, on `calc(16px + env(safe-area-inset-bottom))`.
+
+### The bar
+
+`sf-glass sf-glass--strong sf-glass--scrim` at `--sf-z-sticky`, one hairline on
+top, a 64px tab row plus `env(safe-area-inset-bottom)` INSIDE the element (so
+`translateY(100%)` still clears the screen). Five tabs, every one with a visible
+11px Manrope 600 label: Home · Shop · Search · Wishlist · Account. Active =
+`--sf-color-gold` type **plus** a 20px `--sf-gradient-signature` hairline above
+the icon — two differences, never colour alone — with `aria-current` from
+`NavLink` on top. The hairline is rendered on every tab (transparent when
+inactive) so the row's height never depends on where you are.
+
+### Browser QA (Chromium 1194, mock mode) — 109/109
+
+Run at 390x844 unless stated. Every line below is an assertion the script made,
+not an impression.
+
+- **Open/close cycles** — hamburger opens it; **Escape**, the **close button**,
+  a **route change** and (where the panel does not fill the viewport) the
+  **scrim** all close it. Focus returns to the hamburger (`aria-label="Open
+  menu"`) every time. `body[data-drawer-open]="1"` and `body[data-scroll-lock]="1"`
+  while open, `overflow: hidden` on `<body>`, both released on close.
+- **The blur budget** — with the drawer up the header's `backdrop-filter` is
+  `none` and the drawer's is `blur(12px)`. Two blurred layers, never three.
+- **Tab cycle** — 40 consecutive Tab presses, **0 escapes** from the panel.
+- **Every row ≥ 44px** — measured across every rendered `<a>` and `<button>` in
+  the drawer: 0 under. Category rows exactly 48px, thumbnails exactly 32x32,
+  the Shop trigger 52px, the masthead 64px + hairline.
+- **The accordion** — 7 categories + "All products", 6 thumbnails that actually
+  load (`naturalWidth > 0`), `aria-expanded` `false` on `/`, `true` on `/shop`
+  and `/category/face-care`. Every link navigates AND closes.
+- **Auth** — "Log in" opens the modal on the sign-in tab ("Welcome back"),
+  "Create account" on the sign-up tab ("Join LAMIKAA NATURALS"). Signed in as
+  the seeded customer the section becomes `SC` / `Sample Customer` /
+  `sample.customer@example.com` + the four rows; "My Wishlist" navigates;
+  "Log out" clears the session, lands on `/` and restores the guest pair.
+- **The bar** — 5 tabs, labels `Home Shop Search Wishlist Account`, height ≥64,
+  `position: fixed`, `z-index: 40`, `border-top: 1px` and `border-left: 0`,
+  `backdrop-filter: blur(12px)`. Active tab `rgb(245, 215, 110)` with
+  `linear-gradient(135deg, #F5D76E, #FF4FD8, #8B5CF6)` on its rule. Hides on
+  scroll down (`translateY(65px)`), returns on scroll up, and **does not move
+  while the drawer is open**.
+- **Shop tab activation** — lit on `/shop`, `/category/face-care`, `/rituals`
+  and `/product/black-rice-face-wash`; dark on `/wishlist`.
+- **`/checkout`** — `main.main-content` computes `padding-bottom: 80px`, so the
+  page's last CTA clears the bar.
+- **Widths** — 360 / 390 / 414: drawer full width. 768 and 1024: 420px, with a
+  scrim that closes it. 1024: hamburger visible, **no bottom nav**. 1280: no
+  hamburger, no bottom nav. **No horizontal scroll at any width**, drawer open
+  or closed.
+- **Reduced motion** (`reducedMotion: "reduce"`) — the panel's first frame is
+  already `transform: none` and the bar's `transition-duration` is `0s`.
+- **Safe area** — with a 34px inset injected (Chromium has no notch), the bar
+  measures 99px and `.main-content` computes `114px` — 80 + 34, the `calc`, not
+  a `max` that would have swallowed one of them.
+- **axe-core** (`wcag2a, wcag2aa, wcag21a, wcag21aa, best-practice`) — **0
+  violations** on the bar, on the drawer with the accordion closed AND open, on
+  the drawer at 768, and on the whole document with the drawer open and closed.
+- **Console** — 0 errors across the whole 390px run.
+
+### The defect found on the way
+
+On a product page the PDP purchase bar painted OVER the new drawer:
+`AddToCartBar.module.css` raised itself to a raw `z-index: 1300` inside its
+`@media (max-width: 768px)` block — above `--sf-z-overlay` (1000) and
+`--sf-z-modal` (1100) — justified by a comment about "the global BottomNav
+(z 1200)" that no BottomNav in this repository has ever matched. Reproduced:
+`elementFromPoint(195, innerHeight - 40)` with the menu open returned
+`AddToCartBar_buyNow`. The override is deleted; the base
+`z-index: var(--sf-z-stickybar)` stands at every width. Re-verified: the bar is
+still on top where it overlaps the tab bar (hit test returns
+`AddToCartBar_buyNow` at their overlap), Add to Cart from the bar still creates
+a cart line, and both the navigation drawer and the cart drawer now paint over
+it. This is the z-index order Task 6 asked to reserve, made true.
+
+### Greps
+
+`useFocusTrap|useScrollLock` in `SidebarMenu.js` → **0**.
+`toggleTheme|Dark mode` in `src/components/SidebarMenu` → **0**.
+`.dark` or a hex literal in either new stylesheet → **0**.
+`Meghali|silk|saree|muga` in every touched file → **0**.
+`TrustStrip` in `src/components/SidebarMenu` → **0** (the component is left in
+place, unimported, for Prompt 15).
+
+### Gates
+
+`CI=true npm run build` exit 0, **no warnings**. `npm test -- --watchAll=false`
+exit 0 — 3 suites passed / 1 skipped, 34 passed / 50 skipped. `db.json`
+untouched (the Offers gating check patched the mock API and restored it;
+`git status --short db.json` is empty). `src/services/api.js` untouched — reads
+only. No dependency added.

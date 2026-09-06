@@ -278,6 +278,83 @@ deleted (nothing imports it) and `TrustStrip` no longer renders from the header
   anchor clear the sticky header. `App.css`'s `.main-content` has no spacer and
   no `padding-top` — the header is sticky and occupies its own flow.
 
+
+**Updated by Prompt 10.** The mobile navigation is rebuilt. `SidebarMenu` is the
+first feature to sit on the `ui/Drawer` primitive (its hand-rolled trap, Escape
+handler, `body.style.overflow` lock and close-on-navigate effect are gone);
+`BottomNav` is a glass tab bar; `TrustStrip` is no longer rendered anywhere and
+waits for its home page section in Prompt 15.
+
+- `SidebarMenu/SidebarMenu.js` (632 → 521) + `.module.css` (725 → 377, rewritten
+  wholesale): **props unchanged** — `{ open, onClose, onOpenAuth }`, mounted by
+  `Header` exactly as before. `<Drawer side="left" width="min(100vw, 420px)">`
+  supplies `role="dialog" aria-modal`, the focus trap and restore, Escape, the
+  reference-counted scroll lock, the `--sf-color-overlay` scrim, close on route
+  change and the `body[data-drawer-open]` flag; the panel is
+  `sf-glass sf-glass--strong`. Full width ≤480px, 420px above it, never rendered
+  ≥1025px (the hamburger is hidden there). The dialog's accessible name is
+  **"Menu"** — a `sf-visually-hidden` span inside the `title` slot beside a
+  decorative `<Logo width={132} alt="">`, pointed at by `labelledBy`.
+  **Body — four `<nav aria-label>`s, in order:** `Catalogue` (a one-item
+  `ui/Accordion`, header row "Shop" in Fraunces 22px/52px, expanding the seven
+  categories at 48px behind a 32px `.sf-plate` from
+  `stageSrc(firstProductForCategory(heroProducts, cat), { w: 64 })` plus
+  **All products** → `/shop`; `defaultOpen` when the path is `/shop` or
+  `/category/*`) · `Brand` (Rituals · Our Story · Why LAMIKAA · Offers, gated on
+  `useDealsConfig().enabled` · FAQ · Contact — Fraunces 22px, 52px rows,
+  hairline separators, gold `aria-current="page"`) · `Account` (signed out: `Log
+  in` → `onOpenAuth`, `Create account` → `openAuthModal("signup")`; signed in:
+  initials avatar + name + email, then My Profile · My Orders · My Wishlist with
+  a count · Log out → `logout()` + navigate home) · `Contact` (email/phone rows
+  and the `socialLinks` marks, each rendered only when resolved — the whole nav
+  is absent while all three are `{{TOKENS}}`).
+  **Footer (pinned):** `Button variant="primary" block` **"Shop the Black Rice
+  Range"** → `/shop` at 52px, over `brand.legalNote` at 12px
+  `--sf-color-text-muted`, clamped to three lines.
+  **Data:** `categories.getAll()` + `products.getHeroProducts()` on the FIRST
+  open (not on mount) and again on every `window` focus. Every link also calls
+  `onClose` so navigating to the route you are already on still closes the
+  drawer.
+- `ui/Drawer.module.css` gains **five composition hooks**, each defaulting to the
+  value it replaced, so no existing drawer moves:
+  `--sf-drawer-header-pad-y` · `--sf-drawer-header-pad-b` ·
+  `--sf-drawer-close-margin` · `--sf-drawer-body-pad` ·
+  `--sf-drawer-footer-pad-b`. `SidebarMenu` sets all five on `.panel` for a 64px
+  masthead, an 8px/20px body and `calc(16px + env(safe-area-inset-bottom))`
+  under the CTA. `Drawer.js` itself is unchanged.
+- `BottomNav/BottomNav.js` (174 → 217) + `.module.css` (198 → 212): a
+  `sf-glass sf-glass--strong sf-glass--scrim` bar at `--sf-z-sticky`, one
+  `--sf-glass-border` hairline on top, a 64px tab row plus
+  `env(safe-area-inset-bottom)` inside the element (so `translateY(100%)` still
+  clears the viewport). `aria-label="Primary"`, hidden ≥769px. Five tabs, all
+  with visible 11px Manrope 600 labels and Iconify glyphs: Home `/`
+  (`mdi:home-outline`, `end`) · **Shop** `/shop` (`mdi:shopping-outline`, active
+  on `/shop`, `/category/*`, `/product/*`, `/rituals` and `/rituals/*`) · Search
+  (`mdi:magnify`, a `<button aria-haspopup="dialog">` opening the unchanged
+  `SearchModal` mount) · Wishlist `/wishlist` (`mdi:heart-outline`, gold count
+  disc, `aria-hidden`, the count spoken by the tab's `aria-label`) · Account
+  `/profile` (`mdi:account-outline`). The active tab is `--sf-color-gold` type
+  PLUS a 20px `--sf-gradient-signature` hairline above the icon (rendered on
+  every tab, painted on the active one, so nothing reflows). Hide on scroll
+  down past 80px / show on scroll up is kept and **suspended while
+  `body[data-drawer-open]` or `body[data-scroll-lock]` is set**, and the bar is
+  forced back before its own SearchModal opens.
+- `src/utils/catalogue.js` (new): `inCategory(product, category)` ·
+  `productsForCategory(products, category)` · `firstProductForCategory(products,
+  category)`. The `categoryIds[] || categoryId` membership rule, extracted from
+  `Header/MegaPanel.js` (which now imports it) so the mega panel and the drawer
+  draw the same category row from one implementation.
+- `App.css`: `.main-content` keeps `padding-bottom: 80px` at desktop widths and
+  takes `calc(80px + env(safe-area-inset-bottom))` at ≤768px — `calc`, not
+  `max`, because the bar sits ON the inset rather than instead of it.
+- `storefront/AddToCartBar.module.css`: the `@media (max-width: 768px)` block's
+  raw `z-index: 1300` is deleted, leaving the base
+  `z-index: var(--sf-z-stickybar)`. **The reserved stacking order is now real:**
+  BottomNav `--sf-z-sticky` (40) < PDP purchase bar `--sf-z-stickybar` (60) <
+  `--sf-z-overlay` (1000) < `--sf-z-modal` (1100). At 1300 the bar painted over
+  every drawer and modal on a product page. Prompt 25 rebuilds the bar and
+  inherits the order.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.
