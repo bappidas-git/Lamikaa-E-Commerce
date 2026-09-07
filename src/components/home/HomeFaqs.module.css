@@ -1,0 +1,79 @@
+/* =============================================================================
+ * HomeFaqs
+ * =============================================================================
+ * `.sf-section` supplies the vertical rhythm and `.sf-container` the measure;
+ * neither is restated here. The section states its own ground for the same
+ * reason WhyLamikaaSection does — the band above it paints the full viewport,
+ * and the page has to come back to its own colour underneath.
+ * ========================================================================== */
+
+.section {
+  position: relative;
+  background-color: var(--sf-color-bg);
+  /* The open row's gradient rule hangs into the container's inline padding.
+     `clip` guarantees that never becomes a sideways scroll on a phone, without
+     making the band a scroll container. */
+  overflow-x: clip;
+}
+
+/* ---- The two columns -----------------------------------------------------
+   Stacked to 1024px: what the section is, then the answers, then where the rest
+   of them live — which is also the order the markup is written in, so the
+   keyboard and a screen reader walk it the same way. */
+.grid {
+  display: grid;
+  gap: var(--sf-space-10);
+}
+
+@media (min-width: 1025px) {
+  .grid {
+    /* The answers take the wider share: the left column is a signpost, the
+       right one is the content. 56px of gutter = --sf-space-12 + --sf-space-2,
+       the same figure the About band's two columns are set on. */
+    grid-template-columns: 1fr 1.25fr;
+    gap: calc(var(--sf-space-12) + var(--sf-space-2));
+    align-items: start;
+  }
+
+  /* Held in view for the length of the accordion. 112px clears the sticky
+     masthead — the offset the product chapters' sticky pack already uses. */
+  .aside {
+    position: sticky;
+    top: 112px;
+  }
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-8);
+}
+
+/* `SectionHeading` reserves 40px under itself for the content it introduces.
+   Here the button is part of the same cluster, so the column's own gap is the
+   whole distance. Written as two classes so it outranks the shared rule rather
+   than relying on which module happens to ship last. */
+.aside .heading {
+  margin-bottom: 0;
+}
+
+/* The headline is two words and wants to break between them at every width
+   rather than only where the column happens to run out. */
+.heading h2 {
+  max-width: 12ch;
+}
+
+.cta {
+  flex: none;
+}
+
+@media (max-width: 559px) {
+  .cta {
+    width: 100%;
+  }
+}
+
+.accordion {
+  min-width: 0;
+}

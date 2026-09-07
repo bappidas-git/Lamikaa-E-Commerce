@@ -1707,6 +1707,7 @@
       "answer": "Dispatch and delivery times are shown at checkout for your address. Shipping is free on orders above {freeShipping}.",
       "group": "orders",
       "placements": [
+        "home",
         "help",
         "product"
       ],
@@ -1722,6 +1723,7 @@
       "answer": "You can request a return from My Orders within {{RETURN_WINDOW_DAYS}} days of delivery for unopened products in their original packaging. Opened skincare cannot be returned for hygiene reasons unless it arrived damaged.",
       "group": "orders",
       "placements": [
+        "home",
         "help",
         "product"
       ],
@@ -1737,6 +1739,7 @@
       "answer": "You will receive an email with a tracking number as soon as your order is dispatched. You can also follow it at any time from the My Orders section of your account, where the current stage of every order is shown.",
       "group": "orders",
       "placements": [
+        "home",
         "help",
         "product"
       ],

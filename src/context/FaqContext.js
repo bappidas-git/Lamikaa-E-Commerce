@@ -20,7 +20,12 @@ import { DEFAULT_FAQS, normalizeFaqs, faqsForPlacement, faqsForProduct } from ".
 //   forProduct(product)  the PDP's FAQs tab — the product's own answers first,
 //                        then the general ones
 //   forPlacement("help") the Help Centre's searchable list
-//   forPlacement("home") the shared Frequently Asked Questions block
+//   forPlacement("home", { limit: 8 })
+//                        the shared Frequently Asked Questions block. The second
+//                        argument is `faqsForPlacement`'s options object, passed
+//                        straight through, so a surface caps its own list here
+//                        rather than slicing afterwards — a slice would count
+//                        rows the filters were about to drop.
 //
 // Refetches when the tab regains focus, and again whenever an admin save fires
 // `faqs:updated`, so an answer edited in one tab reaches the storefront open in
@@ -43,7 +48,8 @@ const defaultValue = {
   faqs: FALLBACK,
   loading: true,
   refresh: () => {},
-  forPlacement: (placement) => faqsForPlacement(FALLBACK, placement),
+  forPlacement: (placement, options) =>
+    faqsForPlacement(FALLBACK, placement, options),
   forProduct: (product) => faqsForProduct(FALLBACK, product),
 };
 
@@ -90,7 +96,8 @@ export const FaqProvider = ({ children }) => {
       faqs,
       loading,
       refresh: load,
-      forPlacement: (placement) => faqsForPlacement(faqs, placement),
+      forPlacement: (placement, options) =>
+        faqsForPlacement(faqs, placement, options),
       forProduct: (product) => faqsForProduct(faqs, product),
     }),
     [faqs, loading, load]
