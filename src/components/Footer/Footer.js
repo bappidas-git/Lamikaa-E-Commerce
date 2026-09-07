@@ -1,99 +1,128 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useMediaQuery } from "@mui/material";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
-import {
-  POLICY_LAST_UPDATED,
-  ROUTES,
-  SUPPORT_HOURS,
-} from "../../utils/constants";
+import { ROUTES, SUPPORT_HOURS } from "../../utils/constants";
+import { categoryPath, ritualPath } from "../../utils/categories";
 import brand from "../../config/brand";
 import { resolveOrNull } from "../../utils/placeholders";
 import { isEmailValid } from "../../utils/helpers";
 import Logo from "../brand/Logo";
+import LegalNote from "../brand/LegalNote";
+import { Accordion, Button } from "../ui";
 import styles from "./Footer.module.css";
 
-/**
- * Footer — the editorial close.
- *
- * Four bands on one deep ground, top to bottom:
- *   1. the invitation  — serif "Letters from LAMIKAA" + the newsletter row
- *   2. the grid        — white wordmark, brand statement, contact, 4 link columns
- *   3. the promises    — store-attested policy + accepted payment marks
- *   4. the colophon    — copyright and legal links in tiny tracked type
- *
- * The band is its own room rather than a tint of the page: its ground is
- * pinned to --sf-color-brand-green-deep, the deepest ground in the palette,
- * which storefront-tokens.css declares once in :root. Everything inside paints
- * from footer-scoped aliases (see Footer.module.css) built on that ground, so
- * legibility does not depend on what surrounds the band. No hardcoded hex and
- * no hardcoded type in here — the only
- * literal colours are the payment networks' own brand hexes, which are mandated
- * marks and must not be re-skinned.
- *
- * The newsletter contract is untouched: isEmailValid() gate →
- * apiService.leads.createNewsletter(email) → success / error state.
- */
+// =============================================================================
+// Footer — the LAMIKAA close
+// =============================================================================
+//
+// FOUR BANDS on one `--sf-color-surface` room, under a gradient hairline:
+//
+//   1. INVITATION  the 220px wordmark, the master tagline and one signature
+//                  line on the left; "Stay close to the farm" and the
+//                  newsletter field on the right. A faint violet lamp sits
+//                  behind it on desktop.
+//   2. DIRECTORY   the farmer-ownership note in the wide first track, then
+//                  four data-fed link columns: Shop by category (the seven
+//                  categories the admin publishes), Rituals (the three the
+//                  admin publishes), Company and Help.
+//   3. ASSURANCES  the contact block, the social marks and the payment marks —
+//                  every one of which hides itself while it has nothing real
+//                  to say.
+//   4. COLOPHON    BAOPCL's copyright, the brand-of line, the registration
+//                  rows once they exist, and the policy micro-links.
+//
+// ONE GRID, TWICE. Bands 1 and 2 share `--sf-footer-grid`
+// (`1.6fr repeat(4, 1fr)` on a desktop), so the newsletter starts exactly where
+// the link columns start and the legal note sits exactly under the wordmark.
+// The tracks collapse to 2×2 at 1024px and to one column at 480px, where the
+// four headings become disclosures (`ui/Accordion`) so the close of the page
+// stays scannable with a thumb.
+//
+// NOTHING IS INVENTED. The contact rows, the social marks and the GSTIN/CIN
+// rows are rendered only once `resolveOrNull` says there is a publishable value
+// behind them (utils/placeholders.js) — an unresolved fact costs no label, no
+// hairline and no empty row, and a `{{TOKEN}}` never reaches type.
+//
+// THE NEWSLETTER CONTRACT IS UNCHANGED from the band this file replaces:
+// `isEmailValid()` gate → `apiService.leads.createNewsletter(email)` → success
+// or error, with the success line reverting to the field after six seconds so a
+// second visitor on the same screen can subscribe too. The lead lands in
+// Admin → Leads as a `newsletter` row.
+//
+// The ONLY literal colours in this file are the payment networks' own brand
+// hexes. They are mandated marks that must not be re-skinned, and they are the
+// documented exception to the tokens-only rule (DESIGN_SYSTEM.md §7).
+// =============================================================================
 
-// One wordmark on a transparent ground, so it sits straight on the deep band —
-// the same <Logo> the masthead renders, usually straight from cache. The 48px
-// slot in Footer.module.css decides the rendered height; the width/height <Logo>
-// writes reserve the box and avoid CLS.
-const LOGO_WIDTH = 190;
+const WORDMARK_WIDTH = 220;
 
 const EMAIL_INPUT_ID = "footer-newsletter-email";
 const EMAIL_ERROR_ID = "footer-newsletter-error";
+const NEWSLETTER_NOTE_ID = "footer-newsletter-note";
+const HEADING_ID = "footer-heading";
 
-// Store-attested promises only. Every line here is written down elsewhere in the
-// storefront — the 7-day window in RefundPolicy and the FAQ, the owner-mandated
-// badge wording in brand.trustBadges. No ratings, no subscriber counts, and no
-// "24/7 support" claim (SUPPORT_HOURS contradicts it).
+// The phone breakpoint at which the four columns become disclosures. Kept in
+// step with the `max-width: 480px` block in Footer.module.css by hand — one
+// number, two languages, and no way to express it once.
+const PHONE_QUERY = "(max-width:480px)";
+
+// "Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL)" is the legal name as
+// brand.js writes it; the copyright line wants the registered name on its own,
+// and the sentence after it introduces the short form. Derived rather than
+// retyped, so brand.js stays the single source (BRAND.md §3.9 rule 1).
 //
-// The free-shipping row carries `needsThreshold`: with no threshold set, the
-// row is dropped rather than printed as "above ₹0".
-const TRUST_ITEMS = [
-  {
-    id: "secure",
-    label: "Secure payment",
-    path: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z",
-  },
-  {
-    id: "returns",
-    label: "7-day returns",
-    path: "M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z",
-  },
-  {
-    id: "shipping",
-    // {amount} is filled in at render in the store's own currency — same idiom
-    // and same constant as the AnnouncementBar, so the two figures can never
-    // drift apart. Dropped entirely while the threshold is unknown.
-    needsThreshold: true,
-    label: "Free shipping above {amount}",
-    path: "M18 18.5a1.5 1.5 0 001.5-1.5 1.5 1.5 0 00-1.5-1.5 1.5 1.5 0 00-1.5 1.5 1.5 1.5 0 001.5 1.5zM19.5 9.5h-3V12h4.46L19.5 9.5zM6 18.5A1.5 1.5 0 007.5 17 1.5 1.5 0 006 15.5 1.5 1.5 0 004.5 17 1.5 1.5 0 006 18.5zM20 8l3 4v5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H9c0 1.66-1.34 3-3 3s-3-1.34-3-3H1V6c0-1.11.89-2 2-2h14v4h3zM3 6v9h.76c.55-.61 1.35-1 2.24-1 .89 0 1.69.39 2.24 1H15V6H3z",
-  },
-  {
-    id: "farmer-owned",
-    // Owner-mandated wording, configurable in brand.js (BRAND.md 3.9 rule 4).
-    label: brand.trustBadges[0],
-    path: "M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-13 5l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z",
-  },
-];
+// The name ALREADY ENDS IN A FULL STOP ("… Co. Ltd."), so the copyright line
+// prints it and then "All rights reserved." with no punctuation of its own —
+// otherwise the line reads "Co. Ltd.. All rights reserved." A legal name that
+// does not end in one gets it added here instead.
+const REGISTERED_NAME = brand.legalName.replace(/\s*\([^)]*\)\s*$/, "");
+const COPYRIGHT_NAME = /\.$/.test(REGISTERED_NAME)
+  ? REGISTERED_NAME
+  : `${REGISTERED_NAME}.`;
+
+// The four link columns' data comes from the same two reads the mega panel
+// makes, cached at module level: the footer is mounted once by App.js and lives
+// for the whole session, but a remount (a test, a future layout route) must not
+// re-fetch what is already in hand. A failed load clears the promise so the
+// next mount retries, and the columns keep their static entries meanwhile —
+// "All products" and "Build your ritual" are never missing.
+let footerDataCache = null;
+let footerDataPromise = null;
+
+export const loadFooterData = () => {
+  if (footerDataCache) return Promise.resolve(footerDataCache);
+  if (!footerDataPromise) {
+    footerDataPromise = Promise.all([
+      apiService.categories.getAll(),
+      apiService.rituals.getAll(),
+    ])
+      .then(([categories, rituals]) => {
+        footerDataCache = {
+          categories: Array.isArray(categories) ? categories : [],
+          rituals: Array.isArray(rituals) ? rituals : [],
+        };
+        return footerDataCache;
+      })
+      .catch((error) => {
+        footerDataPromise = null; // allow a retry on the next mount
+        throw error;
+      });
+  }
+  return footerDataPromise;
+};
 
 const Footer = () => {
   const { enabled: dealsEnabled } = useDealsConfig();
-  // Wordmark label, brand line, contact block and the shipping figure all come
-  // from the admin's Settings > General, so the close of every page states what
-  // the store itself says.
-  //
-  // `socialLinks` is the same story for the marks below the wordmark: the admin
-  // owns them in Settings > Social Links, and the list arrives already filtered
-  // to the platforms that have a URL, in canonical order, each carrying its own
-  // label and art. Clearing a link there takes its icon off this row rather than
-  // leaving a dead one — exactly what blanking the old constant did.
+  // Store name, tagline and the contact block are the admin's (Settings →
+  // General); `socialLinks` arrives from Settings → Social Links already
+  // filtered to the platforms that have a URL, in canonical order, each
+  // carrying its own label and art. Clearing a link there takes its mark off
+  // this row rather than leaving a dead one.
   const {
     storeName,
-    tagline,
     email: supportEmail,
     phone: supportPhone,
     address: supportAddress,
@@ -101,23 +130,27 @@ const Footer = () => {
     phoneHref,
     socialLinks,
   } = useStoreSettings();
-  // The free-shipping promise is the one trust row that quotes a figure, and
-  // that figure has exactly one home: `shipping_methods.freeAbove` in
-  // Admin > Shipping, read live (the cart tray's meter does this — Prompt 12).
-  // The retired constant is no longer consulted here; until Prompt 13 rebuilds
-  // this band on the live read, the row is simply not rendered. An unknown
-  // threshold is never promised, and `{amount}` therefore never reaches type.
-  const trustItems = TRUST_ITEMS.filter((item) => !item.needsThreshold);
 
-  // Contact fields the owner has not supplied yet are carried as {{TOKENS}}.
-  // A row with nothing publishable behind it is not rendered — never printed
-  // raw, and never left as an empty <dd> under its own label.
-  const contactAddress = resolveOrNull(supportAddress);
-  const contactEmail = resolveOrNull(supportEmail);
-  const contactPhone = resolveOrNull(supportPhone);
-  const contactHours = resolveOrNull(SUPPORT_HOURS);
-  const hasContact =
-    contactAddress || contactEmail || contactPhone || contactHours;
+  const isPhone = useMediaQuery(PHONE_QUERY);
+
+  const [data, setData] = useState(footerDataCache);
+
+  useEffect(() => {
+    let active = true;
+    loadFooterData()
+      .then((loaded) => {
+        if (active) setData(loaded);
+      })
+      .catch(() => {
+        // The static entries in each column stand on their own; a footer that
+        // cannot reach the API is a shorter footer, not a broken one.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // ---- Newsletter (contract unchanged) -----------------------------------
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscribeStatus, setSubscribeStatus] = useState("idle"); // idle | success | error
@@ -158,75 +191,145 @@ const Footer = () => {
     }
   };
 
-  // Every target below resolves to a real route in App.js — nothing here falls
-  // through to the 404. "Deals" / "Special Offers" share the deals hub and are
-  // dropped when the admin disables it.
-  //
-  // Prompt 08 retired the two `?sort=` deep-links (New Arrivals, Best Sellers):
-  // the LAMIKAA shop has no sort, so both resolved to the same page as "Shop
-  // All" and the column repeated itself three times. Prompt 13 rebuilds the
-  // footer around the new information architecture.
-  const shopLinks = [
-    { label: "Shop All", path: ROUTES.SHOP },
-    { label: "Deals", path: ROUTES.SPECIAL_OFFERS, deals: true },
-  ].filter((link) => dealsEnabled || !link.deals);
+  // ---- The four columns ---------------------------------------------------
+  // Categories and rituals are DATA: the admin publishes seven categories and
+  // three rituals today, and the columns follow whatever it publishes tomorrow.
+  // `categoryPath()` sends the "rituals" category to /rituals and every other
+  // one to /category/<slug>, so the two columns can never disagree about where
+  // a ritual lives.
+  const categories = data?.categories || [];
+  const rituals = data?.rituals || [];
 
-  // Company column — Our Story is the About page; Special Offers is deals-gated.
-  const companyLinks = [
-    { label: "Our Story", path: ROUTES.ABOUT },
-    { label: "Special Offers", path: ROUTES.SPECIAL_OFFERS, deals: true },
-    { label: "Wishlist", path: ROUTES.WISHLIST },
-  ].filter((link) => dealsEnabled || !link.deals);
-
-  // Support column — the FAQ covers shipping/FAQ topics; Returns maps to the
-  // Shipping & Returns policy. All paths exist in App.js.
-  const supportLinks = [
-    { label: "Contact", path: ROUTES.CONTACT },
-    { label: "FAQ", path: ROUTES.FAQ },
-    { label: "Order Tracking", path: ROUTES.ORDERS },
-    { label: "My Account", path: ROUTES.PROFILE },
-    { label: "Returns & Exchange", path: ROUTES.POLICY_SHIPPING_RETURNS },
+  const columns = [
+    {
+      id: "categories",
+      title: "Shop by category",
+      links: [
+        ...categories.map((cat) => ({
+          key: `cat-${cat.id}`,
+          label: cat.displayName || cat.name,
+          path: categoryPath(cat),
+        })),
+        { key: "all-products", label: "All products", path: ROUTES.SHOP },
+      ],
+    },
+    {
+      id: "rituals",
+      title: "Rituals",
+      links: [
+        ...rituals.map((ritual) => ({
+          key: `ritual-${ritual.id}`,
+          label: ritual.name,
+          path: ritualPath(ritual),
+        })),
+        { key: "build-ritual", label: "Build your ritual", path: ROUTES.RITUALS },
+      ],
+    },
+    {
+      id: "company",
+      title: "Company",
+      links: [
+        { key: "about", label: "Our Story", path: ROUTES.ABOUT },
+        { key: "why", label: "Why LAMIKAA", path: ROUTES.WHY },
+        { key: "impact", label: "Impact", path: `${ROUTES.WHY}#impact` },
+        { key: "contact", label: "Contact", path: ROUTES.CONTACT },
+        // Dropped entirely when the admin turns the deals page off, exactly as
+        // the masthead and the mobile drawer drop it.
+        ...(dealsEnabled
+          ? [{ key: "offers", label: "Offers", path: ROUTES.SPECIAL_OFFERS }]
+          : []),
+      ],
+    },
+    {
+      id: "help",
+      title: "Help",
+      links: [
+        { key: "faq", label: "FAQ", path: ROUTES.FAQ },
+        {
+          key: "shipping",
+          label: "Shipping & Returns",
+          path: ROUTES.POLICY_SHIPPING_RETURNS,
+        },
+        { key: "privacy", label: "Privacy", path: ROUTES.POLICY_PRIVACY },
+        { key: "terms", label: "Terms", path: ROUTES.POLICY_TERMS },
+        { key: "cookies", label: "Cookies", path: ROUTES.POLICY_COOKIES },
+        { key: "orders", label: "My Orders", path: ROUTES.ORDERS },
+        { key: "wishlist", label: "Wishlist", path: ROUTES.WISHLIST },
+      ],
+    },
   ];
 
-  // Legal column — exact paths that all resolve in App.js.
-  const legalColumnLinks = [
-    { label: "Privacy Policy", path: ROUTES.POLICY_PRIVACY },
-    { label: "Terms of Service", path: ROUTES.POLICY_TERMS },
-    { label: "Cookie Policy", path: ROUTES.POLICY_COOKIES },
-    { label: "Shipping & Returns", path: ROUTES.POLICY_SHIPPING_RETURNS },
-  ];
+  const linkList = (column) => (
+    <ul className={styles.linkList}>
+      {column.links.map((link) => (
+        <li key={link.key}>
+          <Link to={link.path} className={styles.footerLink}>
+            {link.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+
+  // ---- Contact ------------------------------------------------------------
+  // Fields the owner has not supplied yet are carried as {{TOKENS}}. A row with
+  // nothing publishable behind it is not rendered — never printed raw, and
+  // never left as an empty value under its own label.
+  const contactAddress = resolveOrNull(supportAddress);
+  const contactEmail = resolveOrNull(supportEmail);
+  const contactPhone = resolveOrNull(supportPhone);
+  const contactHours = resolveOrNull(SUPPORT_HOURS);
+  const hasContact =
+    contactAddress || contactEmail || contactPhone || contactHours;
+
+  // ---- Registration rows --------------------------------------------------
+  const gstin = resolveOrNull(brand.legal.gstin);
+  const cin = resolveOrNull(brand.legal.cin);
 
   const currentYear = new Date().getFullYear();
 
-  const linkColumns = [
-    { id: "shop", title: "Shop", links: shopLinks },
-    { id: "company", title: "Company", links: companyLinks },
-    { id: "support", title: "Support", links: supportLinks },
-    { id: "legal", title: "Legal", links: legalColumnLinks },
-  ];
-
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} aria-labelledby={HEADING_ID}>
+      {/* The whole transition from page to close: one signature seam. */}
+      <div className="sf-hairline sf-hairline--gradient" aria-hidden="true" />
+
       {/* ---------- 1. The invitation ---------- */}
-      <div className={styles.invitation}>
-        <div className={styles.container}>
-          <div className={styles.invitationInner}>
-            <div className={styles.invitationCopy}>
-              <p className={styles.eyebrow}>Newsletter</p>
-              <p className={styles.invitationTitle}>Letters from LAMIKAA</p>
-              <p className={styles.invitationNote}>
-                New arrivals, rituals and quiet offers — straight to your
-                inbox.
-              </p>
-            </div>
+      <div className={`${styles.band} ${styles.invitation} sf-glow sf-glow--violet`}>
+        <div className={`sf-container ${styles.grid}`}>
+          <div className={styles.brandBlock}>
+            {/* The wordmark is the heading, so the heading's text is the
+                accessible name and the artwork itself is decorative — one
+                announcement of the brand at the close of the page, not two. */}
+            <h2 id={HEADING_ID} className="sf-visually-hidden">
+              {storeName}
+            </h2>
+            <Logo
+              variant="wordmark"
+              width={WORDMARK_WIDTH}
+              alt=""
+              className={styles.wordmark}
+            />
+            <p className={styles.tagline}>{brand.tagline}</p>
+            <p className={styles.signature}>{brand.signatureLines[3]}</p>
+          </div>
+
+          <div className={styles.newsletter}>
+            <p className={styles.eyebrow}>Stay close to the farm</p>
+            <p className={styles.newsletterNote} id={NEWSLETTER_NOTE_ID}>
+              New products, farm stories and the occasional offer — no noise.
+            </p>
 
             {subscribeStatus === "success" ? (
               <p className={styles.formSuccess} role="status">
                 Thank you — you are on the list.
               </p>
             ) : (
-              <form className={styles.form} onSubmit={handleSubscribe} noValidate>
-                <label className={styles.srOnly} htmlFor={EMAIL_INPUT_ID}>
+              <form
+                className={styles.form}
+                onSubmit={handleSubscribe}
+                noValidate
+              >
+                <label className="sf-visually-hidden" htmlFor={EMAIL_INPUT_ID}>
                   Email address
                 </label>
                 <div className={styles.field}>
@@ -242,28 +345,33 @@ const Footer = () => {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      if (subscribeStatus === "error") setSubscribeStatus("idle");
+                      if (subscribeStatus === "error") {
+                        setSubscribeStatus("idle");
+                      }
                     }}
                     disabled={isSubmitting}
                     aria-invalid={subscribeStatus === "error"}
                     aria-describedby={
-                      subscribeStatus === "error" ? EMAIL_ERROR_ID : undefined
+                      subscribeStatus === "error"
+                        ? `${NEWSLETTER_NOTE_ID} ${EMAIL_ERROR_ID}`
+                        : NEWSLETTER_NOTE_ID
                     }
                   />
-                  {/* The shared `.sf-btn` shape, with the footer's own primary
-                      skin: `--emerald` is ink-on-ink here in light mode (the
-                      CTA fill is the same near-black as this band), so the
-                      module inverts it to ivory-on-ink instead. */}
-                  <button
+                  <Button
                     type="submit"
-                    className={`sf-btn ${styles.submitBtn}`}
+                    variant="primary"
                     disabled={isSubmitting}
+                    className={styles.submit}
                   >
                     {isSubmitting ? "Sending" : "Subscribe"}
-                  </button>
+                  </Button>
                 </div>
                 {subscribeStatus === "error" && (
-                  <p className={styles.formError} id={EMAIL_ERROR_ID} role="alert">
+                  <p
+                    className={styles.formError}
+                    id={EMAIL_ERROR_ID}
+                    role="alert"
+                  >
                     {errorMsg}
                   </p>
                 )}
@@ -273,197 +381,180 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* ---------- 2. The grid ---------- */}
-      <div className={styles.main}>
-        <div className={styles.container}>
-          <div className={styles.grid}>
-            <div className={styles.brandCol}>
-              <Logo
-                className={styles.logo}
-                width={LOGO_WIDTH}
-                alt={storeName}
-              />
-              <p className={styles.brandLine}>{tagline}</p>
-              <p className={styles.brandNote}>{brand.legalNote}</p>
+      {/* ---------- 2. The directory ---------- */}
+      <div className={`${styles.band} ${styles.directory}`}>
+        <div className={`sf-container ${styles.grid}`}>
+          <LegalNote className={styles.legalNote} />
 
+          {isPhone ? (
+            // One accordion, four disclosures, multi-open and all closed: the
+            // primitive owns aria-expanded / aria-controls, the region
+            // labelling, the arrow-key roving between headers and the
+            // visibility flip that takes a collapsed panel's links out of the
+            // tab order. Four separate accordions would each carry their own
+            // roving ring and four collapsed landmarks with them.
+            <nav className={styles.disclosures} aria-label="Footer directory">
+              <Accordion
+                multiple
+                headingLevel="h3"
+                items={columns.map((column) => ({
+                  id: column.id,
+                  title: column.title,
+                  content: linkList(column),
+                }))}
+              />
+            </nav>
+          ) : (
+            columns.map((column) => (
+              <nav
+                key={column.id}
+                className={styles.column}
+                aria-labelledby={`footer-col-${column.id}`}
+              >
+                <h3 className={styles.eyebrow} id={`footer-col-${column.id}`}>
+                  {column.title}
+                </h3>
+                {linkList(column)}
+              </nav>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* ---------- 3. Contact, social and payment ---------- */}
+      <div className={`${styles.band} ${styles.assurances}`}>
+        <div className={`sf-container ${styles.assurancesInner}`}>
+          {(hasContact || socialLinks.length > 0) && (
+            <div className={styles.reach}>
               {hasContact && (
-                <dl className={styles.contact}>
+                <address className={styles.contact}>
                   {contactAddress && (
-                    <>
-                      <dt className={styles.contactLabel}>Address</dt>
-                      <dd className={styles.contactValue}>{contactAddress}</dd>
-                    </>
+                    <span className={styles.contactRow}>{contactAddress}</span>
                   )}
                   {contactEmail && (
-                    <>
-                      <dt className={styles.contactLabel}>Write</dt>
-                      <dd className={styles.contactValue}>
-                        <a className={styles.contactLink} href={emailHref}>
-                          {contactEmail}
-                        </a>
-                      </dd>
-                    </>
+                    <span className={styles.contactRow}>
+                      <a className={styles.contactLink} href={emailHref}>
+                        {contactEmail}
+                      </a>
+                    </span>
                   )}
                   {contactPhone && (
-                    <>
-                      <dt className={styles.contactLabel}>Call</dt>
-                      <dd className={styles.contactValue}>
-                        <a className={styles.contactLink} href={phoneHref}>
-                          {contactPhone}
-                        </a>
-                      </dd>
-                    </>
+                    <span className={styles.contactRow}>
+                      <a className={styles.contactLink} href={phoneHref}>
+                        {contactPhone}
+                      </a>
+                    </span>
                   )}
                   {contactHours && (
-                    <>
-                      <dt className={styles.contactLabel}>Hours</dt>
-                      <dd className={styles.contactValue}>{contactHours}</dd>
-                    </>
+                    <span className={styles.contactRow}>{contactHours}</span>
                   )}
-                </dl>
+                </address>
               )}
 
               {socialLinks.length > 0 && (
-                <div className={styles.social}>
+                <ul className={styles.social}>
                   {socialLinks.map((social) => (
-                    <a
-                      key={social.key}
-                      href={social.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.socialLink}
-                      aria-label={social.label}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        width="18"
-                        height="18"
-                        aria-hidden="true"
-                        focusable="false"
+                    <li key={social.key}>
+                      <a
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.socialLink}
+                        aria-label={social.label}
                       >
-                        <path d={social.path} />
-                      </svg>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {linkColumns.map((col) => (
-              <nav
-                className={styles.linkCol}
-                key={col.id}
-                aria-labelledby={`footer-col-${col.id}`}
-              >
-                <h2 className={styles.colTitle} id={`footer-col-${col.id}`}>
-                  {col.title}
-                </h2>
-                <ul className={styles.linkList}>
-                  {col.links.map((link) => (
-                    <li key={link.label}>
-                      <Link to={link.path} className={styles.footerLink}>
-                        {link.label}
-                      </Link>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          width="18"
+                          height="18"
+                          aria-hidden="true"
+                          focusable="false"
+                        >
+                          <path d={social.path} />
+                        </svg>
+                      </a>
                     </li>
                   ))}
                 </ul>
-              </nav>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ---------- 3. The promises ---------- */}
-      <div className={styles.trustBar}>
-        <div className={styles.container}>
-          <div className={styles.trustInner}>
-            <ul className={styles.trustList}>
-              {trustItems.map((item) => (
-                <li className={styles.trustItem} key={item.id}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    width="16"
-                    height="16"
-                    className={styles.trustIcon}
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d={item.path} />
-                  </svg>
-                  <span>{item.label}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* The payment networks' own brand hexes are mandated marks and are
-                the one documented exception to the tokens-only rule — they must
-                not be re-skinned. The <text> nodes inherit the storefront font
-                from .paymentBadge (see the module), so no font literal remains. */}
-            <div className={styles.payments}>
-              <span className={styles.paymentLabel}>We accept</span>
-              <div className={styles.paymentIcons}>
-                <span className={styles.paymentBadge}>
-                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="Visa">
-                    <rect width="48" height="32" rx="4" fill="#1A1F71" />
-                    <text x="24" y="20" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontWeight="bold">VISA</text>
-                  </svg>
-                </span>
-                <span className={styles.paymentBadge}>
-                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="Mastercard">
-                    <rect width="48" height="32" rx="4" fill="#252525" />
-                    <circle cx="19" cy="16" r="8" fill="#EB001B" />
-                    <circle cx="29" cy="16" r="8" fill="#F79E1B" />
-                    <path d="M24 10.34a8 8 0 010 11.32 8 8 0 000-11.32z" fill="#FF5F00" />
-                  </svg>
-                </span>
-                <span className={styles.paymentBadge}>
-                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="UPI">
-                    <rect width="48" height="32" rx="4" fill="#EDEDED" />
-                    <text x="24" y="20" textAnchor="middle" fill="#00897B" fontSize="11" fontWeight="bold">UPI</text>
-                  </svg>
-                </span>
-                <span className={styles.paymentBadge}>
-                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="Cash on delivery">
-                    <rect width="48" height="32" rx="4" fill="#4CAF50" />
-                    <text x="24" y="20" textAnchor="middle" fill="#FFFFFF" fontSize="10" fontWeight="bold">COD</text>
-                  </svg>
-                </span>
-              </div>
+              )}
             </div>
-          </div>
-        </div>
-      </div>
+          )}
 
-      {/* ---------- 4. The colophon ---------- */}
-      <div className={styles.bottomBar}>
-        <div className={styles.container}>
-          <div className={styles.bottomInner}>
-            <p className={styles.copyright}>
-              &copy; {currentYear} {storeName}. All rights reserved.
-              <span className={styles.policyDate}>
-                {" "}
-                Policies last updated {POLICY_LAST_UPDATED}.
+          {/* The payment networks' own brand hexes are mandated marks and the
+              one documented exception to the tokens-only rule — they must not
+              be re-skinned. The <text> nodes inherit the storefront face from
+              .paymentMark (see the module), so no font literal remains, and the
+              row is held at 60% opacity so it reads as a footnote. */}
+          <div className={styles.payments}>
+            <span className={styles.paymentLabel}>We accept</span>
+            <div className={styles.paymentMarks}>
+              <span className={styles.paymentMark}>
+                <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="Visa">
+                  <rect width="48" height="32" rx="4" fill="#1A1F71" />
+                  <text x="24" y="20" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontWeight="bold">VISA</text>
+                </svg>
               </span>
-            </p>
-            {/* Not a landmark. These three links are already the "Legal"
-                column above, which is a <nav> named by its own <h2> — so this
-                row was a second navigation landmark with the identical name,
-                and a screen-reader user cycling landmarks met "Legal" twice
-                with no way to tell them apart. The links stay; the duplicate
-                signpost goes. */}
-            <div className={styles.legalLinks}>
-              <Link to={ROUTES.POLICY_TERMS} className={styles.legalLink}>
-                Terms of Service
-              </Link>
-              <Link to={ROUTES.POLICY_PRIVACY} className={styles.legalLink}>
-                Privacy Policy
-              </Link>
-              <Link to={ROUTES.POLICY_COOKIES} className={styles.legalLink}>
-                Cookie Policy
-              </Link>
+              <span className={styles.paymentMark}>
+                <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="Mastercard">
+                  <rect width="48" height="32" rx="4" fill="#252525" />
+                  <circle cx="19" cy="16" r="8" fill="#EB001B" />
+                  <circle cx="29" cy="16" r="8" fill="#F79E1B" />
+                  <path d="M24 10.34a8 8 0 010 11.32 8 8 0 000-11.32z" fill="#FF5F00" />
+                </svg>
+              </span>
+              <span className={styles.paymentMark}>
+                <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="UPI">
+                  <rect width="48" height="32" rx="4" fill="#EDEDED" />
+                  <text x="24" y="20" textAnchor="middle" fill="#00897B" fontSize="11" fontWeight="bold">UPI</text>
+                </svg>
+              </span>
+              <span className={styles.paymentMark}>
+                <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-label="Cash on delivery">
+                  <rect width="48" height="32" rx="4" fill="#4CAF50" />
+                  <text x="24" y="20" textAnchor="middle" fill="#FFFFFF" fontSize="10" fontWeight="bold">COD</text>
+                </svg>
+              </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ---------- 4. The colophon ----------
+          Deliberately NOT a landmark: the four policy links below are already
+          the Help column above, which is a <nav> named by its own heading, and
+          a second navigation landmark with the same links is one more thing to
+          cycle past for no new destination. */}
+      <div className={styles.colophon}>
+        <div className={`sf-container ${styles.colophonInner}`}>
+          <div className={styles.copyright}>
+            <p className={styles.copyLine}>
+              &copy; {currentYear} {COPYRIGHT_NAME} All rights reserved.
+            </p>
+            <p className={styles.copyLine}>
+              {brand.name} is a brand of {brand.legalShort}.
+            </p>
+            {/* Registration rows appear the day the owner supplies them and
+                cost nothing until then. */}
+            {gstin && <p className={styles.copyLine}>GSTIN {gstin}</p>}
+            {cin && <p className={styles.copyLine}>CIN {cin}</p>}
+          </div>
+
+          <div className={styles.microLinks}>
+            <Link to={ROUTES.POLICY_PRIVACY} className={styles.microLink}>
+              Privacy
+            </Link>
+            <Link to={ROUTES.POLICY_TERMS} className={styles.microLink}>
+              Terms
+            </Link>
+            <Link to={ROUTES.POLICY_COOKIES} className={styles.microLink}>
+              Cookies
+            </Link>
+            <Link
+              to={ROUTES.POLICY_SHIPPING_RETURNS}
+              className={styles.microLink}
+            >
+              Shipping &amp; Returns
+            </Link>
           </div>
         </div>
       </div>

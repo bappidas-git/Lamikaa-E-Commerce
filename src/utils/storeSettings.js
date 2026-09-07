@@ -21,7 +21,6 @@ import {
   SUPPORT_EMAIL,
   SUPPORT_PHONE,
   SUPPORT_ADDRESS,
-  FREE_SHIPPING_THRESHOLD,
 } from "./constants";
 import { resolveOrNull, stripPlaceholderSentences } from "./placeholders";
 import { DEFAULT_SOCIAL_LINKS, normalizeSocialLinks } from "./socialLinks";
@@ -173,10 +172,10 @@ export const fillStoreCopy = (text, settings, options = {}) => {
       : "inclusive of all taxes"
     : `exclusive of ${store.taxRate}% tax, which is calculated at checkout`;
 
-  // Live methods first, then the (now null) constant. Unknown degrades to the
-  // placeholder token, which takes its sentence off the page below.
-  const threshold =
-    positive(options.freeAbove) ?? positive(FREE_SHIPPING_THRESHOLD);
+  // The live shipping methods are the only source (the constant that used to
+  // back this up was retired in Prompt 13). Unknown degrades to the placeholder
+  // token, which takes its sentence off the page below.
+  const threshold = positive(options.freeAbove);
   const returnDays = positive(options.returnWindowDays);
 
   const filled = text

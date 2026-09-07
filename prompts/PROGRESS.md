@@ -16,7 +16,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 10 | Mobile navigation drawer and bottom nav | complete | 2026-09-06 | (this commit) | `SidebarMenu` is the first feature on the `ui/Drawer` primitive — its hand-rolled focus trap, Escape handler, `body.style.overflow` lock and close-on-navigate effect are **deleted**, not duplicated (`grep useFocusTrap|useScrollLock` in the file → 0; the primitive owns all four). 632 → 521 lines of JS, the 725-line stylesheet replaced wholesale by 377 (`toggleTheme|Dark mode` → **0**, no `.dark`, no logo swap, no hex). Four labelled navs — Catalogue (a one-item accordion over the seven categories at 48px behind 32px `.sf-plate` thumbnails, default-open on `/shop` and `/category/*`), Brand, Account, Contact — over a pinned **"Shop the Black Rice Range"** CTA and the clamped legal note. `BottomNav` is a five-tab glass bar (64px + safe area, gold + a 20px gradient hairline for active, hide-on-scroll suspended while an overlay is up). `src/utils/catalogue.js` extracts the category-membership rule the mega panel and the drawer now share. **Browser QA: 109/109 checks at 360/390/414/768/1024/1280 + reduced motion + a simulated notch; axe-core 0 violations** on the drawer (open and closed), the bar and the whole document. One pre-existing defect fixed on the way: `AddToCartBar`'s raw `z-index: 1300` painted the PDP purchase bar over every drawer and modal — deleted, so the reserved order 40 < 60 < 1000 < 1100 is now real. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). `db.json` and `api.js` untouched — reads only. |
 | 11 | Search overlay and search results | complete | 2026-09-06 | (this commit) | `SearchModal` is the first feature on `ui/Modal` — its hand-rolled focus trap, Escape handler, `document.body.style.overflow` lock and focus-restore are **deleted** (`grep "focusable\|body.style.overflow" SearchModal.js` → 0), and the primitive gains `size="full"` + `initialFocus`. 850 → 642 lines of JS, 813 → 420 of CSS. Ranking moved out to **`src/utils/search.js`** (+ `search.test.js`, 10 tests) so the overlay and `/search` cannot disagree: `"serum"` → Face Serum first, `"hydration"` → Mist/Gel/Body Wash and nothing else, `"goat"` → the soap, `"black rice"` → all eight with the three priced ones leading, nonsense → the empty state (all five verified in Chromium AND pinned in the suite). Recent searches are **`sessionStorage["lk-recent-searches"]`** — `grep -rn "localStorage" src/components/SearchModal src/pages/Search` → **0**. `/search?q=` is a real page (`noindex`), `ComingSoon` is gone from the route (`grep -rn "ComingSoon" src/App.js | grep -i search | wc -l` → **0**), and `/products?search=x` still lands on it. `grep -rn "Muga\|Mekhela\|Eri \|Pat silk\|weave" src/components/SearchModal src/pages/Search` → **0**. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` = **4 suites passed / 1 skipped** (44 passed, 50 skipped). Browser QA at 360/390/414/768/1024/1280/1440 + reduced motion: 0 horizontal overflow, 0 page errors, header backdrop-filter `none` throughout. |
 | 12 | Cart drawer with cross-sell | complete | 2026-09-07 | (this commit) | `CartDrawer` is the second feature on `ui/Drawer` — its hand-rolled focus trap, `FOCUSABLE_SELECTOR`, Escape handler and `document.body.style.overflow` lock are all **deleted** (the only hits left for `grep -n "FOCUSABLE_SELECTOR\|body.style.overflow\|onCloseRef" src/components/CartDrawer/CartDrawer.js` are the **2 inside the docblock that records what moved to the primitive** — no code hit). 440px glass tray: measured **65px** masthead (64 + hairline), **96px** lines (72px plate + 12px), **129px** foot (128 + hairline), no horizontal overflow at 360/390/414/768/1024/1280 and the panel at 360/390/414/**440**/440/440. **No invented shipping figure survives**: `FREE_SHIPPING_THRESHOLD` and `FLAT_SHIPPING = 99` are gone, the meter's bar is the lowest `freeAbove` across the active `shipping_methods` (cached in a ref, one request per mount) and hides when none is set; no delivery charge is previewed at all. Measured with `freeAbove: 999` seeded through the API: ₹390 → "₹609 away from free shipping", `aria-valuenow=390 aria-valuemax=999`, fill 39.04%; ₹1 170 → "You've unlocked free shipping", 999/999. `CartContext` gains **`addMany`** (one toast, one drawer opening, skips uncommitted prices) and both add paths now share one `mergeLine` reducer; toasts are sentence case. **17 new unit tests** (`CartContext.test.js` 7, `CartDrawer.test.js` 10). Browser QA: PDP add auto-opens the tray with "Added to cart"; cross-sell Add keeps it open; coupon `SAMPLE10` applies −₹39.00 and a bad code shows "Invalid coupon code"; Tab cycles 11 stops and wraps; Escape closes and restores focus to "Cart, 1 item"; backdrop click closes; Checkout → `/checkout` with the cart intact, scroll unlocked and `body[data-drawer-open]` cleared; View cart → `/cart`; removing the last line falls to the empty state and the foot disappears with it. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (**6 suites / 61 tests passed**, 1 suite / 50 skipped). `grep -rn "FREE_SHIPPING_THRESHOLD\|FLAT_SHIPPING\|Sualkuchi\|looms" src/components/CartDrawer src/context/CartContext.js` → **0**. See "Prompt 12 record" below. |
-| 13 | Footer | pending | | | |
+| 13 | Footer | complete | 2026-09-07 | (this commit) | The close of every page is rebuilt as **four bands on `--sf-color-surface`** under one `.sf-hairline--gradient`: invitation (220px wordmark, master tagline, `signatureLines[3]`, "Stay close to the farm" + the untouched newsletter flow) · directory (`LegalNote` in the wide track, then **four data-fed columns** — the seven categories and three rituals the admin publishes, Company, Help) · assurances (`<address>`, social marks, payment marks) · colophon (BAOPCL copyright, the brand-of line, GSTIN/CIN when resolved, policy micro-links). **One grid, twice** (`--sf-footer-grid`: `1.6fr repeat(4,1fr)`/48px ≥1280, `1.2fr repeat(4,1fr)`/32px ≥1024, 2-up ≥481, single column below), and at ≤480 the four headings become one multi-open `ui/Accordion`, all closed. `src/components/Newsletter/` **deleted** (0 importers) and `FREE_SHIPPING_THRESHOLD` **removed from `constants.js`** with its dead fallback in `fillStoreCopy` — the `{freeShipping}` sentence-dropping stays (FAQ 6 still carries it). New `src/components/brand/LegalNote.{js,module.css}` renders `brand.legalNote` **verbatim** and is the component Prompts 17/25/28 reuse. Browser QA at 360/390/414/480/768/1024/1280/1440 in mock mode: **no horizontal scroll at any width**, ground `rgb(20,20,22)`, outline `h2 "LAMIKAA NATURALS"` → four `h3`, four labelled `nav` landmarks (one "Footer directory" at ≤480), **no `{{` anywhere**, contrast floor **7.0:1**. Newsletter verified end to end (invalid → `aria-invalid` + `role=alert`; valid → lead `id 3` written as `type: "newsletter", status: "subscribed"`, then reverted). Contact rows, the Instagram mark and the GSTIN/CIN rows verified to appear when resolved and to vanish again. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (6 passed / 1 skipped, 61 / 50 of 111). `db.json`, `api.js` and the admin untouched. See "Prompt 13 record" below. |
 | 14 | Home hero product carousel | pending | | | |
 | 15 | Trust strip and shop-by-category/concern | pending | | | |
 | 16 | Home product showcase sections | pending | | | |
@@ -179,6 +179,14 @@ Record every decision a prompt had to make that the reference files did not sett
 - `12 · 2026-09-07 · `addMany` was verified by unit tests rather than by a temporary `window.__cart` · The acceptance criterion suggests exposing the context on `window` and then removing it. Seven tests in `src/context/CartContext.test.js` prove the same behaviours (merge by line key, one toast, the skip rule, the stock clamp, `openDrawer: false`, the return value) and keep proving them, and nothing temporary has to be remembered out of the source.`
 - `12 · 2026-09-07 · Cart lines still do not carry `slug`, so a line links to `/product/<productId>` and the route redirects to the slug · `buildCartItem` sets a slug and `normalizeCartItem` drops it — an inconsistency that predates this prompt. Adding the field is a `localStorage.cart` FORMAT change, which this prompt's Data section forbids ("no persistence change"). Verified: the tray's product link lands on `/product/black-rice-face-wash`.`
 - `12 · 2026-09-07 · `SearchModal`'s add still passes `openDrawer: false` and was left alone · The acceptance criterion reads "add from a card/search → drawer opens", but Prompt 11 chose this deliberately so a tray cannot slide in under an open full-screen modal. Changing it would remove existing, reasoned behaviour. The card and PDP paths do open the tray, and that is what was measured.`
+- `13 · 2026-09-07 · The prompt's px figures were mapped to the nearest TYPE TOKEN rather than written as literals — legal note 13px → `--sf-text-sm` (14px), footer links 15px → `--sf-text-sm`, tagline 28/24px → `--sf-text-xl` · The tokens are the only styling source (00_INDEX §2), and storefront-tokens.css states the rule this prompt would otherwise break: "nothing below --sf-text-sm (14px) is ever allowed to carry a sentence". `--sf-text-xl` clamps 22px→28px and MEASURES 28px at 1280 (verified), so the tagline hits the spec exactly and degrades on a phone instead of shrinking a sentence below the floor.`
+- `13 · 2026-09-07 · The prompt lists FIVE bullets under "four bands"; the farmer-owned note was folded into the DIRECTORY band's wide first track rather than given a band of its own · That is what makes the count work AND what the shared grid is for: the note lands directly under the wordmark and the four columns directly under the newsletter, so `1.6fr repeat(4, 1fr)` describes both bands instead of leaving an empty first track under the columns. Four hairline-separated bands, every listed element present.`
+- `13 · 2026-09-07 · At ≤480 the four columns are ONE `<Accordion multiple>` inside one `<nav aria-label="Footer directory">`, not four single-item accordions in four navs · "Accordion primitive, multi-open" is one accordion by definition, and the primitive's ArrowUp/Down/Home/End roving only works between headers of the same instance — four instances would give four separate rings. Four collapsed navigation landmarks on a phone is landmark spam for no new destination. `headingLevel="h3"` keeps the h2 → h3 outline identical at every width.`
+- `13 · 2026-09-07 · The social marks take the glass PALETTE (`--sf-glass-bg` over `--sf-glass-border`) with NO `backdrop-filter`, though the prompt says "44px glass circles" · The footer ground is OPAQUE `--sf-color-surface`, so a backdrop filter over it produces identical pixels at real GPU cost — and the sticky glass masthead is in view at the foot of the page, which already spends one of the two blurred layers DESIGN_SYSTEM §4 allows. Same reasoning, and the same resolution, as Prompt 12's QuantityStepper pill.`
+- `13 · 2026-09-07 · The colophon's copyright name is DERIVED from `brand.legalName` (`replace(/\s*\([^)]*\)\s*$/, "")`), not retyped · brand.js is the single source (BRAND.md §3.9 rule 1) and the spec line wants the registered name without the "(BAOPCL)" the sentence after it introduces. The first render read "Co. Ltd.. All rights reserved." — the name already ends in a full stop — so `COPYRIGHT_NAME` adds one only when it is missing.`
+- `13 · 2026-09-07 · "Policies last updated <date>" was dropped from the colophon · The prompt enumerates the colophon's contents and it is not among them, and all four policy pages already print `POLICY_LAST_UPDATED` at the top of the page a reader is actually consulting. The constant keeps its four consumers.`
+- `13 · 2026-09-07 · The footer fetches `categories.getAll` + `rituals.getAll` itself, module-cached, rather than importing `loadMegaPanelData` · The mega panel's promise also pulls `concerns.getAll` and `products.getHeroProducts`; sharing it would cost every page two collections the close of the page never renders. Both columns keep a static entry ("All products", "Build your ritual") so an unreachable API is a SHORTER footer, not a broken one.`
+- `13 · 2026-09-07 · The mobile disclosure triggers keep `ui/Accordion`'s own 16px/600 warm-white look instead of the desktop columns' gold 12px eyebrow · The eyebrow is a column HEADING; a disclosure is a 44px control, and it reads (and taps) like the mobile drawer's Shop group, which is the same primitive. Restyling it would mean reaching into another module's hashed class names.`
 
 ## Open TODOs
 
@@ -194,7 +202,7 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - ~~`03 · The AnnouncementBar is now a full-bleed CHAMPAGNE GOLD band …` · **RESOLVED by Prompt 09**~~ — the bar is a 36px 4%-white glass band on `--sf-color-text-secondary` type with one gold dot, so gold is back inside the §2 balance budget. `--sf-gradient-announce` stays declared and unused; Prompt 35 can retire it.
 - `03 · Eight files still carry the literal "Meghali" in a comment or docblock, down from the sixteen Prompt 02 recorded: AuthModal.module.css and ErrorBoundary.js and theme/tokens.js and the five module headers listed there are now clean (this prompt touched them). What remains is in files this prompt did not touch — Header.module.css:2, storefront/ProductCard.js:17 and the six page docblocks under src/pages that carry no theme code. Prompt 35's sweep still owns them. · Prompt 35 · 35`
 - `03 · adminTheme.js still builds the indigo/slate admin palette from a (mode) ternary whose light half is now unreachable. Prompt 32 recolours the palette to LAMIKAA and should drop the parameter at the same time (both callers pass the literal "dark"). · Prompt 32 · 32`
-- `03 · Two aliases exist only to keep un-rebuilt components compiling and must die with them: --sf-color-brand-green-deep (Footer, HeroSection, CTASection, Newsletter) and --brand-logo-bg (declared, currently consumed by nothing). --sf-gradient-heritage, --sf-gradient-announce-1/2/3 and --sf-cat-* are in the same position. · Prompt 35 · 35`
+- `03 · Two aliases exist only to keep un-rebuilt components compiling and must die with them: --sf-color-brand-green-deep (**Footer and Newsletter came off it in Prompt 13** — the footer now grounds on `--sf-color-surface` and `components/Newsletter/` is deleted; HeroSection and CTASection remain, and both die with Prompts 14 and 22) and --brand-logo-bg (declared, currently consumed by nothing). --sf-gradient-heritage, --sf-gradient-announce-1/2/3 and --sf-cat-* are in the same position. · Prompt 35 · 35`
 - `03 · colors.js exports `DARK = PALETTE` purely for compatibility; nothing imports DARK any more (ThemeContext moved to PALETTE in this prompt). Drop the alias. · Prompt 04 · 04`
 - `03 · The type scale, font families and --sf-font-light are unchanged on purpose — DESIGN_SYSTEM §6 is Prompt 04's contract. storefront-tokens.css still names Cormorant Garamond and Inter, and index.html still loads them. · Prompt 04 · 04`
 - `04 · Small UI labels below 14px survive in component CSS this prompt may not touch (Task 8 restricts fixes to the scale tokens and the base layer). Measured at 1280px: Header .navLink 11px/500 and .navMoreCount 11px/500 (Header.module.css:269,323 — hardcoded 0.6875rem, not a token); AnnouncementBar .message, TrustStrip .label, the section eyebrows and Footer .colTitle at 12px/500 (--sf-text-xs, which DESIGN_SYSTEM §6 fixes at .75rem); breadcrumbs, "We accept" and "Secure payment" at 12px/400. None is body copy and none is light-weight (the 300 tier is gone), so the acceptance criteria hold — but the 11px pair in particular should not survive the header rebuild. · Prompts 09 / 13 / 23 / 28 · 09`
@@ -241,10 +249,14 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `11 · The overlay ranks the WHOLE catalogue on every keystroke with no debounce, which is right for eight products and wrong for eight hundred. The threshold is a linear pass over nine fields per product; past a few hundred products the answer is the server endpoint documented at `products.search()` (REPO_MAP §3.4), not an index in `utils/search.js`. · Owner / backend team · 39`
 - `11 · `stageSrc(p, { w: 112 })` requests a 112px-wide crop for a 56px plate (2× for retina) but no `srcSet`, because the row thumbnail is one fixed size at every breakpoint. If the row ever becomes fluid, it should move onto `ui/CloudinaryImage` like the rest of the media layer. · Prompt 37 · 37`
 - `11 · The Iconify sets the overlay uses (`mdi:magnify`, `mdi:close`, `mdi:cart-plus`, `mdi:arrow-right`) are fetched from the Iconify API at runtime, so in the sandbox used for this prompt's QA they did not paint — the screenshots were re-taken with the assets relayed through the agent proxy. Every icon-only control carries an `srLabel`, so nothing loses its accessible name offline; whether to bundle the set is still Prompt 38's call (carried from Prompt 05). · Prompt 38 · 38`
-- `12 · `src/config/brand.js:109` still carries the announcement string "Free shipping over ₹{{FREE_SHIPPING_THRESHOLD}}". It is a PLACEHOLDER TOKEN, not the retired constant — `fillStoreCopy` resolves it from live `freeAbove` and drops the sentence when there is none — but it is the only remaining hit for the prompt's verification grep over `src`. Confirm the announcement row hides correctly once the footer band is rebuilt on the live read. · developer · 13`
-- `12 · The free-shipping trust row in `Footer.js` no longer consults any constant and is filtered out unconditionally (`!item.needsThreshold`). Prompt 13 rebuilds the band and should re-attach it to `shipping.getMethods()` the way the cart tray's meter now does — `freeShippingThreshold()` is exported from `CartDrawer.js` and should move to a shared util when a second consumer appears. · developer · 13`
+- ~~`12 · `src/config/brand.js:109` still carries the announcement string "Free shipping over ₹{{FREE_SHIPPING_THRESHOLD}}" … Confirm the announcement row hides correctly once the footer band is rebuilt on the live read.`~~ — **PARTLY RESOLVED by Prompt 13.** The footer half is gone: the promises band was deleted with the rest of the old footer, so no footer surface quotes a threshold at all. `AnnouncementBar` filters that row out through `isPlaceholder` (AnnouncementBar.js:50, unchanged), and the token string is still the only `FREE_SHIPPING_THRESHOLD` hit in `src/` besides `fillStoreCopy`'s own emit — the CONSTANT is now deleted (see the Prompt 13 record). What is left is the trust-strip half below.
+- `12/13 · The free-shipping promise row has NO home right now. Prompt 13's spec deletes the `TRUST_ITEMS` band from the footer outright ("the trust strip lives on the home page"), so nothing on the storefront currently states the promise. Prompt 15 builds `TrustStrip` and should re-attach it to `shipping.getMethods()` the way the cart tray's meter does — `freeShippingThreshold()` is exported from `CartDrawer.js` and should move to a shared util when that second consumer appears. · Prompt 15 · 15`
 - `12 · Any `@testing-library/react` render in this repo makes Jest print "Jest did not exit one second after the test run" / "A worker process has failed to exit gracefully". Reproduced with a one-line `render(<span>hi</span>)` test, so it is React 18's scheduler holding a jsdom `MessageChannel`, not the new tests. Exit code is 0 and CI passes. Prompt 39 owns the test harness and should add `src/setupTests.js` (jest-dom + the MessageChannel teardown) before it adds the App smoke test. · developer · 39`
 - `12 · The tray's shipping and catalogue reads are cached for the life of the MOUNT (Header keeps `CartDrawer` mounted for the session). An admin changing `freeAbove` or activating a product mid-session is not seen until a reload. Acceptable for the meter; revisit with the cart PAGE, which will want the same reads. · developer · 29`
+- `13 · `PHONE_QUERY = "(max-width:480px)"` in `Footer.js` and the `@media (max-width: 480px)` / `@media (min-width: 481px)` pair in `Footer.module.css` are the SAME breakpoint written twice, in two languages, with nothing to keep them in step: change one and the disclosures render inside a two-column grid. `BREAKPOINTS.XS` in constants.js is already 480 and is not consumed by either. The responsive pass should give the repo one place to express a breakpoint for JS and CSS together. · Prompt 37 · 37`
+- `13 · The footer's `categories.getAll` + `rituals.getAll` are cached for the life of the PAGE LOAD (a module-level promise), so an admin publishing a category or a ritual mid-session does not see it in the footer until a reload — unlike the contact block and the social marks, which refetch on focus through `StoreSettingsContext`. Same trade-off `MegaPanel.loadMegaPanelData` already makes, and the same fix would serve both: a shared catalogue context with the contexts' focus-refetch. · developer · 39`
+- `13 · The footer fires two GETs at MOUNT on every page, for a band that is below the fold everywhere. `hooks/useInView.js` exists and would defer them to first approach; it was not used here because the columns are the site's link graph and a crawler executing JS should meet them without scrolling. Worth measuring in the performance audit before changing. · Prompt 38 · 38`
+- `13 · `LegalNote`'s `compact` variant is written and styled but has no consumer yet — Prompts 17, 25 and 28 are the ones the prompt names for it. If none of them wants it, delete the branch rather than leave dead CSS. · Prompts 17 / 25 / 28 · 28`
 
 ## Placeholders introduced / resolved
 
@@ -277,6 +289,9 @@ Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token 
 - `06 · {{PRICE_BODY_WASH}} / {{PRICE_FACE_MASK}} / {{PRICE_FACE_MIST}} / {{PRICE_FACE_SERUM}} / {{PRICE_MOISTURIZER_GEL}} · introduced · price: null + priceTBA: true on products 3, 4, 5, 7, 8 — the MRP is masked on those packs. Renders "Price on launch" with Add to Cart disabled.`
 - `06 · {{SIZE_FACE_WASH}} … {{SIZE_MOISTURIZER_GEL}} (8) · resolved · products[*].size, all eight from the packs: 200 ml · 100 g · 250 ml · 100 g · 100 ml · 100 g · 30 ml · 100 ml.`
 - `06 · {{INCI_FACE_WASH}} … {{INCI_MOISTURIZER_GEL}} (8) · resolved · products[*].ingredientsList, verbatim from PRODUCTS.md §5. Owner to proof-read against final artwork.`
+- `13 · {{GSTIN}} / {{CIN}} · FIRST RENDERED · `brand.legal.*` reaches type for the first time, in the footer colophon (`GSTIN <n>` / `CIN <n>` rows). Both go through `resolveOrNull`, so while they are tokens the rows cost no line at all; verified in the browser by temporarily resolving both (rows appeared, `innerText.includes("{{")` stayed false) and reverting. `PLACEHOLDERS.md`'s "Not rendered anywhere yet" note is updated.`
+- `13 · {{LAMIKAA_EMAIL}} / {{LAMIKAA_PHONE}} / {{LAMIKAA_ADDRESS}} / {{SUPPORT_HOURS}} · unchanged, re-verified · The footer's contact block is now a single `<address>` of up to four rows, each rendered only when `resolveOrNull` returns a value. With the seed's tokens the `<address>` is not rendered at all; PATCHing real values into `settings.store` made all three rows appear with working `mailto:` / `tel:` hrefs (then reverted). `{{SUPPORT_HOURS}}` still comes from `constants.js`, not from settings — it has no admin field yet.`
+- `13 · {{FREE_SHIPPING_THRESHOLD}} · one consumer fewer · The footer's promise row is deleted and `constants.js`'s `FREE_SHIPPING_THRESHOLD` export is gone with it. The token itself is untouched in `brand.js → announcements[1].text` and is still what `fillStoreCopy` emits when `{freeShipping}` cannot be resolved, so FAQ 6 keeps losing its sentence exactly as before.`
 
 ---
 
@@ -1400,3 +1415,163 @@ the constant (see Open TODOs).
 `db.json` untouched. `src/services/api.js` untouched — reads only
 (`shipping.getMethods`, `products.getAll`, `coupons.validate`). No dependency
 added. No admin change. `Header.js` unchanged.
+
+---
+
+## Prompt 13 record (2026-09-07)
+
+### What the close of the page now is
+
+Four bands on `--sf-color-surface` — a shade above the page ground, so the
+footer is its own room rather than a tint — opened by one
+`.sf-hairline--gradient` and divided by plain `--sf-color-border` hairlines:
+
+| Band | Left | Right |
+|---|---|---|
+| 1 Invitation | `<Logo variant="wordmark" width={220}>` under a visually-hidden `h2#footer-heading`, `brand.tagline` in Fraunces, `brand.signatureLines[3]` | "Stay close to the farm", the note, the email field and the Subscribe pill |
+| 2 Directory | `LegalNote` — `brand.legalNote`, verbatim | four `<nav>` columns: Shop by category · Rituals · Company · Help |
+| 3 Assurances | `<address>` rows + the social marks | "We accept" + the four payment marks at 60% |
+| 4 Colophon | BAOPCL copyright, the brand-of line, GSTIN/CIN when resolved | Privacy · Terms · Cookies · Shipping & Returns |
+
+The old band's `TRUST_ITEMS` promises strip is **gone** (the trust strip is
+Prompt 15's, on the home page), and with it the last surface that could have
+quoted a free-shipping figure the store has never set.
+
+### One grid, twice
+
+`--sf-footer-grid` is declared on `.footer` and consumed by BOTH band 1 and
+band 2, so the newsletter starts exactly where the link columns start and the
+ownership note sits exactly under the wordmark. Mobile first, four steps:
+
+| Viewport | `--sf-footer-grid` | gap | Layout |
+|---|---|---|---|
+| ≤480 | `minmax(0, 1fr)` | 32px | one column; the four headings are ONE `<Accordion multiple>`, all closed |
+| ≥481 | `repeat(2, minmax(0, 1fr))` | 32px | brand / newsletter / note rows span; link columns 2×2 |
+| ≥1024 | `1.2fr repeat(4, minmax(0, 1fr))` | 32px | note in track 1, four columns beside it; newsletter `3 / -1` |
+| ≥1280 | `1.6fr repeat(4, minmax(0, 1fr))` | 48px | the same, wider |
+
+That is also why the prompt's five bullets fit into four bands: the farmer-owned
+note is the directory band's wide first track, not a strip of its own.
+
+### The four columns are DATA
+
+`loadFooterData()` is a module-level promise over `categories.getAll()` +
+`rituals.getAll()` — the two reads the mega panel already makes, but not the
+four, so a page does not fetch concerns and hero products for a band that never
+renders them. Seven categories through `categoryPath()` (which sends the
+`kind: "rituals"` category to `/rituals`, so the two columns cannot disagree)
+plus **All products**; three rituals through `ritualPath()` plus **Build your
+ritual**; Company (Our Story · Why LAMIKAA · Impact `#impact` · Contact ·
+Offers, deals-gated — dropped in the seed, whose `deals_config.enabled` is
+`false`); Help (FAQ · Shipping & Returns · Privacy · Terms · Cookies · My
+Orders · Wishlist). A failed load leaves the two static entries standing: a
+footer that cannot reach the API is shorter, not broken.
+
+### Nothing unresolved reaches type
+
+Every row that could carry a `{{TOKEN}}` goes through `resolveOrNull`:
+
+| Row | With the committed seed | With a value set |
+|---|---|---|
+| `<address>` (address / email / phone / hours) | not rendered at all | three rows, `mailto:` and `tel:` hrefs — verified by PATCHing `settings.store` and reverting |
+| social marks | row absent (all five blank or tokens) | one 44px Instagram circle with the real href — verified by PATCHing `settings.social` and reverting |
+| GSTIN / CIN | rows absent | `GSTIN <n>` / `CIN <n>` — verified by temporarily resolving `brand.legal` and reverting |
+
+`document.querySelector("footer").innerText.includes("{{")` was **false** in
+every one of those states, and no `href` ever carried a token.
+
+### The newsletter contract is untouched
+
+`isEmailValid()` gate → `apiService.leads.createNewsletter(email)` → success or
+error, with the six-second revert to the field. Only the copy changed
+("Letters from LAMIKAA" → **"Stay close to the farm"**, and the note to "New
+products, farm stories and the occasional offer — no noise."). Verified live in
+mock mode: an invalid address set `aria-invalid="true"` and a `role="alert"`
+line (`aria-describedby` then naming both the note and the error), typing
+cleared it, and a valid address wrote lead **id 3** as
+`{ type: "newsletter", status: "subscribed" }` — the shape Admin → Leads
+renders. `db.json` was reverted afterwards and is untouched in this commit.
+
+### Deletions
+
+- `src/components/Newsletter/{Newsletter.js,Newsletter.module.css}` —
+  `grep -rn "components/Newsletter" src --include=*.js` was **0** before the
+  delete and is **0** after. It was a second, worse copy of this same flow.
+- `FREE_SHIPPING_THRESHOLD` in `constants.js`, and its dead
+  `?? positive(FREE_SHIPPING_THRESHOLD)` fallback in `fillStoreCopy`. The
+  `{freeShipping}` handling **stays** — FAQ 6 still carries the token and still
+  loses its whole sentence while no shipping method sets `freeAbove`.
+  `grep -rn "FREE_SHIPPING_THRESHOLD" src` returns **2**, both the
+  `{{FREE_SHIPPING_THRESHOLD}}` placeholder STRING (`brand.js:109`, and
+  `storeSettings.js:183` where `fillStoreCopy` emits it).
+- The old footer's four `--sf-footer-*` aliases over
+  `--sf-color-brand-green-deep`, which the band no longer needs now that its
+  ground is a first-class token.
+
+### New: `src/components/brand/LegalNote.{js,module.css}`
+
+Takes no `children` and no text prop on purpose — a caller that could pass its
+own string is a caller that can drop a legal qualifier (BRAND.md §3.9 rule 2).
+It renders `brand.legalNote` verbatim behind a small gold leaf (`aria-hidden`),
+with a `compact` variant for a tight slot. Prompts 17, 25 and 28 reuse it.
+
+### Accessibility
+
+- Outline: `h2` "LAMIKAA NATURALS" (visually hidden, `id="footer-heading"`,
+  `aria-labelledby` on the `<footer>`) → four `h3`. Identical at every width:
+  the accordion is given `headingLevel="h3"`. The wordmark carries `alt=""`, so
+  the brand is announced once, not twice.
+- Landmarks: four `<nav aria-labelledby>` above 480px; one
+  `<nav aria-label="Footer directory">` at or below it. The colophon is
+  deliberately NOT a landmark — its four links are the Help column again.
+- The disclosures come from `ui/Accordion`: real `<button>`s in headings with
+  `aria-expanded` / `aria-controls`, `role="region"` panels, ArrowUp/Down/Home/
+  End between headers, and `visibility: hidden` on a collapsed panel so its
+  links leave the tab order. `multiple`, `defaultOpen` unset → all closed.
+- Newsletter: labelled field, `aria-describedby` to the note (and to the error
+  when there is one), `aria-invalid`, `role="alert"` on the error and
+  `role="status"` on the success line.
+- Social links carry the platform name as `aria-label`; the payment SVGs are
+  `role="img"` with their own labels.
+- 44px everywhere: disclosure rows and social circles are 44px in the flow;
+  the small type in the columns, the colophon and the contact block takes an
+  invisible 44px band under `@media (pointer: coarse)`.
+
+### Browser QA (Chromium 1194, mock mode, `npm run dev`)
+
+360 · 390 · 414 · 480 · 768 · 1024 · 1280 · 1440.
+
+- **No horizontal scroll at any width** (`scrollWidth === clientWidth` at all
+  eight). `.footer { overflow-x: clip }` is what holds the `.sf-glow` bleed in —
+  `clip`, not `hidden`, so no scroll container is created.
+- Ground measured `rgb(20, 20, 22)` = `--sf-color-surface`.
+- ≤480: four `button[aria-expanded="false"]`, one nav. ≥768: zero buttons,
+  four navs. The wordmark paints 160px at ≤480 and 220px from 768.
+- Contrast over the band, measured: eyebrow **12.99:1**, column link
+  **9.00:1**, contact row **9.00:1**, colophon and micro-links **7.00:1**,
+  tagline **16.89:1**. Floor 7.00:1, all clear of 4.5:1.
+- Tagline measured **28px** at 1280 (`--sf-text-xl` at the top of its clamp) —
+  the spec figure, from the token rather than a literal.
+- `prefers-reduced-motion: reduce` zeroes the link underline's transition
+  (`0s, 0s` vs `0.32s, 0.16s`); the token layer does it, nothing here re-asks.
+- At ≤768 the colophon reserves `64px + 32px + env(safe-area-inset-bottom)` so
+  the fixed `BottomNav` never covers the last line.
+- The console errors in the sandbox are `ERR_CONNECTION_RESET` on
+  `res.cloudinary.com` and the Iconify API — network, not the app (the wordmark
+  and the accordion chevrons are the only things affected, and both are served
+  in a normal environment). Carried from Prompt 11's TODO.
+
+### Verification
+
+`CI=true npm run build` → **Compiled successfully**, exit 0, no warnings.
+`npm test -- --watchAll=false` → exit 0, **6 suites passed / 1 skipped, 61
+passed / 50 skipped of 111**.
+`test ! -d src/components/Newsletter` → true.
+`grep -rn "Letters from the loom\|Authentic Assamese\|Sualkuchi" src/components/Footer` → **0**
+(and 0 for "Meghali" and "silk" across `Footer/` and `brand/LegalNote.js`).
+`grep -rn "FREE_SHIPPING_THRESHOLD" src | wc -l` → **2**, both the placeholder
+token string.
+`db.json`, `src/services/api.js` and every admin screen are **untouched** — this
+prompt reads two existing storefront endpoints and writes through one existing
+lead endpoint. No dependency added.
+

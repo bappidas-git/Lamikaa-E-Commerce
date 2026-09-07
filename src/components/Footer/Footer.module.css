@@ -1,124 +1,151 @@
 /* =============================================================================
- * Footer — LAMIKAA NATURALS editorial close
+ * Footer — the LAMIKAA close
  * =============================================================================
- * One deep band closing the ivory page, in FOUR quiet strips: the invitation
- * (newsletter), the grid (wordmark + columns), the promises hairline, and the
- * colophon. Type is ivory, gold is seasoning, rules are hairlines — the same
- * grammar as the masthead, inverted.
+ * One room on --sf-color-surface, a shade above the page ground, opened by a
+ * signature hairline and divided into four bands by plain ones. Gold is
+ * seasoning (eyebrows, the leaf, hover), type is warm white over secondary, and
+ * the only motion is a hairline growing in under a link.
  *
- * WHY THE BAND IS PINNED
- *   The footer band is its own room, not a tint of the page: pointing the
- *   ground at --sf-color-brand-green-deep pins it to the deepest ground in the
- *   palette regardless of what surface tokens a future section uses around it.
+ * ONE GRID, TWICE
+ *   --sf-footer-grid is declared on .footer and consumed by BOTH the invitation
+ *   band and the directory band, so the newsletter starts exactly where the
+ *   link columns start and the ownership note sits exactly under the wordmark.
+ *   Four steps, mobile first:
+ *     base      one column          (phone; the columns are disclosures)
+ *     481px     two columns         (brand rows span, link columns 2x2)
+ *     1024px    1.2fr + 4, 32px gap
+ *     1280px    1.6fr + 4, 48px gap
  *
- * THE FOOTER-SCOPED ALIASES
- *   The footer re-derives its own small palette on top of the pinned ground —
- *   the warm-white --sf-color-text, mixed down for the quieter tiers — and pins
- *   --sf-shadow-focus so the shared .sf-btn focus ring reads on it. These are
- *   aliases over existing tokens: still no hardcoded hex anywhere. Every tier
- *   clears 6:1 on this ground.
+ * THE GLOW BLEEDS, SO THE FOOTER CLIPS. `.sf-glow::before` extends past its box
+ * by design (DESIGN_SYSTEM.md §7); `overflow-x: clip` on .footer keeps that
+ * bleed from becoming document overflow, and `clip` rather than `hidden` so no
+ * scroll container is created.
+ *
+ * NO HARD-CODED COLOUR, DURATION OR FONT lives in this file. The payment marks
+ * carry the networks' own hexes and they are inline in the component, where the
+ * exception is documented.
  * ========================================================================== */
 
 .footer {
-  --sf-footer-ground: var(--sf-color-brand-green-deep);
-  --sf-footer-ink: var(--sf-color-text);
-  --sf-footer-ink-soft: color-mix(in srgb, var(--sf-color-text) 72%, transparent);
-  --sf-footer-ink-faint: color-mix(in srgb, var(--sf-color-text) 52%, transparent);
-  --sf-footer-rule: color-mix(in srgb, var(--sf-color-text) 14%, transparent);
-  --sf-footer-rule-soft: color-mix(in srgb, var(--sf-color-text) 8%, transparent);
-  --sf-footer-gold: var(--sf-color-gold);
-  --sf-footer-gold-hi: var(--sf-color-gold-light);
-  /* Overrides the global ring for everything inside the footer, so the gap
-     layer is the band itself rather than the page ivory. */
-  --sf-shadow-focus: 0 0 0 2px var(--sf-footer-ground),
-    0 0 0 4px var(--sf-footer-gold-hi);
+  --sf-footer-grid: minmax(0, 1fr);
+  --sf-footer-gap: var(--sf-space-8);
 
   position: relative;
   margin-top: auto;
-  background: var(--sf-footer-ground);
-  color: var(--sf-footer-ink-soft);
+  overflow-x: clip;
+  background: var(--sf-color-surface);
+  color: var(--sf-color-text-secondary);
   font-family: var(--sf-font-family);
 }
 
-/* A single gold hairline is the whole transition from page to close. */
-.footer::before {
-  content: "";
-  display: block;
-  height: 1px;
-  background: var(--sf-gradient-gold);
-  opacity: 0.55;
+/* Each band is a full-bleed strip; the container inside it holds the grid. */
+.band + .band,
+.colophon {
+  border-top: 1px solid var(--sf-color-border);
 }
 
-.container {
-  max-width: var(--sf-container-max);
-  margin: 0 auto;
-  padding: 0 var(--sf-space-6);
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.grid {
+  display: grid;
+  grid-template-columns: var(--sf-footer-grid);
+  gap: var(--sf-footer-gap);
 }
 
 /* =============================================================================
- * 1. THE INVITATION  —  serif line left, one hairline input row right
+ * 1. THE INVITATION
  * ========================================================================== */
 
 .invitation {
-  border-bottom: 1px solid var(--sf-footer-rule);
+  /* The section rhythm at the top of the close, half of it below — the
+     directory continues the thought rather than starting a new one. */
+  padding: var(--sf-section-y) 0 calc(var(--sf-section-y) * 0.45);
+  /* A lamp, not a light: the tone is set by .sf-glow--violet in the markup and
+     this is the whole of its intensity. */
+  --sf-glow-opacity: 0.12;
 }
 
-.invitationInner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: end;
-  gap: var(--sf-space-10);
-  padding: var(--sf-space-16) 0 var(--sf-space-12);
+/* Desktop only. Below 1024px the lamp is a blurred layer nobody reads, on the
+   devices least able to afford one — so it is not painted at all. Two classes
+   deep so this outranks `.sf-glow::before` whichever order the primitive sheet
+   and this module land in. */
+.footer .invitation::before {
+  display: none;
 }
 
-.eyebrow {
-  margin: 0 0 var(--sf-space-4);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  letter-spacing: var(--sf-tracking-wider);
-  text-transform: uppercase;
-  color: var(--sf-footer-gold);
+@media (min-width: 1024px) {
+  .footer .invitation::before {
+    display: block;
+  }
 }
 
-.invitationTitle {
-  margin: 0;
+.brandBlock {
+  min-width: 0;
+}
+
+.wordmark {
+  /* <Logo> writes width/height attributes for the 220px slot, so the box is
+     reserved before the art lands (CLS) and `height: auto` keeps the aspect. */
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+}
+
+.tagline {
+  margin: var(--sf-space-6) 0 0;
+  max-width: 22ch;
   font-family: var(--sf-font-display);
-  font-size: var(--sf-text-3xl);
+  /* --sf-text-xl is 22px on the narrowest phone and settles at 28px from about
+     1000px — the two figures the spec asks for, without a media query. */
+  font-size: var(--sf-text-xl);
   font-weight: var(--sf-font-normal);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
-  color: var(--sf-footer-ink);
+  color: var(--sf-color-text);
 }
 
-.invitationNote {
-  max-width: 46ch;
+.signature {
   margin: var(--sf-space-4) 0 0;
+  max-width: 34ch;
   font-size: var(--sf-text-sm);
   line-height: var(--sf-leading-relaxed);
-  color: var(--sf-footer-ink-soft);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- Newsletter --------------------------------------------------------- */
+
+.newsletter {
+  min-width: 0;
+}
+
+/* The column-heading voice, shared by the newsletter label and the four
+   directory headings: gold, tracked, 12px, upper case. */
+.eyebrow {
+  margin: 0 0 var(--sf-space-3);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sf-color-gold);
+}
+
+.newsletterNote {
+  max-width: 46ch;
+  margin: 0 0 var(--sf-space-5);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
 }
 
 .form {
   margin: 0;
 }
 
-/* Hairline underline field + the primary button, sharing one baseline rule. */
+/* Hairline field + pill button, sharing one baseline. */
 .field {
   display: flex;
   align-items: stretch;
-  gap: var(--sf-space-4);
+  gap: var(--sf-space-3);
+  max-width: 34rem;
 }
 
 .input {
@@ -127,27 +154,27 @@
   min-height: var(--sf-tap-target);
   padding: var(--sf-space-2) 0;
   border: 0;
-  border-bottom: 1px solid var(--sf-footer-rule);
+  border-bottom: 1px solid var(--sf-color-border);
   border-radius: 0;
   background: transparent;
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-base);
-  color: var(--sf-footer-ink);
+  color: var(--sf-color-text);
   outline: none;
   transition: border-color var(--sf-transition-fast);
 }
 
 .input::placeholder {
-  color: var(--sf-footer-ink-faint);
+  color: var(--sf-color-text-muted);
 }
 
 .input:hover,
 .input:focus {
-  border-bottom-color: var(--sf-footer-gold);
+  border-bottom-color: var(--sf-color-gold);
 }
 
 .input:disabled {
-  color: var(--sf-footer-ink-faint);
+  color: var(--sf-color-text-muted);
   cursor: not-allowed;
 }
 
@@ -155,22 +182,8 @@
   border-bottom-color: var(--sf-color-danger);
 }
 
-/* The shared .sf-btn shape with the footer's primary skin. The global
-   `--emerald` modifier can't be used here: in light mode its fill is the same
-   near-black as this band, so the button would disappear. Ivory fill, band-
-   coloured label — the inverse of the page CTA, which is exactly what a dark
-   band wants. Scoped through .footer so it outranks the primitive's own
-   `background: transparent` whichever order the two sheets land in. */
-.footer .submitBtn {
+.submit {
   flex-shrink: 0;
-  background-color: var(--sf-footer-ink);
-  border-color: var(--sf-footer-ink);
-  color: var(--sf-footer-ground);
-}
-
-.footer .submitBtn:hover:not(:disabled) {
-  background-color: var(--sf-footer-gold-hi);
-  border-color: var(--sf-footer-gold-hi);
 }
 
 .formError,
@@ -184,140 +197,29 @@
   color: var(--sf-color-danger);
 }
 
-/* Success replaces the form entirely — one serif line, no chrome. */
+/* Success replaces the form entirely — one line, no chrome. */
 .formSuccess {
   margin: 0;
-  align-self: end;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-xl);
   font-style: italic;
-  color: var(--sf-footer-gold-hi);
+  color: var(--sf-color-gold-light);
 }
 
 /* =============================================================================
- * 2. THE GRID  —  brand block + four link columns
+ * 2. THE DIRECTORY
  * ========================================================================== */
 
-.main {
-  border-bottom: 1px solid var(--sf-footer-rule);
+.directory {
+  padding: calc(var(--sf-section-y) * 0.45) 0;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) repeat(4, minmax(0, 1fr));
-  gap: var(--sf-space-10);
-  padding: var(--sf-space-16) 0;
-}
-
-.brandCol {
-  min-width: 0;
-  padding-right: var(--sf-space-8);
-}
-
-/* Transparent-ground white art straight on the band — no plate, no box. */
-.logo {
-  display: block;
-  height: 48px;
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-}
-
-.brandLine {
-  margin: var(--sf-space-6) 0 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-xl);
-  font-style: italic;
-  font-weight: var(--sf-font-normal);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-footer-ink);
-}
-
-.brandNote {
-  max-width: 34ch;
-  margin: var(--sf-space-3) 0 0;
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-footer-ink-soft);
-}
-
-/* ---- Contact ------------------------------------------------------------ */
-/* Tracked micro-label above each value; a definition list because that is what
-   it is. */
-.contact {
-  margin: var(--sf-space-8) 0 0;
-}
-
-.contactLabel {
-  margin: 0 0 var(--sf-space-1);
-  font-size: var(--sf-text-xs);
-  letter-spacing: var(--sf-tracking-wide);
-  text-transform: uppercase;
-  color: var(--sf-footer-ink-faint);
-}
-
-.contactValue {
-  max-width: 34ch;
-  margin: 0 0 var(--sf-space-4);
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-normal);
-  color: var(--sf-footer-ink-soft);
-}
-
-.contactValue:last-child {
-  margin-bottom: 0;
-}
-
-.contactLink {
-  color: var(--sf-footer-ink);
-  text-decoration: none;
-  transition: color var(--sf-transition-fast);
-}
-
-.contactLink:hover {
-  color: var(--sf-footer-gold-hi);
-}
-
-/* ---- Social ------------------------------------------------------------- */
-/* Quiet marks in a row — no chips, no fills. The negative margin pulls the row
-   back to the text edge while each hit area still clears 44px. */
-.social {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sf-space-1);
-  margin: var(--sf-space-8) calc(var(--sf-space-3) * -1) 0;
-}
-
-.socialLink {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--sf-tap-target);
-  height: var(--sf-tap-target);
-  border-radius: var(--sf-radius-sm);
-  color: var(--sf-footer-ink-soft);
-  text-decoration: none;
-  transition: color var(--sf-transition-fast);
-}
-
-.socialLink:hover {
-  color: var(--sf-footer-gold-hi);
-}
-
-/* ---- Link columns ------------------------------------------------------- */
-.linkCol {
+.legalNote {
   min-width: 0;
 }
 
-.colTitle {
-  margin: 0 0 var(--sf-space-5);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  letter-spacing: var(--sf-tracking-wider);
-  text-transform: uppercase;
-  color: var(--sf-footer-gold);
+.column {
+  min-width: 0;
 }
 
 .linkList {
@@ -329,68 +231,134 @@
   gap: var(--sf-space-3);
 }
 
-/* The only motion in the footer: a hairline growing in under the label. */
+/* The only motion in the close: a hairline growing in under the label. */
 .footerLink {
-  display: inline;
-  color: var(--sf-footer-ink-soft);
+  display: inline-block;
+  color: var(--sf-color-text-secondary);
   font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
   line-height: var(--sf-leading-normal);
   text-decoration: none;
-  background-image: linear-gradient(currentColor, currentColor);
+  background-image: var(--sf-gradient-gold);
   background-repeat: no-repeat;
   background-position: 0 100%;
   background-size: 0% 1px;
-  transition: background-size var(--sf-transition), color var(--sf-transition-fast);
+  transition: background-size var(--sf-transition),
+    color var(--sf-transition-fast);
 }
 
 .footerLink:hover {
-  color: var(--sf-footer-ink);
+  color: var(--sf-color-gold);
   background-size: 100% 1px;
 }
 
-/* =============================================================================
- * 3. THE PROMISES  —  store-attested policy + accepted payment marks
- * ========================================================================== */
-
-.trustBar {
-  border-bottom: 1px solid var(--sf-footer-rule);
+/* The phone's disclosure stack spans the single column and takes the row rules
+   the accordion primitive already draws, so no second set is added here. */
+.disclosures {
+  min-width: 0;
+  grid-column: 1 / -1;
 }
 
-.trustInner {
+/* Inside a panel the rows are thumb-driven: 44px each, edge to edge. */
+.disclosures .linkList {
+  gap: 0;
+}
+
+.disclosures .footerLink {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--sf-space-6) var(--sf-space-10);
-  padding: var(--sf-space-5) 0;
+  min-height: var(--sf-tap-target);
+  font-size: var(--sf-text-base);
 }
 
-.trustList {
+/* =============================================================================
+ * 3. CONTACT, SOCIAL AND PAYMENT
+ * ========================================================================== */
+
+.assurances {
+  padding: var(--sf-space-8) 0;
+}
+
+.assurancesInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-6) var(--sf-space-10);
+}
+
+.reach {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-4) var(--sf-space-8);
+  min-width: 0;
+}
+
+/* <address> is italic by default in every UA sheet, and this is a contact
+   block rather than an aside. */
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-2) var(--sf-space-6);
+  margin: 0;
+  font-style: normal;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+.contactRow {
+  min-width: 0;
+}
+
+.contactLink {
+  color: var(--sf-color-text-secondary);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+.contactLink:hover {
+  color: var(--sf-color-gold);
+}
+
+/* ---- Social ------------------------------------------------------------- */
+/* 44px circles in the glass PALETTE, deliberately without a backdrop filter:
+   the footer ground is opaque, so a blur would produce identical pixels at real
+   GPU cost, and the sticky glass masthead already owns a layer of the two the
+   blur budget allows (DESIGN_SYSTEM.md §4). */
+.social {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--sf-space-3) var(--sf-space-8);
+  gap: var(--sf-space-2);
   margin: 0;
   padding: 0;
 }
 
-.trustItem {
+.socialLink {
   display: inline-flex;
   align-items: center;
-  gap: var(--sf-space-2);
-  font-size: var(--sf-text-xs);
-  letter-spacing: var(--sf-tracking-wide);
-  text-transform: uppercase;
-  color: var(--sf-footer-ink-soft);
-  white-space: nowrap;
+  justify-content: center;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-glass-bg);
+  color: var(--sf-color-text-secondary);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast);
 }
 
-.trustIcon {
-  flex-shrink: 0;
-  color: var(--sf-footer-gold);
+.socialLink:hover {
+  color: var(--sf-color-gold);
+  border-color: var(--sf-color-border-strong);
 }
 
+/* ---- Payment marks ------------------------------------------------------ */
 .payments {
   display: flex;
   align-items: center;
@@ -401,32 +369,32 @@
   font-size: var(--sf-text-xs);
   letter-spacing: var(--sf-tracking-wide);
   text-transform: uppercase;
-  color: var(--sf-footer-ink-faint);
+  color: var(--sf-color-text-muted);
   white-space: nowrap;
 }
 
-.paymentIcons {
+/* The marks are a footnote, not a feature: held at 60% so their brand colours
+   never out-shout the products above them. */
+.paymentMarks {
   display: flex;
   align-items: center;
   gap: var(--sf-space-2);
+  opacity: 0.6;
 }
 
-/* A hairline frame so the darker marks (Visa navy, Mastercard black) still read
-   as chips against the band. The marks' own colours are never touched. */
-.paymentBadge {
+.paymentMark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--sf-footer-rule);
+  border: 1px solid var(--sf-color-border);
   border-radius: var(--sf-radius-sm);
   padding: 2px;
   overflow: hidden;
 }
 
-/* Replaces the fontFamily="Arial" literals that used to sit on the <text>
-   nodes: SVG text inherits from here, so the marks are set in the storefront
-   face like everything else. */
-.paymentBadge text {
+/* SVG <text> inherits from here, so the marks are set in the storefront face
+   and no font literal is needed on the nodes themselves. */
+.paymentMark text {
   font-family: var(--sf-font-family);
 }
 
@@ -434,124 +402,73 @@
  * 4. THE COLOPHON
  * ========================================================================== */
 
-.bottomInner {
+.colophon {
+  padding: var(--sf-space-6) 0 var(--sf-space-8);
+}
+
+.colophonInner {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--sf-space-3) var(--sf-space-6);
-  padding: var(--sf-space-5) 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sf-space-4) var(--sf-space-6);
 }
 
 .copyright {
+  min-width: 0;
+}
+
+.copyLine {
   margin: 0;
   font-size: var(--sf-text-xs);
   letter-spacing: var(--sf-tracking-wide);
-  line-height: var(--sf-leading-normal);
-  color: var(--sf-footer-ink-faint);
+  line-height: var(--sf-leading-relaxed);
+  /* rgba(247,245,240,.62) over --sf-color-surface measures 7.0:1 — clear of the
+     4.5:1 floor even at this size, and it is the quietest tier in the band. */
+  color: var(--sf-color-text-muted);
 }
 
-.policyDate {
-  color: var(--sf-footer-ink-faint);
-}
-
-.legalLinks {
+.microLinks {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sf-space-2) var(--sf-space-6);
 }
 
-.legalLink {
+.microLink {
   font-size: var(--sf-text-xs);
   letter-spacing: var(--sf-tracking-wide);
-  color: var(--sf-footer-ink-faint);
+  color: var(--sf-color-text-muted);
   text-decoration: none;
   transition: color var(--sf-transition-fast);
 }
 
-.legalLink:hover {
-  color: var(--sf-footer-gold-hi);
+.microLink:hover {
+  color: var(--sf-color-gold);
 }
 
 /* =============================================================================
- * RESPONSIVE
+ * FOCUS
  * ========================================================================== */
 
-/* ---- Tablet: brand block spans, links go four-across beneath it ---------- */
-@media (max-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--sf-space-10) var(--sf-space-8);
-    padding: var(--sf-space-12) 0;
-  }
-
-  .brandCol {
-    grid-column: 1 / -1;
-    padding-right: 0;
-  }
-
-  .brandNote,
-  .contactValue {
-    max-width: 52ch;
-  }
-
-  .invitationInner {
-    padding: var(--sf-space-12) 0 var(--sf-space-10);
-  }
+.footerLink:focus-visible,
+.microLink:focus-visible,
+.contactLink:focus-visible,
+.socialLink:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--sf-color-focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--sf-radius-sm);
 }
 
-/* ---- Small tablet: the invitation stacks, links go two-across ------------ */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 var(--sf-space-4);
-  }
+/* =============================================================================
+ * RESPONSIVE  (mobile first)
+ * ========================================================================== */
 
-  .invitationInner {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    gap: var(--sf-space-6);
-  }
-
-  .invitationTitle {
-    font-size: var(--sf-text-2xl);
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  /* Hairline dividers between the stacked groups (the columns are still real
-     columns — links stay visible and crawlable, never collapsed away). */
-  .linkCol {
-    padding-top: var(--sf-space-6);
-    border-top: 1px solid var(--sf-footer-rule-soft);
-  }
-
-  /* Comfortable rows once the columns are thumb-driven. */
-  .footerLink,
-  .legalLink,
-  .contactLink {
-    display: inline-block;
-    padding: var(--sf-space-1) 0;
-  }
-
-  .trustInner,
-  .bottomInner {
-    justify-content: flex-start;
-  }
-
-  /* The footer is the last element on the page, so IT has to clear the fixed
-     mobile BottomNav dock (70px) plus the iOS safe area. */
-  .bottomInner {
-    padding-bottom: calc(70px + var(--sf-space-5) + env(safe-area-inset-bottom));
-  }
-}
-
-/* ---- Phone: one column throughout --------------------------------------- */
-@media (max-width: 520px) {
-  .invitationInner {
-    padding: var(--sf-space-10) 0 var(--sf-space-8);
+/* ---- Phone ≤480: single column, disclosures, and room for the tab bar ---- */
+@media (max-width: 480px) {
+  .wordmark {
+    width: 160px;
   }
 
   .field {
@@ -559,49 +476,71 @@
     align-items: stretch;
     gap: var(--sf-space-4);
   }
+}
 
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sf-space-8);
-    padding: var(--sf-space-10) 0;
+/* ---- Small tablet and large phone: two tracks --------------------------- */
+@media (min-width: 481px) {
+  .footer {
+    --sf-footer-grid: repeat(2, minmax(0, 1fr));
   }
 
-  .trustList {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--sf-space-3);
-  }
-
-  .payments {
-    flex-wrap: wrap;
-    gap: var(--sf-space-3);
+  /* The brand rows own a full row of their own; the four link columns pair up
+     beneath them, 2 x 2. */
+  .brandBlock,
+  .newsletter,
+  .legalNote {
+    grid-column: 1 / -1;
   }
 }
 
-/* =============================================================================
- * FOCUS  —  the global ring's ivory gap layer is wrong on this band, so the
- * footer paints its own: gold, offset, always visible. (.sf-btn keeps the
- * primitive's box-shadow ring, which the pinned --sf-shadow-focus above has
- * already re-grounded to the band.)
- * ========================================================================== */
+/* ---- Desktop: the wide first track and four columns --------------------- */
+@media (min-width: 1024px) {
+  .footer {
+    --sf-footer-grid: 1.2fr repeat(4, minmax(0, 1fr));
+    --sf-footer-gap: var(--sf-space-8);
+  }
 
-.footerLink:focus-visible,
-.legalLink:focus-visible,
-.contactLink:focus-visible,
-.socialLink:focus-visible,
-.input:focus-visible {
-  outline: 2px solid var(--sf-footer-gold-hi);
-  outline-offset: 3px;
-  border-radius: var(--sf-radius-sm);
+  .brandBlock,
+  .legalNote {
+    grid-column: 1;
+  }
+
+  /* The newsletter starts one track in from the link columns, so the field has
+     room to be a field rather than a slot. */
+  .newsletter {
+    grid-column: 3 / -1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .footer {
+    --sf-footer-grid: 1.6fr repeat(4, minmax(0, 1fr));
+    --sf-footer-gap: var(--sf-space-12);
+  }
+}
+
+/* ---- The tab bar's room -------------------------------------------------
+   The footer is the last element on the page, so IT has to clear the fixed
+   BottomNav (64px of tab row, shown up to 768px) plus the home indicator. */
+@media (max-width: 768px) {
+  .colophon {
+    padding-bottom: calc(
+      64px + var(--sf-space-8) + env(safe-area-inset-bottom)
+    );
+  }
+
+  .assurancesInner,
+  .colophonInner {
+    justify-content: flex-start;
+  }
 }
 
 /* =============================================================================
  * TOUCH TARGETS
- * The close is a directory of small type — 26–29px tall links at 12–14px. On a
- * coarse pointer each one takes an invisible 44px band (WCAG 2.5.5). The bands
- * would otherwise touch, so the two stacked lists open their row gap by one
- * step first: the type moves 3–4px, the tap area doubles. `.socialLink` is
- * already a 44px square and needs nothing.
+ * The close is a directory of small type. On a coarse pointer every link takes
+ * an invisible 44px band (WCAG 2.5.5); the lists open their row gap by one step
+ * first so the bands cannot overlap. The disclosure rows and .socialLink are
+ * already 44px and are left alone.
  * ========================================================================== */
 
 @media (pointer: coarse) {
@@ -609,18 +548,19 @@
     gap: var(--sf-space-4);
   }
 
-  .legalLinks {
+  .microLinks,
+  .contact {
     gap: var(--sf-space-5) var(--sf-space-6);
   }
 
   .footerLink,
-  .legalLink,
+  .microLink,
   .contactLink {
     position: relative;
   }
 
   .footerLink::before,
-  .legalLink::before,
+  .microLink::before,
   .contactLink::before {
     content: "";
     position: absolute;
@@ -629,5 +569,15 @@
     top: 50%;
     height: var(--sf-tap-target);
     transform: translateY(-50%);
+  }
+
+  /* Inside a disclosure the row IS the target, so the invisible band above
+     would only overlap its neighbours. */
+  .disclosures .linkList {
+    gap: 0;
+  }
+
+  .disclosures .footerLink::before {
+    content: none;
   }
 }
