@@ -745,6 +745,89 @@ the shop page (Prompt 23) will reuse.
   are in `PACKAGING_NOTES.md` §2 and `PRODUCTS.md` §2; the live backend must be
   reseeded from those values.
 
+**Updated by Prompt 17.** The About LAMIKAA band on the home page, and the
+value-chain stepper the About and Why LAMIKAA pages (Prompts 20, 28) reuse.
+
+- `brand/ValueChain.js` (153) + `.module.css` (296) + `.test.js` (79) — **new**.
+  BRAND.md §3.3's journey, drawn: Farmer → FPC → Value Addition → LAMIKAA
+  Naturals → Consumer → Profit → Farmer Members.
+  **Contract:** `steps` (default `brand.valueChain`; a caller may pass a SHORTER
+  run of the same list, never a different one) · `orientation`
+  `"auto" | "horizontal" | "vertical"` · `compact` · `label` (the list's
+  accessible name, default "How value reaches farmers") · `className` · rest
+  spread onto the `<ol>`.
+  **Markup:** `<ol role="list" aria-label=…>` of `motion.li`, each a
+  `Chip variant="step"` numeral ("01"–"07"), a 14px Manrope 600 label and — on
+  every step but the last — a gradient hairline connector with an 8px arrow,
+  both `aria-hidden`. `role="list"` is the Safari/VoiceOver repair for
+  `list-style: none`, which is removed because the numerals ARE the markers.
+  **Nothing in it is focusable** — the chain adds no tab stops (verified: the
+  About band's only stop is its CTA), and it reads as seven ordered items,
+  "01 Farmer" … "07 Farmer Members".
+  **Layout is CSS, not measurement.** `auto` = a single row ≥1025px, two rows of
+  4 + 3 at 769–1024px (a four-track grid; seven items fill it 4 + 3, and the
+  fourth connector is kept — it runs to the row's edge and the fifth step opens
+  the next), vertical ≤768px (a 40px rail, 48px rows, the connector down the
+  left). `horizontal` and `vertical` pin one of those; forced `horizontal`
+  WRAPS rather than overflowing.
+  **Every distance is a custom property on the list** (`--vc-numeral` 32px,
+  `--vc-row` 48px, `--vc-rail` 40px, `--vc-link` 24px, `--vc-link-max` 48px), so
+  `compact` is four value changes rather than a second stylesheet.
+  **Two measurements worth keeping:** the vertical connector's
+  `margin-block: calc((var(--vc-numeral) - var(--vc-row)) / 2)` pulls its ends
+  onto the two circles it joins, so the line touches both instead of floating
+  between them; and in the horizontal layouts the connector's flex BASIS is its
+  floor (`flex: 1 1 var(--vc-link)`, `max-width: var(--vc-link-max)`) while the
+  steps grow — measured 24px at 1025px, 28px at 1100, 44px at 1200, 48px from
+  1366 up. The label carries `overflow-wrap: break-word` to undo the global
+  `overflow-wrap: anywhere` on `li` (index.css), which otherwise let flex shrink
+  split "FPC" over two lines; its automatic minimum then stops a step being
+  squeezed narrower than the word it names, so a tight row wraps the three long
+  labels at their spaces and never overflows.
+  **Motion:** `reveal(reduce, { index, inView: true, amount: 0.4 })` per step —
+  a left-to-right wave, settled in ~0.7s — PLUS `animate: { opacity: 0, y:
+  RISE.reveal }` as the resting state. **That second prop is load-bearing:**
+  App.js wraps every route in `<AnimatePresence mode="wait" initial={false}>`,
+  and `initial={false}` makes framer-motion ignore the `initial` prop of
+  anything present at the route's first paint, mounting it at its `animate`
+  state instead — so a `reveal(…, { inView: true })` on a component that ships
+  WITH the route (rather than mounting after a fetch, as the sections around it
+  do) silently never plays. Naming the resting state as `animate` too costs one
+  prop and makes the reveal behave the same on a cold load of `/` and on a click
+  through to it. Under reduced motion `reveal` returns `{}` and the resting
+  state is not applied either: seven finished steps on frame one, no style
+  attribute at all.
+  **Named exports, pure and unit-tested:** `stepNumeral(index)` (`0` → `"01"`)
+  and `isBrandStep(label)` — matched against `brand.runningName`/`name`/
+  `shortName` rather than by index, so a shorter `steps` run keeps the gold on
+  the right word.
+- `home/AboutTeaser.js` (176) + `.module.css` (121) — **new**. `SectionHeading`
+  ("About LAMIKAA" / the title as a Fraunces pull-quote at `--sf-text-3xl`,
+  `text-wrap: balance`, 24ch / `rule`), then a two-column body (`1fr 1.1fr`,
+  56px = `--sf-space-12 + --sf-space-2`, ≥1025px; stacked below), then
+  `ValueChain`, `LegalNote` and `Button variant="secondary"` → `/about`.
+  **Copy is DATA** — `siteContent.get("home")?.aboutTeaser` — and not one word of
+  it is typed in the component; only the section's own furniture (its eyebrow,
+  its CTA label) has defaults. **The fallback is thin on purpose:** a missing,
+  unpublished (`published === false`) or unreachable block leaves the quote
+  (`brand.signatureLines[3]`) and `LegalNote`, and the paragraphs and the image
+  do not render at all.
+  **`gradientWord` is FOUND, not pinned:** `gradientWordIndex(title)` locates
+  "farmers" past its punctuation, so an edited headline keeps the emphasis on
+  the right word — or, when the word is gone, on none.
+  **Media:** a plain `<img loading="lazy" alt="">` inside
+  `GlowWrap tone="gold" intensity={0.16}` on a `.sf-placeholder-media` box
+  (16/10, `--sf-radius-xl`) — NOT `CloudinaryImage`, because the placeholder is
+  a Picsum URL and a Cloudinary transform does not apply to it; `alt=""` because
+  describing a scene the brand has not photographed would be inventing one.
+  `overflow-x: clip` on the section is the guard for the lamp, which bleeds
+  ~11% past its box (110% inset plus its own 6% offset) and, on the stacked
+  layouts, past the viewport with it.
+  **Two named exports, pure and unit-tested:** `gradientWordIndex(title, word)`
+  and `teaserCopy(block)`.
+- `pages/Home/Home.js`: `<AboutTeaser/>` mounts directly after
+  `<ProductShowcase/>`. Sections 1–6 still follow; Prompt 22 replaces them.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.

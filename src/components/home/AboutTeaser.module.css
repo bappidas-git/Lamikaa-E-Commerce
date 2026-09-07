@@ -1,0 +1,121 @@
+/* =============================================================================
+ * AboutTeaser — the surface band between the product chapters
+ * =============================================================================
+ * The chapters above and the sections below sit on --sf-color-bg; this one sits
+ * on --sf-color-surface and runs the full viewport, so the story reads as a
+ * pause in the range rather than as one more spread. Nothing constrains a home
+ * section's width (see .homePage / .main-content), so a background colour here
+ * IS the full-bleed band; `.sf-container` inside it holds the measure.
+ * ========================================================================== */
+
+.section {
+  position: relative;
+  padding-block: var(--sf-section-y);
+  background-color: var(--sf-color-surface);
+  /* The lamp behind the photograph is meant to spill past it — that is what
+     makes it light rather than a border — and at 110% plus its own offset it
+     spills past the viewport too. `overflow-x: clip` takes the page's sideways
+     scroll away without making the band a scroll container, the same guard the
+     footer, the hero and the product chapters use. */
+  overflow-x: clip;
+}
+
+/* The title is the brand's own line, so it is set as a pull-quote rather than
+   as a section headline: one step up the display scale, a measure that breaks
+   it in two, and `balance` so the two lines are of a length rather than a long
+   one over a short one. */
+.heading h2 {
+  max-width: 24ch;
+  font-size: var(--sf-text-3xl);
+  text-wrap: balance;
+}
+
+/* ---- The two-column body -------------------------------------------------
+   Stacked everywhere below 1025px — image, then paragraphs, which is the order
+   the section is read in on a phone and the order it is written in here. */
+.body {
+  display: grid;
+  gap: var(--sf-space-8);
+}
+
+@media (min-width: 1025px) {
+  .body {
+    /* The copy column takes the wider share: the photograph is a placeholder,
+       the words are the point. 56px of gutter = --sf-space-12 + --sf-space-2;
+       every distance on the storefront comes off the token scale. */
+    grid-template-columns: 1fr 1.1fr;
+    gap: calc(var(--sf-space-12) + var(--sf-space-2));
+    align-items: center;
+  }
+}
+
+.mediaWrap {
+  min-width: 0;
+}
+
+.glow {
+  display: block;
+  border-radius: var(--sf-radius-xl);
+}
+
+/* `.sf-placeholder-media` supplies the desaturation and the bottom-weighted
+   wash and already clips its overflow; this is only the shape. */
+.media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--sf-radius-xl);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.copy,
+.copySkeleton {
+  min-width: 0;
+}
+
+/* ---- The value chain -----------------------------------------------------
+   Below the body and across the full measure: seven steps cannot be one row
+   inside a 1.1fr column at any desktop width, and one row from 1025px up is
+   the drawing. */
+.chain {
+  margin-top: var(--sf-space-12);
+}
+
+@media (min-width: 769px) {
+  .chain {
+    margin-top: var(--sf-space-16);
+  }
+}
+
+/* ---- The ownership sentence and the way through -------------------------- */
+.close {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-6);
+  margin-top: var(--sf-space-12);
+  padding-top: var(--sf-space-8);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+@media (min-width: 769px) {
+  .close {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sf-space-8);
+  }
+}
+
+.legalNote {
+  max-width: 78ch;
+}
+
+.cta {
+  flex: none;
+}

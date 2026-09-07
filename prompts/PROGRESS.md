@@ -20,7 +20,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 14 | Home hero product carousel | complete | 2026-09-07 | (this commit) | The admin banner hero is gone: `components/HeroSection/` is deleted and `components/home/HeroCarousel.js` (+`HeroIndex.js`, one shared `HeroCarousel.module.css`) opens the home page on **eight product slides** in `heroOrder` — label card on a duo-glow plate on one side, the product's own `heroHeadline`/`heroSubtext`, `Price`, Explore → PDP, Add to Cart (disabled **"Coming soon"** on the five `priceTBA` products) and its three trust chips on the other. Autoplay 6.5s with banked-time pause on hover / focus-within / hidden tab / the pause button / `body[data-drawer-open]`; swipe, ←/→, Home/End, the product-name index and a signature-gradient progress hairline. Media crossfades (600ms + 1.02→1) while the copy is rendered ONCE and swapped in place, so the page keeps a single `h1`. **Measured in Chromium at 360/390/414/768/1024/1280/1440**: LCP is the first label card (`loading=eager`, `fetchpriority=high`, `ar_1:1` ≤768 / `ar_4:5` above), CLS **0.040 at 390 and 0.029 at 1280 on load** and **0.004 / 0.003 across a full eight-slide walk** (the copy block measures itself against every slide — see the decisions), no horizontal overflow anywhere, zero console errors. Reduced motion: no autoplay, no breathe, no parallax, no progress bar, crossfade only, arrows + index kept. `heroConfig.js` gains `showPause` and a 3000–15000ms interval clamp (default 6500) and marks eleven slide-store exports `@deprecated — removed in Prompt 34`; `db.json` + Admin → Hero Section carry `showPause` in step. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (7 suites / 72 tests, +11 new). |
 | 15 | Trust strip and shop-by-category/concern | complete | 2026-09-07 | (this commit) | Three surfaces, one card contract. **`TrustStrip`** is rewritten as the hero's bottom edge: a `.sf-glass` band, 56px (48px ≤639px), four promises from the brand config — `brand.trustBadges` ×3 plus the new `brand.originBadge` ("Rooted in Assam & Northeast India", BRAND.md §3.1) — gold 20px Iconify glyphs, Manrope 600 13px, one `<ul aria-label="Our promises">`; it scrolls-and-snaps under 640px with edge fades and drops its backdrop blur entirely ≤768px. `Home.js` hangs it off the hero with `margin-top: -28px` at ≥769px and 0 below. **`home/ShopByCategory`** (new) + **`catalogue/CategoryCard`** (new, plus a `catalogue/index.js` barrel): SectionHeading "Shop by category / Find your **step** / Seven ways into the Black Rice range.", seven `GlassCard interactive glow="violet"` cards with a real product's label crop on a 1:1 `.sf-plate`, one-line description and a counted chip (Face Care 6 · Body Care 2 · Cleansers 3 · Serums **1 product** · Moisturizers & Mists 2 · Masks & Scrubs 2 · Rituals **3 rituals**), then the 11 concern chips as `Chip variant="concern" as={Link}` → `/shop?concern=…`. Grid 4+3 centred at ≥1280 (eight tracks, `span 2`, 5th card at track 2 — measured: both rows centre on 640px at a 1280 viewport), 3 at ≥1024, 2 at ≥481, a 76vw snap scroller ≤480. **`storefront/ProductCard`** is rebuilt on `GlassCard interactive glow="pink"` with the prop contract and the media→body→action DOM order intact: label plate (crop + `c_pad`, four-width srcSet, `sizes`), ritual step + ≤2 concern chips, Fraunces 20px name, `promise` clamped to 2 lines, `product.badges` as trust chips at 11px, `Price`, a 44px glass heart with `aria-pressed`, and `Button variant="addToCart" block` reading Add to Cart / Coming soon / Out of stock. **PREMIUM, `isPremium`/bridal, `truncateText(…,48)` and the "No ratings yet" line are gone**; stars appear only when `totalReviews > 0`. `TRUST_BADGE_CATALOG` gains `farmerOwned`/`organic`/`resultOriented` whose labels READ `brand.trustBadges[i]`, `STOREFRONT_CONFIG.trustBadges` becomes those three + `securePayment`, and `TrustBadges.js` gains the sprout/leaf/spark paths (and now drops a badge with no resolvable label). Home's old closing PROMISES row was **deleted** — the strip is that row, from the same config. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 9 suites / 85 passed (13 new). Browser QA at 360/390/414/768/1024/1280/1440 + a touch phone + reduced motion: 0 console errors, 0 horizontal scroll on 10 routes. See "Prompt 15 record" below. |
 | 16 | Home product showcase sections | complete | 2026-09-07 | (this commit) | Every product now has its own full editorial spread on the home page. **`catalogue/ProductChapter`** (new, shared with Prompt 23 through `variant`) renders `<section id data-chapter aria-labelledby class="sf-section">`: a `GlowWrap` (violet/pink by parity) around a 4:5 `.sf-plate` on one side and a `GlassCard` panel on the other carrying the 36px numeral chip, the ritual eyebrow, the `h2` name, the promise, the description at 52ch, up to five `keyIngredients` as glass chips, `product.badges` as trust chips, `fragranceNote`, `Price size="lg"` and the two 48px CTAs ("Explore more" → `productPath`, "Add to Cart" → `useCart().addToCart(buildCartItem(p),1)`, disabled as "Coming soon"/"Out of stock"). Desktop: media 42% at ≥769px then 1fr 1fr with a 64px gutter at ≥1280px, `flip` swapping the columns by `grid-column` so the DOM order stays media → words; the pack is `position: sticky; top: 112px` inside a grid floored at `min-height: 80svh`. Mobile: one column, pack first at 92vw, CTAs stacked full width ≤560px, and the panel drops its backdrop blur ≤768px. **`home/ProductShowcase`** (new) opens with one `SectionHeading` ("The Black Rice range" / "Eight steps. One **ritual.**" / the BRAND.md §3.1 lede) and then eight chapters with a hairline between them; `getHeroProducts()` with a `getAll()`+`heroOrder ?? 99` fallback, two skeleton chapters while loading, nothing at all on error. Mounted in `Home.js` right after `<ShopByCategory/>`. **Two fixes the browser found, both recorded in the decisions log:** a full-width 4:5 plate is exactly as tall as its own grid row, so the sticky never engaged until the pack was capped at `max-width: calc(0.8 * 62svh)`; and the plate's lamp bleeds 5% past its box, which widened the document by 22–69px until the section took `overflow-x: clip`. **Five `media[0].crop` rectangles corrected** after checking all eight at 4:5/900px against their originals — soap (white carton canvas at the foot), body wash (white in all four rounded corners), face mask (white rules at rows 0–8 and 397–400), face scrub (a 1px light-grey rim that made `b_auto` pad the whole frame light grey), face serum (the gold band ran edge to edge); face wash, face mist and moisturizer gel verified unchanged. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 10 suites / 95 passed (10 new). Browser QA at 360/390/414/768/1024/1280/1440: 8 chapters, **0 horizontal overflow at every width**, sticky measured at exactly 112px through 1440/1280/1024 and `static` on a phone, quick add opens the drawer with a toast, 5 TBA products disabled as "Coming soon", both CTAs keyboard-reachable per chapter, reduced motion static, **CLS 0.038 desktop / 0.040 mobile with every recorded shift attributed to the hero and header — none to a chapter**. See "Prompt 16 record" below. |
-| 17 | About LAMIKAA section and value-chain visual | pending | | | |
+| 17 | About LAMIKAA section and value-chain visual | complete | 2026-09-07 | (this commit) | The farmer-owned story now has a surface. **`brand/ValueChain`** draws BRAND.md §3.3's journey as a real `<ol role="list" aria-label="How value reaches farmers">` of seven `motion.li` — a 32px `Chip variant="step"` numeral, a 14px Manrope 600 label ("LAMIKAA Naturals" in gold, matched against `brand.runningName` rather than by index) and a 60%-opacity signature-gradient connector with an 8px arrow, `aria-hidden`. Three layouts from ONE markup: one row ≥1025px, 4 + 3 at 769–1024px, a 40px vertical rail ≤768px — **measured at 360/390/414/768/1024/1025/1060/1100/1200/1280/1366/1440/1920: rows 7/7/7/7/2/1/1/1/1/1/1/1/1, connectors 24→48px, no overflow at any of them and no element past the section's box.** Zero tab stops (the band's only stop is its CTA); the aria tree reads "01 Farmer" … "07 Farmer Members". **`home/AboutTeaser`** mounts it under the pull-quote, the placeholder landscape and the two BRAND.md §3.1 paragraphs, over `LegalNote` and "Our Story". **Not one word of company copy is in the component** — it is `siteContent.home.aboutTeaser`, and a missing/unpublished/unreachable block leaves only the signature line and the legal note (exercised by aborting the request: quote + chain + note + CTA, no image, no paragraphs). **Two real defects found and fixed in the browser, not by reading:** the global `overflow-wrap: anywhere` on `li` was inherited by the labels and let flex shrink split "FPC" over two lines; and `AnimatePresence initial={false}` in App.js silently disables `reveal(…, { inView: true })` for anything that ships with the route, so the chain landed finished — naming the resting state as `animate` as well restores the sequential wave (measured: opacity 0 → 1 across all seven over ~0.7s; under reduced motion, no style attribute at all, at any point). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (11 suites, **104 passed**, 9 new). Contrast on the band: labels 16.5:1, gold 13.0:1, legal note 9.0:1. |
 | 18 | Why Black Rice spotlight and rituals teaser | pending | | | |
 | 19 | Full-page CTA section | pending | | | |
 | 20 | Why LAMIKAA section (pillars and impact) | pending | | | |
@@ -227,6 +227,16 @@ Record every decision a prompt had to make that the reference files did not sett
 - `16 · 2026-09-07 · Five crop rectangles were corrected in `db.json`; three were verified and left alone · The showcase is the first surface that renders all eight crops large, and the estimates from the Phase-A review did not survive it. Soap: the last 21 rows fell past the gold band into the carton's WHITE canvas (a white stripe across the foot of the plate) -> `h_1248`. Body wash: the panel is a rounded rectangle on white and the old rectangle enclosed all four corners -> inset to `x_716,y_43,w_391,h_688`, where the panel is already full width. Face mask: the file carries a white rule at rows 0-8 and 397-400 despite the "full-bleed black" note -> `x_478,y_12,w_356,h_382`, also re-centred on the panel's ink. Face scrub: rows 0 and 743 are a ONE-PIXEL light-grey rim, which `b_auto` sampled and used to letterboard the whole 4:5 frame in light grey -> `x_1767,y_2,w_1428,h_740`, which also sets the pack larger. Face serum: the gold ingredient band had 2px of margin and read as clipped at both edges -> `x_432,y_12,w_464,h_534`. Face wash, face mist and moisturizer gel were checked and are unchanged. Every rectangle now satisfies: no white on any edge or corner, no clipped text, and a border dark enough that `b_auto` pads with the label's own ground. Data only, no schema change, so both api modes and the admin product form read them unchanged — but **the live Laravel database must be reseeded from `PRODUCTS.md` §2**.`
 - `16 · 2026-09-07 · Two blurred chapter panels can be in view at once on a desktop, which is the DESIGN_SYSTEM §4 budget · The prompt specifies a glass panel on desktop and a solid one on a phone, and that is what ships. On a desktop the chapters are ≥80svh apart so at most two panels overlap the viewport during a scroll; the masthead's own glass is the third layer only for the instant a chapter passes beneath it. On a phone — where the budget actually costs frames — the panel is opaque, so eight chapters is zero blurred layers.`
 
+- `17 · `ValueChain`, `LegalNote` and the CTA sit BELOW the two-column body, not inside its right column · The prompt reads "right = the two short paragraphs …, then `ValueChain`, then `LegalNote`, then `Button`", which could be a sequence inside the right column. It cannot be: the right column of a `1fr 1.1fr` grid is ~640px at 1280, and seven steps whose labels alone measure ~560px cannot be a single row in it at ANY desktop width — and "horizontal ≥ 1025px (single row)" is the whole point of the drawing. The chain, the note and the CTA therefore run the full measure under the grid, which also produces exactly the mobile order the prompt specifies.`
+- `17 · The steps carry `animate: { opacity: 0, y: RISE.reveal }` in ADDITION to `reveal(reduce, { index, inView: true })` · `App.js:157` wraps every route in `<AnimatePresence mode="wait" initial={false}>`, and `initial={false}` tells framer-motion to ignore the `initial` prop of everything present at the route's first paint — it mounts those elements at their `animate` state instead. `reveal(…, { inView: true })` returns `initial`/`whileInView`/`viewport`/`transition` and NO `animate`, so a component that ships with the route mounts straight at the whileInView target and never plays its reveal. (The sections around it look fine only because they mount their revealed items after a fetch, i.e. on a later commit.) Verified in Chromium: before the fix the seven `<li>` carried no style attribute at any moment, before or after scrolling into view; after it they rest at `opacity: 0; translateY(16px)` and animate to `opacity: 1; transform: none` in a left-to-right wave. One prop, no remount, no flash, and reduced motion still attaches nothing. **The same one-liner is applied to the section's image and copy** — they mount after the fetch today, but a warm cache can land them on the first render. Worth knowing for every later prompt that reveals something mounted with its page.`
+- `17 · The value-chain labels carry `overflow-wrap: break-word` · `src/index.css:139` sets `overflow-wrap: anywhere` on `p, li, dd, figcaption, blockquote` as the global long-token guard, and it is INHERITED by the label spans inside each `<li>`. `anywhere` also lowers the intrinsic min-content size to one character, so the first 8px of flex shrink at 1280 broke "FPC" and "Profit" across two lines (seen in the first QA capture). `break-word` breaks only a word that would otherwise overflow and leaves the minimum at the longest word, which is what now stops a step being squeezed narrower than the word it names — at 1025px the three long labels wrap at their spaces instead, and nothing overflows.`
+- `17 · The connector's flex BASIS is its floor (24px), not its ceiling · With `flex: 1 1 48px` the six connectors contributed 288px to the row's base size, which pushed the natural row past the 1232px measure at 1280 and forced a shrink pass that squeezed the labels. `flex: 1 1 var(--vc-link)` + `max-width: var(--vc-link-max)` with the STEPS growing (`flex: 1 1 auto`, and `0 1 auto` on the last, which has no connector) gives the designed 24→48px range and finishes the row flush on the final label: measured 24px at 1025, 28px at 1100, 44px at 1200, 48px from 1366 up.`
+- `17 · The fourth connector is KEPT in the 769–1024 two-row layout · Seven items in a four-track grid fill it 4 + 3 with no arithmetic, and the connector after step 04 runs to the right edge of the first row while step 05 opens the second. Hiding it would close the first row flush and lose the sense of continuation; keeping it is the wrap every left-to-right reader already follows.`
+- `17 · `overflow-x: clip` on the section · `GlowWrap`'s lamp is 110% of its box with a 6% offset, so it reaches ~11% past the photograph — that is what makes it light rather than a border. On the stacked layouts (≤1024px) the photograph is the full measure, so the lamp reached past the VIEWPORT and gave the whole document 22–94px of horizontal scroll (measured; removing the section removed the scroll). `clip` rather than `hidden`, so no scroll container is created — the same guard `Footer`, `HeroCarousel` and `ProductChapter` already use.`
+- `17 · An "unpublished" block is `published === false`, not a missing key · The prompt's fallback covers "missing or unpublished", and `siteContent.home.aboutTeaser` has no publish flag today (Prompt 34 owns the editor). Treating only an explicit `false` as unpublished means the seeded block renders now and a future flag works without touching this component; anything else — `null`, `undefined`, a rejected fetch — already lands on the same thin fallback.`
+- `17 · `gradientWord` is FOUND in the headline, not pinned to index 4 · The title is owner-editable data. `gradientWordIndex(title)` locates "farmers" past its punctuation and returns `undefined` when the word is gone, so an edited headline keeps the emphasis on the right word or drops it — rather than gilding whatever word happens to be fourth.`
+- `17 · The image is a plain `<img>`, not `CloudinaryImage`, and its `alt` is "" · The placeholder is `https://picsum.photos/seed/lamikaa-farm/1600/1000`; a Cloudinary transform does not apply to it, so `CloudinaryImage` would only wrap a URL it cannot resize. `.sf-placeholder-media` needs a WRAPPER (its wash is an `::after`), so the `<img>` sits inside a div that carries the class. `alt=""` because the picture is decorative and describing a scene the brand has not photographed would be inventing one — `onImageError` still swaps in the shared placeholder if the host is unreachable (exercised by aborting the request).`
+- `17 · The `editorial` drop cap sets the opening word as "L" + "AMIKAA" · The prompt specifies `ContentBlocks variant="editorial"` and the seeded paragraph opens on the wordmark, so the Prompt 05 drop cap takes its first letter. Left as designed: a drop cap is a typographic convention the reader reconstructs, it changes no casing (BRAND.md §3.9 rule 1), and overriding a spec'd component's own device from outside would be second-guessing it. Flagged for the owner in Open TODOs — the same copy opens the About page in Prompt 28, so the decision is worth making once.`
 
 ## Open TODOs
 
@@ -307,6 +317,9 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `15 · `sizes` on the card's plate is ONE string for every grid the card lands in ("(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 768px) 45vw, 50vw"). It is right for the 4-up walls and the two-up phone grids and slightly generous for the PDP's related rail and the home snap rails, which are narrower. Worth re-measuring once Prompt 16's showcases and Prompt 23's shop fix the final column counts. · Prompt 23 · 23`
 - `15 · Sections 1-6 of `pages/Home/Home.js` still carry pre-rebuild copy — the collections lede ("From everyday Eri to heirloom Muga — start with the drape that suits the day.") and the whole OUR CRAFT band ("Muga is reared nowhere else on earth…", "a handloom in Sualkuchi, Assam's silk village"). Left deliberately: the prompt's own wording is "the remaining old sections stay until Prompt 22", and replacing them now would be that prompt's work done blind. Five lines, all inside `Home.js`. · Prompt 22 · 22`
 
+- `17 · The `ContentBlocks variant="editorial"` drop cap sets the About copy's opening word as a large gold "L" followed by "AMIKAA Naturals is a farmer-owned…". It reads correctly as a drop cap, but the wordmark is the one word in the brand where splitting the first letter is worth a second opinion — and the same paragraph opens the About page. Show the owner the home band at 1280 and the About page side by side; if it should go, the fix is a `.copy .blocks p:first-of-type::first-letter` reset (0,2,2 beats the variant's 0,2,0) rather than dropping to `variant="prose"`, which would also lose the wider measure. · owner/Prompt 28 · 28`
+- `17 · At 769–1024px the About band's photograph is the full measure (984×615 at 1024) because the two-column grid only starts at 1025px, which is what the prompt specifies. It reads as an editorial opener and the placeholder is standing in for real Assam landscape photography, so it was left — but it is the largest single image on the home page at that width and is worth a look with the real photograph before the responsive pass signs it off. · developer · 37`
+- `17 · External images (picsum.photos, res.cloudinary.com) are blocked from the BROWSER in this sandbox even though `curl` reaches them (200) — no request is issued and no error fires, so the About band's landscape could not be seen with the real asset. Every geometry check was run against a locally-served stand-in of the same 16:10 shape, and the broken-image path was exercised separately by aborting the request (`onImageError` swapped in the shared placeholder). Re-check the wash and the gold lamp against the real Picsum frame on a developer machine. · developer · 37`
 
 ## Placeholders introduced / resolved
 
@@ -1886,3 +1899,113 @@ is being read and only leaves as the chapter itself leaves), and it gets longer 
 if the effect wants more room the lever is the cap, not `min-height`: dropping the pack to 55svh buys another
 60px at the cost of a visibly smaller label card. Worth a look with real eyes at 1440×900 before Prompt 23 reuses
 the component for the shop page, where `variant="shop"` removes the floor entirely.
+
+
+## Prompt 17 record (2026-09-07)
+
+### What was built
+
+| File | Lines | What it is |
+|---|---|---|
+| `src/components/brand/ValueChain.js` | 153 | The seven-step chain as a real ordered list. Reusable by Prompts 20 and 28. |
+| `src/components/brand/ValueChain.module.css` | 296 | Three layouts from one markup, every distance a custom property on the list. |
+| `src/components/brand/ValueChain.test.js` | 79 | 9 tests over the four pure exports (`stepNumeral`, `isBrandStep`, `gradientWordIndex`, `teaserCopy`). |
+| `src/components/home/AboutTeaser.js` | 176 | The band: heading, landscape, paragraphs, chain, legal note, CTA — all of the copy from the API. |
+| `src/components/home/AboutTeaser.module.css` | 121 | The surface band, the pull-quote, the `1fr 1.1fr` body and the glow guard. |
+| `src/pages/Home/Home.js` | +5 | `<AboutTeaser/>` mounted after `<ProductShowcase/>`; the page's own section map updated. |
+
+No `db.json` or `api.js` change: the section READS `siteContent.home.aboutTeaser`, seeded in Prompt 06 and
+already served identically by both api modes (`GET /siteContent` in mock, `GET /content/home` live). The admin
+editor for it is Prompt 34's.
+
+### The two defects the browser found, and reading did not
+
+Both were invisible in the source and obvious on screen, which is why the QA pass measured rather than looked.
+
+**1. "FPC" broke across two lines at 1280px.** `src/index.css:139` applies `overflow-wrap: anywhere` to
+`p, li, dd, figcaption, blockquote` as the global long-token guard, and the label spans inherit it from their
+`<li>`. `anywhere` (unlike `break-word`) also lowers an element's intrinsic min-content size to a single
+character, so when the row's base size overshot the 1232px measure by 8px, flex shrink was free to split every
+label mid-word. Two changes fixed it: `overflow-wrap: break-word` on the label (breaks only what would overflow,
+leaves the minimum at the longest word), and moving the connector's flex basis from its 48px CEILING to its 24px
+FLOOR so the natural row fits the measure and the steps — not the labels — absorb the slack.
+
+**2. The sequential reveal never played.** `App.js:157` is `<AnimatePresence mode="wait" initial={false}>`.
+`initial={false}` tells framer-motion to ignore the `initial` prop of every descendant present at the route's
+first paint and mount it at its `animate` state instead. `reveal(reduce, { inView: true })` returns
+`initial` / `whileInView` / `viewport` / `transition` and **no `animate`** — so a component that ships WITH the
+route mounts straight at the whileInView target and its reveal is a no-op. The sections around it look fine only
+because they mount their revealed items after a fetch, on a later commit. Bisected in Chromium against a control
+`motion.div` in the same component: `initial`+`animate` rendered inline styles, every `whileInView` variant
+rendered none, at any position in the tree, in either file. Naming the resting state as `animate` as well is one
+prop, no remount and no flash, and reduced motion still attaches nothing.
+
+Before: the seven `<li>` carried no `style` attribute at any moment, before or after scrolling into view.
+After (viewport 1280, instant scroll, opacity sampled every 80ms):
+
+```
+   0ms  0.00 0.00 0.00 0.00 0.00 0.00 0.00
+ 160ms  0.48 0.26 0.02 0.00 0.00 0.00 0.00
+ 320ms  0.90 0.86 0.80 0.72 0.59 0.40 0.16
+ 640ms  1.00 1.00 1.00 0.99 0.99 0.98 0.96
+```
+
+Under `prefers-reduced-motion: reduce` the same seven elements have **no `style` attribute at all**, off screen,
+mid-scroll and settled.
+
+### Responsive measurements (Chromium 1194, mock mode, dev server)
+
+`rows` counts visual rows (an item starts a new one only when its top clears every previous item's bottom, so a
+wrapped label does not read as a second row); `conn` is the measured connector width; `ovf` is any `<li>` outside
+the `<ol>`'s box.
+
+| Viewport | rows | connectors | labels on 2 lines | ovf |
+|---|---|---|---|---|
+| 360 / 390 / 414 | 7 | 24px (vertical) | — | none |
+| 768 | 7 | 24px (vertical) | — | none |
+| 1024 | 2 (4 + 3) | 48px | — | none |
+| 1025 / 1060 | 1 | 24px (the floor) | Value Addition, LAMIKAA Naturals, Farmer Members | none |
+| 1100 | 1 | 28px | — | none |
+| 1200 | 1 | 44px | — | none |
+| 1280 / 1366 / 1440 / 1920 | 1 | 48px | — | none |
+
+Document-level horizontal scroll was measured with the section shown and hidden at 360/390/414/768/1024: equal at
+every width (`scrollWidth === clientWidth`). Before `overflow-x: clip` was added, the section alone was adding
+22–94px of it — the gold lamp is 110% of its box plus a 6% offset, and on the stacked layouts the photograph is
+the full measure.
+
+### Accessibility
+
+- Aria tree of the chain: `list "How value reaches farmers"` → seven `listitem`s, `01 Farmer` … `07 Farmer Members`.
+- **Zero focusables in the chain.** The whole band has ONE tab stop: the "Our Story" link.
+- Contrast on `--sf-color-surface` (#141416): labels 16.48:1, the gold "LAMIKAA Naturals" step 12.99:1, the legal
+  note 9.00:1 — all far past AA.
+- The connectors and their arrows are `aria-hidden`; the numerals are read as part of each item, which is the
+  order the diagram is drawing.
+
+### The three data states, all exercised in the browser
+
+| State | What renders |
+|---|---|
+| Seeded block | eyebrow, pull-quote with **farmers** gilded, landscape, two paragraphs, chain, legal note, CTA |
+| Image host unreachable (request aborted) | identical, with `onImageError` swapping in the shared placeholder |
+| `siteContent` unreachable (request aborted) | quote (`brand.signatureLines[3]`), chain, legal note, CTA — **no image, no paragraphs, no invented copy** |
+
+### Verification run
+
+- `CI=true npm run build` — exit 0, **Compiled successfully, no warnings**.
+- `npm test -- --watchAll=false` — 11 suites (1 skipped: the live API), **104 passed**, 9 of them new.
+- `grep -rn "subject to applicable laws" src/components/brand/LegalNote.js src/config/brand.js` → 3 (≥ 1).
+- No hard-coded colour, `rgb()` or `hsl()` in either new stylesheet; no Meghali-era name, asset or identifier in
+  any touched file; no `dangerouslySetInnerHTML`; no value-chain label typed in a component (the only occurrence
+  of "Farmer →" in `src/` is a section comment).
+- Manual QA at 360 / 390 / 414 / 768 / 1024 / 1280 / 1440, plus 1025 / 1060 / 1100 / 1200 / 1366 / 1920 for the
+  single-row layout, each with and without `prefers-reduced-motion`.
+
+### Left for later
+
+The external image hosts are blocked from the browser in this environment (`curl` reaches picsum.photos with a
+200, the browser issues no request at all and fires no error), so the geometry was verified against a locally
+served stand-in of the same 16:10 shape and the broken-image path was exercised separately. The wash and the gold
+lamp still want one look at the real Picsum frame on a developer machine — carried into Open TODOs, with the
+drop-cap question and the full-measure photograph at 769–1024px.
