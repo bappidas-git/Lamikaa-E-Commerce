@@ -1,0 +1,66 @@
+/* =============================================================================
+ * ProductShowcase — the heading, the seams and the loading shape
+ * =============================================================================
+ * The chapters bring their own layout (catalogue/ProductChapter.module.css);
+ * this file owns only what sits BETWEEN them.
+ * ========================================================================== */
+
+.showcase {
+  position: relative;
+}
+
+/* The run's one heading. `.sf-section` gives it a full rhythm unit above; below
+   it only a quarter, because the first chapter brings half a unit of its own
+   and a full gap here would read as two sections rather than as an opening. */
+.intro {
+  padding-bottom: calc(var(--sf-section-y) * 0.25);
+}
+
+/* The seam between two chapters. It sits in the middle of the rhythm the two
+   chapters share, so it reads as a page turn rather than as a border on
+   either one. */
+.rule {
+  margin: 0;
+}
+
+/* ---- Loading ------------------------------------------------------------ */
+
+.skeleton {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-8);
+  padding-block: calc(var(--sf-section-y) * 0.5);
+}
+
+.skeletonPlate {
+  width: 100%;
+}
+
+.skeletonPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-6);
+  padding: var(--sf-space-6);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-xl);
+  background: var(--sf-color-surface);
+}
+
+@media (min-width: 769px) {
+  .skeleton {
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    gap: var(--sf-space-10);
+    align-items: start;
+  }
+
+  .skeletonPanel {
+    padding: var(--sf-space-10);
+  }
+}
+
+@media (min-width: 1280px) {
+  .skeleton {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sf-space-16);
+  }
+}

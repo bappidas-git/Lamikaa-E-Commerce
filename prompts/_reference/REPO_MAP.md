@@ -666,6 +666,85 @@ components that present the SHAPE of the range — Prompts 18, 23 and 24 fill it
   and given the page two identically named regions. Sections 1–6 are untouched;
   Prompt 22 replaces them.
 
+**Updated by Prompt 16.** The home product showcase, and the chapter component
+the shop page (Prompt 23) will reuse.
+
+- `catalogue/ProductChapter.js` (292) + `.module.css` (298) + `.test.js` (75) —
+  **new**. ONE product as a full editorial spread, shared by the home showcase
+  and — through `variant` — by the shop listing.
+  **Contract:** `product` (required) · `index` (0-based; the chapter numeral and
+  the glow tone) · `total` (for the "Chapter 3 of 8" a screen reader hears) ·
+  `variant` `"home" | "shop"` · `flip` (swap the columns) · `id` · `className`.
+  It renders `<section id={id} data-chapter={index} aria-labelledby=…
+  class="sf-section">` — **`data-chapter` is the hook Prompt 23's index rail
+  reads, and it is written now**; `variant="shop"` already drops the 80svh floor
+  and is where the rail's remaining hooks go.
+  **Composition (text column, in order):** a 36px `Chip variant="step"` numeral
+  (28px ≤414px, `aria-hidden` — decoration) beside the `.sf-eyebrow` ritual line
+  → the `h2` name (Fraunces, `--sf-text-2xl`) → `promise` at 18px →
+  `description` at 16px secondary, held to 52ch → "Key ingredients" +
+  `Chip variant="glass"` × `keyIngredients[].name` (max 5) → `product.badges` as
+  `Chip variant="trust"` → `fragranceNote` as a quiet 13px line when present →
+  `Price product size="lg" live={false}` → `Button variant="secondary"` **Explore
+  more** → `productPath(p)` and `Button variant="addToCart"` **Add to Cart**
+  (`useCart().addToCart(buildCartItem(p), 1)`), 48px pills, stacked full width
+  ≤560px. Labels "Coming soon" (`priceTBA`) / "Out of stock" (`stock === 0`)
+  and their disabled state are ProductCard's, spelled identically.
+  **Media column:** `GlowWrap tone={index % 2 ? "violet" : "pink"}
+  intensity={0.2}` → `CloudinaryImage` on a 4:5 `.sf-plate` with the product's
+  own `crop` (`ar="4:5" pad`, `sizes="(max-width: 768px) 92vw, 44vw"`, lazy).
+  It passes the RAW `media.url` plus `crop`/`ar`/`pad` rather than a
+  pre-transformed `stageSrc()` string — identical output per width, but
+  `CloudinaryImage` can then build a real srcSet instead of re-wrapping a URL
+  that already carries a transform (which would resize BEFORE the crop).
+  **Layout:** one column with the pack FIRST below 769px; two columns above,
+  media 42% (≥769px) then 1fr 1fr with a 64px gutter (≥1280px). `flip` moves
+  the columns with `grid-column`, so the DOM order is media → words at every
+  width and a keyboard walks the same order the phone paints.
+  **Sticky media:** `align-self: start; position: sticky; top: 112px` with the
+  grid floored at `min-height: 80svh` (`80vh` first, as the fallback). The pack
+  is additionally capped at `max-width: calc(0.8 * 62svh)` — **without that cap
+  a full-width 4:5 plate is as tall as its own grid row and the sticky never
+  engages** (measured: 735px plate in a 735px row at 1280). The cap is written
+  as the WIDTH that produces the height so the 4:5 box, and the space it
+  reserves before the bytes land, is never broken.
+  **Two guards worth keeping:** `overflow-x: clip` on the section (the lamp
+  bleeds 5% past its box and the plate is already 92vw on a phone — `clip`, not
+  `hidden`, so no scroll container is created and the sticky still works), and
+  `padding-block: calc(var(--sf-section-y) * 0.5)` overriding `.sf-section` so
+  two adjacent chapters are separated by exactly ONE rhythm unit rather than two.
+  **The panel drops its backdrop blur ≤768px** (`--sf-glass-fallback`): eight
+  chapters is eight blurred panels in one scroll and DESIGN_SYSTEM §4 budgets two.
+  **Motion:** `reveal(reduce, { inView: true })` on the panel, a slower opacity
+  fade (`DURATION.slow * 1.5`) on the media, no parallax; both factories return
+  nothing under reduced motion.
+  **Named exports, pure and unit-tested:** `chapterNumeral(index)` (`0` → `"01"`)
+  and `stepEyebrow(product)` — `"01 — Cleanse"`, but **`"Body 01 — Body cleanse"`**
+  when the step's label begins "Body", because the soap and the body wash are
+  both step one of a different routine and an unqualified second "01" beside the
+  face wash reads as a contradiction. The qualifier is derived from the label,
+  so a ritual the owner adds later needs no code change.
+- `home/ProductShowcase.js` (149) + `.module.css` (66) — **new**. `SectionHeading`
+  ("The Black Rice range" / "Eight steps. One **ritual.**" with
+  `gradientWord={3}` / "Every product carries a bigger purpose — beauty that
+  creates value for farmers." from BRAND.md §3.1 / `rule`) rendered ONCE, then a
+  `ProductChapter` per product with `flip={i % 2 === 1}` and
+  `id={`product-${slug}`}`, a `.sf-hairline` between chapters.
+  **Data:** `products.getHeroProducts()` (already visible-only and already
+  `heroOrder`-sorted in both api modes), falling back to `products.getAll()`
+  sorted by `heroOrder ?? 99` for a merchant who has not arranged the hero yet.
+  **On error the section renders NOTHING**; two skeleton chapters hold the
+  first spread's shape while it loads (not eight — that is a page of shimmer).
+  One named export, `showcaseProducts(hero, all)`, unit-tested.
+- `catalogue/index.js`: `ProductChapter` added to the barrel.
+- `pages/Home/Home.js`: `<ProductShowcase/>` mounts directly after
+  `<ShopByCategory/>`. Sections 1–6 still follow; Prompt 22 replaces them.
+- `db.json`: five `media[0].crop` rectangles corrected after checking all eight
+  at 4:5/900px — data only, no schema change, so both api modes and the admin
+  product form read them unchanged. The final rectangles and the reason for each
+  are in `PACKAGING_NOTES.md` §2 and `PRODUCTS.md` §2; the live backend must be
+  reseeded from those values.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.

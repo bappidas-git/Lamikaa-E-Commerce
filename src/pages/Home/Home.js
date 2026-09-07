@@ -10,6 +10,7 @@ import { resolveCountdownTarget, diffToParts } from "../../utils/dealsConfig";
 import { reveal as sharedReveal } from "../../theme/motion";
 import HeroCarousel from "../../components/home/HeroCarousel";
 import ShopByCategory from "../../components/home/ShopByCategory";
+import ProductShowcase from "../../components/home/ProductShowcase";
 import TrustStrip from "../../components/TrustStrip";
 import ProductCard from "../../components/storefront/ProductCard";
 import useSeo from "../../hooks/useSeo";
@@ -26,6 +27,7 @@ import styles from "./Home.module.css";
 //   0. HERO             the product carousel (Prompt 14)
 //   0b TRUST STRIP      the four promises, on the hero's bottom edge  (15)
 //   0c SHOP BY …        seven category cards + the concern chips      (15)
+//   0d THE RANGE        eight product chapters, alternating spreads   (16)
 //   1. WHERE TO BEGIN   collection stories (categories.getAll)
 //   2. THE EDIT         featured, staggered editorial grid (products.getFeatured)
 //   3. ON OFFER         the deals rail + one tracked countdown line   [conditional]
@@ -421,6 +423,9 @@ const Home = () => {
 
       {/* ── SHOP BY CATEGORY / CONCERN — the seven ways in ────────────────── */}
       <ShopByCategory />
+
+      {/* ── THE BLACK RICE RANGE — one editorial chapter per product ──────── */}
+      <ProductShowcase />
 
       {/* ── 1. WHERE TO BEGIN — the collections, told as stories ──────────── */}
       {showCollections && (

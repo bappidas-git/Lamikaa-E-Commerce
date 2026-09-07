@@ -7,3 +7,4 @@
 // =============================================================================
 
 export { default as CategoryCard } from "./CategoryCard";
+export { default as ProductChapter } from "./ProductChapter";

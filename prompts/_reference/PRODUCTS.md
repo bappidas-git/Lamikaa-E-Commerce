@@ -13,16 +13,34 @@ Cloudinary delivery rule: never serve the raw URL at full size in the UI. `src/u
 
 ## 2. The eight products — cover URLs (character-exact) and packaging-derived facts
 
-| # | Name (site) | slug | Cover image URL | Size (pack) | MRP (pack) | stageCrop (verify) |
+| # | Name (site) | slug | Cover image URL | Size (pack) | MRP (pack) | stageCrop (✅ = verified on screen) |
 |---|---|---|---|---|---|---|
-| 1 | Black Rice Face Wash | `black-rice-face-wash` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg` | 200 ml | ₹390 | `x_1050,y_100,w_1500,h_3200` |
-| 2 | Black Rice Goat Milk Soap | `black-rice-goat-milk-soap` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg` | 100 g | ₹90 | `x_216,y_522,w_1377,h_1269` |
-| 3 | Black Rice Body Wash | `black-rice-body-wash` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg` | 250 ml | not legible → `priceTBA` | `x_715,y_30,w_395,h_710` |
-| 4 | Black Rice Face Mask | `black-rice-face-mask` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg` | 100 g | not legible → `priceTBA` | `x_480,y_0,w_370,h_401` |
-| 5 | Black Rice Face Mist | `black-rice-face-mist` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg` | 100 ml | not legible → `priceTBA` | `x_320,y_20,w_410,h_710` |
-| 6 | Black Rice Exfoliating Face Scrub | `black-rice-exfoliating-face-scrub` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg` | 100 g | ₹349 | `x_1700,y_0,w_1600,h_744` |
-| 7 | Black Rice Face Serum | `black-rice-face-serum` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg` | 30 ml | not legible → `priceTBA` | `x_460,y_15,w_410,h_530` |
-| 8 | Black Rice Moisturizer Gel | `black-rice-moisturizer-gel` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg` | 100 ml | not legible → `priceTBA` | `x_240,y_40,w_330,h_680` |
+| 1 | Black Rice Face Wash | `black-rice-face-wash` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg` | 200 ml | ₹390 | `x_1050,y_100,w_1500,h_3200` ✅ |
+| 2 | Black Rice Goat Milk Soap | `black-rice-goat-milk-soap` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg` | 100 g | ₹90 | `x_216,y_522,w_1377,h_1248` ✅ |
+| 3 | Black Rice Body Wash | `black-rice-body-wash` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg` | 250 ml | not legible → `priceTBA` | `x_716,y_43,w_391,h_688` ✅ |
+| 4 | Black Rice Face Mask | `black-rice-face-mask` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg` | 100 g | not legible → `priceTBA` | `x_478,y_12,w_356,h_382` ✅ |
+| 5 | Black Rice Face Mist | `black-rice-face-mist` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg` | 100 ml | not legible → `priceTBA` | `x_320,y_20,w_410,h_710` ✅ |
+| 6 | Black Rice Exfoliating Face Scrub | `black-rice-exfoliating-face-scrub` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg` | 100 g | ₹349 | `x_1767,y_2,w_1428,h_740` ✅ |
+| 7 | Black Rice Face Serum | `black-rice-face-serum` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg` | 30 ml | not legible → `priceTBA` | `x_432,y_12,w_464,h_534` ✅ |
+| 8 | Black Rice Moisturizer Gel | `black-rice-moisturizer-gel` | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg` | 100 ml | not legible → `priceTBA` | `x_240,y_40,w_330,h_680` ✅ |
+
+**Updated by Prompt 16 — every rectangle is now VERIFIED, not estimated.** The
+home showcase is the first surface that renders all eight crops large (4:5 at
+900px), so each was checked against its original cover and five were corrected.
+The rule every corrected rectangle now satisfies: **no white canvas on any edge
+or corner, no clipped text, and a border dark enough that `c_pad …,b_auto`
+samples the label's own ground rather than a light rim.**
+
+| # | was | now | why |
+|---|---|---|---|
+| 1 Face Wash | `x_1050,y_100,w_1500,h_3200` | unchanged | clean at 4:5; pads on the charcoal ground. |
+| 2 Goat Milk Soap | `…,h_1269` | `x_216,y_522,w_1377,h_1248` | the last 21 rows fell past the panel's gold band into the carton's **white canvas** (a white stripe across the foot of the plate). The panel's own bottom edge is y=1772; the crop now stops at 1769, inside the angled bottom-left corner. |
+| 3 Body Wash | `x_715,y_30,w_395,h_710` | `x_716,y_43,w_391,h_688` | the panel is a rounded rectangle on a white canvas and the old rectangle enclosed all four **rounded corners**, so white showed in each. Inset to where the panel is already full width (measured: rows 43–730). |
+| 4 Face Mask | `x_480,y_0,w_370,h_401` | `x_478,y_12,w_356,h_382` | the raw file carries a **white rule at rows 0–8 and 397–400**; both were inside the crop and printed as white bands. Also re-centred on the panel's ink (x 500–812). |
+| 5 Face Mist | `x_320,y_20,w_410,h_710` | unchanged | clean. |
+| 6 Face Scrub | `x_1700,y_0,w_1600,h_744` | `x_1767,y_2,w_1428,h_740` | rows 0 and 743 are a **one-pixel light-grey rim** (208,208,206) — `b_auto` sampled it and letterboxed the 6.67:1 label onto a **light grey ground**. Dropping the rim restores the dark pad; the tighter width sets the pack larger in the frame with ~45px of margin around the name. |
+| 7 Face Serum | `x_460,y_15,w_410,h_530` | `x_432,y_12,w_464,h_534` | the gold ingredient band (x 462–866) ran **edge to edge** with 2px of margin. Widened to ~30px each side; the file's 4px white frame stays outside the crop. |
+| 8 Moisturizer Gel | `x_240,y_40,w_330,h_680` | unchanged | clean. |
 
 Price policy (adaptation, see `00_INDEX.md`): a legible MRP is seeded as `price` with `priceSource: "packaging-mrp"` (owner to confirm); an illegible one is seeded as `price: null, priceTBA: true` and renders as "Price on launch" with Add to Cart disabled. The tokens `{{PRICE_<PRODUCT>}}` in `PLACEHOLDERS.md` map to these rows.
 

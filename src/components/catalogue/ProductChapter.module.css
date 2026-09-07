@@ -1,0 +1,298 @@
+/* =============================================================================
+ * ProductChapter — the alternating split-screen spread
+ * =============================================================================
+ * `.sf-section` supplies the vertical rhythm (--sf-section-y) and `.sf-container`
+ * the measure; `.sf-plate`, `.sf-glass` (through GlassCard), `.sf-chip`,
+ * `.sf-eyebrow` and `.sf-numeral` supply the surfaces and the type. Nothing they
+ * already own is restated here.
+ *
+ * MOBILE FIRST. One column, the pack first, no sticky, no blur. Everything
+ * below 769px is the default and the split screen is the enhancement — which is
+ * also why the DOM order is media -> words at every width: `flip` moves columns
+ * with `grid-column`, so the order a keyboard walks never changes.
+ *
+ * THE STICKY MEDIA needs three things at once and all three are here: a row
+ * taller than the pack (`min-height: 80svh` on the grid), a column that does not
+ * stretch to fill it (`align-self: start`), and an offset clear of the masthead
+ * (112px = the 64px header plus air; the announcement band has scrolled away by
+ * the time any chapter is on screen).
+ * ========================================================================== */
+
+.chapter {
+  position: relative;
+  /* The plate's lamp bleeds 5% past its box by design (GlowWrap `size`), and on
+     a phone the plate is already 92vw — so that bleed would widen the document.
+     `clip`, not `hidden`: no scroll container, so the sticky media below still
+     sticks to the viewport. Same guard, same reason, as the hero's. */
+  overflow-x: clip;
+  /* HALF a rhythm unit at each end, so two adjacent chapters are separated by
+     exactly one --sf-section-y — one unit PER CHAPTER, which is the rhythm the
+     spec asks for, rather than one per edge (which would be two between every
+     pair). `.sf-section` is a global class and this is a module class: they tie
+     on specificity and CSS Modules ship after the primitives, so this wins. */
+  padding-block: calc(var(--sf-section-y) * 0.5);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-8);
+  align-items: start;
+}
+
+/* ---- The pack ------------------------------------------------------------ */
+
+.media {
+  min-width: 0;
+}
+
+/* GlowWrap is the lamp behind the plate; it must not become a second box. */
+.glow {
+  display: block;
+  border-radius: var(--sf-radius-lg);
+}
+
+.plate {
+  width: 100%;
+  /* `.sf-plate` brings a 1:1; the chapter's stage is the editorial 4:5 and the
+     component sets it inline. The border-radius comes from the plate. */
+}
+
+/* ---- The words ----------------------------------------------------------- */
+
+.text {
+  min-width: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+  border-radius: var(--sf-radius-xl);
+}
+
+.numeralRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  flex-wrap: wrap;
+}
+
+/* The chapter numeral is bigger than a ritual step's: 36px on a desktop, back
+   to the primitive's 28px on a phone. `.numeralRow` is the extra class that
+   wins over Chip.module.css's own `.step` at equal-or-lower specificity. */
+.numeralRow .numeralChip {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+}
+
+.numeralRow .numeralChip :global(.sf-numeral) {
+  font-size: var(--sf-text-base);
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  /* 40px at 1280/1440, 28px at 360-414 — the two figures the chapter spec
+     names, which is exactly what this token clamps to at those widths. */
+  font-size: var(--sf-text-2xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.promise {
+  margin: 0;
+  /* 18px: one step above the body floor, no token sits on it. The promise is
+     the chapter's second voice and has to lead the description. */
+  font-size: 1.125rem;
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text);
+}
+
+.description {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+}
+
+.blockLabel {
+  margin: 0;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badges {
+  margin-top: var(--sf-space-1);
+}
+
+.fragrance {
+  margin: 0;
+  font-size: 0.8125rem; /* 13px — a printed-on-the-pack aside, not a sentence */
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-muted);
+}
+
+.price {
+  margin-top: var(--sf-space-1);
+}
+
+/* ---- The two ways forward ------------------------------------------------ */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-3);
+  margin-top: var(--sf-space-2);
+}
+
+/* 48px: the chapter's CTAs carry more weight than a card's 44px default and
+   less than the hero's 52px `lg`. The pill radius and every colour stay with
+   `.sf-btn`. */
+.cta {
+  min-height: 48px;
+}
+
+/* Phones stack them full width — two half-width pills on a 360px screen are two
+   two-line labels. */
+@media (max-width: 560px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cta {
+    width: 100%;
+  }
+}
+
+/* ---- No backdrop blur on a phone -----------------------------------------
+   Eight chapters is eight blurred panels in one scroll, and DESIGN_SYSTEM §4
+   budgets two blurred layers in view. Below the breakpoint the panel paints the
+   same opaque ground `@supports not (backdrop-filter)` uses. The property is
+   unset here rather than left to the cascade: `.sf-card` is a global class and
+   this is a module class, so they tie on specificity and CSS Modules ship after
+   the primitives in the bundle. */
+@media (max-width: 768px) {
+  .panel {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--sf-glass-fallback);
+  }
+}
+
+/* ---- 769px+ : the split screen ------------------------------------------- */
+
+@media (min-width: 769px) {
+  /* The tablet/small-laptop band: the pack takes 42% and the words take the
+     rest, because at 1024 two equal halves leave the description at ~34ch and
+     the CTAs wrapping. The 42% belongs to the MEDIA column wherever it sits, so
+     a flipped chapter states the same two tracks the other way round rather
+     than moving the ratio with it. */
+  .grid {
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    gap: var(--sf-space-10);
+    /* Taller than either column, so the pack has somewhere to stick. `svh`
+       wins where it is supported; `vh` is the fallback declared first. */
+    min-height: 80vh;
+    min-height: 80svh;
+  }
+
+  .flip .grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 42%);
+  }
+
+  /* The chapter panel is one step roomier than GlassCard's `lg` (32px): 40px,
+     because this panel is a page-width column of running copy rather than a
+     card. `.text .panel` outranks the shared `.padLg` rather than relying on
+     which module happens to ship last. */
+  .text .panel {
+    padding: var(--sf-space-10);
+  }
+
+  .media {
+    position: sticky;
+    top: 112px;
+    align-self: start;
+    /* `justify-self` would shrink-wrap the column, so the width is stated and
+       the cap below is what actually bounds it. */
+    justify-self: center;
+    width: 100%;
+    /* THE PACK IS CAPPED BY HEIGHT, not left to fill its column. A full-width
+       4:5 plate in half of a 1280 container is 735px tall — as tall as the row
+       it sits in, and a sticky element the height of its own containing block
+       has nowhere to stick. Capping it at 62% of the viewport leaves the words
+       the taller column (the row floors at 80svh below), so there is always at
+       least 18svh of travel for the pack to hold still through. The cap is
+       written as the WIDTH that produces that height, so the 4:5 box — and the
+       space it reserves before the bytes land — is never broken. */
+    max-width: calc(0.8 * 62vh);
+    max-width: calc(0.8 * 62svh);
+  }
+
+  /* The words on the left, the pack on the right — same DOM, mirrored grid. */
+  .flip .media {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .flip .text {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+/* 1280+: the spread settles into two equal halves with the full 64px gutter. */
+@media (min-width: 1280px) {
+  .grid,
+  .flip .grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sf-space-16);
+  }
+}
+
+/* ---- 360-414 : the numeral steps back down ------------------------------- */
+
+@media (max-width: 414px) {
+  .numeralRow .numeralChip {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+  }
+
+  .numeralRow .numeralChip :global(.sf-numeral) {
+    font-size: var(--sf-text-sm);
+  }
+}
+
+/* ---- variant="shop" ------------------------------------------------------
+   The shop page stacks its chapters into a listing rather than a sequence of
+   spreads, so it drops the 80svh floor: eight screen-height chapters is a
+   page you scroll past, not one you shop. Prompt 23 adds the index rail on top
+   of the `data-chapter` attribute this component already writes. */
+@media (min-width: 769px) {
+  .shop .grid {
+    min-height: 0;
+  }
+}
