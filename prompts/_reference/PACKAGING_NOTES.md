@@ -29,7 +29,9 @@
 
 Common to all eight unless noted: black ground; centred brand lockup (mark + LAMIKAA NATURALS in gold); product name in white bold geometric caps; a gold band naming the key ingredients (black text on gold); the antioxidant line; three-word benefit line separated by bullets; "Mild Sandalwood Fragrance"; volume; roundels ISO / GMP / NON GMO / CRUELTY FREE; left column ABOUT / DIRECTIONS (HOW TO USE) / INGREDIENTS / CAUTION; right column Marketed by / Manufactured by / Mfg. Lic. No. 890-AYU / Batch / Mfg. date / Exp. date / M.R.P.
 
-`stageCrop` = starting crop rectangle **in original pixels** for the hero/showcase "label card" (Cloudinary `c_crop,x_,y_,w_,h_`). They were estimated from the rendered previews and **must be checked visually in Prompt 06/14** (tune ±5 %). Chain with `c_pad,ar_1:1,b_auto` (or `ar_4:5`) for a uniform stage.
+`stageCrop` = the crop rectangle **in original pixels** for the hero/showcase "label card" (Cloudinary `c_crop,x_,y_,w_,h_`), chained with `c_pad,ar_1:1,b_auto` (or `ar_4:5`) for a uniform stage.
+
+**Updated by Prompt 16 — the rectangles below are FINAL and verified on screen**, not the Phase-A estimates. The home showcase renders all eight at 4:5 / 900px, which is the first place a stray pixel of carton is visible, so each was re-measured against its original file. Every rectangle now satisfies three things: no white canvas on any edge **or corner**, no clipped text, and a border dark enough that `b_auto` pads with the label's own ground instead of a light rim. Five changed (2, 3, 4, 6, 7); the per-product entries below carry the old value and the reason. `PRODUCTS.md` §2 holds the same table in one place.
 
 ### 1 · Black Rice Face Wash — `…/v1788670695/Black-Rice-Face-Wash-Cover.jpg`
 - 3604 × 3417 px (1.05 : 1, near-square), 300 dpi, 1.63 MB. Full-bleed charcoal `#1C1C1C`. Padding ≈ 3 % all round. **Edge-to-edge safe.**
@@ -40,7 +42,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Black Rice Extract, Aloe Vera Extract, Green Tea Extract, Turmeric Extract, Neem Extract, Tulsi Extract, Glycerin, Cocamidopropyl Betaine, Decyl Glucoside, Propanediol, Panthenol, Allantoin, Xanthan Gum, Sodium Chloride, Citric Acid, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.
 - Caution: "For external use only. Avoid direct contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children. Store in a cool, dry place away from direct sunlight."
 - Volume **200 ml** · Batch RWMH/203 · Mfg Aug-2026 · Exp July-2028 · **M.R.P ₹390/-** (legible). Extra marks bottom-right: Do-not-litter, Keep-your-city-clean, Make-in-India lion, Swachh Bharat.
-- `stageCrop`: `x_1050,y_100,w_1500,h_3200` (centre column, portrait ≈ 0.47:1). Whole image is also usable (square).
+- `stageCrop`: **`x_1050,y_100,w_1500,h_3200`** (centre column, portrait ≈ 0.47:1) — *verified unchanged, Prompt 16.* Whole image is also usable (square).
 
 ### 2 · Black Rice Goat Milk Soap — `…/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg`
 - 3610 × 1830 px (1.97 : 1), 300 dpi, 1.23 MB. **Carton dieline on a WHITE canvas** — two identical front panels (left/right), a narrow information panel between them, a right-hand legal panel, top flaps with inverted text, cut-outs. Gold foil bands and a circular "Power of Black Rice" gold seal. **NOT edge-to-edge safe.**
@@ -50,7 +52,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Glycerin, Goat Milk, Black Rice Extract, Rice Extract, Coconut Oil, Shea Butter, Aloe Vera Extract, Turmeric Extract, Liquorice Extract, Vitamin E, Sodium Chloride, Fragrance.
 - Caution: "For external use only. Avoid contact with eyes. Keep out of reach of children. Store in a cool, dry place after use."
 - Weight **100 g** · Batch RSMH/204 · Mfg Aug-2026 · Exp July-2028 · **M.R.P ₹90/-** (legible).
-- `stageCrop` (left front panel, below the top flap): `x_216,y_522,w_1377,h_1269` (≈ 1.09:1). Verify the gold "Beauty Soap" tag is inside the crop and no white shows at the rounded corners.
+- `stageCrop` (left front panel, below the top flap): **`x_216,y_522,w_1377,h_1248`** (≈ 1.10:1) — *corrected, Prompt 16* (was `h_1269`). The panel's dark area ends at y=1772 and its bottom-left corner is angled, so the old height reached past the gold band into the **white carton canvas** and printed a white stripe across the foot of the plate; 1248 stops at row 1769, where the panel is still full width. The "Beauty Soap" tag and the "Power of Black Rice" seal (x 262–470) are both inside the crop.
 
 ### 3 · Black Rice Body Wash — `…/v1788670690/Body-Wash-Cover.jpg`
 - 1365 × 767 px (1.78 : 1), 146 KB. **Two rounded-rectangle label panels on a WHITE canvas** (back panel left with text; front panel right with lockup and a gold swoosh). **NOT edge-to-edge safe.**
@@ -60,7 +62,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Glycerin, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Caprylic/Capric Triglyceride, Cetearyl Alcohol, Glyceryl Stearate, Shea Butter, Squalane, Dimethicone, Niacinamide, Panthenol, Sodium Hyaluronate, Tocopherol, Carbomer, Xanthan Gum, Triethanolamine, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.
 - Caution: "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children."
 - Volume **250 mL** · Batch RWMH/203 · Mfg Sep-2026 · Exp Aug-2028 · M.R.P **not legible** (masked `₹ ***/-`).
-- `stageCrop` (front panel, inside the rounded corners): `x_715,y_30,w_395,h_710` (≈ 0.56:1).
+- `stageCrop` (front panel, inside the rounded corners): **`x_716,y_43,w_391,h_688`** (≈ 0.57:1) — *corrected, Prompt 16* (was `x_715,y_30,w_395,h_710`). The panel is x 702–1120 / y 22–749 with a ≈30px corner radius, so the old rectangle enclosed **all four rounded corners** and showed white in each. The new one starts where the panel is already full width across the crop (measured row by row: 43 at the top, 730 at the foot).
 
 ### 4 · Black Rice Face Mask — `…/v1788670690/Face-Mask-Cover.jpg`
 - 1318 × 401 px (**3.29 : 1**, very wide), 115 KB. Full-bleed black. **Edge-to-edge safe** but too wide for a card without cropping.
@@ -70,7 +72,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Kaolin, Bentonite, Glycerin, Aloe Barbadensis Leaf Juice, Niacinamide, Panthenol, Allantoin, Sodium Hyaluronate, Xanthan Gum, Hydroxyethylcellulose, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.
 - Caution: "For external use only. Avoid contact with eyes. Patch test before use. Discontinue if irritation occurs."
 - Weight **100 g** · Batch RMMH/204 · Mfg Sep-2026 · Exp Aug-2028 · M.R.P **not legible**.
-- `stageCrop` (centre panel): `x_480,y_0,w_370,h_401` (≈ 0.92:1).
+- `stageCrop` (centre panel): **`x_478,y_12,w_356,h_382`** (≈ 0.93:1) — *corrected, Prompt 16* (was `x_480,y_0,w_370,h_401`). Despite the "full-bleed black" note, the file carries a **white rule at rows 0–8 and 397–400**; the old full-height crop printed both as white bands. Also re-centred: the panel's ink runs x 500–812, so 478–834 gives it 22px of margin on each side.
 
 ### 5 · Black Rice Face Mist — `…/v1788670691/Face-Mist-Cover.jpg`
 - 1045 × 744 px (1.40 : 1), 151 KB. Full-bleed black. **Edge-to-edge safe.**
@@ -80,7 +82,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Glycerin, Propanediol, Aloe Barbadensis Leaf Juice, Niacinamide, Panthenol, Betaine, Sodium Hyaluronate, Allantoin, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Citric Acid, Sodium Citrate, Fragrance.
 - Caution: "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children."
 - Volume **100 ml** · Batch RMMH/204 · Mfg Sep-2026 · Exp Aug-2028 · M.R.P **not legible**.
-- `stageCrop`: `x_320,y_20,w_410,h_710` (≈ 0.58:1).
+- `stageCrop`: **`x_320,y_20,w_410,h_710`** (≈ 0.58:1) — *verified unchanged, Prompt 16.*
 
 ### 6 · Black Rice Exfoliating Face Scrub — `…/v1788670694/Face-Scrub-Cover.jpg`
 - 4963 × 744 px (**6.67 : 1**, an extremely wide wrap label), 300 dpi, 869 KB. Full-bleed `#1A1A1A`. **Edge-to-edge safe** but unusable uncropped in any card.
@@ -90,7 +92,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Black Rice Extract, Glycerin, Aloe Vera Extract, Rice Powder, Walnut Shell Powder, Kaolin Clay, Jojoba Oil, Almond Oil, Coconut Oil, Shea Butter, Niacinamide, Vitamin E, Liquorice Extract, Green Tea Extract, Cucumber Extract, Xanthan Gum, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.
 - Caution: "For external use only. Avoid contact with eyes and broken skin. Discontinue use if irritation occurs."
 - Weight **100 g** ("100gm") · Batch RCMH/202 · Mfg Aug-2026 · Exp July-2028 · **M.R.P ₹349/-** (legible).
-- `stageCrop` (centre panel): `x_1700,y_0,w_1600,h_744` (≈ 2.15:1 landscape — pad to 1:1 with `b_auto`).
+- `stageCrop` (centre panel): **`x_1767,y_2,w_1428,h_740`** (≈ 1.93:1 landscape — pad with `b_auto`) — *corrected, Prompt 16* (was `x_1700,y_0,w_1600,h_744`). Rows 0 and 743 of this file are a **one-pixel light-grey rim** (208,208,206 / 197,197,197); `b_auto` sampled it and letterboxed the label onto a **light-grey ground** — the single worst crop on the page. Dropping the rim restores the label's own `#1A1A1A` pad. The narrower width sets the pack larger in the 4:5 frame while keeping ≈45px of margin around "EXFOLIATING FACE SCRUB" (ink runs x 1812–3150).
 
 ### 7 · Black Rice Face Serum — `…/v1788670692/Face-Serum-Cover.jpg`
 - 1323 × 558 px (2.37 : 1), 163 KB. Full-bleed black. **Edge-to-edge safe.**
@@ -100,7 +102,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Glycerin, Propanediol, Niacinamide, Alpha-Arbutin, Panthenol, Sodium Hyaluronate, Betaine, Allantoin, Tocopherol, Hydroxyethylcellulose, Carbomer, Tromethamine, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.
 - Caution: "For external use only. Avoid contact with eyes. Patch test before use."
 - Volume **30 mL** · Batch RMMH/204 · Mfg Sep-2026 · Exp Aug-2028 · M.R.P **not legible**.
-- `stageCrop`: `x_460,y_15,w_410,h_530` (≈ 0.77:1).
+- `stageCrop`: **`x_432,y_12,w_464,h_534`** (≈ 0.87:1) — *corrected, Prompt 16* (was `x_460,y_15,w_410,h_530`). The gold ingredient band runs x 462–866, so the old rectangle left it **2px of margin and it read as clipped at both edges**. Widened to ≈30px each side; the file's 4px white frame (rows 0–5, 552–557 and the outer columns) stays outside the crop.
 
 ### 8 · Black Rice Moisturizer Gel — `…/v1788670693/Moisturizer-Gel-Cover.jpg`
 - 814 × 739 px (1.10 : 1), 115 KB. Full-bleed black. **Edge-to-edge safe.**
@@ -110,7 +112,7 @@ Common to all eight unless noted: black ground; centred brand lockup (mark + LAM
 - Ingredients: Aqua, Oryza Sativa (Black Rice) Extract, Santalum Album (Sandalwood) Extract, Glycerin, Propanediol, Niacinamide, Panthenol, Sodium Hyaluronate, Aloe Barbadensis Leaf Juice, Betaine, Carbomer, Hydroxyethylcellulose, Tromethamine, Disodium EDTA, Phenoxyethanol, Ethylhexylglycerin, Fragrance.
 - Caution: "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children."
 - Volume **100 ml** · Batch RMMH/204 · Mfg Sep-2026 · Exp Aug-2028 · M.R.P **not legible**.
-- `stageCrop`: `x_240,y_40,w_330,h_680` (≈ 0.49:1).
+- `stageCrop`: **`x_240,y_40,w_330,h_680`** (≈ 0.49:1) — *verified unchanged, Prompt 16.*
 
 ## 3. What the review changes in the design system and copy
 
