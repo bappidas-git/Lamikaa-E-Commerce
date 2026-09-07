@@ -1,0 +1,296 @@
+/* =============================================================================
+ * ValueChain — seven steps, three layouts, one set of measurements
+ * =============================================================================
+ * Every distance the chain needs is a custom property on the list, so the
+ * compact variant is four value changes rather than a second stylesheet, and
+ * the three layouts read the same numbers.
+ *
+ *   --vc-numeral    the gradient-ringed circle           32px (28 compact)
+ *   --vc-row        one row of the VERTICAL layout       48px (40 compact)
+ *   --vc-rail       the vertical layout's left rail      40px (32 compact)
+ *   --vc-link       the connector's length               24px (20 compact)
+ *   --vc-link-max   its longest, when a row has room     48px
+ *
+ * VERTICAL GEOMETRY. Each step is a two-row grid: [numeral | label] over the
+ * connector, which sits in the rail column beneath the numeral. The connector's
+ * negative block margin — exactly half the space the numeral leaves in its row —
+ * pulls its ends onto the two circles it joins, so the line touches both
+ * instead of floating between them, and the row pitch stays 48 + 8.
+ *
+ * HORIZONTAL GEOMETRY. The steps do not grow; the connectors do, from a 48px
+ * basis down to a 24px floor as the row tightens, and the labels wrap before
+ * anything overflows. Whatever room is left over past 48px per connector shows
+ * as air at the two ends of a centred row, never as a gap between an arrow and
+ * the circle it points at.
+ * ========================================================================== */
+
+.chain {
+  --vc-numeral: 32px;
+  --vc-row: 48px;
+  --vc-rail: 40px;
+  --vc-link: 24px;
+  --vc-link-max: 48px;
+  --vc-arrow: 8px;
+
+  margin: 0;
+  padding: 0;
+  /* The numerals ARE the markers. `role="list"` on the element puts back the
+     semantics Safari drops the moment a list loses its bullets. */
+  list-style: none;
+}
+
+.compact {
+  --vc-numeral: 28px;
+  --vc-row: 40px;
+  --vc-rail: 32px;
+  --vc-link: 20px;
+}
+
+/* The numeral, one size up from the 28px `Chip variant="step"` rest state —
+   this is the chain's spine, not a chip in a row of chips. */
+.chain .marker {
+  width: var(--vc-numeral);
+  height: var(--vc-numeral);
+  min-height: var(--vc-numeral);
+}
+
+.label {
+  /* The global long-token guard (`overflow-wrap: anywhere` on li in index.css)
+     is inherited here, and under flex shrink it splits "FPC" over two lines.
+     `break-word` breaks only a word that would otherwise overflow and leaves
+     the intrinsic minimum at the longest word, which is what stops a step from
+     ever being squeezed narrower than the word it names. */
+  overflow-wrap: break-word;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-semibold);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.compact .label {
+  font-size: var(--sf-text-xs);
+}
+
+/* The one emphasis in the chain: the step the storefront itself stands at. */
+.brandLabel {
+  color: var(--sf-color-gold);
+}
+
+/* The connector is a flex box holding a rule and the arrow that closes it. The
+   rule is the signature gradient held to 60%, the same weight
+   `.sf-hairline--gradient` gives a seam; it is declared here rather than
+   composed because this one has to run vertically as well as across. */
+.connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.line {
+  background-image: var(--sf-gradient-signature);
+  opacity: 0.6;
+}
+
+.arrow {
+  flex: none;
+  color: var(--sf-color-gold);
+  opacity: 0.7;
+}
+
+/* =============================================================================
+ * VERTICAL  —  the forced variant, and `auto` up to 768px
+ * ========================================================================== */
+.vertical,
+.auto {
+  display: grid;
+}
+
+.vertical .step,
+.auto .step {
+  display: grid;
+  grid-template-columns: var(--vc-rail) minmax(0, 1fr);
+  grid-template-rows: minmax(var(--vc-row), auto) auto;
+  align-items: center;
+  column-gap: var(--sf-space-2);
+}
+
+.vertical .marker,
+.auto .marker {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.vertical .label,
+.auto .label {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.vertical .connector,
+.auto .connector {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: center;
+  flex-direction: column;
+  width: var(--vc-arrow);
+  height: var(--vc-link);
+  /* Half the slack the numeral leaves in its row, taken back at both ends, so
+     the line starts and finishes on the circles rather than short of them. */
+  margin-block: calc((var(--vc-numeral) - var(--vc-row)) / 2);
+}
+
+.vertical .line,
+.auto .line {
+  flex: 1 1 auto;
+  width: 1px;
+}
+
+.vertical .arrow,
+.auto .arrow {
+  transform: rotate(90deg);
+}
+
+/* =============================================================================
+ * 769–1024  —  `auto` becomes two rows of 4 + 3
+ * =============================================================================
+ * Four equal tracks; seven items fill them 4 + 3 with no arithmetic. The fourth
+ * connector is KEPT: it runs to the end of the first row and the fifth step
+ * opens the second, which is the wrap every reader already knows how to follow.
+ * ========================================================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .auto {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    row-gap: var(--sf-space-8);
+  }
+
+  .auto .step {
+    display: flex;
+    align-items: center;
+    gap: var(--sf-space-3);
+    min-width: 0;
+  }
+
+  .auto .marker,
+  .auto .label,
+  .auto .connector {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .auto .connector {
+    flex: 1 1 var(--vc-link);
+    flex-direction: row;
+    justify-self: auto;
+    width: auto;
+    height: auto;
+    min-width: var(--vc-link);
+    max-width: var(--vc-link-max);
+    margin-block: 0;
+  }
+
+  .auto .line {
+    width: auto;
+    height: 1px;
+  }
+
+  .auto .arrow {
+    transform: none;
+  }
+}
+
+/* =============================================================================
+ * ≥1025  —  `auto` becomes one row of seven
+ * ========================================================================== */
+@media (min-width: 1025px) {
+  .auto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+
+  .auto .step {
+    display: flex;
+    align-items: center;
+    gap: var(--sf-space-3);
+    /* A step grows so that the only growable thing inside it — the connector —
+       has room to reach 48px; it keeps its automatic minimum, so shrinking a
+       tight row wraps the labels at their spaces and never past their longest
+       word. The last step has no connector, so it takes no share of the slack
+       and the row finishes on the final label rather than on empty space. */
+    flex: 1 1 auto;
+  }
+
+  .auto .step:last-child {
+    flex: 0 1 auto;
+  }
+
+  .auto .marker,
+  .auto .label,
+  .auto .connector {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .auto .connector {
+    flex: 1 1 var(--vc-link);
+    flex-direction: row;
+    justify-self: auto;
+    width: auto;
+    height: auto;
+    min-width: var(--vc-link);
+    max-width: var(--vc-link-max);
+    margin-block: 0;
+  }
+
+  .auto .line {
+    width: auto;
+    height: 1px;
+  }
+
+  .auto .arrow {
+    transform: none;
+  }
+}
+
+/* =============================================================================
+ * HORIZONTAL  —  the forced variant, at every width
+ * =============================================================================
+ * A caller that pins this knows its slot is wide; it does not know it is wide
+ * enough at 360px, so the row WRAPS rather than overflowing. A chain broken
+ * over two lines is still readable; one that runs off the page is not.
+ * ========================================================================== */
+.horizontal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: var(--sf-space-6);
+}
+
+.horizontal .step {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  flex: 1 1 auto;
+}
+
+.horizontal .step:last-child {
+  flex: 0 1 auto;
+}
+
+.horizontal .connector {
+  flex: 1 1 var(--vc-link);
+  flex-direction: row;
+  width: auto;
+  height: auto;
+  min-width: var(--vc-link);
+  max-width: var(--vc-link-max);
+}
+
+.horizontal .line {
+  width: auto;
+  height: 1px;
+  flex: 1 1 auto;
+}
