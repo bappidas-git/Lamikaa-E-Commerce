@@ -17,7 +17,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 11 | Search overlay and search results | complete | 2026-09-06 | (this commit) | `SearchModal` is the first feature on `ui/Modal` — its hand-rolled focus trap, Escape handler, `document.body.style.overflow` lock and focus-restore are **deleted** (`grep "focusable\|body.style.overflow" SearchModal.js` → 0), and the primitive gains `size="full"` + `initialFocus`. 850 → 642 lines of JS, 813 → 420 of CSS. Ranking moved out to **`src/utils/search.js`** (+ `search.test.js`, 10 tests) so the overlay and `/search` cannot disagree: `"serum"` → Face Serum first, `"hydration"` → Mist/Gel/Body Wash and nothing else, `"goat"` → the soap, `"black rice"` → all eight with the three priced ones leading, nonsense → the empty state (all five verified in Chromium AND pinned in the suite). Recent searches are **`sessionStorage["lk-recent-searches"]`** — `grep -rn "localStorage" src/components/SearchModal src/pages/Search` → **0**. `/search?q=` is a real page (`noindex`), `ComingSoon` is gone from the route (`grep -rn "ComingSoon" src/App.js | grep -i search | wc -l` → **0**), and `/products?search=x` still lands on it. `grep -rn "Muga\|Mekhela\|Eri \|Pat silk\|weave" src/components/SearchModal src/pages/Search` → **0**. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` = **4 suites passed / 1 skipped** (44 passed, 50 skipped). Browser QA at 360/390/414/768/1024/1280/1440 + reduced motion: 0 horizontal overflow, 0 page errors, header backdrop-filter `none` throughout. |
 | 12 | Cart drawer with cross-sell | complete | 2026-09-07 | (this commit) | `CartDrawer` is the second feature on `ui/Drawer` — its hand-rolled focus trap, `FOCUSABLE_SELECTOR`, Escape handler and `document.body.style.overflow` lock are all **deleted** (the only hits left for `grep -n "FOCUSABLE_SELECTOR\|body.style.overflow\|onCloseRef" src/components/CartDrawer/CartDrawer.js` are the **2 inside the docblock that records what moved to the primitive** — no code hit). 440px glass tray: measured **65px** masthead (64 + hairline), **96px** lines (72px plate + 12px), **129px** foot (128 + hairline), no horizontal overflow at 360/390/414/768/1024/1280 and the panel at 360/390/414/**440**/440/440. **No invented shipping figure survives**: `FREE_SHIPPING_THRESHOLD` and `FLAT_SHIPPING = 99` are gone, the meter's bar is the lowest `freeAbove` across the active `shipping_methods` (cached in a ref, one request per mount) and hides when none is set; no delivery charge is previewed at all. Measured with `freeAbove: 999` seeded through the API: ₹390 → "₹609 away from free shipping", `aria-valuenow=390 aria-valuemax=999`, fill 39.04%; ₹1 170 → "You've unlocked free shipping", 999/999. `CartContext` gains **`addMany`** (one toast, one drawer opening, skips uncommitted prices) and both add paths now share one `mergeLine` reducer; toasts are sentence case. **17 new unit tests** (`CartContext.test.js` 7, `CartDrawer.test.js` 10). Browser QA: PDP add auto-opens the tray with "Added to cart"; cross-sell Add keeps it open; coupon `SAMPLE10` applies −₹39.00 and a bad code shows "Invalid coupon code"; Tab cycles 11 stops and wraps; Escape closes and restores focus to "Cart, 1 item"; backdrop click closes; Checkout → `/checkout` with the cart intact, scroll unlocked and `body[data-drawer-open]` cleared; View cart → `/cart`; removing the last line falls to the empty state and the foot disappears with it. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (**6 suites / 61 tests passed**, 1 suite / 50 skipped). `grep -rn "FREE_SHIPPING_THRESHOLD\|FLAT_SHIPPING\|Sualkuchi\|looms" src/components/CartDrawer src/context/CartContext.js` → **0**. See "Prompt 12 record" below. |
 | 13 | Footer | complete | 2026-09-07 | (this commit) | The close of every page is rebuilt as **four bands on `--sf-color-surface`** under one `.sf-hairline--gradient`: invitation (220px wordmark, master tagline, `signatureLines[3]`, "Stay close to the farm" + the untouched newsletter flow) · directory (`LegalNote` in the wide track, then **four data-fed columns** — the seven categories and three rituals the admin publishes, Company, Help) · assurances (`<address>`, social marks, payment marks) · colophon (BAOPCL copyright, the brand-of line, GSTIN/CIN when resolved, policy micro-links). **One grid, twice** (`--sf-footer-grid`: `1.6fr repeat(4,1fr)`/48px ≥1280, `1.2fr repeat(4,1fr)`/32px ≥1024, 2-up ≥481, single column below), and at ≤480 the four headings become one multi-open `ui/Accordion`, all closed. `src/components/Newsletter/` **deleted** (0 importers) and `FREE_SHIPPING_THRESHOLD` **removed from `constants.js`** with its dead fallback in `fillStoreCopy` — the `{freeShipping}` sentence-dropping stays (FAQ 6 still carries it). New `src/components/brand/LegalNote.{js,module.css}` renders `brand.legalNote` **verbatim** and is the component Prompts 17/25/28 reuse. Browser QA at 360/390/414/480/768/1024/1280/1440 in mock mode: **no horizontal scroll at any width**, ground `rgb(20,20,22)`, outline `h2 "LAMIKAA NATURALS"` → four `h3`, four labelled `nav` landmarks (one "Footer directory" at ≤480), **no `{{` anywhere**, contrast floor **7.0:1**. Newsletter verified end to end (invalid → `aria-invalid` + `role=alert`; valid → lead `id 3` written as `type: "newsletter", status: "subscribed"`, then reverted). Contact rows, the Instagram mark and the GSTIN/CIN rows verified to appear when resolved and to vanish again. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (6 passed / 1 skipped, 61 / 50 of 111). `db.json`, `api.js` and the admin untouched. See "Prompt 13 record" below. |
-| 14 | Home hero product carousel | pending | | | |
+| 14 | Home hero product carousel | complete | 2026-09-07 | (this commit) | The admin banner hero is gone: `components/HeroSection/` is deleted and `components/home/HeroCarousel.js` (+`HeroIndex.js`, one shared `HeroCarousel.module.css`) opens the home page on **eight product slides** in `heroOrder` — label card on a duo-glow plate on one side, the product's own `heroHeadline`/`heroSubtext`, `Price`, Explore → PDP, Add to Cart (disabled **"Coming soon"** on the five `priceTBA` products) and its three trust chips on the other. Autoplay 6.5s with banked-time pause on hover / focus-within / hidden tab / the pause button / `body[data-drawer-open]`; swipe, ←/→, Home/End, the product-name index and a signature-gradient progress hairline. Media crossfades (600ms + 1.02→1) while the copy is rendered ONCE and swapped in place, so the page keeps a single `h1`. **Measured in Chromium at 360/390/414/768/1024/1280/1440**: LCP is the first label card (`loading=eager`, `fetchpriority=high`, `ar_1:1` ≤768 / `ar_4:5` above), CLS **0.040 at 390 and 0.029 at 1280 on load** and **0.004 / 0.003 across a full eight-slide walk** (the copy block measures itself against every slide — see the decisions), no horizontal overflow anywhere, zero console errors. Reduced motion: no autoplay, no breathe, no parallax, no progress bar, crossfade only, arrows + index kept. `heroConfig.js` gains `showPause` and a 3000–15000ms interval clamp (default 6500) and marks eleven slide-store exports `@deprecated — removed in Prompt 34`; `db.json` + Admin → Hero Section carry `showPause` in step. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (7 suites / 72 tests, +11 new). |
 | 15 | Trust strip and shop-by-category/concern | pending | | | |
 | 16 | Home product showcase sections | pending | | | |
 | 17 | About LAMIKAA section and value-chain visual | pending | | | |
@@ -187,6 +187,21 @@ Record every decision a prompt had to make that the reference files did not sett
 - `13 · 2026-09-07 · "Policies last updated <date>" was dropped from the colophon · The prompt enumerates the colophon's contents and it is not among them, and all four policy pages already print `POLICY_LAST_UPDATED` at the top of the page a reader is actually consulting. The constant keeps its four consumers.`
 - `13 · 2026-09-07 · The footer fetches `categories.getAll` + `rituals.getAll` itself, module-cached, rather than importing `loadMegaPanelData` · The mega panel's promise also pulls `concerns.getAll` and `products.getHeroProducts`; sharing it would cost every page two collections the close of the page never renders. Both columns keep a static entry ("All products", "Build your ritual") so an unreachable API is a SHORTER footer, not a broken one.`
 - `13 · 2026-09-07 · The mobile disclosure triggers keep `ui/Accordion`'s own 16px/600 warm-white look instead of the desktop columns' gold 12px eyebrow · The eyebrow is a column HEADING; a disclosure is a 44px control, and it reads (and taps) like the mobile drawer's Shop group, which is the same primitive. Restyling it would mean reaching into another module's hashed class names.`
+
+- `14 · 2026-09-07 · The interval clamp is 3000–15000ms with a 6500ms default, and the old 1000–60000ms pair stays for the deprecated per-slide `durationMs` · The prompt names the hero range; the wider pair was written for hand-authored banner slides. A slide now carries an eyebrow, a headline, a price, one or two lines and two CTAs — nobody reads that in a second, and a slide that sits for a minute is not a carousel. `HERO_INTERVAL_MIN_MS`/`HERO_INTERVAL_MAX_MS` are new constants rather than a rewrite of `HERO_MIN_DURATION_MS`/`HERO_MAX_DURATION_MS`, because the admin's per-slide field still guards against the old pair until Prompt 34 deletes it. AdminHeroSection's section-interval input was repointed at the new pair (3–15s, "Between 3 and 15 seconds") so the screen cannot save a value the storefront would silently clamp.`
+- `14 · 2026-09-07 · `showPause: false` turns AUTOPLAY off; it does not merely hide the button · WCAG 2.2.2 and the prompt's own guardrail ("no autoplay without a visible pause control") make an unstoppable moving hero the one outcome the switch must not have. Reading it as a plain chrome toggle would have made that outcome one click away in the admin. So `autoplayOn = enabled && autoplay && showPause && n > 1 && !reducedMotion`, and the pause button renders exactly when `autoplayOn` — the control and the motion cannot be separated.`
+- `14 · 2026-09-07 · The BRAND SLIDE is the render for BOTH "no products resolved" and `enabled: false` · The prompt's line reads "render only a visually hidden h1 with brand.name (existing behaviour) plus the brand slide": the brand slide's headline IS the wordmark image, so the page's single `h1` has to be the hidden one beside it. One `brandOnly` branch therefore serves both — a static wordmark, `brand.tagline` and "Shop the Black Rice Range" → `/shop`, with no carousel chrome, no autoplay and no photography. `#hero-sentinel` still renders, so a switched-off hero keeps the transparent masthead rather than jumping to glass. Verified both ways in Chromium: `heroConfig.enabled = false`, and json-server stopped.`
+- `14 · 2026-09-07 · The copy block MEASURES ITSELF against every slide instead of reserving `3.2em / 2.4em` · The prompt's fixed min-heights were implemented first and measured at 0.178 CLS over an eight-slide walk at 390px: 3.2em is 2.86 lines of `--sf-leading-display`, so a three-line headline (four of the eight, at every breakpoint) pushed the CTAs 16px; the price swapping between an amount and the "Price on launch" chip moved them 5px more; and at 1024 the long "Explore the Exfoliating Face Scrub" wrapped the CTA row, moving the badges and rail 66px. A reservation in ems can only ever be right for the copy that happens to be seeded, and hero copy is edited on the PRODUCTS. So `.copySizer` renders every slide's whole copy block — eyebrow, headline, `Price`, subtext, both `Button`s and the badge chips — stacked in ONE grid cell, `visibility: hidden` + `aria-hidden`, with the live copy laid over it. The block is always the tallest slide's height at any width for any copy: the walk now measures **0.004 (390) / 0.003 (1280)**, all of it sub-0.001 horizontal drift as a CTA label changes width. The em min-heights survive as the pre-data FLOOR (headline exactly 3 lines, subtext 3 lines ≤768 / 2 above, price 36px), computed from the leading tokens rather than written flat, because a floor a hair under one full line is a layout shift with extra steps.`
+- `14 · 2026-09-07 · `HeroIndex` renders an empty `.rail` div instead of `null` while there are no products, and `.rail` reserves its own height in CSS · An element that is not in the document cannot reserve anything, and the rail is 116px (one names row) or 168px (two, from 1025px) of the copy column. Returning `null` was worth 0.46 of load CLS at 390px on its own. The rail is the one part of the column the sizer cannot measure — it does not exist until the products do — but its height is pure geometry (`--sf-space-2` + `--sf-tap-target` + `--sf-space-4` + the rows), so it is written as that `calc()` and not as a magic number. `.names` was narrowed to `max-width: 32rem` at ≥1025px so the eight launch products fall into the TWO rows the prompt specifies (46ch gave three).`
+- `14 · 2026-09-07 · One `GlowWrap tone="duo" intensity={0.24} breathe` wraps the whole media STACK, not each slide's `CloudinaryImage` · The prompt puts the image inside the glow. Eight layers each carrying their own lamp would be eight animated `blur(60px)` compositing layers painting one picture (only one layer is ever opaque), and gating `breathe` on the active layer instead would restart the 10s loop on every slide change. The layers are identically sized and identically placed, so a single lamp behind the stack is the same image at an eighth of the cost — and it is still "the only breathing glow above the fold" (DESIGN_SYSTEM §5). The pointer parallax rides on that same wrapper.`
+- `14 · 2026-09-07 · Pointer parallax is ±8px, written to CSS custom properties on the section rather than to React state · DESIGN_SYSTEM §7 caps hero parallax at 8px; the card leans INTO the pointer (inverted offset), the way a lit object would. A `setState` per `pointermove` would re-render the whole carousel sixty times a second to move one card eight pixels. Gated on `(min-width: 1025px) and (pointer: fine)` AND `!prefersReducedMotion`, and the offset is zeroed the moment either stops being true, so a stale lean cannot survive a visitor turning reduced motion on.`
+- `14 · 2026-09-07 · `#hero-sentinel` is the hero's opening 140px, not the whole section · Header.js watches it with `threshold: 0` and drops ALL glass while it intersects. Covering the whole hero would have kept a transparent masthead over hero copy scrolling beneath it — the header is `position: sticky` in normal flow, so once the page moves it is over content, not beside it. 140px keeps the opening frame clean and hands the header its glass as soon as anything passes under it. Verified: transparent at scroll 0, `sf-glass sf-glass--strong` at 400, transparent again on the way back.`
+- `14 · 2026-09-07 · The CTAs sit OUTSIDE the `aria-live` region, which wraps only the eyebrow, headline, price and subtext · Both CTA labels change with the slide, and `Button variant="addToCart"` already carries its own `aria-live` on its label. Leaving them inside would have nested live regions and narrated "Explore the Face Serum… Coming soon" over the headline the visitor asked to hear. The region is `polite` only while the timer is stopped, so an announcement is always the answer to something the visitor just did.`
+- `14 · 2026-09-07 · `-webkit-user-drag: none` on the stage image, found by testing the swipe with a mouse · A mouse drag across the card started the browser's native image drag, which fires `pointercancel` and leaves a ghost under the cursor — the swipe never completed. Touch was unaffected (verified through CDP `Input.dispatchTouchEvent`: 120px left advances, 120px right returns, a 25px drag is ignored and a vertical drag scrolls the page without changing the slide).`
+- `14 · 2026-09-07 · `HERO_FALLBACK_IMAGE` could not be rewritten because Prompt 07 had already DELETED it · The prompt asks for its Meghali placeholder text to be replaced with a neutral picsum URL "right now". There is nothing left to rewrite (`grep -rn "HERO_FALLBACK_IMAGE" src` → 0), and the new hero's fallback carries no photography at all by design (Task 8: no imagery behind the hero). Re-adding the constant would have created an unused export for Prompt 34 to delete. `PLACEHOLDER_ASSETS.md`'s row for it is marked retired instead, so the inventory does not claim a placeholder the code no longer has.`
+- `14 · 2026-09-07 · Three files outside the prompt's expected list were touched, each a one-line consequence · `db.json` and `AdminHeroSection.js` carry `showPause` and the new interval bounds (the guardrail: an api/db change is reflected in the admin). `CloudinaryImage.js:28` and `Home.module.css:65` cited `HeroSection.js` by name in their docblocks, which the acceptance grep counts. `src/components/home/HeroCarousel.test.js` is new — the repo's convention since Prompt 05 is that a component's pure decisions are pinned by tests rather than by clicking.`
+- `14 · 2026-09-07 · The one-time load shift is ~2–4px everywhere except a 769–1279px band, where it is up to one headline line · The pre-data floor reserves three headline lines; between 769 and 1279 the copy column is narrow enough that the seeded headlines take FOUR (the column is capped by `--sf-container-max`, so ≥1280 is back to three). Closing it would need the floor to know the copy, which is exactly the data-dependence the sizer exists to avoid — and reserving four lines there would trade a growth for an equal shrink at ~900px, where three is right. Mobile (the Lighthouse target) and ≥1280 measure 0.040 and 0.029; the band is a one-time load shift only — the recurring, every-6.5-seconds shift is 0.004 at every width.`
+
 
 ## Open TODOs
 
@@ -1575,3 +1590,95 @@ token string.
 prompt reads two existing storefront endpoints and writes through one existing
 lead endpoint. No dependency added.
 
+
+## Prompt 14 record (2026-09-07)
+
+### What the top of the home page now is
+
+The admin-managed banner is gone. `src/components/HeroSection/` is deleted and
+`src/pages/Home/Home.js:421` renders `<HeroCarousel />` — **one slide per hero
+product**, eight at launch, in the merchant's `heroOrder`.
+
+| Region | Contents |
+|---|---|
+| Copy (left ≥769px, second on mobile) | `sf-eyebrow` `Black Rice Ritual · 03 / 08` · the `h1` from `p.heroHeadline` (falls back to `p.promise`) · `Price product={p} size="sm"` · `p.heroSubtext` (falls back to `p.shortDescription`) · `Button variant="primary" size="lg"` **Explore the {shortName}** → `productPath(p)` · `Button variant="addToCart" size="lg"` **Add to Cart**, `disabled` and **"Coming soon"** when `p.priceTBA` · a `Chip variant="trust"` per `p.badges` |
+| Rail (`HeroIndex`) | ‹ › 44px glass circles · pause/play · `01 — 08` counter · a signature-gradient progress hairline · eight product-name buttons (`aria-current`, gold gradient underline, scroll-snap ≤1024 / two wrapped rows ≥1025) |
+| Media (right ≥769px, FIRST on mobile) | one absolutely-positioned layer per slide inside one `GlowWrap tone="duo" intensity={0.24} breathe`; each layer is `CloudinaryImage` with the product's `crop`, `pad`, `fit="contain"`, `plate`, `widths=[480,768,1080]`, `sizes="(max-width: 768px) 80vw, 40vw"` |
+| Ground | the page ground, plus a non-breathing `.sf-glow--gold` at `--sf-glow-opacity: .12` behind the copy, ≥1025px only. No imagery, no scrim. |
+
+`<div id="hero-sentinel">` is the hero's opening 140px; `Header.js`'s observer
+needed no change.
+
+### Composition
+
+- **≤768** card first (80vw, max 420px, `ar_1:1`), then the copy; headline
+  `--sf-text-4xl`, subtext 16px, CTAs stacked (capped at 30rem so a 768px pill
+  is not a banner); section height content-driven.
+- **769–1024** `1.05fr 1fr`, card 420px at `ar_4:5`, subtext 18px,
+  `min-height: calc(100svh - 100px)` with a `100vh` fallback under it.
+- **≥1025** the same split, card up to 560px, headline `--sf-text-5xl`, the
+  ground glow on, the name index wrapped to two rows.
+
+### Motion
+
+Crossfade `--sf-duration-slow` (600ms) `--sf-ease` + scale 1.02→1; copy replaced,
+never slid; progress hairline linear, frozen with `animation-play-state` in step
+with the banked timer; index underline `--sf-transition-fast` (160ms); ≤8px
+pointer parallax on `(min-width: 1025px) and (pointer: fine)`.
+
+Autoplay is `intervalMs` (6500) per slide, and BANKS its remainder on every
+pause — hover (when `pauseOnHover`), focus within, `document.visibilitychange`
+hidden, the pause button, and `body[data-drawer-open]` (a `MutationObserver` on
+the flag `hooks/useOverlayFlag` reference-counts). Under
+`prefers-reduced-motion` it never starts, the pause button and the progress bar
+are not rendered, the plate does not breathe, the parallax is not attached and
+the layers lose their scale — arrows and the index stay.
+
+### `heroConfig.js`
+
+- **New:** `HERO_INTERVAL_MIN_MS` (3000), `HERO_INTERVAL_MAX_MS` (15000),
+  `DEFAULT_HERO_CONFIG.intervalMs` 5000 → **6500**, `showPause: true`.
+  `normalizeHeroConfig` clamps `intervalMs` to the new pair and resolves
+  `showPause: cfg.showPause !== false`.
+- **`@deprecated — removed in Prompt 34`** (the temporary admin screen is the
+  only importer): `HERO_BACKGROUND_TYPES`, `HERO_TEXT_ALIGNMENTS`,
+  `HERO_IMAGE_POSITIONS`, `HERO_DEVICES`, `DEFAULT_HERO_HEIGHTS`,
+  `DEFAULT_HERO_SECONDARY_CTA`, `DEFAULT_HERO_OPENERS`, `DEFAULT_HERO_SLIDE`,
+  `HERO_MIN_DURATION_MS`, `HERO_MAX_DURATION_MS`, `HERO_FALLBACK_SLIDES`,
+  `normalizeHeroHeights`, `normalizeHeroSlide`, `normalizeHeroSlides`,
+  `heroSlideDuration`, `heroSlideOverlay`, `heroStageVars`.
+- `HERO_FALLBACK_IMAGE` no longer exists (deleted in Prompt 07) — see the
+  decisions log.
+
+`db.json → heroConfig` and Admin → Storefront → Hero Section → Section settings
+carry `showPause` and the 3–15s bound in step; `admin.updateHeroConfig` replaces
+the whole record, so no write path needed a change.
+
+### Verification (Chromium 1194, mock mode, real Cloudinary covers and fonts)
+
+| Check | Result |
+|---|---|
+| `CI=true npm run build` | exit 0, **no warnings** |
+| `npm test -- --watchAll=false` | exit 0 — 7 suites / 72 tests (11 new in `HeroCarousel.test.js`) |
+| `test ! -d src/components/HeroSection` | passes |
+| `grep -rn "HeroSection\|banners" src` | 4 lines, all `AdminHeroSection` (the admin screen + its two routes) — the deleted storefront component has no references left |
+| LCP element | the first label card `<img>`, `loading="eager"`, `fetchpriority="high"`, `ar_1:1` at 390 / `ar_4:5` at 1280; slides 2–8 `loading="lazy"` and mounted in a `requestIdleCallback` pass |
+| CLS — load | **0.040** at 390, **0.029** at 1280 |
+| CLS — eight-slide walk | **0.004** at 390, **0.003** at 1280 (was 0.178 / 0.025 with flat em reservations) |
+| Autoplay | advances at ~6.5s; held through hover, focus, the pause button (`aria-pressed`) and an open cart drawer |
+| Keyboard | ←/→ step, Home/End jump, index buttons jump; 12 hero tab stops in DOM order (Explore → Add to Cart → ‹ → › → pause → the eight names); the sizer contributes none |
+| Touch (CDP) | 120px left advances, 120px right returns, 25px ignored, a vertical drag scrolls the page and holds the slide |
+| Add to Cart | slide 1 opens the drawer with "Black Rice Face Wash · 1 · ₹390.00"; slide 3 (`priceTBA`) is a disabled "Coming soon" |
+| Header | transparent at scroll 0, `sf-glass sf-glass--strong` at 400px, transparent again on return |
+| Reduced motion | no autoplay over 8s, no breathe animation, no progress bar, no pause button, layer transform `none`; arrows + 8 index buttons kept |
+| Fallbacks | `enabled: false` → hidden `h1` "LAMIKAA NATURALS" + wordmark + tagline + "Shop the Black Rice Range" → `/shop`, no carousel role. json-server stopped → identical render |
+| 360 / 390 / 414 / 768 / 1024 / 1280 / 1440 | `document.scrollWidth === innerWidth` at every width; headline ≤3 lines at 12ch; card 288/312/331/420/420/560/560px; right gutter 41px at 1280 and 1440 |
+| Admin | Hero Section → Section settings shows "Pause / play button" and a 3–15s interval at 6.5; zero console errors |
+
+### Observation for a later prompt
+
+The scrub's and the soap's `crop` rectangles are wider than 4:5, so `c_pad,b_auto`
+letterboxes them onto a light ground sampled from the label's own edges — correct
+behaviour (the artwork is never sliced), but it reads as pale bands on the dark
+plate where the face wash's taller crop fills it. Worth a look when the crops are
+reviewed in Prompt 26/33; no code change belongs here.

@@ -9,7 +9,7 @@ import apiService from "../../services/api";
 import { categoryPath } from "../../utils/categories";
 import { resolveCountdownTarget, diffToParts } from "../../utils/dealsConfig";
 import { reveal as sharedReveal } from "../../theme/motion";
-import HeroSection from "../../components/HeroSection/HeroSection";
+import HeroCarousel from "../../components/home/HeroCarousel";
 import ProductCard from "../../components/storefront/ProductCard";
 import useSeo from "../../hooks/useSeo";
 import { ROUTES, TRUST_BADGES } from "../../utils/constants";
@@ -19,7 +19,7 @@ import styles from "./Home.module.css";
 // =============================================================================
 // HOME — the storefront read as a magazine
 // =============================================================================
-// Below the Prompt 12 hero the page is no longer a stack of marketplace rails.
+// Below the Prompt 14 hero the page is no longer a stack of marketplace rails.
 // It is a sequence of few, large, well-spaced spreads:
 //
 //   1. WHERE TO BEGIN   collection stories (categories.getAll)
@@ -46,8 +46,9 @@ import styles from "./Home.module.css";
 const RECENTLY_VIEWED_KEY = "recentlyViewed";
 
 // How many category "stories" open the page. The rest of the collections stay
-// one click away in the hero's index line, the header menu and the listing
-// facets — this section is a statement, not a directory.
+// one click away in the header's mega panel and the listing facets — this
+// section is a statement, not a directory. (The hero's index line lists hero
+// PRODUCTS since Prompt 14, not collections.)
 const COLLECTION_STORIES = 3;
 
 // The promises row. Titles come from TRUST_BADGES (constants.js) so the store's
@@ -411,12 +412,13 @@ const Home = () => {
     // keyed wrapper around <Routes> in App.js, so every storefront route
     // arrives the same way.
     <div className={styles.homePage}>
-      {/* Hero — full-bleed cinematic opening. It escapes nothing: .main-content
-          and .homePage set no max-width, so the section spans the viewport.
-          The old promises strip that sat here is gone: the header already
-          states the same four policies, and the page now closes on them. */}
+      {/* Hero — one slide per hero product (Prompt 14). It escapes nothing:
+          .main-content and .homePage set no max-width, so the section spans the
+          viewport and the page ground shows straight through it. It owns the
+          page's single h1 and renders #hero-sentinel, which is what keeps the
+          masthead transparent over the opening band. */}
       <section className={styles.heroSection}>
-        <HeroSection />
+        <HeroCarousel />
       </section>
 
       {/* ── 1. WHERE TO BEGIN — the collections, told as stories ──────────── */}

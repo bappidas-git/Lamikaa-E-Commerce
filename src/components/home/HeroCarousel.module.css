@@ -1,0 +1,615 @@
+/* =============================================================================
+ * HeroCarousel  —  the home page's opening spread
+ * =============================================================================
+ * MOBILE FIRST. The base rules are the ≤768px composition: the label card
+ * first (80vw on a 1:1 plate), then the copy, then the control rail, with the
+ * section's height decided by its content. Everything else is an addition at
+ * 769px and 1025px.
+ *
+ * WHAT RESERVES SPACE (and so keeps CLS out of the hero)
+ *   • `.stage` carries the aspect-ratio, not the image — the plate is filled by
+ *     an absolutely positioned layer, so the box exists before the bytes do.
+ *   • `.headline` and `.subtext` carry min-heights in their OWN em, so a slide
+ *     whose copy is one line shorter cannot move the CTAs under a thumb.
+ *
+ * WHAT THE STYLESHEET DOES NOT DO
+ *   • It never crops the label artwork. The pack is pulled out of the cover
+ *     photograph by the Cloudinary crop rectangle and padded to the ratio
+ *     (`c_pad,b_auto`); CSS only ever contains it.
+ *   • It never re-states a primitive. The buttons are `.sf-btn*`, the chips
+ *     `.sf-chip*`, the eyebrow `.sf-eyebrow`, the plate `.sf-plate`, the lamps
+ *     `.sf-glow*`. Where a rule below overrides one of those it is written as a
+ *     compound selector (`.hero .groundGlow`) so it wins on specificity rather
+ *     than on stylesheet order.
+ * ========================================================================== */
+
+.hero {
+  /* The masthead + announcement band the hero sits under; the height budget
+     and the sentinel's tail are both measured from it. */
+  --sf-hero-chrome: 100px;
+  --sf-hero-parallax-x: 0px;
+  --sf-hero-parallax-y: 0px;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-top: var(--sf-space-6);
+  padding-bottom: var(--sf-space-12);
+  /* The lamps bleed past their boxes by design; a full-width section that let
+     that bleed through would scroll the document sideways (DESIGN_SYSTEM §6).
+     `clip`, not `hidden`: no scroll container, so sticky still works inside. */
+  overflow-x: clip;
+}
+
+/* The header's IntersectionObserver target. It is the hero's opening band, not
+   the whole hero: the masthead is transparent while the hero's top is on screen
+   and takes its glass as soon as hero content starts passing beneath it. */
+.sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  pointer-events: none;
+}
+
+/* Desktop-only ground light behind the copy column — faint, and NOT breathing:
+   the plate owns the single breathing glow above the fold. */
+.hero .groundGlow {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 46%;
+  height: 62%;
+  /* Below GlowWrap's own 0.15 floor, which is why it is set here rather than
+     passed as `intensity`: this is ground light, not a lamp on an object. */
+  --sf-glow-opacity: 0.12;
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: var(--sf-space-8);
+}
+
+/* ─── Copy ─────────────────────────────────────────────────────────────── */
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  min-width: 0;
+}
+
+/* The copy block is exactly as tall as its tallest slide, because the sizer
+   (every slide's copy, invisible, all in one grid cell) is the only thing in
+   its flow; the visible copy is laid over it. Nothing below it can move when a
+   slide changes — which is the whole CLS budget of a carousel that swaps text
+   every few seconds. */
+.copyText {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.copySizer {
+  display: grid;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.copySizer > * {
+  grid-area: 1 / 1;
+}
+
+.copyBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  min-width: 0;
+}
+
+/* Eyebrow, headline, price, subtext — the part that becomes a live region. */
+.copyLines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+  min-width: 0;
+}
+
+/* The one real copy block sits on top of the sizer. */
+.copyText > .copyBlock {
+  position: absolute;
+  inset: 0;
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+.headline {
+  margin: 0;
+  max-width: 12ch;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-4xl);
+  font-weight: 500;
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  /* Three lines is the worst case across the eight seeded headlines at every
+     breakpoint (measured 360 → 1440), so the box is reserved for exactly three
+     — computed from the leading token rather than written as a flat em, because
+     a reservation that is a hair under one full line is a layout shift with
+     extra steps: a two-line slide and a three-line slide must put the CTAs in
+     the same place, or the buttons move under a thumb mid-carousel. */
+  min-height: calc(3em * var(--sf-leading-display));
+  /* The slack in that reservation collects ABOVE the words, not below them: a
+     two-line headline then sits tight against its price and subtext, and the
+     extra air falls under the eyebrow where editorial space belongs. */
+  display: flex;
+  align-items: flex-end;
+}
+
+.skeletonLine {
+  display: block;
+  width: 82%;
+  height: 0.7em;
+  border-radius: var(--sf-radius-sm);
+}
+
+.price {
+  margin: 0;
+  /* An amount and the "Price on launch" chip are not the same height, and the
+     range mixes both. Reserve the chip's 36px so the swap costs nothing.
+     PriceBlock is already a COLUMN flex container, so it is `justify-content`
+     that centres it in the reserved height — `align-items: center` would have
+     pushed the amount into the middle of the copy column. */
+  min-height: 36px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.subtext {
+  margin: 0;
+  max-width: 42ch;
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  /* Two lines on a wide column, three on a phone — the measured worst case at
+     each. This floor only has to carry the moment BEFORE the products land
+     (the sizer above owns every frame after it), so it is set to the height the
+     copy actually resolves to rather than to a round number. */
+  min-height: calc(3em * var(--sf-leading-relaxed));
+}
+
+/* ─── CTAs ─────────────────────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  /* Full-width, but only up to a readable measure: a 728px-wide pill at the top
+     of the mobile bracket is a banner, not a button. */
+  max-width: 30rem;
+}
+
+/* Full-width and stacked on a phone; side by side from the tablet up. */
+.actions .cta {
+  width: 100%;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ─── The control rail (HeroIndex) ─────────────────────────────────────── */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+  min-width: 0;
+  padding-top: var(--sf-space-2);
+  /* The rail is the one part of the copy column the sizer cannot measure — it
+     does not exist until the products do. Its height is pure geometry though:
+     the padding, one 44px control row, the gap, one 44px row of names and the
+     rail's own scroll padding. Reserving it means the page below the hero does
+     not jump when the index arrives. */
+  min-height: calc(
+    var(--sf-space-2) + var(--sf-tap-target) + var(--sf-space-4) +
+      var(--sf-tap-target) + var(--sf-space-1)
+  );
+}
+
+.railControls {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+}
+
+/* 44px glass circles — the arrows and the pause button are the same object. */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  padding: 0;
+  border: 1px solid var(--sf-glass-border);
+  border-radius: 50%;
+  background: var(--sf-glass-bg);
+  color: var(--sf-color-text);
+  font-size: var(--sf-text-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast),
+    background-color var(--sf-transition-fast);
+}
+
+.stepper:hover {
+  color: var(--sf-color-gold);
+  border-color: var(--sf-color-border-strong);
+}
+
+.stepper:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  flex: none;
+  color: var(--sf-color-text-muted);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: var(--sf-tracking-wide);
+  font-variant-numeric: tabular-nums;
+}
+
+.counterRule {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--sf-color-border-strong);
+}
+
+.progress {
+  display: block;
+  flex: 1 1 auto;
+  max-width: 140px;
+  height: 2px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-border);
+  overflow: hidden;
+}
+
+.progressFill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background-image: var(--sf-gradient-signature);
+  animation-name: heroProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes heroProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The product-name index. A scrolling, snapping rail on a phone; two wrapped
+   rows once there is room for them. */
+.names {
+  display: flex;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding-bottom: var(--sf-space-1);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.names::-webkit-scrollbar {
+  display: none;
+}
+
+.name {
+  position: relative;
+  flex: none;
+  scroll-snap-align: center;
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-2) var(--sf-space-1);
+  border: 0;
+  background: transparent;
+  color: var(--sf-color-text-muted);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+/* The gold gradient underline. It is a pseudo-element rather than a border so
+   it can scale from the centre in 160ms without moving the label. */
+.name::after {
+  content: "";
+  position: absolute;
+  left: var(--sf-space-1);
+  right: var(--sf-space-1);
+  bottom: var(--sf-space-1);
+  height: 2px;
+  border-radius: var(--sf-radius-pill);
+  background-image: var(--sf-gradient-gold);
+  transform: scaleX(0);
+  transition: transform var(--sf-transition-fast);
+}
+
+.name:hover {
+  color: var(--sf-color-text);
+}
+
+.name:focus-visible {
+  outline: none;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.nameActive {
+  color: var(--sf-color-text);
+}
+
+.nameActive::after {
+  transform: scaleX(1);
+}
+
+/* ─── Media stage ──────────────────────────────────────────────────────── */
+
+.stage {
+  order: -1;
+  position: relative;
+  width: 80vw;
+  max-width: 420px;
+  margin-inline: auto;
+  aspect-ratio: 1 / 1;
+  /* A vertical drag is always the page's; only a horizontal one is ours. */
+  touch-action: pan-y;
+}
+
+/* A mouse drag across the card is a swipe, so the browser's own image drag —
+   which fires pointercancel and leaves a ghost under the cursor — is off. */
+.stage img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* The lamp pair behind the plate — pink off the top-right shoulder, violet off
+   the bottom-left. ONE wrapper for the whole stack rather than one per layer:
+   the layers are identically sized and only one is ever opaque, so eight lamps
+   would be eight blurred compositing layers to paint the same picture — and the
+   breathe loop would restart on every slide change. */
+.stage .stageGlow {
+  height: 100%;
+  transform: translate3d(
+    var(--sf-hero-parallax-x),
+    var(--sf-hero-parallax-y),
+    0
+  );
+  transition: transform var(--sf-transition-fast);
+}
+
+.stageSkeleton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--sf-radius-lg);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.02);
+  transition: opacity var(--sf-duration-slow) var(--sf-ease),
+    transform var(--sf-duration-slow) var(--sf-ease);
+}
+
+.layerActive {
+  opacity: 1;
+  transform: none;
+}
+
+/* `transition: "none"` in the hero config, and reduced motion, both land here. */
+.stageInstant .layer {
+  transition: none;
+  transform: none;
+}
+
+/* `.sf-plate` brings the surface, the hairline and `aspect-ratio: 1`; the layer
+   already has the right box, so the plate fills it instead. */
+.stage .plate {
+  height: 100%;
+  border-radius: var(--sf-radius-xl);
+  box-shadow: var(--sf-shadow-2);
+}
+
+/* ─── The brand slide ──────────────────────────────────────────────────── */
+/* No products resolved, or the hero is switched off. Wordmark, tagline, one
+   way in — and no photography, because an offline storefront must not be the
+   one surface that invents an image. */
+
+.heroBrand {
+  min-height: 60vh;
+  text-align: center;
+}
+
+.brandInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sf-space-6);
+}
+
+.brandGlow {
+  display: inline-block;
+  width: auto;
+}
+
+.brandMark {
+  display: block;
+  width: min(280px, 70vw);
+  height: auto;
+}
+
+.brandTagline {
+  margin: 0;
+  max-width: 26ch;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  line-height: var(--sf-leading-tight);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABLET — 769px and up. The two-column split arrives, and with it the height
+   budget: the hero fills the viewport minus the chrome above it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) {
+  .hero {
+    /* svh first with a vh fallback underneath, so a browser without the small
+       viewport unit still gets a full-height hero rather than none. */
+    min-height: calc(100vh - var(--sf-hero-chrome));
+    min-height: calc(100svh - var(--sf-hero-chrome));
+    padding-bottom: var(--sf-space-16);
+  }
+
+  .inner {
+    grid-template-columns: 1.05fr 1fr;
+    gap: var(--sf-space-10);
+  }
+
+  .stage {
+    order: 0;
+    width: 100%;
+    max-width: 420px;
+    margin-inline: 0 auto;
+    aspect-ratio: 4 / 5;
+  }
+
+  .subtext {
+    /* 18px. The lede tier sits between --sf-text-base and --sf-text-lg, and a
+       hero's one quiet line is the case the tier was described for. */
+    font-size: 1.125rem;
+    min-height: calc(2em * var(--sf-leading-relaxed));
+  }
+
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .actions .cta {
+    width: auto;
+  }
+
+  .heroBrand {
+    min-height: calc(100vh - var(--sf-hero-chrome));
+    min-height: calc(100svh - var(--sf-hero-chrome));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP — 1025px and up. The card grows to its full 560px, the ground light
+   comes on behind the copy, and the name index wraps instead of scrolling.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1025px) {
+  .hero .groundGlow {
+    display: block;
+  }
+
+  .inner {
+    gap: var(--sf-space-12);
+  }
+
+  .headline {
+    font-size: var(--sf-text-5xl);
+  }
+
+  .stage {
+    max-width: 560px;
+  }
+
+  /* Two wrapped rows, not a scrolling line: the measure is chosen so the eight
+     launch products fall into exactly two. */
+  .names {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    max-width: 32rem;
+  }
+
+  .rail {
+    min-height: calc(
+      var(--sf-space-2) + var(--sf-tap-target) + var(--sf-space-4) +
+        (2 * var(--sf-tap-target)) + var(--sf-space-2) + var(--sf-space-1)
+    );
+  }
+
+  .name {
+    scroll-snap-align: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION. The token layer already zeroes every --sf-duration, and the
+   component never starts autoplay, hides the pause control and does not attach
+   the parallax. What is left to stop here is the scale on the crossfade, the
+   progress fill and the rail's snap.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .layer {
+    transform: none;
+    transition: opacity var(--sf-duration-slow) var(--sf-ease);
+  }
+
+  .stage .stageGlow {
+    transform: none;
+    transition: none;
+  }
+
+  .progressFill {
+    animation: none;
+    transform: none;
+  }
+
+  .names {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+}

@@ -42,6 +42,8 @@ import {
   HERO_BACKGROUND_TYPES,
   HERO_DEVICES,
   HERO_IMAGE_POSITIONS,
+  HERO_INTERVAL_MAX_MS,
+  HERO_INTERVAL_MIN_MS,
   HERO_MAX_DURATION_MS,
   HERO_MIN_DURATION_MS,
   HERO_TEXT_ALIGNMENTS,
@@ -920,8 +922,8 @@ const AdminHeroSection = () => {
                             setCfg({
                               intervalMs: clampInt(
                                 config.intervalMs,
-                                HERO_MIN_DURATION_MS,
-                                HERO_MAX_DURATION_MS,
+                                HERO_INTERVAL_MIN_MS,
+                                HERO_INTERVAL_MAX_MS,
                                 DEFAULT_HERO_CONFIG.intervalMs
                               ),
                             })
@@ -929,8 +931,8 @@ const AdminHeroSection = () => {
                           InputProps={{
                             endAdornment: <InputAdornment position="end">sec</InputAdornment>,
                           }}
-                          inputProps={{ min: 1, max: 60, step: 0.5 }}
-                          helperText="The default; a slide can set its own"
+                          inputProps={{ min: 3, max: 15, step: 0.5 }}
+                          helperText="Between 3 and 15 seconds"
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -990,6 +992,14 @@ const AdminHeroSection = () => {
                         key: "showArrows",
                         label: "Previous / next arrows",
                         hint: "Extra arrow buttons at the stage edges",
+                      },
+                      {
+                        key: "showPause",
+                        label: "Pause / play button",
+                        hint:
+                          "Required while autoplay is on — switching it off " +
+                          "stops the hero autoplaying rather than leaving it " +
+                          "unstoppable",
                       },
                     ].map((row) => (
                       <FormControlLabel

@@ -62,8 +62,8 @@
 }
 
 /* The hero is full-bleed: neither .main-content nor .homePage constrains its
-   width, and the section adds no container of its own. HeroSection owns its
-   internal max-width; everything below here uses .container. */
+   width, and the section adds no container of its own. home/HeroCarousel owns
+   its internal max-width (.sf-container); everything below uses .container. */
 .heroSection {
   position: relative;
   z-index: 1;
