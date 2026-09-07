@@ -25,7 +25,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 19 | Full-page CTA section | complete | 2026-09-07 | (this commit) | The page now stops for one screen and asks. **`brand/NewsletterForm`** is the footer's capture, extracted: the `isEmailValid()` gate, `apiService.leads.createNewsletter`, the six-second success revert and the `role="status"` / `role="alert"` pair move out of `Footer.js` whole, and both surfaces mount the same component (`variant="footer" | "cta"`, own `id` base so the two forms' ids cannot collide). Both were subscribed for real in Chromium and both leads landed in `/leads` as `type: "newsletter"`, `status: "subscribed"` rows the admin table renders. **`home/FullPageCta`** is four layers — a lazy `alt=""` photograph, the 82%→94% `--sf-color-bg` wash, the signature gradient at 12% `screen`, and a `GlassCard strong scrim padding="lg"` (max 760px) under one `GlowWrap tone="duo" intensity={0.22} breathe` — with **no backdrop blur on the ground** (measured: section `backdrop-filter: none`, card `blur(20px)`). `min-height` **100svh from 769px, 80svh below**, `vh` fallback above each. **Two defects found in the primitives and fixed**: `prefers-reduced-motion` never stopped a DUO glow's second lamp (`.sf-glow--duo.sf-glow--breathe::after` out-specificities the one-class reset — the hero has had this since Prompt 14; `document.getAnimations()` 2 → 0), and `.sf-glass--scrim::before` painted **over** the content it exists to make legible (a warm-white headline capped at rgb(165,163,161); now `z-index: -1` inside an isolated context, headline back to rgb(247,245,240)). Contrast on the card, measured against a deliberately near-white photograph: headline **12.9:1**, eyebrow 9.9, lede 6.9, hint 6.9, ownership note 5.9, and the one gradient keyword's darkest stop **3.1:1** — inside the large-text floor at 72px/36px. One breathing glow visible at every one of the 176 scroll positions scanned. `CI=true npm run build` **exit 0, Compiled successfully, no warnings**; `npm test -- --watchAll=false` 13 suites / **127 passed** (9 new). No `db.json` and no `api.js` change. |
 | 20 | Why LAMIKAA section (pillars and impact) | complete | 2026-09-07 | (this commit) | The band that says what the brand stands on, built as two components the Why LAMIKAA page (Prompt 28) mounts unchanged. **`brand/Pillars`** is BRAND.md §3.2's four pillars as one `<ul role="list">` of four `GlassCard as={motion.li}` — a 44px glass circle carrying a 24px gold glyph (`mdi:leaf`, `mdi:flask-outline`, `mdi:account-group-outline`, `mdi:earth`, resolved by KEY with a positional fallback so a renamed key cannot silently swap two icons), a `Chip variant="step"` numeral 01–04, the title in Fraunces 22px and the sentence in Manrope 15px secondary — **every word of it from `brand.pillars`, none of it typed in the component**. 4 columns ≥1025px / 2 at 769–1024 / 1 stacked ≤768, 16px gaps, measured at all seven widths. **The cards are deliberately NOT `interactive`**: a card that lifts 4px and shows a focus ring promises a destination it does not have, so the alternating gold/violet tone glow is faded in by a hover rule of the module's own (`:global(.sf-glow)` held at 0 → 1) and the grid stays keyboard-transparent — **measured: one tab stop in the whole section, the CTA, and `transform: none` on every card at every hover**. **`brand/ImpactTriptych`** is `siteContent.impact.items` as three columns under a 60% signature-gradient hairline: the eyebrow DERIVED from the key (Financial / Social / Environmental), the title with that category prefix taken off — but only when a dash follows it, so "Financially Sustainable" keeps its first word — and the three points at 15px behind 18px gold bullets. **A bullet, not a tick**: these are aims, and a check mark in front of "Farmers can benefit from the profitability of their own enterprise" reads as a claim that it has already happened. Points render **verbatim** — no truncation, no summarising — which is what preserves the BRAND.md §3.9 qualifiers; asserted in the suite and re-checked against the seed (0 dividend mentions without "can reach the member farmers through dividends"). `showImages` false here, true on the page. **`home/WhyLamikaaSection`** fetches `siteContent.get("impact")` and composes the two: `brand.philosophy` as the h2 over the new `brand.philosophyLede` (BRAND.md §3.2's first sentence), the pillars, a second heading row, the triptych and `Button variant="secondary"` → `/why-lamikaa`. **The two halves fail separately** — the pillars come from a module the bundle always has and always render; a missing, unpublished or unreachable impact block takes its own heading with it rather than standing over an empty space (exercised for real: the first QA run reached the live host and the section rendered philosophy + 4 cards + CTA, nothing invented). **One defect the test found and reading did not:** `impactColumns` filtered rows before normalising them, so a row carrying three blank strings passed a `points.length` check and rendered as an empty column; the filter now runs after. Outline verified in the browser: 1 page `h1`, this section's `h2` at 52px, 4 pillar `h3` at 22px, the impact `h3` at 40px, 3 column `h4` at 20px, 4 `role="list"` lists, 0 nested landmarks. Contrast on the page ground 18.05 / 13.88 / 9.62:1 and on the card ground 15.95 / 12.27 / 8.5:1. Under `prefers-reduced-motion` framer-motion attaches **no style attribute at all** and 0 animations run. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 14 suites / **151 passed** (24 new). No `db.json` and no `api.js` change: reads only. See "Prompt 20 record" below. |
 | 21 | Home FAQs section and accordion | complete | 2026-09-07 | (this commit) | `components/FAQ/*` rewritten onto the `ui/Accordion` primitive and turned into a **props-driven** block (`faqs, limit, defaultOpen, multiple, id, headingLevel`), so the home band, `/faq` (28) and the PDP panel (27) can all mount one accordion; `home/HomeFaqs.js` is the band around it. `utils/faqs.js` gained `faqLimit()` and a `{ limit }` option on `faqsForPlacement` (applied AFTER the filters and the de-dupe); `FaqContext.forPlacement` passes the options through. `db.json` `faqs` rows 6–8 gained the `"home"` placement — **3 JSON values** — so the block carries the 6–8 rows the prompt asks for (the Prompt 06 seed had put `home` on rows 1–5 only). Browser QA at 360/390/768/1024/1025/1280: **8 rows at every width**, 0 horizontal overflow, no `{{TOKEN}}` anywhere on the page, two columns + sticky aside from exactly 1025px, question Manrope 600 17px over a 44px floor, 20px gold chevron, answer Manrope 16px secondary at 20px inset, open row wearing a 2px signature-gradient rule at 0.6, separators `rgba(255,255,255,.08)`. Deep link `/#faq-3` opens **and focuses** row 3; ↑/↓/Home/End walk the headers and wrap; Enter opens, Space closes; panel `transition-duration: 0s` under reduced motion. Admin → FAQs still lists all eight with the Shared/Help/Product vocabulary, and a `PATCH /faqs/1` reached the open storefront on the next focus refetch. `CI=true npm run build` exit 0 **Compiled successfully, 0 warnings**; `npm test -- --watchAll=false` **173 passed** (17 suites, 1 skipped), 22 of them new. See "Prompt 21 record" below. |
-| 22 | Home assembly, performance and SEO | pending | | | |
+| 22 | Home assembly, performance and SEO | complete | 2026-09-07 | (this commit) | The home page is assembled: **eleven sections in the brief's order**, `ShopByCategory` moved from under the trust strip to **after** the eight product chapters (brief §7.2 item 4), and every pre-rebuild section deleted — collection stories, featured grid, offers rail + countdown, craft interlude, trending rail, promises row — along with `components/FeaturedProducts/*` and `components/CTASection/*` (0 consumers) and the now-unused `TRUST_BADGES` alias in `constants.js` (`WHY_CHOOSE_US` **kept** — `pages/Support/Support.js:594` still maps over it). `Home.js` 742 → 279 lines, `Home.module.css` 779 → 105 (page rhythm only: ground, hero, trust edge, deferral). **One data load:** new `components/home/useHomeData.js` reads `products.getAll` · `getHeroProducts` · `categories` · `concerns` · `rituals` · `siteContent` **once each, in parallel**, and the nine sections take their slices as props — the naively assembled page issued **15 requests for 6 collections**, it now issues **6**. Tri-state slices (`undefined` = in flight, `null` = failed, value = loaded). **Nine lazy chunks** behind a `DeferredSection` (`useInView` + `rootMargin: 600px`, measured reserve heights, `content-visibility: auto` on the six sections that draw no glow). New `components/home/RecentlyViewed.{js,module.css,test.js}` ports the localStorage reconciliation and the `useRail`/ResizeObserver logic verbatim; threshold raised 1 → 2 (8 new tests). `organizationJsonLd()` + `websiteJsonLd()` added to `hooks/useSeo.js` — **schema.org validator: 0 errors, 0 warnings**. **Lighthouse mobile (production build, median of 3): Performance 68, Accessibility 100, Best Practices 100, SEO 100** — three of four targets met; Performance is **below the ≥85 target** and the cause is measured and recorded below. CLS 0.174 → **0.042**; Speed Index 20.7s → **3.2s**; total JS on `/` **253 kB gzipped** (≤350 budget ✓). `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (18 suites / 181 passed, 1 suite / 50 skipped). See the Prompt 22 record below.
 | 23 | Shop page — chaptered editorial listing | pending | | | |
 | 24 | Category pages and rituals pages | pending | | | |
 | 25 | PDP — layout, chapters, purchase panel, mobile bar | pending | | | |
@@ -282,6 +282,20 @@ Record every decision a prompt had to make that the reference files did not sett
 - `21 · 2026-09-07 · The FAQ page's and the PDP's hand-rolled accordions were NOT migrated here · "One accordion implementation only" is this prompt's guardrail and `pages/HelpCenter/HelpCenter.js` and `pages/ProductDetails/ProductDetails.js` each still hold one. Both files are owned by prompts that rewrite them wholesale — 27 (PDP supporting content) and 28 (`/faq` from `siteContent`) — and doing it here would re-do work those prompts specify differently (the help centre's list is searchable and filtered; the PDP's is a tab panel with tracked ordinals). The rewrite this prompt DID do is what makes both migrations a one-line mount. Carried into Open TODOs.`
 - `21 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are again left untouched · `Home.js` is touched only to import and mount `<HomeFaqs/>` after `<WhyLamikaaSection/>` and to extend its own section map with `0j`. Same posture as Prompts 15–20; those sections (and the four Meghali-era strings a word-boundary sweep still finds in them) are Prompt 22's to delete.`
 - `21 · 2026-09-07 · The section's lede is written in `HomeFaqs.js` rather than sourced from a reference file · The prompt fixes three strings ("Good to know", "Questions, answered", "All questions") and asks for a lede without supplying one. "The things worth knowing before you buy — the full set lives on the FAQ page." states no brand fact, no figure and no claim: it says what the list is and where the rest of it is, which is also what justifies the button beside it. Nothing is invented and nothing needs a source.`
+- `22 · 2026-09-07 · "Recently viewed" is KEPT as the one secondary section; the home offers rail is REMOVED (the deals page remains) · The brief (§7.2) allows a secondary section "only if your repository analysis justifies it". Recently-viewed is not a section idea, it is EXISTING STOREFRONT FUNCTIONALITY: `pages/ProductDetails/ProductDetails.js:370-386` has always written the `recentlyViewed` localStorage list and the old home page has always read it back, so deleting the rail would have deleted a shipped feature to make a redesign tidier — which the programme's first guardrail forbids. The offers rail has no such claim: `/special-offers` is still a full admin-driven page, still routed, and still in the nav as "Offers" when `dealsConfig` is enabled, so the home rail was duplicating a page rather than providing a feature. Everything else on the old page (collection stories, featured grid, craft interlude, trending rail, promises row) was Meghali-era merchandising and is deleted.
+- `22 · 2026-09-07 · The threshold for the recently-viewed rail is raised from 1 live product to 2 · One card under a heading that says "Where you left off" is not a rail, it is a repeat of the page the visitor just arrived from. Two is the smallest number that makes the heading true. Exported as `MINIMUM` and unit-tested.
+- `22 · 2026-09-07 · `useHomeData()` orchestrates the fetches itself; NO `useAsync`/cache helper was used or written · The prompt names "the `useAsync`/cache helpers from Prompt 05". Prompt 05 shipped three hooks — `useInView`, `useFocusTrap`, `useScrollLock` — and no async helper, and `services/api.js` has no request cache either (`grep -n "cache" src/services/api.js` finds only the wallet's storeCredit denormalisation). Rather than invent a general-purpose async primitive for a single caller, the orchestration lives in `useHomeData` beside the tri-state contract it exists to serve. A module-level map de-duplicates requests that are IN FLIGHT (React 18 StrictMode double-mounts every effect in development) and drops the entry once settled — caching results for the session would have meant an owner editing a product in the admin and returning to `/` saw stale data, a freshness regression the old per-section fetches did not have.
+- `22 · 2026-09-07 · `useHomeData` also returns `homeContent` and `impactContent`, beyond the seven keys the prompt lists · Three sections (`AboutTeaser`, `WhyBlackRice`, `FullPageCta`) each read `siteContent.get("home")` and a fourth read `siteContent.get("impact")` — four requests for one collection, which the prompt's own guardrail ("no section may fetch the same collection twice") forbids as much as it forbids four reads of `products`. `siteContent.get()` with no key answers the whole record, so the hook makes ONE request and hands out `record.home` / `record.impact`.
+- `22 · 2026-09-07 · `HeroCarousel` takes `heroProducts` as a prop but KEEPS its own `hero.getConfig()` and its `getFeatured` fallback · `getHeroProducts` was read by four sections and is now read once. `hero.getConfig()` is read by nothing else on the page, and the `getFeatured(8)` fallback is the one CONDITIONAL read on `/` — it fires only when a merchant has arranged no hero order at all, so asking for it up front would be a request the page almost never needs.
+- `22 · 2026-09-07 · The empty pre-mount reservation renders NOTHING, not a `<Skeleton>` · The prompt asks for "a `Skeleton` of the section's reserved height" while a deferred section waits. Measured, that cost **20.7 s of Speed Index**: `.sf-skeleton` is `animation: … infinite` over a 200 %-wide gradient, and nine of them (one 3200 px tall) repainted for the life of the page — for placeholders that are BY CONSTRUCTION at least 600 px outside the viewport and therefore never seen. The real `<Skeleton>` is kept for the Suspense fallback, which is the state a visitor CAN see (scrolling toward a section whose chunk is still downloading). Both hold the identical reserved height. Speed Index 20.7 s → 3.2 s.
+- `22 · 2026-09-07 · The reservation is dropped the moment a section mounts · Holding `min-height` for the life of the page made `reserve` a FLOOR on each section's height. Measured at 390 px, that padded three bands with dead space (ShopByCategory 980 px forced to 1400, WhyBlackRice 953 → 1000, RitualsTeaser 849 → 1200) and left a **420 px blank hole** where `RecentlyViewed` had correctly rendered nothing — the normal case for a first-time visitor. `.reserving` is now applied only while the section is still >600 px away.
+- `22 · 2026-09-07 · `content-visibility: auto` is applied to six deferred sections, NOT to about / spotlight / full-page-CTA · `content-visibility` applies PAINT CONTAINMENT at all times (not only while skipping), and `.sf-glow::before` deliberately bleeds past its host box (`inset: -12% -8%` under a 60 px blur). Those three sections draw a glow, and containing them would clip it to a hard edge. Skipping the rendering of three more sections is not worth cutting the page's atmosphere in half. Verified by screenshot at 390 px.
+- `22 · 2026-09-07 · `hooks/useInView.js` gained a `rootMargin` option · The prompt specifies `useInView` with `rootMargin: "600px"` and the hook had no such option. Added with a `"0px"` default, so every existing caller (VideoPlayer, the hero's autoplay gate) is unchanged.
+- `22 · 2026-09-07 · The JSON-LD helpers live in `hooks/useSeo.js`, and read `brand.name`/`brand.legalName` rather than the prompt's literals · The prompt allows either `useSeo.js` or `utils/seo.js`; `utils/seo.js` does not exist yet and Prompt 27 creates it for the PRODUCT graph, so the two site-level graphs sit with the hook that publishes them. The prompt spells the name "LAMIKAA Naturals" and the legal name without "(BAOPCL)"; `src/config/brand.js` is the single source of brand truth established in Prompt 02, so `brand.name` ("LAMIKAA NATURALS") and `brand.legalName` ("Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL)") are used instead of re-typing either. `sameAs` takes the LIVE `settings.social` map through `normalizeSocialLinks` (which blanks every `{{TOKEN}}`), so today it resolves to nothing and the property is dropped rather than published empty.
+- `22 · 2026-09-07 · The dead Material Icons stylesheet was removed from `public/index.html` · Lighthouse flagged a SECOND render-blocking stylesheet from fonts.googleapis.com with no `display=swap`; the prompt's own rule is one render-blocking font link. Its comment claimed the admin's MUI icon set required it, which is false: `@mui/icons-material` ships SVG React components, MUI's ligature-based `<Icon>` is used nowhere, and the three storefront files with a local `Icon` (`Profile`, `OrderHistory`, `DeliveryReturnsInfo`) each draw their own inline SVG. `grep -rn "material-icons" src public` → 0. Best Practices 96 → 100.
+- `22 · 2026-09-07 · A `preconnect` to res.cloudinary.com was added to `public/index.html` · The LCP element on `/` is the hero's first product image, and because the hero is product-driven its URL is not known until the catalogue read returns — so it cannot be preloaded and a cold DNS+TCP+TLS handshake lands on the critical path at the worst moment. Measured FCP 3.2 s → 2.6 s. No `crossorigin`: these are no-CORS `<img>` loads and a crossorigin preconnect opens a connection they cannot reuse.
+- `22 · 2026-09-07 · `components/AdminLayout/AdminLayout` was made lazy in `App.js` — outside this prompt's expected-files list · Source-map analysis of the main bundle showed **~630 kB (uncompressed) of `@mui/*` plus the admin shell in the chunk every STOREFRONT visitor downloads**, for a layout only a signed-in administrator ever sees. It was the last eager import on the admin side; every admin PAGE was already lazy, and it is a layout route inside the same `<Suspense fallback={<RouteFallback/>}>` as the pages it wraps. Main bundle 285 → 249 kB gzipped. Verified afterwards by signing in and walking `/admin/dashboard`, `/admin/products`, `/admin/orders`, `/admin/settings`: drawer, app bar and navigation all present, **zero console errors**.
+
 
 ## Open TODOs
 
@@ -378,6 +392,11 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `19 · At desktop the card measures 1060px and the section 1188px, so a 900px laptop scrolls ~290px through a section whose floor is 100svh. It is inherent to `--sf-text-4xl` inside a 760px card (each signature line wraps to two), not to the implementation — see the decision above. If the owner wants the whole card on one screen, the levers are the card's max-width or the headline token, and Prompt 22's assembly pass is where the home page's vertical budget is decided as a whole · Prompt 22 · 22`
 - `19 · `NewsletterForm`'s `buttonLabel` prop has no consumer yet — both call sites take the "Subscribe" default. It is built to the prompt's contract for a later surface (a policy page footer, a post-purchase capture) · owner of 28 · 28`
 - `19 · The reduced-motion and scrim fixes both landed in `theme/storefront-primitives.css`, which is shared. Neither changes a look that any component asked for — one stops an animation with reduced motion on, the other stops a wash dimming its own text — and `BottomNav` (the only other `.sf-glass--scrim` user) was re-checked in Chromium at 390px. Worth one pass over the hero with reduced motion on during the responsive/a11y sweeps · developer · 37`
+
+- `22 · **Lighthouse mobile Performance on `/` is 68, not the ≥85 the prompt targets.** The cause is measured, not guessed: with every asset served locally (<150 ms per request) the LCP image itself loads in **3.5 ms**, and LCP ≈ FCP + 0.5 s — the page is bounded entirely by time-to-first-render of the **249 kB gzipped main bundle** under Lighthouse's simulated slow-4G + 4× CPU. Source-map analysis of that bundle: framer-motion 381 kB, `@mui/material` 225 kB + `@mui/system` 80 kB, `@remix-run/router` 213 kB, sweetalert2 169 kB, `services/api.js` 143 kB, axios 105 kB, `@iconify/react` 53 kB (uncompressed source bytes). MUI is still there because the STOREFRONT shell imports it — `components/Header/Header.js`, `Header/HeaderActions.js`, `Footer/Footer.js`, `context/ThemeContext.js` and `App.js`'s `<CssBaseline/>`. Getting to 85 means taking MUI / sweetalert2 / framer-motion off the storefront's eager path, which is a refactor of Prompts 03/09/13's work spanning the whole shell, not this page. Everything inside this page's own scope was done and is measured above (nine lazy chunks, the shimmer fix, the dead font stylesheet, the Cloudinary preconnect, the lazy admin shell) · owner of 38 · 38
+- `22 · `@iconify/react` fetches its icon data from a THIRD-PARTY API at runtime, on the storefront's critical path. The Lighthouse trace shows six such requests on `/` (`api.simplesvg.com`, `api.unisvg.com`, `api.iconify.design` — the library's fallback chain), issued by components that are above the fold (`Header`, `BottomNav`, `AnnouncementBar`, `TrustStrip`). Bundling the icons offline (`addCollection`, or the `@iconify-icons/*` packages) would remove the dependency entirely; it touches 18+ files built by Prompts 09–21, so it is not this prompt's to do · owner of 38 · 38
+- `22 · Footer link targets are 18–21 px tall (`Footer_footerLink`, `Footer_microLink`) and the header logo link is 40 px, below the 44 px the QA sweep checks for. WCAG 2.2 AA (2.5.8 Target Size Minimum) is 24 px WITH a spacing exception these rows may well satisfy, and axe/Lighthouse a11y scores 100, so this is a review item rather than a known failure. Outside this prompt's files (`Footer/*` is Prompt 13, `Header/*` is Prompt 09) · owner of 37 · 37
+- `22 · The Lighthouse Performance figure was measured through a local caching mirror for the external hosts (Cloudinary, Google Fonts, Iconify), because this sandbox's agent proxy adds **~12.5 s of latency to every request that leaves the container** — which put Speed Index at ~20 s and made the score a measurement of the sandbox rather than of the page. The mirror scaffolding lives in the scratchpad and is NOT committed. Accessibility / Best Practices / SEO are unaffected by network latency and were the same (100/100/100) with and without it. The numbers should be re-taken on a normal network in Prompt 38 · owner of 38 · 38
 
 ## Placeholders introduced / resolved
 
@@ -2580,3 +2599,168 @@ The guardrail "one accordion implementation only" holds for the home page, not y
 and both files belong to prompts that rewrite them wholesale (28 and 27). The rewrite done here is
 what makes each migration a one-line mount. Carried into Open TODOs, together with the returns-window
 figure for the owner.
+
+---
+
+## Prompt 22 record (2026-09-07)
+
+### What the page is now
+
+Eleven sections, in the brief's order. Two are eager (they are above the fold);
+the other nine are lazy chunks mounted by `DeferredSection` when they come
+within 600px of the viewport.
+
+| # | Section | Chunk | Data it receives | Ground |
+|---|---|---|---|---|
+| 1 | `HeroCarousel` | eager | `heroProducts` (+ its own `hero.getConfig()`) | bg |
+| 2 | `TrustStrip` | eager | brand config | glass edge |
+| 3 | `ProductShowcase` | lazy | `heroProducts`, `products` | bg |
+| 4 | `ShopByCategory` | lazy | `categories`, `concerns`, `heroProducts`, `rituals` | bg |
+| 5 | `AboutTeaser` | lazy | `homeContent.aboutTeaser` | surface band |
+| 6 | `WhyBlackRice` | lazy | `homeContent.whyBlackRice`, `heroProducts` | bg |
+| 7 | `RitualsTeaser` | lazy | `rituals`, `products` | bg |
+| 8 | `FullPageCta` | lazy | `homeContent.fullPageCta` | photo |
+| 9 | `WhyLamikaaSection` | lazy | `impactContent` | bg |
+| 10 | `RecentlyViewed` | lazy | `products` (+ localStorage) | surface band, tight |
+| 11 | `HomeFaqs` | lazy | `FaqContext` | bg |
+
+`ShopByCategory` **moved**: Prompt 15 mounted it directly under the trust strip,
+the brief (§7.2 item 4) places it after the product chapters, and that is where
+it is. Verified in the browser — the accessible-name order at 390px reads
+`Black Rice range → Eight steps. One ritual. → [8 product chapters] → Find your
+step → When LAMIKAA grows… → Why black rice? → Build your ritual → Beauty that
+creates value… → Indigenous Wisdom… → Where you left off → Questions, answered`.
+
+### One data load
+
+`components/home/useHomeData.js` is called once, in `Home.js`. Assembled
+naively the page issued **fifteen requests for six collections**:
+
+| Collection | Was | Now |
+|---|---|---|
+| `products.getHeroProducts()` | 4 (hero, showcase, categories, spotlight) | 1 |
+| `products.getAll()` | 3 (showcase fallback, rituals, recently viewed) | 1 |
+| `siteContent.get("home")` | 3 (about, spotlight, CTA) | 1 (whole record) |
+| `siteContent.get("impact")` | 1 | — (same record) |
+| `categories` / `concerns` / `rituals` | 1 / 1 / 2 | 1 / 1 / 1 |
+| **Total** | **15** | **6** |
+
+Slices are tri-state — `undefined` in flight, `null` failed, value loaded — the
+convention `AboutTeaser` and `WhyLamikaaSection` already used for their content
+block, lifted to the whole page. A module-level map de-duplicates requests that
+are in flight and drops the entry once settled, so a return visit to `/` reads
+fresh data exactly as the per-section fetches did.
+
+### Lighthouse (mobile, production build, median of 3 runs)
+
+| Metric | Target | Result |
+|---|---|---|
+| **Performance** | ≥ 85 | **68** — below target, see below |
+| **Accessibility** | ≥ 95 | **100** ✓ |
+| **Best Practices** | ≥ 95 | **100** ✓ |
+| **SEO** | ≥ 95 | **100** ✓ |
+| CLS | < 0.1 | **0.042** ✓ |
+| Total JS on `/` | ≤ 350 kB gz | **253 kB** ✓ |
+| FCP / LCP / TBT / SI | — | 3.2 s / 5.9 s / 230 ms / 3.2 s |
+
+What this prompt's work moved, measured on the same build and harness:
+
+| Fix | Before | After |
+|---|---|---|
+| Nine perpetual skeleton shimmers on off-screen reservations | SI **20.7 s** | SI **3.2 s** |
+| Deferral reserve heights (vs. no reservation) | CLS **0.174** | CLS **0.042** |
+| Dead Material Icons stylesheet removed | Best Practices **96** | **100** |
+| `preconnect` to res.cloudinary.com | FCP **3.2 s** | FCP **2.6 s** |
+| `AdminLayout` made lazy | main **285 kB** gz | **249 kB** gz |
+
+**Why Performance is 68 and not ≥85.** It is not this page's content. With
+every asset served locally (<150 ms per request) the LCP image loads in **3.5
+ms** and LCP ≈ FCP + 0.5 s: the page is bounded entirely by time-to-first-render
+of the main bundle under simulated slow-4G + 4× CPU. Source-map analysis of that
+bundle (uncompressed source bytes): framer-motion 381 kB, `@mui/material` 225 kB
++ `@mui/system` 80 kB, `@remix-run/router` 213 kB, sweetalert2 169 kB,
+`services/api.js` 143 kB, axios 105 kB, `@iconify/react` 53 kB. MUI survives the
+lazy admin shell because the STOREFRONT shell imports it (`Header.js`,
+`HeaderActions.js`, `Footer.js`, `ThemeContext.js`, `App.js`'s `<CssBaseline/>`).
+Taking MUI / sweetalert2 / framer-motion off the storefront's eager path is a
+refactor of Prompts 03/09/13's work across the whole shell — carried to Prompt
+38, which owns the performance audit. Everything inside this page's scope was
+done and is in the table above.
+
+**Measurement harness.** This sandbox's agent proxy adds **~12.5 s of latency to
+every request that leaves the container**, which put Speed Index at ~20 s and
+made the raw score a measurement of the sandbox. The four numbers were therefore
+taken with a local caching mirror standing in for Cloudinary / Google Fonts /
+Iconify (Chrome started with `--host-resolver-rules`, `--no-proxy-server`), so
+Lighthouse's own throttling models a normal network instead of a pathological
+one. The mirror's first version cached Google Fonts' **TTF** variant (curl's
+user-agent gets TTF, Chrome gets WOFF2) and charged the page ~350 kB of fonts it
+never downloads — fixed, and worth 5 points and 0.6 s of FCP. The scaffolding
+lives in the scratchpad and is **not committed**. Accessibility, Best Practices
+and SEO are unaffected by network latency and scored 100/100/100 with and
+without the mirror. Also note `.env.production` points at the live Laravel API,
+unreachable from here: the audited build used a temporary, git-ignored
+`.env.production.local` pointing at the local JSON Server, since the first run
+otherwise measured the API-unreachable fallback page (a hero with no products).
+
+### Structured data
+
+`hooks/useSeo.js` gained `organizationJsonLd()` and `websiteJsonLd()`. Both are
+published by `/` only. Verified against the official validator
+(`validator.schema.org`): **0 errors, 0 warnings**.
+
+- `Organization` — `name`, `legalName`, `url`, `logo` (`cld(brand.logoUrl,{w:600})`).
+  `sameAs` reads the LIVE `settings.social` map through `normalizeSocialLinks`,
+  which blanks every `{{TOKEN}}`; today every profile is unresolved, so the
+  property is **dropped rather than published empty**. It will appear by itself
+  once the owner fills Admin > Settings > Social Links.
+- `WebSite` — `name`, `url`, and a `SearchAction` targeting
+  `/search?q={search_term_string}` (the results page Prompt 11 built, so the
+  target is a route that actually answers).
+
+`url` resolves to `seoOrigin()`, which is the serving origin while
+`brand.seo.siteUrl` is still `{{LAMIKAA_DOMAIN}}` — correct on the real domain,
+harmless on localhost, and never a placeholder in the markup.
+
+### Browser QA
+
+Driven over CDP at 360 / 390 / 414 / 768 / 1024 / 1280 / 1440, walking the full
+page so every deferred section mounts.
+
+- `document.documentElement.scrollWidth === window.innerWidth` at **360, 390 and
+  414** ✓. At 1024+ scrollWidth is 8px *less* than innerWidth — the vertical
+  scrollbar, not horizontal overflow. The elements whose boxes exceed the
+  viewport are all inside `overflow-x` tracks (the hero index, the trust strip),
+  which is what those tracks are for.
+- Exactly **one `<h1>`** at every width (the hero's).
+- Announcement + header = **92px** at ≤768, **100px** at ≥1024 (budget ≤100) ✓.
+- The bottom nav does not cover the last section's CTA (the FAQ band ends above
+  it; `main` carries the bottom-nav padding from Prompt 10).
+- **Recently viewed, end to end**: 0 stored → hidden; 1 stored → hidden (the
+  raised threshold); 3 stored → 3 cards in browsing order; `[2, 9999, 1]` →
+  **2 cards, the unreachable id dropped**, current records rendered.
+- Screenshots at 390 confirm no glow is clipped on the about / spotlight / CTA
+  bands, and that the grounds alternate as specified.
+- Admin re-verified after the lazy-shell change: signed in, walked
+  `/admin/dashboard`, `/admin/products`, `/admin/orders`, `/admin/settings` —
+  drawer, app bar and full navigation present, **zero console errors**.
+
+### The acceptance grep
+
+`grep -rn "FeaturedProducts\|CTASection\|Where to begin\|Chosen this season" src`
+→ **0** ✓.
+
+`heritage` is **not** 0, and cannot be at this point in the programme. All five
+remaining files are pre-existing and owned by later prompts:
+
+- `config/brand.js` ×2 — LAMIKAA's own copy ("the natural heritage of our
+  region", from BRAND.md). Not Meghali, and not to be removed.
+- `theme/storefront-tokens.css` ×2 — the `--sf-gradient-heritage` legacy alias,
+  which `00_INDEX.md` §3.2 schedules for removal in **Prompt 35**.
+- `theme/colors.js` ×1 — a comment, same prompt.
+- `pages/AboutUs/AboutUs.{js,module.css}` ×6 — the old About page, replaced
+  wholesale in **Prompt 28**.
+
+Every occurrence this prompt was responsible for is gone, including a stale
+comment in `utils/helpers.js` that still described the featured grid this prompt
+deleted.

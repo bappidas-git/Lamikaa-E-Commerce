@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import apiService from "../../services/api";
 import brand from "../../config/brand";
 import { ROUTES } from "../../utils/constants";
 import { reveal } from "../../theme/motion";
@@ -130,28 +129,22 @@ export const ctaCopy = (block) => {
   };
 };
 
-const FullPageCta = () => {
+/**
+ * @param {object} props
+ * @param {object|null|undefined} props.content  the home record's `fullPageCta`
+ *        block, from useHomeData(): `undefined` while the record is in flight,
+ *        `null` for a record that could not be read or a block the owner has
+ *        not written — and both land on the brand's own three lines.
+ */
+const FullPageCta = ({ content }) => {
   const reduceMotion = useReducedMotion();
-  const [block, setBlock] = useState(undefined);
+  const block = content === undefined ? undefined : content || null;
   // The URL that failed to load, rather than a boolean: a background that 404s
   // drops out and leaves the wash over the page ground, and the state resets by
   // itself the moment the owner publishes a different photograph. The shared
   // `onImageError` is deliberately NOT used — its "No Image" plate is right for
   // a product plate and wrong for a decorative ground the size of a screen.
   const [failedImage, setFailedImage] = useState(null);
-
-  useEffect(() => {
-    let active = true;
-    // `siteContent.get` never rejects — it answers null for a section it cannot
-    // reach, which is the same answer as "the owner has not written one", and
-    // both land on the brand's own three lines.
-    apiService.siteContent.get("home").then((home) => {
-      if (active) setBlock(home?.fullPageCta || null);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const copy = ctaCopy(block);
   const image = copy.image && copy.image !== failedImage ? copy.image : "";

@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import apiService from "../../services/api";
+import React from "react";
 import { SectionHeading, Skeleton } from "../ui";
 import ProductChapter from "../catalogue/ProductChapter";
 import styles from "./ProductShowcase.module.css";
@@ -67,38 +66,34 @@ const ChapterSkeleton = () => (
   </div>
 );
 
-const ProductShowcase = () => {
-  const [products, setProducts] = useState(null);
-  const [failed, setFailed] = useState(false);
+/**
+ * @param {object} props
+ * @param {object[]|null|undefined} props.heroProducts  the hero-ordered range
+ * @param {object[]|null|undefined} props.products      the whole catalogue
+ *
+ * Both come from useHomeData(). An EMPTY hero list is not a failure — it is a
+ * merchant who has not arranged one — so the fallback to the catalogue is a
+ * choice made here rather than a second request; the section only gives up when
+ * BOTH reads failed.
+ */
+const ProductShowcase = ({ heroProducts, products: allProducts }) => {
+  const heroPending = heroProducts === undefined;
+  // True while pending too, which is what makes `loading` below wait for the
+  // catalogue only when it is actually going to be needed.
+  const heroEmpty = !Array.isArray(heroProducts) || heroProducts.length === 0;
+  // Waiting on the catalogue only matters once the hero has come back empty.
+  const loading = heroPending || (heroEmpty && allProducts === undefined);
+  const failed = heroProducts === null && (allProducts === null || allProducts?.length === 0);
 
-  useEffect(() => {
-    let active = true;
-    apiService.products
-      .getHeroProducts()
-      .then((hero) => {
-        if (!active) return;
-        // An empty hero list is not a failure — it is a merchant who has not
-        // arranged one. Fall back to the catalogue before giving up.
-        if (Array.isArray(hero) && hero.length > 0) {
-          setProducts(showcaseProducts(hero));
-          return null;
-        }
-        return apiService.products.getAll().then((all) => {
-          if (active) setProducts(showcaseProducts(null, all));
-        });
-      })
-      .catch(() => {
-        if (active) setFailed(true);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const products = loading || failed
+    ? null
+    : heroEmpty
+      ? showcaseProducts(null, allProducts)
+      : showcaseProducts(heroProducts);
 
   // Nothing to say, or nothing to say it with.
   if (failed || (products && products.length === 0)) return null;
 
-  const loading = !products;
   const total = products?.length || 0;
 
   return (

@@ -139,11 +139,35 @@
       rel="stylesheet"
     />
 
-    <!-- Material Icons — required by the admin panel's MUI icon set. -->
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    />
+    <!--
+      Cloudinary is where every product image lives, and the home hero's first
+      slide is the LCP element on the page the site is judged on. Its URL cannot
+      be preloaded — the hero is product-driven (one slide per `heroOrder`), so
+      the URL is not known until the catalogue read comes back — which puts a
+      cold DNS + TCP + TLS handshake on the critical path at the worst possible
+      moment. Preconnecting warms that origin while the bundle is still
+      downloading, so the image request starts on an open connection.
+
+      No `crossorigin`: these are plain <img> loads in no-CORS mode, and a
+      crossorigin preconnect would open a connection the images cannot reuse.
+    -->
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+
+    <!--
+      The Material Icons stylesheet was here, on the claim that the admin's MUI
+      icon set required it. It did not: `@mui/icons-material` ships its icons as
+      React SVG components, and MUI's ligature-based <Icon> — the one component
+      that needs the font — is used nowhere in this repository. The storefront's
+      own icons are @iconify/react or hand-drawn inline SVG (Profile,
+      OrderHistory and DeliveryReturnsInfo each define a local `Icon`).
+
+      It cost every page a SECOND render-blocking stylesheet from
+      fonts.googleapis.com, without `display=swap`, for an icon font nothing
+      referenced. Prompt 22's Lighthouse pass found it; the audit's rule is one
+      render-blocking font link, and that is the css2 link above.
+
+      grep -rn "material-icons" src public → 0.
+    -->
 
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.

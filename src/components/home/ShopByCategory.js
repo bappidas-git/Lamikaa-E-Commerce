@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import apiService from "../../services/api";
 import { concernPath } from "../../utils/categories";
 import { firstProductForCategory, productsForCategory } from "../../utils/catalogue";
 import { reveal } from "../../theme/motion";
@@ -42,35 +41,44 @@ import styles from "./ShopByCategory.module.css";
 // skeletons hold exactly their shape so nothing below moves when data lands.
 const SKELETON_COUNT = 7;
 
-const ShopByCategory = () => {
+/**
+ * @param {object} props
+ * @param {object[]|null|undefined} props.categories  the seven ways in
+ * @param {object[]|null|undefined} props.concerns    the chips under the grid
+ * @param {object[]|null|undefined} props.products    the hero-ordered catalogue
+ * @param {object[]|null|undefined} props.rituals     the routines the last card counts
+ *
+ * All four come from useHomeData(). `undefined` anywhere is "still in flight"
+ * (skeletons); `null` anywhere is a read that failed, and the section takes
+ * itself off the page — the same answer the combined `Promise.all` gave when
+ * this component owned the requests.
+ */
+const ShopByCategory = ({
+  categories: categoryRows,
+  concerns: concernRows,
+  products: productRows,
+  rituals: ritualRows,
+}) => {
   const reduceMotion = useReducedMotion();
-  const [data, setData] = useState(null);
-  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-      apiService.categories.getAll(),
-      apiService.concerns.getAll(),
-      apiService.products.getHeroProducts(),
-      apiService.rituals.getAll(),
-    ])
-      .then(([categories, concerns, products, rituals]) => {
-        if (!active) return;
-        setData({
-          categories: Array.isArray(categories) ? categories : [],
-          concerns: Array.isArray(concerns) ? concerns : [],
-          products: Array.isArray(products) ? products : [],
-          rituals: Array.isArray(rituals) ? rituals : [],
-        });
-      })
-      .catch(() => {
-        if (active) setFailed(true);
-      });
-    return () => {
-      active = false;
+  // Memoised so it is the same object between renders: `cards` below is a pass
+  // over the whole catalogue per category, and an identity that changed every
+  // render would re-run it every render.
+  const data = useMemo(() => {
+    const slices = [categoryRows, concernRows, productRows, ritualRows];
+    if (slices.some((slice) => slice === null || slice === undefined)) return null;
+    return {
+      categories: categoryRows,
+      concerns: concernRows,
+      products: productRows,
+      rituals: ritualRows,
     };
-  }, []);
+  }, [categoryRows, concernRows, productRows, ritualRows]);
+
+  const failed = [categoryRows, concernRows, productRows, ritualRows].some(
+    (slice) => slice === null
+  );
+  const loading = !failed && !data;
 
   // One pass over the catalogue per category: its plate product and its count.
   const cards = useMemo(() => {
@@ -97,7 +105,6 @@ const ShopByCategory = () => {
   }, [data]);
 
   const concerns = data?.concerns || [];
-  const loading = !data && !failed;
 
   // Nothing to say, or nothing to say it with.
   if (failed || (data && cards.length === 0)) return null;

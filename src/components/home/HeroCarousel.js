@@ -29,11 +29,13 @@ import styles from "./HeroCarousel.module.css";
 // carrying a `heroOrder`, and it prints the `heroHeadline`/`heroSubtext` seeded
 // from PRODUCTS.md. Nothing here hard-codes a word of product copy.
 //
-// DATA (both api modes, one round trip each, in parallel)
-//   • products.getHeroProducts()  the slides, already in `heroOrder`
+// DATA (both api modes)
+//   • `heroProducts` PROP         the slides, already in `heroOrder`. Prompt 22
+//     lifted this read into `home/useHomeData` — four sections wanted the same
+//     collection, so the page reads it once and hands out the slice.
 //   • hero.getConfig()            section behaviour only, through
 //     normalizeHeroConfig(): enabled, autoplay, intervalMs, transition,
-//     pauseOnHover and which chrome shows.
+//     pauseOnHover and which chrome shows. Read HERE: no other section wants it.
 //   Fallbacks, in order: hero products → products.getFeatured(8) → the BRAND
 //   SLIDE (wordmark, tagline, one CTA). Never a fabricated product: an
 //   unreachable catalogue must not be the one surface that invents a listing.
@@ -149,7 +151,16 @@ const useMediaFlag = (query) => {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-const HeroCarousel = () => {
+/**
+ * @param {object} props
+ * @param {object[]|null|undefined} props.heroProducts  the hero-ordered range,
+ *        from useHomeData() — `undefined` while it is in flight, `null` when
+ *        the read failed. Prompt 22 lifted this read out of the component so
+ *        the four sections that wanted it share one request; the hero keeps its
+ *        own `hero.getConfig()` (no other section reads it) and its own
+ *        `getFeatured` fallback, because both are the hero's business alone.
+ */
+const HeroCarousel = ({ heroProducts }) => {
   const prefersReducedMotion = useReducedMotion();
   const { addToCart } = useCart();
 
@@ -174,28 +185,38 @@ const HeroCarousel = () => {
   const parallaxAllowed = useMediaFlag(PARALLAX_QUERY);
   const parallaxOn = parallaxAllowed && !prefersReducedMotion;
 
-  // ── Data ─────────────────────────────────────────────────────────────────
-  // Both reads go out together; neither can fail the other. hero.getConfig()
-  // never throws by contract (it resolves to {}), and a catalogue that does
-  // throw simply leaves the brand slide standing.
+  // ── Config ───────────────────────────────────────────────────────────────
+  // The hero's own collection — the master toggle, autoplay, timer and chrome.
+  // Nothing else on the page reads it, so it stays here. It never throws by
+  // contract (it resolves to {}), and its failure only costs the defaults.
   useEffect(() => {
+    let alive = true;
+    apiService.hero.getConfig().then(
+      (value) => {
+        if (alive && value) setRawConfig(value);
+      },
+      () => {
+        // Defaults are the answer; nothing to recover.
+      }
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // ── Slides ───────────────────────────────────────────────────────────────
+  // The range arrives as a prop. An empty (or unreadable) hero order is not the
+  // end of the hero: the featured products stand in, and only if THAT is empty
+  // too does the brand slide carry the band on its own. The fallback is fetched
+  // here rather than in useHomeData because it is the one read on this page
+  // that is conditional — asking for it up front would be a request the page
+  // almost never needs.
+  useEffect(() => {
+    if (heroProducts === undefined) return undefined;
     let alive = true;
 
     const load = async () => {
-      const [heroResult, configResult] = await Promise.allSettled([
-        apiService.products.getHeroProducts(),
-        apiService.hero.getConfig(),
-      ]);
-      if (!alive) return;
-
-      if (configResult.status === "fulfilled" && configResult.value) {
-        setRawConfig(configResult.value);
-      }
-
-      const hero =
-        heroResult.status === "fulfilled" && Array.isArray(heroResult.value)
-          ? heroResult.value
-          : [];
+      const hero = Array.isArray(heroProducts) ? heroProducts : [];
 
       let slides = resolveHeroSlides(hero, null);
       if (slides.length === 0) {
@@ -216,7 +237,7 @@ const HeroCarousel = () => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [heroProducts]);
 
   const config = useMemo(() => normalizeHeroConfig(rawConfig), [rawConfig]);
 

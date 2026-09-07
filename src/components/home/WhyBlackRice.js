@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import apiService from "../../services/api";
 import { RISE, reveal } from "../../theme/motion";
 import { onImageError, productPath } from "../../utils/helpers";
 import { stageSrc } from "../../utils/product";
@@ -86,33 +85,21 @@ const THUMB_WIDTH = 112;
 // Where the image and the copy wait before they arrive — see AboutTeaser.js.
 const RESTING = { opacity: 0, y: RISE.reveal };
 
-const WhyBlackRice = () => {
+/**
+ * @param {object} props
+ * @param {object|null|undefined} props.content  the home record's `whyBlackRice`
+ *        block, from useHomeData(): `undefined` while the record is in flight,
+ *        `null` for a record that could not be read or a block the owner has
+ *        not written — and both land on the same empty state.
+ * @param {object[]|null|undefined} props.products  the hero-ordered catalogue.
+ *        The row of labels is the section's EVIDENCE, not its subject: a
+ *        catalogue that could not be read leaves the three points standing on
+ *        their own rather than taking the band off the page.
+ */
+const WhyBlackRice = ({ content, products: productRows }) => {
   const reduceMotion = useReducedMotion();
-  const [block, setBlock] = useState(undefined);
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    let active = true;
-    // `siteContent.get` never rejects — it answers null for a section it cannot
-    // reach, which is the same answer as "the owner has not written one", and
-    // both land on the same empty state.
-    apiService.siteContent.get("home").then((home) => {
-      if (active) setBlock(home?.whyBlackRice || null);
-    });
-    // The row is the section's evidence, not its subject: if the catalogue
-    // cannot be read the three points still stand on their own.
-    apiService.products
-      .getHeroProducts()
-      .then((rows) => {
-        if (active) setProducts(Array.isArray(rows) ? rows : []);
-      })
-      .catch(() => {
-        if (active) setProducts([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const block = content === undefined ? undefined : content || null;
+  const products = Array.isArray(productRows) ? productRows : [];
 
   const loading = block === undefined;
   const copy = spotlightCopy(block);
