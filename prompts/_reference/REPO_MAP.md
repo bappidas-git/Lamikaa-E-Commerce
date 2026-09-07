@@ -207,7 +207,7 @@ Highlights that shape the prompts:
 - `Header.js` (709): sticky masthead + measured **priority nav** (category links from `getMainMenuCategories`, editorial links `?sort=newest|popular|discount`, "Today's Deals"), hover/focus **collection panels**, MUI user menu, hosts `AnnouncementBar`, `TrustStrip`, `CartDrawer`, `SidebarMenu`, `AuthModal`, `SearchModal`, `CategoriesDrawer`. Theme toggle at 466-477. Logo constant `LOGO_SRC` (old wordmark).
 - `HeroSection.js` (Prompt 07: ~575): the pre-rebuild carousel (gradient/image/video backgrounds, banked-time autoplay, ←/→ keys, `aria-roledescription="carousel"`, reduced-motion aware, "openers" category row). **Its slides now come from `products.getHeroProducts()`** through a temporary `productSlide()` adapter — headline `heroHeadline`, subtitle `heroSubtext`, CTA "Explore the {shortName}" → `productPath(p)`, background `stageSrc(p, { w: 1600, ar: "16:9" })`. Prompt 14 deletes the file.
 - `SearchModal.js` (848): module-level catalogue cache, `scoreProduct()` relevance, category chips, recent searches (localStorage-free? it uses its own storage helpers), trending rail; hard-coded silk terms at 20-34, 633, 688.
-- `CartDrawer.js` (659): dialog with focus trap, qty steppers, free-shipping meter (`FREE_SHIPPING_THRESHOLD=999`, `FLAT_SHIPPING=99`), coupon apply/remove via `apiService.coupons.validate`, summary, Checkout CTA.
+- `CartDrawer.js` (659 → 736, **rewritten by Prompt 12**): a 440px glass tray on `ui/Drawer` (its own trap, Escape handler and scroll lock deleted). 64px masthead with a count chip; body = free-shipping meter → 96px lines → "Complete your ritual" → "Have a code?" → the money; 128px pinned foot (Checkout / View cart / "Secure checkout"). The meter's bar is the lowest `freeAbove` across the ACTIVE `shipping_methods`, read live and cached in a ref, and is not rendered at all when no method sets one — `FREE_SHIPPING_THRESHOLD` and the `FLAT_SHIPPING=99` flat rate are both gone, and no delivery charge is previewed (checkout owns it). Coupon apply/remove via `apiService.coupons.validate` and the auto-drop-below-minimum rule are unchanged. Two pure exports, `freeShippingThreshold()` and `crossSellFor()`, are unit-tested in `CartDrawer.test.js`.
 - `SidebarMenu.js` (682): mobile drawer with recursive category accordion, account links, **theme switch** at 609-636, TrustStrip, legal links.
 - `Footer.js` (445): newsletter (`apiService.leads.createNewsletter`), brand+contact, four columns, promises + payment marks, colophon; old white logo at 45.
 - `storefront/*` (13 atoms exported from `index.js`): `ProductCard` (props `product, onAddToCart, onToggleWishlist, isWishlisted, showAddToCart`), `ProductGallery` (props `images, alt, discount, zoom, ribbon, inStock` — images only), `AddToCartBar` (mobile sticky), `PriceBlock`, `QuantityStepper`, `VariantSelector` (+ `variantUtils.js`), `TrustBadges` (config-driven from `tokens.js`), `DeliveryReturnsInfo`, `ReviewsSection`, `RelatedProducts`, `FrequentlyBoughtTogether`, `SocialProof`, `StarRating`.
@@ -315,13 +315,17 @@ waits for its home page section in Prompt 15.
   open (not on mount) and again on every `window` focus. Every link also calls
   `onClose` so navigating to the route you are already on still closes the
   drawer.
-- `ui/Drawer.module.css` gains **five composition hooks**, each defaulting to the
-  value it replaced, so no existing drawer moves:
+- `ui/Drawer.module.css` gains **seven composition hooks** (five in Prompt 10,
+  two more in Prompt 12), each defaulting to the value it replaced, so no
+  existing drawer moves:
   `--sf-drawer-header-pad-y` · `--sf-drawer-header-pad-b` ·
   `--sf-drawer-close-margin` · `--sf-drawer-body-pad` ·
-  `--sf-drawer-footer-pad-b`. `SidebarMenu` sets all five on `.panel` for a 64px
+  `--sf-drawer-footer-pad-t` · `--sf-drawer-footer-pad-b` ·
+  `--sf-drawer-footer-gap`. `SidebarMenu` sets five on `.panel` for a 64px
   masthead, an 8px/20px body and `calc(16px + env(safe-area-inset-bottom))`
-  under the CTA. `Drawer.js` itself is unchanged.
+  under the CTA; `CartDrawer` sets six for a 64px masthead, a flush body and a
+  128px foot that still gives both controls a 44px touch target.
+  `Drawer.js` itself is unchanged.
 - `BottomNav/BottomNav.js` (174 → 217) + `.module.css` (198 → 212): a
   `sf-glass sf-glass--strong sf-glass--scrim` bar at `--sf-z-sticky`, one
   `--sf-glass-border` hairline on top, a 64px tab row plus
@@ -479,10 +483,12 @@ Provider order in `App.js`: `ErrorBoundary > ThemeContextProvider > StoreSetting
 | AuthContext | `useAuth()` (also `hooks/useAuth`) | `user`, `isLoading`, `isAuthenticated`, `login`, `register`, `logout`, `updateUser`, `authModalOpen`, `authModalTab`, `openAuthModal(tab)`, `closeAuthModal` | `authStorage` (`user`, `token`) — sessionStorage by default, localStorage with "Remember me" |
 | AdminContext | `useAdmin()` | `admin`, `isLoading`, `isAuthenticated`, `login`, `logout` | `sessionStorage.admin`, `sessionStorage.adminToken` (`mock-admin-token` in mock mode) |
 | WishlistContext | `useWishlist()` | `wishlistItems`, `isLoading`, `addToWishlist`, `removeFromWishlist(id,{silent})`, `toggleWishlist`, `isInWishlist`, `clearWishlist` (Swal confirm), `getWishlistCount` | `localStorage.wishlist`; server sync on login |
-| CartContext | `useCart()` (also `hooks/useCart`) | `cartItems`, `isCartOpen`, `isLoading`, `addToCart(product, qty, {openDrawer})`, `removeFromCart`, `updateQuantity`, `clearCart({silent})`, `getCartTotal`, `getCartItemCount`, `toggleCart`, `setIsCartOpen`; line id = `${productId}-${variantId ?? "default"}`; SweetAlert toasts | `localStorage.cart`; debounced replace-sync to `/cart` for logged-in users |
+| CartContext | `useCart()` (also `hooks/useCart`) | `cartItems`, `isCartOpen`, `isLoading`, `addToCart(product, qty, {openDrawer})`, **`addMany(items, {openDrawer}) -> {added, skipped}`**, `removeFromCart`, `updateQuantity`, `clearCart({silent})`, `getCartTotal`, `getCartItemCount`, `toggleCart`, `setIsCartOpen`; line id = `${productId}-${variantId ?? "default"}`; SweetAlert toasts, sentence case ("Added to cart" / "Cart updated" / "Removed from cart" / "Cart cleared") | `localStorage.cart` (format unchanged); debounced replace-sync to `/cart` for logged-in users |
 | OrderContext | `useOrder()` | `orders`, `currentOrder`, `isLoading`, `createOrder(orderData)` (generates `ORD-<ts>-<rand>`), `loadUserOrders`, `getOrderById` | — |
 | DealsConfigContext | `useDealsConfig()` | `config`, `enabled`, `loading`, `refresh` | refetch on focus |
 | FaqContext | `useFaqs()` | `faqs`, `loading`, `refresh`, `forPlacement(p)`, `forProduct(product)`; fallback `DEFAULT_FAQS` (= `FAQ_ITEMS` constants) | refetch on focus + `faqs:updated` event |
+
+**Updated by Prompt 12.** `addMany(items, { openDrawer = true } = {})` is the multi-add helper the rituals and the cart tray's cross-sell share. Both add paths now fold an item in through one private reducer (`mergeLine`), so `addToCart` and `addMany` cannot drift on the line-key merge or the stock clamp. `addMany` normalises each entry in the order given inside ONE functional update, SKIPS any entry whose price is not committed (`isPriceKnown`, so a `priceTBA` product can never become a ₹0 line), fires exactly one toast ("3 items added to your cart", or "2 added · 1 coming soon" when it skipped some), opens the drawer at most once — and not at all when nothing was added — and returns `{ added, skipped }`. Covered by `src/context/CartContext.test.js`.
 
 Other storage keys: `localStorage.recentlyViewed` (PDP writes, Home reads, cap 20). `useSound` hook (unused) references `/assets/click-sound-1.wav` (file lives at `src/assets/`, so the path is wrong — dead code).
 

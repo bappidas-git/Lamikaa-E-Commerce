@@ -15,7 +15,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 09 | Header, mega panel and announcement bar | complete | 2026-09-06 | (this commit) | The masthead is the LAMIKAA sticky glass header: one 64px row (56px ≤768px) inside `.sf-container`, `transparent` over `#hero-sentinel` → `.sf-glass` → `.sf-glass--strong` past 24px, blur withdrawn while any overlay is up. `Header.js` 683 → 437 lines; the priority-nav machinery (hidden twin list, `ResizeObserver`, `measureOverflow`, overflow count) and the per-category collection panels are **gone** — `grep -rn "navMeasure\|measureOverflow" src` → **0**. `CategoriesDrawer/` deleted (2 files, 1 071 lines); `grep -rn "CategoriesDrawer\|TrustStrip" src/components/Header` → **0**. New: `MegaPanel.{js,module.css}` (7 categories with real product thumbnails + counts, 11 concern chips, a featured glow card, module-level data cache) and `HeaderActions.js` (search · account · wishlist · cart, the MUI account menu moved verbatim). `AnnouncementBar` is data-driven (`announcements.getAll` → `brand.announcements` fallback), drops placeholder rows and remembers dismissal in **`sessionStorage`** — `grep -rn "localStorage\|FREE_SHIPPING_THRESHOLD" src/components/AnnouncementBar` → **0**. axe (axe-core 4.x, wcag2a/2aa/21a/21aa + best-practice) on the header at 1280 (closed and panel-open) and 390: **0 violations**. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). Browser QA at 320/360/390/414/768/1024/1280/1440 — 0px horizontal overflow at every width, 0 console errors. See "Prompt 09 record" below. |
 | 10 | Mobile navigation drawer and bottom nav | complete | 2026-09-06 | (this commit) | `SidebarMenu` is the first feature on the `ui/Drawer` primitive — its hand-rolled focus trap, Escape handler, `body.style.overflow` lock and close-on-navigate effect are **deleted**, not duplicated (`grep useFocusTrap|useScrollLock` in the file → 0; the primitive owns all four). 632 → 521 lines of JS, the 725-line stylesheet replaced wholesale by 377 (`toggleTheme|Dark mode` → **0**, no `.dark`, no logo swap, no hex). Four labelled navs — Catalogue (a one-item accordion over the seven categories at 48px behind 32px `.sf-plate` thumbnails, default-open on `/shop` and `/category/*`), Brand, Account, Contact — over a pinned **"Shop the Black Rice Range"** CTA and the clamped legal note. `BottomNav` is a five-tab glass bar (64px + safe area, gold + a 20px gradient hairline for active, hide-on-scroll suspended while an overlay is up). `src/utils/catalogue.js` extracts the category-membership rule the mega panel and the drawer now share. **Browser QA: 109/109 checks at 360/390/414/768/1024/1280 + reduced motion + a simulated notch; axe-core 0 violations** on the drawer (open and closed), the bar and the whole document. One pre-existing defect fixed on the way: `AddToCartBar`'s raw `z-index: 1300` painted the PDP purchase bar over every drawer and modal — deleted, so the reserved order 40 < 60 < 1000 < 1100 is now real. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (3 passed / 1 skipped). `db.json` and `api.js` untouched — reads only. |
 | 11 | Search overlay and search results | complete | 2026-09-06 | (this commit) | `SearchModal` is the first feature on `ui/Modal` — its hand-rolled focus trap, Escape handler, `document.body.style.overflow` lock and focus-restore are **deleted** (`grep "focusable\|body.style.overflow" SearchModal.js` → 0), and the primitive gains `size="full"` + `initialFocus`. 850 → 642 lines of JS, 813 → 420 of CSS. Ranking moved out to **`src/utils/search.js`** (+ `search.test.js`, 10 tests) so the overlay and `/search` cannot disagree: `"serum"` → Face Serum first, `"hydration"` → Mist/Gel/Body Wash and nothing else, `"goat"` → the soap, `"black rice"` → all eight with the three priced ones leading, nonsense → the empty state (all five verified in Chromium AND pinned in the suite). Recent searches are **`sessionStorage["lk-recent-searches"]`** — `grep -rn "localStorage" src/components/SearchModal src/pages/Search` → **0**. `/search?q=` is a real page (`noindex`), `ComingSoon` is gone from the route (`grep -rn "ComingSoon" src/App.js | grep -i search | wc -l` → **0**), and `/products?search=x` still lands on it. `grep -rn "Muga\|Mekhela\|Eri \|Pat silk\|weave" src/components/SearchModal src/pages/Search` → **0**. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` = **4 suites passed / 1 skipped** (44 passed, 50 skipped). Browser QA at 360/390/414/768/1024/1280/1440 + reduced motion: 0 horizontal overflow, 0 page errors, header backdrop-filter `none` throughout. |
-| 12 | Cart drawer with cross-sell | pending | | | |
+| 12 | Cart drawer with cross-sell | complete | 2026-09-07 | (this commit) | `CartDrawer` is the second feature on `ui/Drawer` — its hand-rolled focus trap, `FOCUSABLE_SELECTOR`, Escape handler and `document.body.style.overflow` lock are all **deleted** (the only hits left for `grep -n "FOCUSABLE_SELECTOR\|body.style.overflow\|onCloseRef" src/components/CartDrawer/CartDrawer.js` are the **2 inside the docblock that records what moved to the primitive** — no code hit). 440px glass tray: measured **65px** masthead (64 + hairline), **96px** lines (72px plate + 12px), **129px** foot (128 + hairline), no horizontal overflow at 360/390/414/768/1024/1280 and the panel at 360/390/414/**440**/440/440. **No invented shipping figure survives**: `FREE_SHIPPING_THRESHOLD` and `FLAT_SHIPPING = 99` are gone, the meter's bar is the lowest `freeAbove` across the active `shipping_methods` (cached in a ref, one request per mount) and hides when none is set; no delivery charge is previewed at all. Measured with `freeAbove: 999` seeded through the API: ₹390 → "₹609 away from free shipping", `aria-valuenow=390 aria-valuemax=999`, fill 39.04%; ₹1 170 → "You've unlocked free shipping", 999/999. `CartContext` gains **`addMany`** (one toast, one drawer opening, skips uncommitted prices) and both add paths now share one `mergeLine` reducer; toasts are sentence case. **17 new unit tests** (`CartContext.test.js` 7, `CartDrawer.test.js` 10). Browser QA: PDP add auto-opens the tray with "Added to cart"; cross-sell Add keeps it open; coupon `SAMPLE10` applies −₹39.00 and a bad code shows "Invalid coupon code"; Tab cycles 11 stops and wraps; Escape closes and restores focus to "Cart, 1 item"; backdrop click closes; Checkout → `/checkout` with the cart intact, scroll unlocked and `body[data-drawer-open]` cleared; View cart → `/cart`; removing the last line falls to the empty state and the foot disappears with it. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (**6 suites / 61 tests passed**, 1 suite / 50 skipped). `grep -rn "FREE_SHIPPING_THRESHOLD\|FLAT_SHIPPING\|Sualkuchi\|looms" src/components/CartDrawer src/context/CartContext.js` → **0**. See "Prompt 12 record" below. |
 | 13 | Footer | pending | | | |
 | 14 | Home hero product carousel | pending | | | |
 | 15 | Trust strip and shop-by-category/concern | pending | | | |
@@ -164,6 +164,21 @@ Record every decision a prompt had to make that the reference files did not sett
 - `11 · 2026-09-06 · "See all N results" renders whenever there are results, not only past the eight-row cap · With eight products in the range the cap can never be exceeded, so gating on it would leave `/search` unreachable by pointer from the overlay and the whole link untested. Enter in the field goes there too; the link is the mouse's equivalent.`
 - `11 · 2026-09-06 · `role="list"` is restated on every `<ul>` with an `eslint-disable-next-line jsx-a11y/no-redundant-roles` · Safari drops the list semantics of a `<ul>` whose `list-style` is `none`, which is every list in this design system. The rule does not know about that bug, and `CI=true npm run build` treats its warning as an error.`
 - `11 · 2026-09-06 · The overlay calls `onClose()` itself on every navigation instead of relying on `Modal`'s close-on-route-change · `Modal` compares PATHNAMES, so submitting from `/search?q=a` to `/search?q=b` is not a navigation as far as the dialog is concerned and the overlay would sit over the results it had just produced. Verified: opened on `/search?q=face`, submitted "serum", overlay closed and the `<h1>` became "Results for “serum”".`
+- `12 · 2026-09-07 · Cross-sell selection is one pure exported function, `crossSellFor(products, cartItems, limit)`, and the EMPTY-cart "Start with" rows are the same call with no lines · The prompt describes two lists ("Complete your ritual" for a cart, "Start with" for an empty one) whose only stated difference is the eyebrow. Written as one function, the empty cart falls through preferences 1 and 2 (which need cart lines) straight into hero order, which is exactly what "fed by hero order" asks for — and one function is one thing to test.`
+- `12 · 2026-09-07 · Preference 2 ("the next `ritualStep.order` in the same category") is matched on `categoryId`, not on `categoryIds[]` · `ritualStep.order` is a position within ONE ritual, and `categoryId` is the primary category that names it (INDEX §3). Widening to `categoryIds[]` would make a face wash (cats 1 and 3) suggest the next step of the body ritual, which is not a next step at all.`
+- `12 · 2026-09-07 · The tray shows NO "Total" row — subtotal, the discount, any real compare-at saving, then "Shipping and taxes calculated at checkout" · The prompt's Task 7 lists exactly these, and the reason is the guardrail above it: the delivery charge is unknown until checkout has an address, so a "Total" here would silently omit it and be beaten two screens later. The compare-at "You save" row is KEPT (it was existing behaviour and is computed only from real `comparePrice` values); the old flat-rate "Shipping" row and grand total are gone with the constant that fabricated them.`
+- `12 · 2026-09-07 · The pinned foot is NOT rendered for an empty cart · Task 9 does not condition it, but a Checkout button over an empty cart is a dead end, and Task 10's empty state already carries the one CTA that makes sense ("Shop the Black Rice Range"). `Drawer` renders no footer at all for a falsy `footer` prop, so this costs nothing. Verified: removing the last line drops the foot with it.`
+- `12 · 2026-09-07 · `addMany` opens the drawer only when it actually added something, and reports `{ added, skipped }` · "Opens the drawer once" is unambiguous for a list that added lines; a tray sliding in over an unchanged cart is a lie about what just happened. A list of nothing-but-unpriced products gets the "Coming soon" toast and no drawer. The return value is what lets a ritual page tell the difference without re-deriving it.`
+- `12 · 2026-09-07 · The "Have a code?" disclosure is hand-rolled (`button[aria-expanded][aria-controls]` + a `hidden` panel), not `ui/Accordion` · The prompt says "`Accordion`-like". `Accordion` is an items array of heading + region with its own chevron and single-open logic, and the applied state here REPLACES the row with a chip rather than filling a panel — so the primitive would have been configured away to nothing. The ARIA contract (expanded/controls, panel out of the tab order when closed) is the same.`
+- `12 · 2026-09-07 · A message the shopper has not read keeps its own panel open (`couponOpen || couponError || couponNote`) · A code auto-dropped for falling under its minimum explains itself in that panel. Collapsing it would hide the explanation behind the very control the shopper just used.`
+- `12 · 2026-09-07 · `ui/Drawer.module.css` gains TWO more composition hooks — `--sf-drawer-footer-pad-t` and `--sf-drawer-footer-gap`, both defaulting to the values they replaced · The spec reserves 128px for the foot. Two 44px pill buttons plus a micro-line come to 128 only on 8/4/8 padding-and-gap, and the primitive hard-coded `--sf-space-4` and `--sf-space-3`. Adding hooks is the pattern Prompt 10 established for exactly this; the alternative was matching the footer by position, which that prompt's own comment forbids. Nothing bought the height by shrinking a touch target. No existing drawer moves.`
+- `12 · 2026-09-07 · The cart line's remove mark is absolutely positioned rather than sitting beside the name · In the flow it made the row 140px: a 36px circle stacked over a 42px stepper is 78px of column before the name is measured. Out of the flow the 72px plate sets the height again and the row measures exactly 96px. `.lineName` keeps a `--sf-space-8` right padding so a long name wraps clear of the mark instead of under it.`
+- `12 · 2026-09-07 · The unit price moved from its own line into a right-hand column beside the stepper · Same reason: "₹390.00 each" on its own line cost 19px the 96px row does not have, and two short lines beside a 42px control cost nothing.`
+- `12 · 2026-09-07 · `QuantityStepper`'s "glass pill" is `--sf-glass-bg` over `--sf-glass-border` with NO `backdrop-filter` · DESIGN_SYSTEM §4 allows two blurred layers in view, not two plus one per cart line. The stepper always sits inside something already blurred (the tray, the purchase panel); the tint and the hairline are what read as glass. `md` stays at 44px for the PDP, `sm` is the prompt's 36px and is promoted back to 44px under `@media (pointer: coarse)` — the same rule `.sf-btn--sm` and `.iconSm` already follow.`
+- `12 · 2026-09-07 · The meter's figure prints with `decimals: 0`, the money rows with the store default (2) · The meter states a DISTANCE ("₹609 away"), which is the same reading `resolveTrustBadgeDetail` gives the trust badge; the money rows are charges and match Checkout, as they did before.`
+- `12 · 2026-09-07 · `addMany` was verified by unit tests rather than by a temporary `window.__cart` · The acceptance criterion suggests exposing the context on `window` and then removing it. Seven tests in `src/context/CartContext.test.js` prove the same behaviours (merge by line key, one toast, the skip rule, the stock clamp, `openDrawer: false`, the return value) and keep proving them, and nothing temporary has to be remembered out of the source.`
+- `12 · 2026-09-07 · Cart lines still do not carry `slug`, so a line links to `/product/<productId>` and the route redirects to the slug · `buildCartItem` sets a slug and `normalizeCartItem` drops it — an inconsistency that predates this prompt. Adding the field is a `localStorage.cart` FORMAT change, which this prompt's Data section forbids ("no persistence change"). Verified: the tray's product link lands on `/product/black-rice-face-wash`.`
+- `12 · 2026-09-07 · `SearchModal`'s add still passes `openDrawer: false` and was left alone · The acceptance criterion reads "add from a card/search → drawer opens", but Prompt 11 chose this deliberately so a tray cannot slide in under an open full-screen modal. Changing it would remove existing, reasoned behaviour. The card and PDP paths do open the tray, and that is what was measured.`
 
 ## Open TODOs
 
@@ -226,6 +241,10 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `11 · The overlay ranks the WHOLE catalogue on every keystroke with no debounce, which is right for eight products and wrong for eight hundred. The threshold is a linear pass over nine fields per product; past a few hundred products the answer is the server endpoint documented at `products.search()` (REPO_MAP §3.4), not an index in `utils/search.js`. · Owner / backend team · 39`
 - `11 · `stageSrc(p, { w: 112 })` requests a 112px-wide crop for a 56px plate (2× for retina) but no `srcSet`, because the row thumbnail is one fixed size at every breakpoint. If the row ever becomes fluid, it should move onto `ui/CloudinaryImage` like the rest of the media layer. · Prompt 37 · 37`
 - `11 · The Iconify sets the overlay uses (`mdi:magnify`, `mdi:close`, `mdi:cart-plus`, `mdi:arrow-right`) are fetched from the Iconify API at runtime, so in the sandbox used for this prompt's QA they did not paint — the screenshots were re-taken with the assets relayed through the agent proxy. Every icon-only control carries an `srLabel`, so nothing loses its accessible name offline; whether to bundle the set is still Prompt 38's call (carried from Prompt 05). · Prompt 38 · 38`
+- `12 · `src/config/brand.js:109` still carries the announcement string "Free shipping over ₹{{FREE_SHIPPING_THRESHOLD}}". It is a PLACEHOLDER TOKEN, not the retired constant — `fillStoreCopy` resolves it from live `freeAbove` and drops the sentence when there is none — but it is the only remaining hit for the prompt's verification grep over `src`. Confirm the announcement row hides correctly once the footer band is rebuilt on the live read. · developer · 13`
+- `12 · The free-shipping trust row in `Footer.js` no longer consults any constant and is filtered out unconditionally (`!item.needsThreshold`). Prompt 13 rebuilds the band and should re-attach it to `shipping.getMethods()` the way the cart tray's meter now does — `freeShippingThreshold()` is exported from `CartDrawer.js` and should move to a shared util when a second consumer appears. · developer · 13`
+- `12 · Any `@testing-library/react` render in this repo makes Jest print "Jest did not exit one second after the test run" / "A worker process has failed to exit gracefully". Reproduced with a one-line `render(<span>hi</span>)` test, so it is React 18's scheduler holding a jsdom `MessageChannel`, not the new tests. Exit code is 0 and CI passes. Prompt 39 owns the test harness and should add `src/setupTests.js` (jest-dom + the MessageChannel teardown) before it adds the App smoke test. · developer · 39`
+- `12 · The tray's shipping and catalogue reads are cached for the life of the MOUNT (Header keeps `CartDrawer` mounted for the session). An admin changing `freeAbove` or activating a product mid-session is not seen until a reload. Acceptable for the meter; revisit with the cart PAGE, which will want the same reads. · developer · 29`
 
 ## Placeholders introduced / resolved
 
@@ -1219,3 +1238,165 @@ untouched; `src/services/api.js` untouched (reads only — `products.getAll`,
 `categories.getAll`, `concerns.getAll`). No dependency added. `ComingSoon.js`
 unchanged, with one fewer usage. `Header.js` and `BottomNav.js` unchanged — the
 overlay's `open`/`onClose` contract is the same.
+
+
+## Prompt 12 record (2026-09-07)
+
+### What the cart tray now is
+
+A 440px glass tray on `ui/Drawer` — the SECOND feature on the primitive, and,
+like `SidebarMenu` before it, everything it used to hand-roll is deleted rather
+than duplicated:
+
+| Was, in `CartDrawer.js` | Is, in `ui/Drawer` |
+|---|---|
+| a 40-line `keydown` handler cycling `FOCUSABLE_SELECTOR` and catching Escape | `useFocusTrap(panelRef, { active, onEscape })` |
+| `document.body.style.overflow = "hidden"` | `useScrollLock(open)` — reference-counted |
+| an `opener`/`onCloseRef` dance to restore focus | the hook's own restore |
+| nothing | close on route change (`pathAtOpen` vs `location.pathname`) |
+| a hand-drawn `motion.div` scrim + tray | `overlay(reduce)` + `panel(reduce, "right")` |
+| nothing | `body[data-drawer-open]` — the header drops its blur while the tray is up |
+
+`grep -n "FOCUSABLE_SELECTOR\|body.style.overflow\|onCloseRef" src/components/CartDrawer/CartDrawer.js`
+returns **2** — both inside the docblock above, which names what moved to the
+primitive; there is no code hit.
+The PUBLIC PROPS are unchanged: `Header.js` still mounts `<CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />`,
+and `Header.js` itself was not touched.
+
+The tray reads top to bottom as one document: a 64px masthead with a count chip,
+then a body of five full-bleed sections — the free-shipping meter, the 96px
+lines, "Complete your ritual", "Have a code?", the money — over a 128px pinned
+foot. `--sf-drawer-body-pad: 0` is what lets the hairlines run edge to edge; each
+section owns its own air.
+
+### No invented shipping figure survives
+
+This is the point of the prompt, so it is worth stating plainly. The old tray
+quoted a `FLAT_SHIPPING = 99` delivery charge in its summary and raced a meter
+towards `FREE_SHIPPING_THRESHOLD` — a figure the store had never committed to.
+Both are gone, and nothing replaced the charge:
+
+- the meter's bar is `freeShippingThreshold(methods)` — the LOWEST positive
+  `freeAbove` across the ACTIVE methods from `shipping.getMethods()`, the same
+  rule `resolveTrustBadgeDetail` uses, so the meter and the trust badge can
+  never quote different numbers;
+- when no method sets one, `hasMeter` is false and the meter is not rendered at
+  all — unknown means unknown, not free;
+- **the delivery charge is not previewed in the tray in any form.** The summary
+  ends "Shipping and taxes calculated at checkout", which is the first screen
+  that knows an address.
+
+Measured in the browser with `freeAbove: 999` PATCHed onto Standard Delivery
+through the API (and restored to `null` afterwards — `git status db.json` clean):
+
+| Subtotal | Text | `aria-valuenow` / `aria-valuemax` | Fill |
+|---|---|---|---|
+| ₹390 | "₹609 away from free shipping" | 390 / 999 | 39.039% |
+| ₹1 170 | "You've unlocked free shipping" | 999 / 999 | 100% |
+
+With the committed seed (`freeAbove: null`) the meter does not render.
+
+### `CartContext` — `addMany`, and one merge rule
+
+`addMany(items, { openDrawer = true } = {}) -> { added, skipped }`. Both add
+paths now fold an item in through ONE private reducer:
+
+```js
+const mergeLine = (prev, incoming) => { /* line-key merge + clampQty */ };
+addToCart : setCartItems((prev) => mergeLine(prev, incoming));
+addMany   : setCartItems((prev) => incoming.reduce(mergeLine, prev));
+```
+
+so the two cannot drift on the merge or the stock clamp, and a list is folded in
+inside ONE functional update — two entries for the same line sum rather than
+race. An entry whose price is not committed (`isPriceKnown` → `priceTBA`, or no
+price at all) is SKIPPED, never added at ₹0: five of the eight products ship
+before their MRP is set, and a ₹0 line checks out. One toast, whatever the
+length of the list ("3 items added to your cart", or "2 added · 1 coming soon"),
+and at most one drawer opening — none at all when nothing was added.
+
+Toasts are sentence case throughout: **"Added to cart" / "Cart updated" /
+"Removed from cart" / "Cart cleared"**, still on the SweetAlert2 toast skinned
+in Prompt 04. `removeFromCart` now names the line it removed (read from
+`cartItemsRef` before the state change), which is the difference between "did I
+just delete the wrong thing?" and knowing.
+
+`localStorage.cart` is byte-for-byte the same format; nothing about persistence
+or the API mirror changed.
+
+### Cross-sell
+
+`crossSellFor(products, cartItems, limit = 2)` is pure and exported. Preference
+order, best answer first:
+
+1. `frequentlyBoughtTogetherIds` of the cart's own lines, walked in cart order —
+   the merchant's own pairing;
+2. the NEXT `ritualStep.order` in the same `categoryId`, nearest step first;
+3. `heroOrder` — the house's running order.
+
+Never offered: anything already in the cart, and anything `!isPriceKnown` (an
+Add button beside a "Price on launch" product is an invitation to a dead end).
+An EMPTY cart is the same call with no lines, so it falls straight through to
+hero order — which is exactly the "Start with" list Task 10 asks for. The
+section is not rendered when nothing qualifies.
+
+With the committed seed and a cart of Face Wash + Scrub, only the Goat Milk Soap
+qualifies (every other product is `priceTBA`), so one row renders — "up to 2",
+honestly.
+
+### `QuantityStepper`, restyled
+
+From a hairline box cut into three by two internal rules, to one pill: a glass
+ground (`--sf-glass-bg` over `--sf-glass-border`, and deliberately **no**
+`backdrop-filter` — see the decisions log), round controls at each end, tabular
+figures between them, the `aria-live` value unchanged. `md` keeps its 44px for
+the PDP purchase panel; `sm` is the prompt's 36px and returns to 44px under
+`@media (pointer: coarse)`.
+
+### Measured
+
+Chromium, `npm run dev`, cart of two lines unless stated.
+
+| Check | Result |
+|---|---|
+| Panel width at 360 / 390 / 414 / 768 / 1024 / 1280 | 360 / 390 / 414 / **440** / 440 / 440 |
+| Horizontal overflow, every width | none |
+| `body[data-scroll-lock]` while open | set at every width |
+| `body[data-drawer-open]` while open | set at every width |
+| Masthead / line / foot height | 65 / **96** / 129 px (64 / 96 / 128 + hairlines) |
+| Line height, name wrapping to two lines + variant | 134 px |
+| Plate | 72 × 72 px (cross-sell rows 56 px) |
+| PDP "Add to cart" | tray auto-opens; toast "Added to cart · Black Rice Face Wash is in your cart" |
+| Cross-sell "Add" | line added, tray stays open |
+| Coupon `SAMPLE10` | applied chip + "Discount (SAMPLE10) −₹39.00"; bad code → "Invalid coupon code" |
+| Tab ring | 11 stops, wraps to the close button; the disabled − is skipped |
+| Escape | closes, focus restored to "Cart, 1 item" |
+| Backdrop click | closes |
+| Checkout | `/checkout`, cart intact, scroll unlocked, `data-drawer-open` cleared |
+| View cart | `/cart` |
+| In-tray product link | `/product/black-rice-face-wash` (id → slug redirect), tray closed |
+| Remove the last line | empty state renders, the pinned foot disappears with it |
+| `prefers-reduced-motion: reduce` | tray renders at 440px, no travel |
+
+### Tests
+
+17 new, all green: `src/context/CartContext.test.js` (7 — the merge, the single
+toast, the skip rule, the "nothing added" path, `openDrawer: false` and the
+return value, the stock clamp, and the four sentence-case toasts) and
+`src/components/CartDrawer/CartDrawer.test.js` (10 — `freeShippingThreshold` for
+the lowest bar, inactive/zero/non-numeric methods and the null case;
+`crossSellFor` for each preference, the two exclusions, the limit, the empty-cart
+fallback and the nothing-qualifies case).
+
+### Verification
+
+`CI=true npm run build` → **Compiled successfully**, exit 0, no warnings.
+`npm test -- --watchAll=false` → exit 0, **6 suites passed / 1 skipped, 61
+passed / 50 skipped of 111**.
+`grep -rn "FREE_SHIPPING_THRESHOLD\|FLAT_SHIPPING\|Sualkuchi\|looms" src/components/CartDrawer src/context/CartContext.js` → **0**.
+`grep -rn "FREE_SHIPPING_THRESHOLD" src --include=*.js | grep -v "constants.js\|storeSettings.js\|tokens.js"` → **1**, and it is
+`src/config/brand.js:109`'s `{{FREE_SHIPPING_THRESHOLD}}` placeholder TOKEN, not
+the constant (see Open TODOs).
+`db.json` untouched. `src/services/api.js` untouched — reads only
+(`shipping.getMethods`, `products.getAll`, `coupons.validate`). No dependency
+added. No admin change. `Header.js` unchanged.

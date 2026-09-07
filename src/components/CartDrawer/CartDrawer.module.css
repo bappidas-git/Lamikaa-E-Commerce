@@ -1,756 +1,52 @@
 /* =============================================================================
- * CartDrawer — the quiet tray
+ * CartDrawer — the glass tray
  * =============================================================================
- * Not a shopping panel: a page of the boutique's ledger that slides in from the
- * right. The tray paints --sf-color-bg, the same ivory ground as the page, so
- * opening it reads as the page turning rather than as a slab arriving. Every
- * separation in here is a 1px hairline — there is not a single card, fill or
- * shadow inside the panel; only the panel's own edge lifts it off the scrim.
+ * The panel, the scrim, the focus ring, the safe-area insets and the sides are
+ * `ui/Drawer`'s (Drawer.module.css). What is here is only what the tray HOLDS:
+ * five stacked sections separated by full-bleed hairlines, each owning its own
+ * air. That is why the primitive's body padding is set to 0 on `.panel` — a
+ * hairline that stops 20px short of the panel edge reads as a mistake, and a
+ * meter inset from the glass reads as a widget rather than as part of the tray.
  *
- * THE ONE SERIF MOMENT
- *   Two things are set in the display serif: the "Your Cart" masthead and the
- *   Total. Everything between them is quiet Manrope — tracked uppercase for
- *   labels and actions, tabular figures for every number, so the column of
- *   money on the right never jitters as quantities change.
+ * THE FIVE `--sf-drawer-*` CUSTOM PROPERTIES retune the primitive's chrome to
+ * this content: a 64px masthead (44px close button + 10px above and below), a
+ * flush body, and a foot that ADDS the home-indicator inset rather than
+ * absorbing it. They are the primitive's own hooks, declared with its values as
+ * defaults, so nothing else that uses Drawer moves.
  *
- * TOKENS ONLY
- *   Colour, spacing, radius, shadow, type and motion all come from
- *   src/theme/storefront-tokens.css, so dark mode ("evening gallery") and the
- *   reduced-motion pass are re-derived for free. No hardcoded hex anywhere.
+ * ONE SERIF MOMENT — "Your cart" in the masthead. Everything below it is
+ * Manrope: tracked uppercase for the eyebrows, tabular figures for every
+ * number, so the column of money on the right never jitters as quantities
+ * change. Prices are gold (`--sf-color-price`); nothing else in the tray is.
+ *
+ * TOKENS ONLY. Colour, spacing, radius, type and motion come from
+ * theme/storefront-tokens.css. No hardcoded hex, no hardcoded gradient.
  * ========================================================================== */
 
-/* =============================================================================
- * 1. SCRIM + PANEL
- * ========================================================================== */
+.panel {
+  /* 10 + 44 (close button) + 10 = the 64px masthead. */
+  --sf-drawer-header-pad-y: 10px;
+  --sf-drawer-header-pad-b: 10px;
+  --sf-drawer-close-margin: 0 calc(var(--sf-space-2) * -1) 0 0;
+  --sf-drawer-body-pad: 0;
+  /* 8 + 44 + 4 + 44 + 4 + 16 + 8 = the 128px foot, with both controls still at
+     the full 44px touch target and the home indicator added on top. */
+  --sf-drawer-footer-pad-t: var(--sf-space-2);
+  --sf-drawer-footer-gap: var(--sf-space-1);
+  --sf-drawer-footer-pad-b: calc(var(--sf-space-2) + env(safe-area-inset-bottom));
 
-.scrim {
-  position: fixed;
-  inset: 0;
-  z-index: var(--sf-z-overlay);
-  background: var(--sf-color-overlay);
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Sits in the overlay band: above the masthead and the BottomNav (--sf-z-sticky)
-   and below Swal's 2000, so a confirm dialog still lands on top of the tray. */
-.drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--sf-z-modal);
-  width: min(100vw, 440px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  outline: none;
-  background: var(--sf-color-bg);
   color: var(--sf-color-text);
-  border-left: 1px solid var(--sf-color-border);
-  box-shadow: var(--sf-shadow-lg);
-  font-family: var(--sf-font-family);
 }
 
 /* =============================================================================
- * 2. MASTHEAD ROW
+ * 1. MASTHEAD
  * ========================================================================== */
-
-.header {
-  flex: none;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sf-space-4);
-  padding: var(--sf-space-5) var(--sf-space-6);
-  border-bottom: 1px solid var(--sf-color-border);
-}
 
 .heading {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sf-space-3);
-  min-width: 0;
-}
-
-.title {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  letter-spacing: var(--sf-tracking-normal);
-  color: var(--sf-color-text);
-}
-
-/* The count is a note beside the title, not a badge on it. */
-.count {
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  white-space: nowrap;
-  color: var(--sf-color-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.closeBtn {
-  flex: none;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  width: var(--sf-tap-target);
-  height: var(--sf-tap-target);
-  margin-right: calc(var(--sf-space-3) * -1);
-  padding: 0;
-  border: none;
-  border-radius: var(--sf-radius-sm);
-  background: transparent;
-  color: var(--sf-color-text);
-  cursor: pointer;
-  transition: color var(--sf-transition-fast),
-    transform var(--sf-transition-fast), opacity var(--sf-transition-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.closeBtn:hover {
-  color: var(--sf-color-accent);
-}
-
-/* The shared icon-button press. */
-.closeBtn:active {
-  transform: scale(0.98);
-  opacity: 0.85;
-}
-
-.closeBtn:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-/* =============================================================================
- * 3. FREE-SHIPPING METER
- * =============================================================================
- * One honest line and one 2px rule. The number and the threshold are the real
- * ones (FREE_SHIPPING_THRESHOLD / the Standard method's flat rate) — there is
- * no timer, no scarcity note and nothing else in this block.
- * ========================================================================== */
-
-.meter {
-  flex: none;
-  padding: var(--sf-space-4) var(--sf-space-6);
-  border-bottom: 1px solid var(--sf-color-border);
-}
-
-.meterText {
-  margin: 0 0 var(--sf-space-3);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-normal);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  color: var(--sf-color-text-muted);
-}
-
-.meterText strong {
-  font-weight: var(--sf-font-medium);
-  color: var(--sf-color-gold-deep);
-  font-variant-numeric: tabular-nums;
-}
-
-.meterTrack {
-  position: relative;
-  width: 100%;
-  height: 2px;
-  overflow: hidden;
-  background: var(--sf-color-border);
-}
-
-.meterFill {
-  height: 100%;
-  background: var(--sf-gradient-gold);
-}
-
-/* =============================================================================
- * 4. SCROLL REGION
- * =============================================================================
- * Everything between the meter and the pinned footer scrolls as one column —
- * lines, promo and summary — so a long cart never pushes the CTA off-screen.
- * `min-height: 0` is what actually lets a flex child shrink and scroll.
- * ========================================================================== */
-
-.body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.body::-webkit-scrollbar-thumb {
-  background: var(--sf-color-border-strong);
-}
-
-/* =============================================================================
- * 5. LINE ITEMS
- * ========================================================================== */
-
-.lines {
-  margin: 0;
-  padding: 0 var(--sf-space-6);
-  list-style: none;
-}
-
-/* Hairline between rows, never around them. The first row needs no rule: the
-   meter above it already carries one. */
-.line {
-  display: flex;
-  gap: var(--sf-space-4);
-  padding: var(--sf-space-5) 0;
-  border-top: 1px solid var(--sf-color-border);
-}
-
-.line:first-child {
-  border-top: none;
-}
-
-/* ---- The photograph — a 3:4 crop on the sunken sand panel ----------------- */
-/* `align-self` is load-bearing: the row is a flex container, so without it the
-   default `stretch` gives the thumbnail the row's full height and the crop
-   silently stops being 3:4. */
-.thumb {
-  flex: none;
-  align-self: flex-start;
-  display: block;
-  width: 76px;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface-2);
-}
-
-.thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform var(--sf-transition-slow);
-}
-
-.line:hover .thumb img {
-  transform: scale(1.03);
-}
-
-/* ---- The text column ----------------------------------------------------- */
-.lineBody {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sf-space-1);
-}
-
-/* The name — display serif, two lines, hairline underline on hover. */
-.lineName {
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-md);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  transition: text-decoration-color var(--sf-transition);
-}
-
-.line:hover .lineName {
-  text-decoration-color: var(--sf-color-border-strong);
-}
-
-.lineName:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 3px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
-}
-
-.lineVariant {
-  font-size: var(--sf-text-xs);
-  color: var(--sf-color-text-muted);
-  letter-spacing: 0.02em;
-  line-height: var(--sf-leading-normal);
-}
-
-/* ---- Price — the PriceBlock language at cart-line scale ------------------- */
-.linePrice {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--sf-space-2);
-  margin: var(--sf-space-1) 0 var(--sf-space-2);
-}
-
-.price {
-  font-size: var(--sf-text-base);
-  font-weight: var(--sf-font-semibold);
-  letter-spacing: var(--sf-tracking-tight);
-  color: var(--sf-color-price);
-  font-variant-numeric: tabular-nums;
-}
-
-.compare {
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-normal);
-  color: var(--sf-color-compare);
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---- Stepper + remove, on one baseline ----------------------------------- */
-.lineFoot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sf-space-3);
-  width: 100%;
-  margin-top: auto;
-}
-
-/* The QuantityStepper look (prompt 09), inlined: a near-square hairline frame
-   with two internal rules, not a pill of buttons. Kept visually identical to
-   the shared control so the PDP and the tray never disagree. */
-.stepper {
-  display: inline-flex;
-  align-items: stretch;
-  border: 1px solid var(--sf-color-border-strong);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface);
-  transition: border-color var(--sf-transition-fast);
-}
-
-.stepper:focus-within {
-  border-color: var(--sf-color-text-secondary);
-}
-
-.stepperBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text-secondary);
-  cursor: pointer;
-  transition: background-color var(--sf-transition-fast),
-    color var(--sf-transition-fast);
-}
-
-.stepperBtn:hover:not(:disabled) {
-  background: var(--sf-color-primary-soft);
-  color: var(--sf-color-text);
-}
-
-.stepperBtn:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: -2px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
-  color: var(--sf-color-text);
-}
-
-/* Disabled edges — the control stays in place, it just stops responding. */
-.stepperBtn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.stepperValue {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 38px;
-  padding: 0 var(--sf-space-2);
-  border-left: 1px solid var(--sf-color-border);
-  border-right: 1px solid var(--sf-color-border);
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  color: var(--sf-color-text);
-  user-select: none;
-}
-
-/* Quiet remove — a tracked label that only reddens when you reach for it. */
-.removeBtn {
-  flex: none;
-  padding: var(--sf-space-2) 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text-muted);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  line-height: 1;
-  cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 4px;
-  transition: color var(--sf-transition-fast),
-    text-decoration-color var(--sf-transition-fast);
-}
-
-.removeBtn:hover {
-  color: var(--sf-color-danger);
-  text-decoration-color: currentColor;
-}
-
-.removeBtn:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
-}
-
-/* =============================================================================
- * 6. SECTION EYEBROW  —  shared by the promo and summary blocks
- * ========================================================================== */
-
-.eyebrow {
-  margin: 0 0 var(--sf-space-4);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  line-height: 1;
-  color: var(--sf-color-text-muted);
-}
-
-/* =============================================================================
- * 7. PROMO CODE
- * ========================================================================== */
-
-.promo {
-  padding: var(--sf-space-6);
-  border-top: 1px solid var(--sf-color-border);
-}
-
-/* Underline field: the input has no chrome of its own, the rule beneath it is
-   the whole control. It darkens when the field is live. */
-.promoField {
-  display: flex;
   align-items: center;
   gap: var(--sf-space-3);
-  border-bottom: 1px solid var(--sf-color-border-strong);
-  transition: border-color var(--sf-transition-fast);
-}
-
-.promoField:focus-within {
-  border-bottom-color: var(--sf-color-text-secondary);
-}
-
-.promoInput {
-  flex: 1;
-  min-width: 0;
   min-height: var(--sf-tap-target);
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
-  letter-spacing: var(--sf-tracking-wide);
-  text-transform: uppercase;
-}
-
-.promoInput::placeholder {
-  color: var(--sf-color-text-muted);
-  font-weight: var(--sf-font-normal);
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-
-.promoInput:focus {
-  outline: none;
-}
-
-.promoInput:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
-}
-
-.promoApply {
-  flex: none;
-  min-height: var(--sf-tap-target);
-  padding: 0 var(--sf-space-1);
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  cursor: pointer;
-  transition: color var(--sf-transition-fast), opacity var(--sf-transition-fast);
-}
-
-.promoApply:hover:not(:disabled) {
-  color: var(--sf-color-accent);
-}
-
-.promoApply:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.promoApply:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
-}
-
-/* ---- Applied: a small ink chip ------------------------------------------- */
-.couponChip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sf-space-3);
-  max-width: 100%;
-  padding: var(--sf-space-2) var(--sf-space-2) var(--sf-space-2)
-    var(--sf-space-4);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
-}
-
-.couponCode {
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.couponValue {
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.85;
-}
-
-/* The mark is 24px for the sake of the chip; the tap target underneath it is
-   the full 44px (WCAG 2.5.5) via a transparent pseudo-element. */
-.couponRemove {
-  position: relative;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: var(--sf-radius-sm);
-  background: transparent;
-  color: inherit;
-  opacity: 0.7;
-  cursor: pointer;
-  transition: opacity var(--sf-transition-fast);
-}
-
-.couponRemove::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--sf-tap-target);
-  height: var(--sf-tap-target);
-  transform: translate(-50%, -50%);
-}
-
-.couponRemove:hover {
-  opacity: 1;
-}
-
-.couponRemove:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-  opacity: 1;
-}
-
-/* Error and the below-minimum auto-remove note: calm inline text, no icons,
-   no boxes. The note keeps the muted voice; only a true error takes colour. */
-.promoMsg {
-  margin: var(--sf-space-3) 0 0;
-  font-size: var(--sf-text-xs);
-  line-height: var(--sf-leading-normal);
-  color: var(--sf-color-text-muted);
-}
-
-.promoError {
-  color: var(--sf-color-danger);
-}
-
-/* =============================================================================
- * 8. SUMMARY
- * ========================================================================== */
-
-.summary {
-  padding: var(--sf-space-6);
-  border-top: 1px solid var(--sf-color-border);
-}
-
-.summaryRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sf-space-4);
-  margin-bottom: var(--sf-space-3);
-}
-
-.summaryLabel {
-  font-size: var(--sf-text-sm);
-  color: var(--sf-color-text-secondary);
-}
-
-.summaryValue {
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
-  text-align: right;
-  color: var(--sf-color-text);
-  font-variant-numeric: tabular-nums;
-}
-
-.savings {
-  color: var(--sf-color-discount);
-}
-
-/* The single strong serif moment in the tray. */
-.totalRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sf-space-4);
-  margin-top: var(--sf-space-5);
-  padding-top: var(--sf-space-4);
-  border-top: 1px solid var(--sf-color-border);
-}
-
-.totalLabel {
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  font-weight: var(--sf-font-medium);
-  color: var(--sf-color-text);
-}
-
-.totalValue {
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  text-align: right;
-  color: var(--sf-color-price);
-  font-variant-numeric: tabular-nums;
-}
-
-/* =============================================================================
- * 9. PINNED FOOTER
- * ========================================================================== */
-
-.footer {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sf-space-2);
-  padding: var(--sf-space-4) var(--sf-space-6)
-    calc(var(--sf-space-5) + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--sf-color-border);
-  background: var(--sf-color-bg);
-}
-
-.continue {
-  min-height: var(--sf-tap-target);
-  padding: 0 var(--sf-space-2);
-  border: none;
-  background: transparent;
-  color: var(--sf-color-text-muted);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  cursor: pointer;
-  transition: color var(--sf-transition-fast);
-}
-
-.continue:hover {
-  color: var(--sf-color-accent);
-}
-
-.continue:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
-}
-
-/* =============================================================================
- * 10. EMPTY STATE
- * =============================================================================
- * A warm editorial pause: hairline line-art, a serif line, one gold-outline
- * way back into the catalogue.
- * ========================================================================== */
-
-.empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sf-space-3);
-  padding: var(--sf-space-10) var(--sf-space-8)
-    calc(var(--sf-space-12) + env(safe-area-inset-bottom, 0px));
-  text-align: center;
-}
-
-.emptyArt {
-  color: var(--sf-color-border-strong);
-  margin-bottom: var(--sf-space-2);
-}
-
-.emptyTitle {
-  margin: 0;
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-xl);
   font-weight: var(--sf-font-medium);
@@ -758,66 +54,516 @@
   color: var(--sf-color-text);
 }
 
-.emptyText {
-  margin: 0 0 var(--sf-space-4);
-  max-width: 26ch;
+/* The count is a chip, not a badge on the title: it sits beside the words and
+   carries its own hairline, so it reads at a glance without shouting. */
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 var(--sf-space-2);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-glass-bg);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--sf-color-gold);
+}
+
+/* An eyebrow that is also a heading: the primitive is inline-flex, so the
+   browser's own h3 margins have to go. */
+.eyebrow {
+  display: flex;
+  margin: 0 0 var(--sf-space-3);
+}
+
+/* =============================================================================
+ * 2. FREE-SHIPPING METER
+ * A single 2px hairline of the signature gradient on the surface-2 track. It is
+ * rendered only when a shipping method has committed to a `freeAbove`, so the
+ * bar always races towards a real number.
+ * ========================================================================== */
+
+.meter {
+  padding: var(--sf-space-4) var(--sf-space-5);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.meterText {
+  margin: 0 0 var(--sf-space-3);
   font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-relaxed);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+.meterAmount {
+  font-weight: var(--sf-font-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--sf-color-price);
+}
+
+.meterTrack {
+  height: 2px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface-2);
+  overflow: hidden;
+}
+
+.meterFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-image: var(--sf-gradient-signature);
+}
+
+/* =============================================================================
+ * 3. LINES
+ * A 96px row, and 96 is arithmetic rather than a declared height: a 72px plate
+ * with 12px of air above and below it. Nothing here may set `min-height` — the
+ * exit animation collapses the row to zero, and a floor would stop it dead.
+ *
+ * The remove mark is ABSOLUTE. In the flow it sat beside the name and dragged
+ * the row to 140px, because a 36px circle stacked over a 42px stepper is 78px
+ * of column before the name is even measured. Out of the flow, the plate sets
+ * the height again and the name simply keeps its right padding.
+ *
+ * The unit price and the line total stack in one right-hand column beside the
+ * stepper — two short lines are shorter than the control they sit next to, so
+ * they cost the row nothing.
+ * ========================================================================== */
+
+.lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.line {
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: var(--sf-space-4);
+  align-items: start;
+  padding: var(--sf-space-3) var(--sf-space-5);
+}
+
+.line + .line {
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.plate {
+  width: 72px;
+  display: block;
+}
+
+.lineBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-1);
+  min-width: 0;
+}
+
+/* Two lines and then an ellipsis — "Black Rice Exfoliating Face Scrub" wraps
+   at 360px and must not push the stepper out of the row. The right padding is
+   the absolute remove mark's footprint. */
+.lineName {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-width: 0;
+  padding-right: var(--sf-space-8);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+.lineName:hover,
+.lineName:focus-visible {
+  color: var(--sf-color-gold);
+}
+
+.remove {
+  position: absolute;
+  top: var(--sf-space-2);
+  right: var(--sf-space-3);
+}
+
+.lineVariant {
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+}
+
+.lineFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-3);
+  margin-top: var(--sf-space-1);
+}
+
+.linePrices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lineUnit {
+  font-size: var(--sf-text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--sf-color-text-muted);
+  white-space: nowrap;
+}
+
+.lineTotal {
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-price);
+  white-space: nowrap;
+}
+
+/* =============================================================================
+ * 4. CROSS-SELL — "Complete your ritual" / "Start with"
+ * A 56px plate, the name, the price, and one compact Add. Deliberately lighter
+ * than a product card: this is a footnote to the cart, not a second shop.
+ * ========================================================================== */
+
+.cross {
+  padding: var(--sf-space-5);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.crossList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crossRow {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: var(--sf-space-3);
+  align-items: center;
+}
+
+.crossPlate {
+  width: 56px;
+  display: block;
+}
+
+.crossBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.crossName {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+.crossName:hover,
+.crossName:focus-visible {
+  color: var(--sf-color-gold);
+}
+
+.crossPrice {
+  font-size: var(--sf-text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--sf-color-price);
+}
+
+.crossAdd {
+  flex: none;
+}
+
+/* =============================================================================
+ * 5. CODE — a disclosure, then a chip
+ * Collapsed to one quiet row until asked for, because most visits do not have
+ * a code and an empty field is an invitation to go looking for one.
+ * ========================================================================== */
+
+.coupon {
+  padding: var(--sf-space-3) var(--sf-space-5);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.couponToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-3);
+  width: 100%;
+  min-height: var(--sf-tap-target);
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text-secondary);
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.couponToggle:hover {
+  color: var(--sf-color-text);
+}
+
+.couponToggle:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+  color: var(--sf-color-text);
+}
+
+.couponChevron {
+  flex: none;
+  font-size: var(--sf-text-lg);
+  transition: transform var(--sf-transition);
+}
+
+.couponToggle[aria-expanded="true"] .couponChevron {
+  transform: rotate(180deg);
+}
+
+.couponPanel {
+  padding-top: var(--sf-space-2);
+  padding-bottom: var(--sf-space-2);
+}
+
+/* `hidden` has to beat the layout rules below it, so it is stated explicitly
+   rather than left to the user-agent sheet. */
+.couponPanel[hidden] {
+  display: none;
+}
+
+.couponField {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+}
+
+.couponInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-4);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-glass-bg);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sf-color-text);
+  transition: border-color var(--sf-transition-fast);
+}
+
+.couponInput::placeholder {
+  color: var(--sf-color-text-muted);
+  letter-spacing: var(--sf-tracking-normal);
+  text-transform: none;
+}
+
+.couponInput:focus {
+  outline: 2px solid transparent;
+  border-color: var(--sf-color-gold);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.couponApply {
+  flex: none;
+}
+
+.couponError,
+.couponNote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+  margin: var(--sf-space-2) 0 0;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+}
+
+.couponError {
+  color: var(--sf-color-danger);
+}
+
+.couponNote {
+  color: var(--sf-color-text-secondary);
+}
+
+/* The applied state: the code, what it took off, and one way to undo it. */
+.couponChip {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-1) var(--sf-space-1) var(--sf-space-1)
+    var(--sf-space-4);
+  border: 1px solid color-mix(in srgb, var(--sf-color-success) 40%, transparent);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-success-bg);
+  color: var(--sf-color-success);
+  font-size: var(--sf-text-sm);
+}
+
+.couponCode {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+.couponValue {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--sf-font-medium);
+}
+
+.couponRemove {
+  flex: none;
+  color: inherit;
+}
+
+/* =============================================================================
+ * 6. THE MONEY
+ * Subtotal, what came off, and one sentence about what is still to come. There
+ * is no "Total" line: the tray does not know the delivery charge, and a total
+ * that quietly leaves it out is a number the shopper is asked to beat later.
+ * ========================================================================== */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  padding: var(--sf-space-5);
+}
+
+.summaryRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-secondary);
+}
+
+.summaryValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+  white-space: nowrap;
+}
+
+.summarySaving {
+  color: var(--sf-color-success);
+}
+
+.summaryNote {
+  margin: var(--sf-space-1) 0 0;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
   color: var(--sf-color-text-muted);
 }
 
 /* =============================================================================
- * 11. RESPONSIVE + INPUT MODE
+ * 7. EMPTY STATE
  * ========================================================================== */
 
-/* Full-width sheet on phones, with the gutters pulled in a step. */
-@media (max-width: 480px) {
-  .drawer {
-    width: 100vw;
-    border-left: none;
-  }
-
-  .header,
-  .meter,
-  .promo,
-  .summary,
-  .footer {
-    padding-left: var(--sf-space-5);
-    padding-right: var(--sf-space-5);
-  }
-
-  .lines {
-    padding-left: var(--sf-space-5);
-    padding-right: var(--sf-space-5);
-  }
-
-  .line {
-    gap: var(--sf-space-3);
-  }
-
-  .thumb {
-    width: 68px;
-  }
+.emptyWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-6);
+  padding: var(--sf-space-5);
 }
 
-/* On touch, the stepper's compact controls still have to clear the 44px
-   minimum (WCAG 2.5.5) — same rule the shared QuantityStepper applies. */
-@media (pointer: coarse) {
-  .stepperBtn {
-    min-width: var(--sf-tap-target);
-    min-height: var(--sf-tap-target);
-  }
-
-  .stepperValue {
-    min-width: 44px;
-  }
+.empty {
+  text-align: center;
 }
 
-/* Reduced motion: the tray's slide and the row offsets are dropped in JS
-   (useReducedMotion); these are the CSS-side hovers that also go still. */
+.emptyLine {
+  margin: var(--sf-space-3) 0 var(--sf-space-5);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-2xl);
+  font-weight: var(--sf-font-normal);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.emptyCta {
+  width: 100%;
+}
+
+/* The eyebrow centres with the card it heads. */
+.empty .eyebrow {
+  justify-content: center;
+}
+
+/* The suggestions below the card are already inside the wrapper's padding. */
+.emptyWrap .cross {
+  padding: 0;
+  border-bottom: 0;
+}
+
+/* =============================================================================
+ * 8. FOOT
+ * Two ways out and one reassurance, above the home indicator. `Drawer` supplies
+ * the border, the pinning and the safe-area inset; the rhythm inside it comes
+ * from the three `--sf-drawer-footer-*` hooks set on `.panel`, which is how the
+ * foot lands on its specified 128px without either control dropping below the
+ * 44px touch target.
+ *
+ * "Secure checkout" is a statement of fact about the checkout, not a claim
+ * about anyone's certification — there is no legal copy in this tray.
+ * ========================================================================== */
+
+.secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sf-space-2);
+  margin: 0;
+  min-height: 16px;
+  font-size: var(--sf-text-xs);
+  line-height: 1.2;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .line:hover .thumb img,
-  .closeBtn:active {
-    transform: none;
+  .couponChevron,
+  .lineName,
+  .crossName,
+  .couponInput {
+    transition: none;
   }
 }

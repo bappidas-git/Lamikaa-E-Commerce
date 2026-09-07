@@ -158,6 +158,13 @@ export const DEFAULT_CURRENCY = CURRENCIES.INR;
 // Admin > Shipping, is the lowest `freeAbove` across the active shipping
 // methods (resolveTrustBadgeDetail in theme/tokens.js already reads it that
 // way), and it reaches shared copy through fillStoreCopy's `freeAbove` option.
+//
+// NO COMPONENT READS THIS ANY MORE (Prompt 12). The cart tray's meter reads the
+// active shipping methods directly and hides itself when none of them commits
+// to a bar; the footer's promise row no longer consults a constant either. What
+// is left is one fallback inside utils/storeSettings.js, for the copy filler
+// that has no live methods to hand — which is why the export stays `null` and
+// stays exported rather than being deleted outright.
 export const FREE_SHIPPING_THRESHOLD = null;
 
 // Social links — the SEED values only. Where the marks actually point is owned
