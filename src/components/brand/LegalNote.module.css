@@ -1,0 +1,45 @@
+/* =============================================================================
+ * LegalNote
+ * =============================================================================
+ * A quiet block: a gold leaf, then the ownership sentence in secondary type.
+ * It is deliberately not a callout — the qualifier has to be legible and
+ * findable, not loud, and a boxed "legal" panel is the first thing an eye
+ * learns to skip.
+ *
+ * TYPE SIZE. The prompt's spec asks for 13px; the token scale (see the TEXT
+ * TIER comment in storefront-tokens.css) forbids a SENTENCE below --sf-text-sm
+ * (14px), and the tokens are the only styling source. 14px it is — one pixel
+ * larger than asked, on the right side of the contract and of WCAG.
+ * ========================================================================== */
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+  margin: 0;
+  max-width: 52ch;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-normal);
+  line-height: var(--sf-leading-relaxed);
+}
+
+/* Nudged down to sit on the first line's cap height rather than its ascender. */
+.leaf {
+  flex: none;
+  margin-top: 3px;
+  color: var(--sf-color-gold);
+}
+
+.text {
+  min-width: 0;
+}
+
+/* A footnote in a tight slot: no leaf, no indent, one step quieter. */
+.compact {
+  display: block;
+  max-width: none;
+  color: var(--sf-color-text-muted);
+  line-height: var(--sf-leading-normal);
+}

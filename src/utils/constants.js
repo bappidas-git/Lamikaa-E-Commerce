@@ -146,26 +146,24 @@ export const DEFAULT_CURRENCY = CURRENCIES.INR;
 
 // Shipping
 // ---------------------------------------------------------------------------
-// THERE IS NO BUILT-IN FREE-SHIPPING THRESHOLD ANY MORE.
+// THERE IS NO FREE-SHIPPING THRESHOLD CONSTANT ANY MORE (Prompt 13).
 //
 // The old constant (999) was a figure the store had never actually committed
 // to, yet it was quoted on the announcement bar, in the cart meter, in the
-// footer promise row and inside a FAQ answer. LAMIKAA has not set one, so the
-// only honest value is "unknown": null.
+// footer promise row and inside a FAQ answer. Prompt 02 retired its value to
+// null; Prompt 12 took the last component off it, and Prompt 13 removed both
+// the footer promise row and the export itself.
 //
-// EVERY CONSUMER MUST TREAT null AS "unknown → hide" — not as zero, and not as
-// "everything ships free". The real threshold, once the owner sets one in
-// Admin > Shipping, is the lowest `freeAbove` across the active shipping
-// methods (resolveTrustBadgeDetail in theme/tokens.js already reads it that
-// way), and it reaches shared copy through fillStoreCopy's `freeAbove` option.
+// THE THRESHOLD NOW HAS EXACTLY ONE HOME: `freeAbove` on the active
+// `shipping_methods` (Admin > Shipping), read live. The real threshold is the
+// lowest `freeAbove` across those methods (resolveTrustBadgeDetail in
+// theme/tokens.js reads it that way, and CartDrawer's meter reads it directly),
+// and it reaches shared copy as `fillStoreCopy`'s `freeAbove` option.
 //
-// NO COMPONENT READS THIS ANY MORE (Prompt 12). The cart tray's meter reads the
-// active shipping methods directly and hides itself when none of them commits
-// to a bar; the footer's promise row no longer consults a constant either. What
-// is left is one fallback inside utils/storeSettings.js, for the copy filler
-// that has no live methods to hand — which is why the export stays `null` and
-// stays exported rather than being deleted outright.
-export const FREE_SHIPPING_THRESHOLD = null;
+// EVERY CONSUMER MUST TREAT AN ABSENT THRESHOLD AS "unknown -> hide" — not as
+// zero, and not as "everything ships free". `fillStoreCopy` keeps its
+// {freeShipping} handling for exactly that reason: FAQ 6 still carries the
+// token, and the whole sentence is dropped while nobody has set a figure.
 
 // Social links — the SEED values only. Where the marks actually point is owned
 // by the admin (Settings > Social Links, persisted as `settings.social`); these

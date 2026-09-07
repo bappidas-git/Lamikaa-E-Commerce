@@ -423,6 +423,69 @@ ranking it runs is now a shared, tested utility.
   regions arriving at once talk over the result count. The search overlay's rows
   pass it.
 
+**Updated by Prompt 13.** The footer is rebuilt, `components/Newsletter/` is
+deleted (nothing imported it) and the ownership sentence becomes a shared
+component.
+
+- `Footer/Footer.js` (445 → 470) + `.module.css` (rewritten): FOUR bands on
+  `--sf-color-surface` under one `.sf-hairline--gradient`, `<footer
+  aria-labelledby="footer-heading">`, `overflow-x: clip` (it hosts a
+  `.sf-glow--violet` lamp at `--sf-glow-opacity: .12`, painted from 1024px
+  only).
+  **1 Invitation** — `<Logo variant="wordmark" width={220} alt="">` under a
+  visually-hidden `h2#footer-heading` (the store name, so an admin rename still
+  reaches it), `brand.tagline` in Fraunces `--sf-text-xl` (28px at 1280),
+  `brand.signatureLines[3]`; on the right "Stay close to the farm", "New
+  products, farm stories and the occasional offer — no noise.", the email field
+  and a `Button variant="primary"` "Subscribe".
+  **2 Directory** — `brand/LegalNote` in the wide first track, then four
+  `<nav aria-labelledby>` with `h3` eyebrows: *Shop by category* (every
+  `categories.getAll()` row through `categoryPath()`, so the `kind: "rituals"`
+  one goes to `/rituals`, + **All products** → `/shop`), *Rituals* (every
+  `rituals.getAll()` row through `ritualPath()` + **Build your ritual** →
+  `/rituals`), *Company* (`/about`, `/why-lamikaa`, `/why-lamikaa#impact`,
+  `/contact`, and `/special-offers` only while `useDealsConfig().enabled`),
+  *Help* (`/faq`, `/policies/shipping-returns`, `/policies/privacy`,
+  `/policies/terms`, `/policies/cookies`, `/orders`, `/wishlist`).
+  **3 Assurances** — an `<address>` whose four rows (address, email, phone,
+  `SUPPORT_HOURS`) each render only when `resolveOrNull` returns a value; the
+  `socialLinks` marks as 44px circles in the glass PALETTE (no
+  `backdrop-filter`: the ground is opaque and the masthead already spends a
+  blurred layer); the four inline payment SVGs, unchanged, held at 60% opacity —
+  still the file's only hex literals and still the documented exception.
+  **4 Colophon** — `© <year> <brand.legalName minus the parenthetical>. All
+  rights reserved.`, `<brand.name> is a brand of <brand.legalShort>.`, then
+  `GSTIN`/`CIN` rows from `brand.legal` when resolved, then four policy
+  micro-links. Not a landmark.
+  **`--sf-footer-grid`** is declared on `.footer` and consumed by bands 1 and 2
+  so their tracks align: `minmax(0,1fr)` → `repeat(2, …)` at 481px →
+  `1.2fr repeat(4, …)` / 32px at 1024px → `1.6fr repeat(4, …)` / 48px at
+  1280px. At ≤480 (`useMediaQuery("(max-width:480px)")`) the four columns become
+  ONE `<Accordion multiple headingLevel="h3">` — all closed — inside a single
+  `<nav aria-label="Footer directory">`.
+  Exports **`loadFooterData()`**, a module-level promise over
+  `categories.getAll` + `rituals.getAll` (the `loadMegaPanelData` shape, two
+  reads not four). A failed load keeps "All products" and "Build your ritual".
+  The newsletter contract is byte-for-byte the old one:
+  `isEmailValid` → `apiService.leads.createNewsletter` → success/error with a
+  6s revert. **Deleted:** the `TRUST_ITEMS` promises band (the trust strip is
+  Prompt 15's, on the home page), the `--sf-footer-*` aliases over
+  `--sf-color-brand-green-deep`, and the "Policies last updated" line (all four
+  policy pages still print `POLICY_LAST_UPDATED` themselves).
+- `brand/LegalNote.js` (new, 50) + `.module.css`: renders `brand.legalNote`
+  **verbatim** behind an `aria-hidden` gold leaf, `--sf-text-sm` in
+  `--sf-color-text-secondary`. Props `compact` (drops the leaf and the indent),
+  `as` (default `p`), `className`. It takes NO children and no text prop — a
+  caller that could pass its own string could drop a legal qualifier. Reused by
+  Prompts 17, 25 and 28.
+- `Newsletter/` — **deleted**, both files. A second, worse copy of the footer's
+  own flow with no importer (`grep -rn "components/Newsletter" src` → 0).
+- `utils/constants.js`: `FREE_SHIPPING_THRESHOLD` is **removed** (it was `null`
+  and unread since Prompt 12). `utils/storeSettings.js` drops the import and the
+  `?? positive(FREE_SHIPPING_THRESHOLD)` fallback; `fillStoreCopy` keeps its
+  `{freeShipping}` handling, because FAQ 6 still carries the token and still
+  loses its whole sentence while no shipping method sets `freeAbove`.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.
