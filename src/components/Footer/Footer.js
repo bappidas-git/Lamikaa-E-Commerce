@@ -4,7 +4,6 @@ import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
 import {
-  FREE_SHIPPING_THRESHOLD,
   POLICY_LAST_UPDATED,
   ROUTES,
   SUPPORT_HOURS,
@@ -100,19 +99,15 @@ const Footer = () => {
     address: supportAddress,
     emailHref,
     phoneHref,
-    formatPrice,
     socialLinks,
   } = useStoreSettings();
-  // Unknown threshold → the promise row is not rendered at all. `null` is the
-  // shipped value until the owner sets a `freeAbove` in Admin > Shipping.
-  const hasFreeShipping =
-    Number.isFinite(FREE_SHIPPING_THRESHOLD) && FREE_SHIPPING_THRESHOLD > 0;
-  const freeShippingLabel = hasFreeShipping
-    ? formatPrice(FREE_SHIPPING_THRESHOLD, { decimals: 0 })
-    : "";
-  const trustItems = TRUST_ITEMS.filter(
-    (item) => !item.needsThreshold || hasFreeShipping
-  );
+  // The free-shipping promise is the one trust row that quotes a figure, and
+  // that figure has exactly one home: `shipping_methods.freeAbove` in
+  // Admin > Shipping, read live (the cart tray's meter does this — Prompt 12).
+  // The retired constant is no longer consulted here; until Prompt 13 rebuilds
+  // this band on the live read, the row is simply not rendered. An unknown
+  // threshold is never promised, and `{amount}` therefore never reaches type.
+  const trustItems = TRUST_ITEMS.filter((item) => !item.needsThreshold);
 
   // Contact fields the owner has not supplied yet are carried as {{TOKENS}}.
   // A row with nothing publishable behind it is not rendered — never printed
@@ -397,7 +392,7 @@ const Footer = () => {
                   >
                     <path d={item.path} />
                   </svg>
-                  <span>{item.label.replace("{amount}", freeShippingLabel)}</span>
+                  <span>{item.label}</span>
                 </li>
               ))}
             </ul>

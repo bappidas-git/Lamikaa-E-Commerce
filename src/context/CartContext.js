@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { useAuth } from "./AuthContext";
 import apiService from "../services/api";
+import { isPriceKnown } from "../utils/product";
 import Swal from "sweetalert2";
 
 const CartContext = createContext();
@@ -60,6 +61,32 @@ const normalizeCartItem = (raw = {}) => {
 const clampQty = (qty, stock) => {
   const q = Math.max(1, qty);
   return typeof stock === "number" && stock > 0 ? Math.min(q, stock) : q;
+};
+
+// The one merge rule every add path shares: a line already in the cart takes the
+// extra quantity (clamped to what is genuinely in stock), a line that is not
+// joins the end. Written as a REDUCER over the previous cart so both add paths
+// run it inside a functional update — addToCart folds one item in, addMany folds
+// a whole list in one commit — and neither can read a stale cart.
+const mergeLine = (prev, incoming) => {
+  const existing = prev.find((item) => item.id === incoming.id);
+  if (!existing) {
+    return [
+      ...prev,
+      { ...incoming, quantity: clampQty(incoming.quantity, incoming.stock) },
+    ];
+  }
+  return prev.map((item) =>
+    item.id === incoming.id
+      ? {
+          ...item,
+          quantity: clampQty(
+            item.quantity + incoming.quantity,
+            item.stock ?? incoming.stock
+          ),
+        }
+      : item
+  );
 };
 
 // Merge two carts by line key: keep every distinct line (no silent loss) and,
@@ -250,33 +277,14 @@ export const CartProvider = ({ children }) => {
         (item) => item.id === incoming.id
       );
 
-      setCartItems((prev) => {
-        const existing = prev.find((item) => item.id === incoming.id);
-        if (existing) {
-          return prev.map((item) =>
-            item.id === incoming.id
-              ? {
-                  ...item,
-                  quantity: clampQty(
-                    item.quantity + incoming.quantity,
-                    item.stock ?? incoming.stock
-                  ),
-                }
-              : item
-          );
-        }
-        return [
-          ...prev,
-          { ...incoming, quantity: clampQty(incoming.quantity, incoming.stock) },
-        ];
-      });
+      setCartItems((prev) => mergeLine(prev, incoming));
 
       cartToast({
         icon: "success",
-        title: wasUpdate ? "Cart Updated" : "Added to Cart",
+        title: wasUpdate ? "Cart updated" : "Added to cart",
         text: wasUpdate
           ? `${incoming.name} quantity updated`
-          : `${incoming.name} has been added to your cart`,
+          : `${incoming.name} is in your cart`,
       });
 
       if (openDrawer) setIsCartOpen(true);
@@ -284,19 +292,84 @@ export const CartProvider = ({ children }) => {
       console.error("Error adding to cart:", error);
       cartToast({
         icon: "error",
-        title: "Error",
-        text: "Failed to add item to cart",
+        title: "Couldn\u2019t add to cart",
+        text: "Please try again.",
         timer: 2000,
       });
     }
   }, []);
 
+  // ── addMany — one gesture, one toast ─────────────────────────────────────
+  // A ritual is a list of products, and a list must not become a stack of three
+  // toasts, three drawer openings and three renders. THE CONTRACT:
+  //
+  //   addMany(items, { openDrawer = true })  ->  { added, skipped }
+  //
+  //   • every entry is normalised and folded in with the SAME lineKey logic
+  //     addToCart uses (mergeLine), in the order given, inside ONE functional
+  //     update — so two entries for the same line sum instead of racing, and
+  //     nothing can interleave between them
+  //   • an entry with no committed price is SKIPPED, never added at ₹0. That is
+  //     the guardrail behind every "Price on launch" chip in the storefront:
+  //     five of the eight products have no MRP yet, and a ₹0 line checks out
+  //   • ONE toast and at most ONE drawer opening, whatever the list's length;
+  //     skipped entries are reported in that same toast rather than swallowed
+  //   • nothing is opened for a list that added nothing — a drawer sliding in
+  //     over an unchanged cart is a lie about what just happened
+  const addMany = useCallback((items, options = {}) => {
+    const { openDrawer = true } = options;
+    const list = (Array.isArray(items) ? items : [items]).filter(Boolean);
+
+    const incoming = [];
+    let skipped = 0;
+    list.forEach((raw) => {
+      if (!isPriceKnown(raw)) {
+        skipped += 1;
+        return;
+      }
+      incoming.push(normalizeCartItem(raw));
+    });
+
+    const added = incoming.length;
+    if (added === 0) {
+      if (skipped > 0) {
+        cartToast({
+          icon: "info",
+          title: "Coming soon",
+          text:
+            skipped === 1
+              ? "That one is not on sale yet."
+              : `Those ${skipped} are not on sale yet.`,
+        });
+      }
+      return { added, skipped };
+    }
+
+    setCartItems((prev) => incoming.reduce(mergeLine, prev));
+
+    cartToast({
+      icon: "success",
+      title: "Added to cart",
+      text:
+        skipped > 0
+          ? `${added} added \u00b7 ${skipped} coming soon`
+          : `${added} ${added === 1 ? "item" : "items"} added to your cart`,
+    });
+
+    if (openDrawer) setIsCartOpen(true);
+    return { added, skipped };
+  }, []);
+
   const removeFromCart = useCallback((itemId) => {
+    // Named from the latest committed cart before the line goes — a toast that
+    // says WHICH line left is the difference between "did I just delete the
+    // wrong thing?" and knowing.
+    const removed = cartItemsRef.current.find((item) => item.id === itemId);
     setCartItems((prev) => prev.filter((item) => item.id !== itemId));
     cartToast({
       icon: "info",
-      title: "Removed",
-      text: "Item removed from cart",
+      title: "Removed from cart",
+      text: removed?.name || undefined,
       timer: 1500,
     });
   }, []);
@@ -326,8 +399,8 @@ export const CartProvider = ({ children }) => {
     if (!options.silent) {
       cartToast({
         icon: "info",
-        title: "Cart Cleared",
-        text: "Your cart has been emptied",
+        title: "Cart cleared",
+        text: "Your cart is empty again.",
       });
     }
   }, []);
@@ -350,6 +423,7 @@ export const CartProvider = ({ children }) => {
     isCartOpen,
     isLoading,
     addToCart,
+    addMany,
     removeFromCart,
     updateQuantity,
     clearCart,

@@ -90,21 +90,28 @@
 }
 
 /* ---- chrome --------------------------------------------------------------
-   FIVE COMPOSITION HOOKS. A drawer's chrome is the primitive's, but its rhythm
+   SEVEN COMPOSITION HOOKS. A drawer's chrome is the primitive's, but its rhythm
    belongs to what it holds: the cart tray reads as a document (20px of air all
    round), the mobile menu as a list of rows (a 64px masthead over an 8px/20px
    body). Rather than let a feature reach into these class names — which are
    scoped to this module and would be re-derived, or worse, matched by position
-   — the four paddings and the close button's optical offset are custom
-   properties whose DEFAULTS ARE EXACTLY THE VALUES THEY REPLACED. A drawer that
-   sets none of them is unchanged; SidebarMenu sets all five on `.panel`
-   through `className`.
+   — the paddings, the footer's gap and the close button's optical offset are
+   custom properties whose DEFAULTS ARE EXACTLY THE VALUES THEY REPLACED. A
+   drawer that sets none of them is unchanged; SidebarMenu sets five on `.panel`
+   through `className`, CartDrawer six.
 
      --sf-drawer-header-pad-y   header top (still floored by the notch inset)
      --sf-drawer-header-pad-b   header bottom
      --sf-drawer-close-margin   the close button's optical pull
      --sf-drawer-body-pad       the scrolling body's padding
+     --sf-drawer-footer-pad-t   the pinned footer's top padding
      --sf-drawer-footer-pad-b   the pinned footer's bottom padding
+     --sf-drawer-footer-gap     the space between the footer's stacked children
+
+   The last two exist because a foot is a HEIGHT the layout reserves, not just
+   somewhere to put buttons: the cart tray's is specified at 128px, which two
+   44px pill buttons and a micro-line only reach on a tighter rhythm than the
+   default. Nothing may buy that height by shrinking a touch target.
 */
 .header {
   display: flex;
@@ -152,8 +159,8 @@
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: var(--sf-space-3);
-  padding: var(--sf-space-4) var(--sf-space-5);
+  gap: var(--sf-drawer-footer-gap, var(--sf-space-3));
+  padding: var(--sf-drawer-footer-pad-t, var(--sf-space-4)) var(--sf-space-5);
   padding-bottom: var(
     --sf-drawer-footer-pad-b,
     max(var(--sf-space-4), env(safe-area-inset-bottom))
