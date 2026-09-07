@@ -1,0 +1,173 @@
+/* =============================================================================
+ * WhyBlackRice — the ingredient spotlight
+ * =============================================================================
+ * Two columns on a desktop, one on everything smaller, with the photograph
+ * first in the DOM at every width — which is also the order a phone paints and
+ * the order a keyboard walks.
+ * ========================================================================== */
+
+.section {
+  position: relative;
+  /* The lamp behind the macro shot is meant to spill past it — that is what
+     makes it light rather than a border — and at 110% plus its own offset it
+     spills past the viewport too. `overflow-x: clip` takes the page's sideways
+     scroll away without making the section a scroll container, the same guard
+     the About band, the hero and the product chapters use. */
+  overflow-x: clip;
+}
+
+.body {
+  display: grid;
+  gap: var(--sf-space-8);
+}
+
+@media (min-width: 1025px) {
+  .body {
+    /* The words take the wider share: the photograph is a placeholder, the
+       three points are the section. 56px of gutter = --sf-space-12 +
+       --sf-space-2; every distance on the storefront comes off the scale. */
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: calc(var(--sf-space-12) + var(--sf-space-2));
+    align-items: center;
+  }
+}
+
+.mediaWrap {
+  min-width: 0;
+}
+
+.glow {
+  display: block;
+  border-radius: var(--sf-radius-xl);
+}
+
+/* `.sf-placeholder-media` supplies the desaturation and the bottom-weighted
+   wash and already clips its overflow; this is only the shape. */
+.media {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--sf-radius-xl);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* SectionHeading's own 40px bottom margin would double up with the gap to the
+   points below it; the column owns the rhythm inside this section. */
+.heading {
+  margin-bottom: var(--sf-space-6);
+}
+
+/* ---- The three points ----------------------------------------------------
+   `role="list"` is the Safari/VoiceOver repair for `list-style: none` — the
+   gold glyph is the marker, so the bullet goes. */
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.point {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-3);
+  /* 17px — long-form prose, the same step the ledes are set at. */
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text);
+  max-width: 52ch;
+}
+
+.glyph {
+  display: inline-flex;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  /* The icon inside is 1em square, so the glyph's size IS this font-size. */
+  font-size: 20px;
+  color: var(--sf-color-gold);
+  /* Optically centred on the first line of a 17px/1.65 point rather than on its
+     box: (17 * 1.65 - 20) / 2 ≈ 4px. */
+  margin-top: 4px;
+}
+
+/* ---- Carried by ---------------------------------------------------------- */
+.carriedBy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+  width: 100%;
+  margin-top: var(--sf-space-8);
+  padding-top: var(--sf-space-6);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.carriedByLabel {
+  margin: 0;
+}
+
+.thumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 100%;
+  /* Eight 56px plates and their gaps run to 532px — wider than the column at
+     1025-1180px and wider than a phone at any width, so the row scrolls
+     sideways inside itself rather than pushing the page. */
+  overflow-x: auto;
+  /* Room for a plate's focus ring, top and bottom. */
+  padding-block: var(--sf-space-1);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.thumb {
+  display: grid;
+  width: 56px;
+  flex: none;
+  border-radius: var(--sf-radius-md);
+  transition: border-color var(--sf-transition), transform var(--sf-transition);
+}
+
+.thumb:hover {
+  border-color: var(--sf-color-border-strong);
+  transform: translateY(-2px);
+}
+
+.thumb:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
+  }
+
+  .thumb:hover {
+    transform: none;
+  }
+}

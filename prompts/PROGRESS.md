@@ -21,7 +21,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 15 | Trust strip and shop-by-category/concern | complete | 2026-09-07 | (this commit) | Three surfaces, one card contract. **`TrustStrip`** is rewritten as the hero's bottom edge: a `.sf-glass` band, 56px (48px ≤639px), four promises from the brand config — `brand.trustBadges` ×3 plus the new `brand.originBadge` ("Rooted in Assam & Northeast India", BRAND.md §3.1) — gold 20px Iconify glyphs, Manrope 600 13px, one `<ul aria-label="Our promises">`; it scrolls-and-snaps under 640px with edge fades and drops its backdrop blur entirely ≤768px. `Home.js` hangs it off the hero with `margin-top: -28px` at ≥769px and 0 below. **`home/ShopByCategory`** (new) + **`catalogue/CategoryCard`** (new, plus a `catalogue/index.js` barrel): SectionHeading "Shop by category / Find your **step** / Seven ways into the Black Rice range.", seven `GlassCard interactive glow="violet"` cards with a real product's label crop on a 1:1 `.sf-plate`, one-line description and a counted chip (Face Care 6 · Body Care 2 · Cleansers 3 · Serums **1 product** · Moisturizers & Mists 2 · Masks & Scrubs 2 · Rituals **3 rituals**), then the 11 concern chips as `Chip variant="concern" as={Link}` → `/shop?concern=…`. Grid 4+3 centred at ≥1280 (eight tracks, `span 2`, 5th card at track 2 — measured: both rows centre on 640px at a 1280 viewport), 3 at ≥1024, 2 at ≥481, a 76vw snap scroller ≤480. **`storefront/ProductCard`** is rebuilt on `GlassCard interactive glow="pink"` with the prop contract and the media→body→action DOM order intact: label plate (crop + `c_pad`, four-width srcSet, `sizes`), ritual step + ≤2 concern chips, Fraunces 20px name, `promise` clamped to 2 lines, `product.badges` as trust chips at 11px, `Price`, a 44px glass heart with `aria-pressed`, and `Button variant="addToCart" block` reading Add to Cart / Coming soon / Out of stock. **PREMIUM, `isPremium`/bridal, `truncateText(…,48)` and the "No ratings yet" line are gone**; stars appear only when `totalReviews > 0`. `TRUST_BADGE_CATALOG` gains `farmerOwned`/`organic`/`resultOriented` whose labels READ `brand.trustBadges[i]`, `STOREFRONT_CONFIG.trustBadges` becomes those three + `securePayment`, and `TrustBadges.js` gains the sprout/leaf/spark paths (and now drops a badge with no resolvable label). Home's old closing PROMISES row was **deleted** — the strip is that row, from the same config. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 9 suites / 85 passed (13 new). Browser QA at 360/390/414/768/1024/1280/1440 + a touch phone + reduced motion: 0 console errors, 0 horizontal scroll on 10 routes. See "Prompt 15 record" below. |
 | 16 | Home product showcase sections | complete | 2026-09-07 | (this commit) | Every product now has its own full editorial spread on the home page. **`catalogue/ProductChapter`** (new, shared with Prompt 23 through `variant`) renders `<section id data-chapter aria-labelledby class="sf-section">`: a `GlowWrap` (violet/pink by parity) around a 4:5 `.sf-plate` on one side and a `GlassCard` panel on the other carrying the 36px numeral chip, the ritual eyebrow, the `h2` name, the promise, the description at 52ch, up to five `keyIngredients` as glass chips, `product.badges` as trust chips, `fragranceNote`, `Price size="lg"` and the two 48px CTAs ("Explore more" → `productPath`, "Add to Cart" → `useCart().addToCart(buildCartItem(p),1)`, disabled as "Coming soon"/"Out of stock"). Desktop: media 42% at ≥769px then 1fr 1fr with a 64px gutter at ≥1280px, `flip` swapping the columns by `grid-column` so the DOM order stays media → words; the pack is `position: sticky; top: 112px` inside a grid floored at `min-height: 80svh`. Mobile: one column, pack first at 92vw, CTAs stacked full width ≤560px, and the panel drops its backdrop blur ≤768px. **`home/ProductShowcase`** (new) opens with one `SectionHeading` ("The Black Rice range" / "Eight steps. One **ritual.**" / the BRAND.md §3.1 lede) and then eight chapters with a hairline between them; `getHeroProducts()` with a `getAll()`+`heroOrder ?? 99` fallback, two skeleton chapters while loading, nothing at all on error. Mounted in `Home.js` right after `<ShopByCategory/>`. **Two fixes the browser found, both recorded in the decisions log:** a full-width 4:5 plate is exactly as tall as its own grid row, so the sticky never engaged until the pack was capped at `max-width: calc(0.8 * 62svh)`; and the plate's lamp bleeds 5% past its box, which widened the document by 22–69px until the section took `overflow-x: clip`. **Five `media[0].crop` rectangles corrected** after checking all eight at 4:5/900px against their originals — soap (white carton canvas at the foot), body wash (white in all four rounded corners), face mask (white rules at rows 0–8 and 397–400), face scrub (a 1px light-grey rim that made `b_auto` pad the whole frame light grey), face serum (the gold band ran edge to edge); face wash, face mist and moisturizer gel verified unchanged. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 10 suites / 95 passed (10 new). Browser QA at 360/390/414/768/1024/1280/1440: 8 chapters, **0 horizontal overflow at every width**, sticky measured at exactly 112px through 1440/1280/1024 and `static` on a phone, quick add opens the drawer with a toast, 5 TBA products disabled as "Coming soon", both CTAs keyboard-reachable per chapter, reduced motion static, **CLS 0.038 desktop / 0.040 mobile with every recorded shift attributed to the hero and header — none to a chapter**. See "Prompt 16 record" below. |
 | 17 | About LAMIKAA section and value-chain visual | complete | 2026-09-07 | (this commit) | The farmer-owned story now has a surface. **`brand/ValueChain`** draws BRAND.md §3.3's journey as a real `<ol role="list" aria-label="How value reaches farmers">` of seven `motion.li` — a 32px `Chip variant="step"` numeral, a 14px Manrope 600 label ("LAMIKAA Naturals" in gold, matched against `brand.runningName` rather than by index) and a 60%-opacity signature-gradient connector with an 8px arrow, `aria-hidden`. Three layouts from ONE markup: one row ≥1025px, 4 + 3 at 769–1024px, a 40px vertical rail ≤768px — **measured at 360/390/414/768/1024/1025/1060/1100/1200/1280/1366/1440/1920: rows 7/7/7/7/2/1/1/1/1/1/1/1/1, connectors 24→48px, no overflow at any of them and no element past the section's box.** Zero tab stops (the band's only stop is its CTA); the aria tree reads "01 Farmer" … "07 Farmer Members". **`home/AboutTeaser`** mounts it under the pull-quote, the placeholder landscape and the two BRAND.md §3.1 paragraphs, over `LegalNote` and "Our Story". **Not one word of company copy is in the component** — it is `siteContent.home.aboutTeaser`, and a missing/unpublished/unreachable block leaves only the signature line and the legal note (exercised by aborting the request: quote + chain + note + CTA, no image, no paragraphs). **Two real defects found and fixed in the browser, not by reading:** the global `overflow-wrap: anywhere` on `li` was inherited by the labels and let flex shrink split "FPC" over two lines; and `AnimatePresence initial={false}` in App.js silently disables `reveal(…, { inView: true })` for anything that ships with the route, so the chain landed finished — naming the resting state as `animate` as well restores the sequential wave (measured: opacity 0 → 1 across all seven over ~0.7s; under reduced motion, no style attribute at all, at any point). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (11 suites, **104 passed**, 9 new). Contrast on the band: labels 16.5:1, gold 13.0:1, legal note 9.0:1. |
-| 18 | Why Black Rice spotlight and rituals teaser | pending | | | |
+| 18 | Why Black Rice spotlight and rituals teaser | complete | 2026-09-07 | (this commit) | Two sections and the card the rituals pages will reuse. **`home/WhyBlackRice`** is the ingredient spotlight: a 1:1 placeholder under `GlowWrap tone="gold" intensity={0.16}` on the left, and on the right the `SectionHeading` ("The hero ingredient" / "Why black rice?", the gradient on **black**, found in the headline rather than pinned to an index), the THREE seeded `siteContent.home.whyBlackRice` points at 17px behind 20px gold `mdi:check-circle-outline` glyphs, and a "Carried by" row of the eight `products.getHeroProducts()` as 56px `.sf-plate` links to their PDPs. **No fallback copy for the points** — an unpublished or unreachable block renders NOTHING, because a spotlight that invents a cosmetic claim is worse than no spotlight. **`catalogue/RitualCard`** is ONE `<Link>` per routine (verified: one tab stop, zero nested controls) carrying a 16:10 photograph, "Ritual · N steps", the name at 22px Fraunces, the tagline (or the story's first WHOLE sentence), a step strip of up to five 40px plates at −8px overlap with 24px gradient-ring numerals — the body ritual's `alternativeProductId` peeking out from behind step 01 — the duration and a ghost "See the ritual →". It resolves its own steps through the pure `resolveRitualSteps`, so Prompt 24's index needs only the same two inputs. **`home/RitualsTeaser`** is the triptych: `rituals.getAll()` + `products.getAll()` in one `Promise.all`, three cards at 769px+, one column 481–768, an 84vw snap scroller ≤480, and a primary "Build your ritual" → `/rituals` under the grid. Measured at 360/390/414/480/481/768/769/1024/1280/1440: **document overflow 0 at every width**; media 1:1 (533² at 1280) and 16:10 (355×222); the desktop body `532.8px 651.2px` (0.9fr/1.1fr) at 56px gutter from 1025px. 12 tab stops across both sections (8 PDP thumbs, 3 cards, 1 CTA). Under `prefers-reduced-motion: reduce` no reveal wrapper carries a non-1 opacity. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 12 suites / 118 passed (15 new in `RitualCard.test.js`, 1 suite / 50 tests skipped — the live-API suite). No `db.json` or `api.js` change: reads only. |
 | 19 | Full-page CTA section | pending | | | |
 | 20 | Why LAMIKAA section (pillars and impact) | pending | | | |
 | 21 | Home FAQs section and accordion | pending | | | |
@@ -237,6 +237,18 @@ Record every decision a prompt had to make that the reference files did not sett
 - `17 · `gradientWord` is FOUND in the headline, not pinned to index 4 · The title is owner-editable data. `gradientWordIndex(title)` locates "farmers" past its punctuation and returns `undefined` when the word is gone, so an edited headline keeps the emphasis on the right word or drops it — rather than gilding whatever word happens to be fourth.`
 - `17 · The image is a plain `<img>`, not `CloudinaryImage`, and its `alt` is "" · The placeholder is `https://picsum.photos/seed/lamikaa-farm/1600/1000`; a Cloudinary transform does not apply to it, so `CloudinaryImage` would only wrap a URL it cannot resize. `.sf-placeholder-media` needs a WRAPPER (its wash is an `::after`), so the `<img>` sits inside a div that carries the class. `alt=""` because the picture is decorative and describing a scene the brand has not photographed would be inventing one — `onImageError` still swaps in the shared placeholder if the host is unreachable (exercised by aborting the request).`
 - `17 · The `editorial` drop cap sets the opening word as "L" + "AMIKAA" · The prompt specifies `ContentBlocks variant="editorial"` and the seeded paragraph opens on the wordmark, so the Prompt 05 drop cap takes its first letter. Left as designed: a drop cap is a typographic convention the reader reconstructs, it changes no casing (BRAND.md §3.9 rule 1), and overriding a spec'd component's own device from outside would be second-guessing it. Flagged for the owner in Open TODOs — the same copy opens the About page in Prompt 28, so the decision is worth making once.`
+- `18 · 2026-09-07 · The spotlight has NO fallback copy for its three points; a missing, unpublished or unreachable block renders the section not at all · Every other section on the page degrades to thinner copy, and this one cannot: its subject IS three cosmetic ingredient claims, and BRAND.md §3.9 makes the qualifiers part of the sentence ("antioxidant-rich", "traditionally valued in Northeast India"). A claim hard-coded as a fallback is a claim nobody can edit, review or withdraw. The section's own furniture — its eyebrow, its headline, "Carried by" — is copy ABOUT the section rather than about the ingredient, so that keeps defaults, exactly as AboutTeaser's does.
+- `18 · 2026-09-07 · The check glyph's box belongs to a WRAPPER `<span>`, not to `<Icon>` · `@iconify/react` renders an unstyled, unsized `<span></span>` placeholder until the icon data resolves and forwards neither `className` nor `aria-hidden` to it. A bare `<Icon className={styles.glyph}>` therefore measured 0×0 in `--sf-color-text` (confirmed in Chromium) and would have shoved each point sideways the moment the icon landed. The wrapper reserves 20px and carries the gold; the svg inside is 1em, so the glyph's size IS the wrapper's font-size. Every other `<Icon>` in the repo is unstyled, which is why nothing hit this before.
+- `18 · 2026-09-07 · `RitualCard` resolves its own steps, and imports the PURE `resolveRitualSteps` rather than taking resolved steps as a prop · The prompt fixes the card's props as `{ ritual, products, compact }`, and `apiService.rituals.resolveSteps` IS `resolveRitualSteps` — no fetching, no mode branch — so where it runs is only a question of who holds the catalogue. Resolving inside means Prompt 24's rituals index feeds the card the same two inputs the teaser does and cannot disagree with it about what a step shows.
+- `18 · 2026-09-07 · The ritual card is one link and nothing inside it is interactive — including the step thumbnails, which do NOT link to their PDPs · A routine has one destination. Five thumbs linking onward would nest anchors inside an anchor and give a keyboard visitor six stops to five places inside one tile. The strip is `aria-hidden`, every image takes `alt=""`, and the link carries the whole name ("The Morning Glow Ritual, 4 steps"). Verified: 3 cards = 3 tab stops. The eight PDP thumbnails in the SPOTLIGHT are links, because there each destination is genuinely different.
+- `18 · 2026-09-07 · The blurb is the tagline, else the story's first WHOLE sentence — never a truncation at N characters · A cut at a character count breaks mid-word and promises an ellipsis the copy never earned. `ritualBlurb` finds the first terminator followed by a space or the end of the string, so a story with no terminator comes through whole rather than empty.
+- `18 · 2026-09-07 · The card takes `padding="none"` and sets 20px itself · The prompt specifies 20px; `GlassCard`'s scale is 16 / 24 / 32. Passing `padding="sm"` and overriding would have left two single-class rules fighting over stylesheet order. `none` emits no class at all, so the module's `--sf-space-5` is the only rule in play.
+- `18 · 2026-09-07 · The overlapping step thumbs carry a 2px `--sf-color-bg` ring on top of `.sf-plate`'s own hairline · At −8px of overlap a plate's `--sf-color-surface` ground sits on the card's glass, which is within a few percent of it; without the ring the five plates read as one smear. The ring is the page ground, so it reads as the gap between two plates rather than as a second border.
+- `18 · 2026-09-07 · The 40px step thumbs opt OUT of `.sf-card--hover:hover img`'s 1.03 breath · The gesture is written for a card's photograph; five 40px plates twitching together reads as a glitch, not as a response. The opt-out is three classes deep (`.card:hover .strip .thumb img`) so it wins over the primitive whatever order the sheets load in. The card's own 16:10 photograph keeps the breath.
+- `18 · 2026-09-07 · Three ritual columns from 769px, not from 1024px · The prompt fixes 3 columns at 1024+ and one column ≤768 and leaves 769–1023 open. Three routines are a triptych; two columns there would strand the third on a row of its own. Measured at 769px: cards 227px, the longest strip (5 steps) 172px inside 187px of content width — it fits, with no overflow at any width.
+- `18 · 2026-09-07 · `gradientWordIndex` is duplicated in `WhyBlackRice.js` rather than shared with `AboutTeaser.js` · Six lines against pulling `AboutTeaser`'s whole import graph (`ValueChain`, `LegalNote`, `ContentBlocks`) into a section that needs none of it. Two call sites is not yet a utility; Prompt 22's assembly pass is where a third would move it to `src/utils/`.
+- `18 · 2026-09-07 · Both new sections sit on the page ground (`.sf-section`), not on `--sf-color-surface` · `AboutTeaser` immediately above IS a full-bleed surface band, and a second band butted against it would merge into one. The alternation the home page reads by is band → ground, which is what these two continue.
+- `18 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are left untouched, pre-rebuild copy included · The file is touched only to import and mount the two new sections and to extend its own section map. Those sections are Prompt 22's to delete (00_INDEX §3.13, and the note the file itself carries); removing them here would drop functionality — recently viewed, the deals countdown — that Prompt 22 decides the fate of. Same posture Prompts 15–17 took.
 
 ## Open TODOs
 
@@ -320,6 +332,9 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `17 · The `ContentBlocks variant="editorial"` drop cap sets the About copy's opening word as a large gold "L" followed by "AMIKAA Naturals is a farmer-owned…". It reads correctly as a drop cap, but the wordmark is the one word in the brand where splitting the first letter is worth a second opinion — and the same paragraph opens the About page. Show the owner the home band at 1280 and the About page side by side; if it should go, the fix is a `.copy .blocks p:first-of-type::first-letter` reset (0,2,2 beats the variant's 0,2,0) rather than dropping to `variant="prose"`, which would also lose the wider measure. · owner/Prompt 28 · 28`
 - `17 · At 769–1024px the About band's photograph is the full measure (984×615 at 1024) because the two-column grid only starts at 1025px, which is what the prompt specifies. It reads as an editorial opener and the placeholder is standing in for real Assam landscape photography, so it was left — but it is the largest single image on the home page at that width and is worth a look with the real photograph before the responsive pass signs it off. · developer · 37`
 - `17 · External images (picsum.photos, res.cloudinary.com) are blocked from the BROWSER in this sandbox even though `curl` reaches them (200) — no request is issued and no error fires, so the About band's landscape could not be seen with the real asset. Every geometry check was run against a locally-served stand-in of the same 16:10 shape, and the broken-image path was exercised separately by aborting the request (`onImageError` swapped in the shared placeholder). Re-check the wash and the gold lamp against the real Picsum frame on a developer machine. · developer · 37`
+- `18 · The eight "Carried by" plates and the ritual step thumbs render EMPTY in this sandbox: `res.cloudinary.com` answers `net::ERR_CONNECTION_RESET` to the browser (curl reaches it), so `onImageError` swaps in `PLACEHOLDER_IMG`. Same for the gold check glyphs — `@iconify/react` fetches `mdi:check-circle-outline` at runtime and its API is unreachable here, so the reserved 20px boxes stay empty. Both are environment limits, not defects: the geometry, the colour and the box reservation were all measured in Chromium and are correct. Re-look at both on a machine with outbound HTTPS · developer · 37
+- `18 · A ritual card links to `/rituals/<slug>`, which is a stub until Prompt 24 builds the page · owner of 24 · 24
+- `18 · `RitualCard`'s `compact` variant (no photograph) has no consumer yet — it is built to the prompt's contract for the rituals index and the PDP cross-links · owner of 24 · 24
 
 ## Placeholders introduced / resolved
 
@@ -359,6 +374,8 @@ Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token 
 ---
 - `15 · (none introduced, none resolved) · The five `{{PRICE_*}}` products render the "Price on launch" chip on the rebuilt card with Add to Cart disabled and labelled "Coming soon" — the rule PLACEHOLDERS.md states, now visible in search, wishlist and the PDP rails. `brand.originBadge` is BRAND copy from BRAND.md §3.1, not a token: it needs no owner input.`
 
+
+- `18 · (none introduced) · — · Both images the two sections render — `siteContent.home.whyBlackRice.image` (`picsum.photos/seed/lamikaa-black-rice/1200/1200`) and `rituals[*].image` (`…/lamikaa-ritual-{morning,evening,body}/1200/1500`) — were seeded and inventoried by Prompt 06 and are already listed in `PLACEHOLDER_ASSETS.md`. No `{{…}}` token is read or rendered by either section.
 
 ## Baseline record (Prompt 01, 2026-09-06)
 
@@ -2009,3 +2026,104 @@ The external image hosts are blocked from the browser in this environment (`curl
 served stand-in of the same 16:10 shape and the broken-image path was exercised separately. The wash and the gold
 lamp still want one look at the real Picsum frame on a developer machine — carried into Open TODOs, with the
 drop-cap question and the full-measure photograph at 769–1024px.
+
+## Prompt 18 record (2026-09-07)
+
+### What was built
+
+| File | Lines | What it is |
+|---|---|---|
+| `src/components/catalogue/RitualCard.js` | 178 | One routine as one link: photograph, eyebrow, name, blurb, numbered step strip, duration, CTA. Reusable by Prompt 24. |
+| `src/components/catalogue/RitualCard.module.css` | 215 | 20px glass card, 16:10 media, the overlapping strip and its 24px numerals, the ghost CTA. |
+| `src/components/catalogue/RitualCard.test.js` | 111 | 15 tests over the four pure exports (`ritualBlurb`, `stepCountLabel`, `gradientWordIndex`, `spotlightCopy`). |
+| `src/components/home/WhyBlackRice.js` | 225 | The ingredient spotlight: the three seeded points, and the eight labels that carry the ingredient. |
+| `src/components/home/WhyBlackRice.module.css` | 173 | The `0.9fr 1.1fr` body, the 20px gold glyphs, the scrolling "Carried by" row, the glow guard. |
+| `src/components/home/RitualsTeaser.js` | 114 | The triptych and the way through to `/rituals`. |
+| `src/components/home/RitualsTeaser.module.css` | 93 | Three columns from 769px, one below, an 84vw snap scroller ≤480. |
+| `src/components/catalogue/index.js` | +1 | `RitualCard` joins the barrel. |
+| `src/pages/Home/Home.js` | +10 | `<WhyBlackRice/>` then `<RitualsTeaser/>` after `<AboutTeaser/>`; the page's own section map extended with 0f and 0g. |
+
+No `db.json` or `api.js` change. Both sections READ: `siteContent.home.whyBlackRice` and
+`products.getHeroProducts()` for the spotlight, `rituals.getAll()` + `products.getAll()` for the teaser — all
+seeded in Prompt 06 and served identically by both api modes (`GET /siteContent`, `GET /rituals`,
+`GET /products` in mock; `GET /content/home`, `GET /rituals`, `GET /products/hero` live). The admin editors for
+the ritual and content records are Prompt 34's.
+
+### The one defect the browser found, and reading did not
+
+**The gold check glyphs measured 0×0 in the wrong colour.** `@iconify/react` fetches its icon data at runtime and
+renders a bare, unstyled `<span></span>` until the data lands — it forwards neither `className` nor
+`aria-hidden` to that placeholder. `<Icon className={styles.glyph} icon="mdi:check-circle-outline" />` therefore
+computed to `20px`-wide nothing (`width: 0px`, `color: rgb(247, 245, 240)` — inherited body text, not gold) and
+would have shoved each point sideways the moment the icon resolved. Every other `<Icon>` in the repo is
+unstyled, which is why no earlier prompt hit it. Fixed by giving the glyph a wrapper `<span>` that owns the box
+and the colour; the svg inside is `1em`, so the wrapper's `font-size` IS the glyph's size.
+
+```
+before   <li …><span></span><span>Antioxidant-rich, …</span></li>     box 0×0    rgb(247,245,240)
+after    <li …><span class=glyph aria-hidden><svg…></span><span>…</span></li>   box 20×20  rgb(245,215,110)
+```
+
+### Responsive measurements (Chromium 1194, mock mode, dev server)
+
+`ovf` is `documentElement.scrollWidth - clientWidth`. Every row measured with both sections scrolled into view.
+
+| Viewport | ovf | spotlight body | "Carried by" row | rituals grid | card |
+|---|---|---|---|---|---|
+| 360 | 0 | 1 col, 328px | scrolls (532 in 328) | flex, `x mandatory` | 302px (84vw) |
+| 390 | 0 | 1 col, 358px | scrolls (532 in 358) | flex, `x mandatory` | 328px (84vw) |
+| 414 | 0 | 1 col, 382px | scrolls (532 in 382) | flex, `x mandatory` | 340px (max-width) |
+| 480 | 0 | 1 col, 448px | scrolls (532 in 448) | flex, `x mandatory` | 340px |
+| 481 | 0 | 1 col, 449px | scrolls (532 in 449) | grid, 1 col | 449px |
+| 768 | 0 | 1 col, 736px | fits (532 in 532) | grid, 1 col | 736px |
+| 769 | 0 | 1 col, 729px | fits | grid, 3 cols | 227px |
+| 1024 | 0 | 1 col, 984px | fits | grid, 3 cols | 312px |
+| 1280 | 0 | **532.8 / 651.2**, gap 56px | fits | grid, 3 cols | 397px |
+| 1440 | 0 | **532.8 / 651.2**, gap 56px | fits | grid, 3 cols | 397px |
+
+Fixed geometry, identical at every width: spotlight media **533×533** (`aspect-ratio: 1`, radius 28px,
+`--sf-glow-opacity: 0.16`) · card media **355×222** (16:10) · card padding **20px** · name **Fraunces 22px** ·
+points **17px** · glyphs **20×20 gold** · "Carried by" plates **56×56** · step thumbs **40×40**, radius 8px,
+`-8px` overlap, 2px `--sf-color-bg` ring · numerals **24×24**.
+
+### Keyboard and reduced motion
+
+Twelve tab stops across both sections, in this order, at every width and under both motion settings:
+
+```
+why-black-rice   8 × <a>  "Black Rice Face Wash" … "Black Rice Moisturizer Gel"  → /product/<slug>
+rituals-teaser   <a> "The Morning Glow Ritual, 4 steps"    → /rituals/morning-glow
+rituals-teaser   <a> "The Evening Renewal Ritual, 5 steps" → /rituals/evening-renewal
+rituals-teaser   <a> "The Black Rice Body Ritual, 2 steps" → /rituals/black-rice-body
+rituals-teaser   <a> "Build your ritual"                   → /rituals
+```
+
+**Each ritual card is exactly one stop** — no nested control, no focusable thumbnail. Under
+`prefers-reduced-motion: reduce` no reveal wrapper in either section carries a non-1 opacity, off screen or on.
+
+### The step strips, against the seed
+
+| Ritual | steps | plates rendered | numerals |
+|---|---|---|---|
+| The Morning Glow Ritual | 4 | 4 | 01 02 03 04 |
+| The Evening Renewal Ritual | 5 | 5 | 01 02 03 04 05 |
+| The Black Rice Body Ritual | 2 | **3** — step 01's `alternativeProductId` (the body wash behind the soap) | 01 02 |
+
+### Verification run
+
+- `CI=true npm run build` — exit 0, **Compiled successfully, no warnings**.
+- `npm test -- --watchAll=false` — 12 suites (1 skipped: the live API), **118 passed**, 15 of them new.
+- `grep -n "WhyBlackRice\|RitualsTeaser" src/pages/Home/Home.js` → 4 (2 imports, 2 mounts).
+- No hard-coded colour, `rgb()` or `hsl()` in any of the three new stylesheets; no Meghali-era name, asset or
+  identifier in any touched file; no `dangerouslySetInnerHTML`; no ingredient claim typed in a component (the
+  three points exist in `db.json` only).
+- Manual QA at 360 / 390 / 414 / 768 / 1024 / 1280 / 1440, plus the 480 / 481 / 769 breakpoint edges, each with
+  and without `prefers-reduced-motion`.
+
+### Left for later
+
+`res.cloudinary.com` and `api.iconify.design` are unreachable from the browser in this environment, so the eight
+"Carried by" plates, the step thumbs and the gold check glyphs all render as correctly sized empty boxes here.
+The boxes, the ring, the overlap and the colour were measured; the pictures themselves want one look on a
+machine with outbound HTTPS. Carried into Open TODOs, with the `/rituals/<slug>` stub and the unused `compact`
+variant, both of which are Prompt 24's.

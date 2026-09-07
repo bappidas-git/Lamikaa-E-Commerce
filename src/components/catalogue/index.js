@@ -8,3 +8,4 @@
 
 export { default as CategoryCard } from "./CategoryCard";
 export { default as ProductChapter } from "./ProductChapter";
+export { default as RitualCard } from "./RitualCard";

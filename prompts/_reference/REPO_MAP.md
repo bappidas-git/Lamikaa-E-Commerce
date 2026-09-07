@@ -828,6 +828,93 @@ value-chain stepper the About and Why LAMIKAA pages (Prompts 20, 28) reuse.
 - `pages/Home/Home.js`: `<AboutTeaser/>` mounts directly after
   `<ProductShowcase/>`. Sections 1–6 still follow; Prompt 22 replaces them.
 
+**Updated by Prompt 18.** The ingredient spotlight, the rituals teaser, and the
+ritual card the rituals pages (Prompt 24) will reuse.
+
+- `catalogue/RitualCard.js` (178) + `.module.css` (215) + `.test.js` (111) —
+  **new**. ONE routine as a card, shared by the home teaser and the rituals
+  index.
+  **Contract:** `ritual` (required) · `products` (the catalogue the steps
+  resolve against) · `compact` (drop the photograph) · `className`.
+  **The whole card is ONE `<Link>` and nothing inside it is interactive.**
+  `GlassCard as="article" interactive glow="violet" padding="none"` (20px is off
+  the 16/24/32 scale, so the module sets it) wrapping a single anchor to
+  `ritualPath(ritual)` that carries the full name ("The Morning Glow Ritual,
+  4 steps"). Five thumbnails linking onward would nest anchors and give a
+  keyboard visitor six stops to five places inside one tile; verified, three
+  cards are three tab stops.
+  **Composition:** a 16:10 `.sf-placeholder-media` photograph (omitted when
+  `compact`) → `.sf-eyebrow` "Ritual · N steps" → the name in Fraunces at
+  **22px** (no token sits on it: `--sf-text-lg` is 20 and `--sf-text-xl` clamps
+  22→28, which outgrows a three-across card) → the blurb → the step strip →
+  `duration` → a ghost "See the ritual →" whose gradient underline animates on
+  `:hover` / `:focus-within`, as an inert `<span>`.
+  **The step strip** is up to **5** resolved steps as 40px `.sf-plate` thumbs
+  (`stageSrc(product, { w: 80 })`) at **−8px** overlap, each with a 24px
+  `Chip variant="step"` numeral pinned to its bottom-left, and each with a 2px
+  `--sf-color-bg` ring on top of the plate's own hairline (at that overlap two
+  `--sf-color-surface` grounds on glass read as one smear). A step's
+  `alternativeProductId` renders as a SECOND thumb pulled back 28px so 12px of
+  it shows from behind the primary — the soap and the body wash are both step
+  one of the body ritual. A step whose product is missing keeps its numeral and
+  shows an empty plate. The whole strip is `aria-hidden` (decoration — the
+  link's name already says how many steps there are) and opts out of
+  `.sf-card--hover:hover img`'s 1.03 breath.
+  **The steps are resolved HERE**, through the pure `resolveRitualSteps`
+  (= `apiService.rituals.resolveSteps` — no fetching, no mode branch), so
+  Prompt 24's index feeds the card the same two inputs the teaser does.
+  **The tone glow is a HOVER event**, held at 0 and faded in on `:hover` /
+  `:focus-within` at `--sf-glow-opacity: .2`, exactly as `CategoryCard`'s is.
+  **Two named exports, pure and unit-tested:** `ritualBlurb(ritual)` (the
+  tagline, else the story's first WHOLE sentence — never a truncation at N
+  characters) and `stepCountLabel(count)` ("Ritual · 1 step", not "1 steps").
+- `home/WhyBlackRice.js` (225) + `.module.css` (173) — **new**. Left: a 1:1
+  `.sf-placeholder-media` box (`--sf-radius-xl`) inside
+  `GlowWrap tone="gold" intensity={0.16}`, a plain `<img alt="">` for the same
+  reason `AboutTeaser`'s is. Right: `SectionHeading` ("The hero ingredient" /
+  "Why black rice?", `rule`), the three points, then "Carried by".
+  **Two columns `0.9fr 1.1fr` at 56px from 1025px**, one column below, image
+  first in the DOM at every width. `overflow-x: clip` on the section guards the
+  lamp's ~11% bleed.
+  **The three points are `siteContent.home.whyBlackRice.points`, and there is NO
+  fallback for them** — a missing, unpublished (`published === false`) or
+  unreachable block renders the section not at all. Its subject is three
+  cosmetic ingredient claims; a claim hard-coded as a fallback is a claim nobody
+  can edit, review or withdraw. The section's own furniture (eyebrow, headline,
+  "Carried by") keeps defaults. Points are 17px (`--sf-text-md`) behind **20px**
+  gold `mdi:check-circle-outline` glyphs — the box belongs to a wrapper `<span>`
+  because `@iconify/react` renders an unstyled, unsized placeholder until the
+  icon resolves and forwards neither `className` nor `aria-hidden` to it.
+  **"Carried by"** is `products.getHeroProducts()` — the owner's own
+  `heroOrder`, so it cannot disagree with the hero or the showcase — as eight
+  **56px** `.sf-plate` `<Link>`s to `productPath(p)`, `aria-label` the product
+  name and `alt=""` on the image. The row scrolls sideways inside itself
+  (532px of plates) rather than pushing the page.
+  **Two named exports, pure and unit-tested:** `gradientWordIndex(title, word)`
+  (finds "black" rather than pinning index 1; a six-line twin of
+  `AboutTeaser`'s, kept local so this section does not pull in `ValueChain`,
+  `LegalNote` and `ContentBlocks`) and `spotlightCopy(block)`.
+- `home/RitualsTeaser.js` (114) + `.module.css` (93) — **new**. `SectionHeading`
+  ("Rituals" / "Build your ritual", gradient on "ritual", lede "Three curated
+  routines, in the order the range was designed to be used.", `rule`), three
+  `RitualCard`s, then `Button variant="primary"` "Build your ritual" →
+  `ROUTES.RITUALS`, centred under the grid.
+  **Data:** `rituals.getAll()` + `products.getAll()` in one `Promise.all` — the
+  WHOLE catalogue, not the hero list, because a step may name any product.
+  Any rejection, or no live ritual, and the section renders NOTHING.
+  **Grid:** three columns from **769px** (three routines are a triptych; two
+  columns would strand the third, and at 769px the longest strip measures 172px
+  inside 187px of content), one column 481–768, and an 84vw horizontal snap
+  scroller ≤480 built the same way `ShopByCategory`'s is (the track breaks the
+  container's padding and puts it back inside itself).
+- `pages/Home/Home.js`: `<WhyBlackRice/>` then `<RitualsTeaser/>` mount directly
+  after `<AboutTeaser/>`. Sections 1–6 still follow; Prompt 22 replaces them.
+- `catalogue/index.js`: `RitualCard` joins the barrel.
+
+No `db.json` or `api.js` change — both sections read only
+(`siteContent.home.whyBlackRice`, `rituals.getAll`, `products.getAll`,
+`products.getHeroProducts`), all already served identically by both api modes.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.
