@@ -1183,6 +1183,59 @@ used is gone from `App.js` (four remain: `/rituals`, `/rituals/:slug`,
   instead of claiming nothing matched. `role="status"` announces the count.
   `/products?search=x` already redirects here (`LegacyRedirects`, Prompt 08).
 
+**Updated by Prompt 22.** The home page is assembled. `pages/Home/Home.js`
+742 → 279 lines and `Home.module.css` 779 → 105; the page is now a composition
+of `components/home/*` and owns nothing but the ground, the hero/trust-strip
+relationship and the deferral machinery.
+
+- `pages/Home/Home.js` (279): **eleven sections in the brief's order** —
+  `HeroCarousel` and `TrustStrip` eager, then nine lazy chunks: `ProductShowcase`
+  → `ShopByCategory` → `AboutTeaser` → `WhyBlackRice` → `RitualsTeaser` →
+  `FullPageCta` → `WhyLamikaaSection` → `RecentlyViewed` → `HomeFaqs`.
+  `ShopByCategory` moved from under the trust strip to after the product
+  chapters (brief §7.2 item 4). One `useHomeData()` call feeds every section by
+  prop. `useSeo({ jsonLd: [organizationJsonLd({social}), websiteJsonLd()] })`.
+  A local `DeferredSection` wraps each lazy section: `useInView` with
+  `rootMargin: "600px"`, a measured `reserve` height held only until the section
+  mounts, and `content-visibility: auto` on the six sections that draw no glow
+  (about / spotlight / CTA opt out — paint containment would clip
+  `.sf-glow::before`).
+- `components/home/useHomeData.js` (new): the page's ONE read of the catalogue.
+  `products.getAll` · `products.getHeroProducts` · `categories.getAll` ·
+  `concerns.getAll` · `rituals.getAll` · `siteContent.get()` (the whole record,
+  split into `homeContent` / `impactContent`), all in parallel from the first
+  effect. Returns tri-state slices — `undefined` in flight, `null` failed, value
+  loaded — plus `loading` and `error`. The naive assembly issued **15 requests
+  for 6 collections**; this issues **6**. A module-level map de-duplicates only
+  requests that are IN FLIGHT, so freshness is unchanged.
+- `components/home/RecentlyViewed.{js,module.css}` (new): the one secondary
+  section kept, because it is existing storefront functionality — the localStorage
+  key `recentlyViewed` written by `pages/ProductDetails/ProductDetails.js` and the
+  reconciliation against the live catalogue (browsing order kept, unreachable
+  products dropped, current record rendered) are ported verbatim from the old
+  `Home.js`, as is the `useRail`/ResizeObserver hook. Quiet compact rail on the
+  surface band; hidden below **two** live products (was one). `reconcile` and
+  `readStoredIds` are exported and unit-tested (`RecentlyViewed.test.js`, 8 tests).
+- **Deleted**: `components/FeaturedProducts/*` and `components/CTASection/*` (no
+  consumers), and with them the old page's collection stories, featured grid,
+  offers rail + countdown, craft interlude, trending rail and promises row.
+  `TRUST_BADGES` is gone from `utils/constants.js` (its last consumer was the
+  promises row); `WHY_CHOOSE_US` **stays** — `pages/Support/Support.js:594` maps
+  over it.
+- **Sections switched from self-fetching to props** (Prompts 14–21):
+  `HeroCarousel` (`heroProducts`; keeps its own `hero.getConfig()` and the
+  conditional `getFeatured` fallback), `ProductShowcase`, `ShopByCategory`,
+  `AboutTeaser`, `WhyBlackRice`, `RitualsTeaser`, `FullPageCta`,
+  `WhyLamikaaSection`. `HomeFaqs` is unchanged (it reads `FaqContext`).
+- **Outside `src/pages`**: `hooks/useInView.js` gained a `rootMargin` option
+  (default `"0px"`, existing callers unaffected); `hooks/useSeo.js` gained the
+  `organizationJsonLd()` / `websiteJsonLd()` helpers (validator: 0 errors, 0
+  warnings) — `utils/seo.js` is left free for Prompt 27's product graph;
+  `public/index.html` lost the dead Material Icons stylesheet and gained a
+  `preconnect` to res.cloudinary.com; `App.js` made `AdminLayout` lazy, which
+  took the admin's MUI shell out of the bundle every storefront visitor
+  downloads (main 285 → 249 kB gzipped).
+
 ## 7. Admin panel
 
 - Shell `src/components/AdminLayout/AdminLayout.js` (1015): guard `useAdmin().isAuthenticated` → `<Navigate to="/admin" />`; 260 px MUI Drawer (temporary < 900 px, permanent ≥ 900) with sections Dashboard · Catalogue (Products, Categories, Reviews) · Sales (Orders, Returns, Payments, Coupons, Special Offers) · Storefront (Hero Section, FAQs) · Operations (Shipping, Users, Leads, Settings) · "Back to Store"; AppBar with theme toggle (shared `useThemeContext`), notifications (polls orders+leads every 30 s), avatar menu; `useAdminBodyClass()` adds `body.admin-area`; MUI theme from `buildAdminTheme(mode)` (indigo/slate, `#4f46e5`, `#0b1220`…); logo constants `LOGO_LIGHT/LOGO_WHITE` (old wordmark).

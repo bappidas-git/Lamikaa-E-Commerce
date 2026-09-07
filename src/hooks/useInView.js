@@ -28,9 +28,21 @@ const hasIO = () =>
  * @param {object}  [options]
  * @param {boolean} [options.once]    stop observing after the first entry (default true)
  * @param {number}  [options.amount]  visible fraction that counts as "in view" (default 0.15)
+ * @param {string}  [options.rootMargin]  grows (or shrinks) the viewport the
+ *                                    answer is measured against, in the CSS
+ *                                    margin shorthand. "600px" means "within
+ *                                    600px of the viewport counts as in view" —
+ *                                    which is how Prompt 22's DeferredSection
+ *                                    mounts a home section BEFORE the visitor
+ *                                    reaches it, so the chunk is fetched and
+ *                                    painted rather than flashing in under
+ *                                    them. Default "0px": the viewport itself.
  * @returns {boolean}
  */
-export default function useInView(ref, { once = true, amount = 0.15 } = {}) {
+export default function useInView(
+  ref,
+  { once = true, amount = 0.15, rootMargin = "0px" } = {}
+) {
   const [inView, setInView] = useState(() => !hasIO());
 
   useEffect(() => {
@@ -49,12 +61,12 @@ export default function useInView(ref, { once = true, amount = 0.15 } = {}) {
           setInView(false);
         }
       },
-      { threshold: amount }
+      { threshold: amount, rootMargin }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [ref, once, amount]);
+  }, [ref, once, amount, rootMargin]);
 
   return inView;
 }

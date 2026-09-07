@@ -1,0 +1,112 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   RECENTLY VIEWED  —  the page's one footnote
+   ═══════════════════════════════════════════════════════════════════════════
+   A quiet band between the pillars and the questions: the surface ground rather
+   than the page ground, tight vertical rhythm (`.sf-section--tight`), smaller
+   cards than any statement section above it, and arrows that live up in the
+   heading rather than over the photographs.
+
+   Token-only: every colour / space / radius comes from storefront-tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.section {
+  background: var(--sf-color-surface);
+  /* The band's own edges, so it reads as a change of ground rather than as a
+     floating patch of colour between two sections on the page ground. */
+  border-block: 1px solid var(--sf-color-border);
+}
+
+/* A footnote's heading does not need a statement's air under it. */
+.heading {
+  margin-bottom: var(--sf-space-6);
+}
+
+/* ── The track ─────────────────────────────────────────────────────────────── */
+
+.track {
+  display: flex;
+  gap: var(--sf-space-5);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Room for the card's focus ring, which would otherwise be clipped by the
+     scroll container — and the matching scroll-padding, so snapping still parks
+     the first card at scroll position zero rather than 4px past it. */
+  padding: var(--sf-space-1) var(--sf-space-1) var(--sf-space-4);
+  margin: 0 calc(-1 * var(--sf-space-1));
+  scroll-padding-inline: var(--sf-space-1);
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.track:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+.cell {
+  flex: 0 0 clamp(180px, 17vw, 210px);
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+/* ── The arrows ────────────────────────────────────────────────────────────── */
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+}
+
+.arrow {
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-sm);
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast),
+    color var(--sf-transition-fast), opacity var(--sf-transition-fast),
+    transform var(--sf-transition-fast);
+}
+
+.arrow:hover:not(:disabled) {
+  border-color: var(--sf-color-gold-deep);
+  color: var(--sf-color-text);
+}
+
+/* The shared icon-button press. */
+.arrow:active:not(:disabled) {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.arrow:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow {
+    transition: none;
+  }
+
+  .arrow:active:not(:disabled) {
+    transform: none;
+  }
+}

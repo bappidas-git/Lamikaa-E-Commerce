@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import apiService from "../../services/api";
+import React from "react";
 import brand from "../../config/brand";
 import { ROUTES } from "../../utils/constants";
 import { Button, SectionHeading, Skeleton } from "../ui";
@@ -61,21 +60,15 @@ export const impactCopy = (block) => {
   };
 };
 
-const WhyLamikaaSection = () => {
-  const [block, setBlock] = useState(undefined);
-
-  useEffect(() => {
-    let active = true;
-    // `siteContent.get` never rejects — it answers null for a section it cannot
-    // reach, which is the same answer as "the owner has not written one", and
-    // both land on the same empty state.
-    apiService.siteContent.get("impact").then((impact) => {
-      if (active) setBlock(impact || null);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+/**
+ * @param {object} props
+ * @param {object|null|undefined} props.content  the `impact` record, from
+ *        useHomeData(): `undefined` while it is in flight, `null` for a record
+ *        that could not be read or one the owner has not written — and both
+ *        land on the same empty state.
+ */
+const WhyLamikaaSection = ({ content }) => {
+  const block = content === undefined ? undefined : content || null;
 
   const loading = block === undefined;
   const copy = impactCopy(block);

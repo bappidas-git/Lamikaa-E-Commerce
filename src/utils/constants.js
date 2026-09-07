@@ -316,6 +316,11 @@ export const BREAKPOINTS = {
   XL: 1440,
 };
 
-// Trust badges — owner-mandated wording, configurable in brand.js so it can be
-// adjusted for compliance without touching a component (BRAND.md 3.9 rule 4).
-export const TRUST_BADGES = brand.trustBadges;
+// TRUST_BADGES was here. It was a one-line re-export of `brand.trustBadges`,
+// and its last consumer was the home page's closing "Promises" row, which
+// Prompt 15 replaced with <TrustStrip/> — reading the same four promises from
+// the same config, at the top of the page. Prompt 22 deleted the row's last
+// remnants, so the alias had nothing left to alias for. `brand.trustBadges` is
+// unchanged and is what every surface reads.
+//
+// WHY_CHOOSE_US, two blocks up, is NOT removed: Support.js still maps over it.

@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import apiService from "../../services/api";
 import brand from "../../config/brand";
 import { RISE, reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
@@ -81,22 +80,16 @@ export const teaserCopy = (block) => {
 // Where the image and the copy wait before they arrive — see ValueChain.js.
 const RESTING = { opacity: 0, y: RISE.reveal };
 
-const AboutTeaser = () => {
+/**
+ * @param {object} props
+ * @param {object|null|undefined} props.content  the home record's `aboutTeaser`
+ *        block, from useHomeData(): `undefined` while the record is in flight,
+ *        `null` for a record that could not be read or a block the owner has
+ *        not written — and both land on the same thin fallback.
+ */
+const AboutTeaser = ({ content }) => {
   const reduceMotion = useReducedMotion();
-  const [block, setBlock] = useState(undefined);
-
-  useEffect(() => {
-    let active = true;
-    // `siteContent.get` never rejects — it answers null for a section it cannot
-    // reach, which is the same answer as "the owner has not written one", and
-    // both land on the same thin fallback.
-    apiService.siteContent.get("home").then((home) => {
-      if (active) setBlock(home?.aboutTeaser || null);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const block = content === undefined ? undefined : content || null;
 
   const loading = block === undefined;
   const copy = teaserCopy(block);

@@ -27,7 +27,6 @@ import Header from "./components/Header/Header";
 import BottomNav from "./components/BottomNav/BottomNav";
 import Footer from "./components/Footer/Footer";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
-import AdminLayout from "./components/AdminLayout/AdminLayout";
 
 // Routing components (Prompt 08)
 import legacyRoutes from "./components/routing/LegacyRedirects";
@@ -79,6 +78,15 @@ const ComingSoon = React.lazy(() => import("./pages/_ComingSoon/ComingSoon"));
 const Playground = React.lazy(() => import("./pages/_Playground/Playground"));
 
 // Admin Pages
+// The admin SHELL, not just the admin pages. It was the one eager import left
+// on the admin side, and because it is built on MUI (Drawer, AppBar, List,
+// Popper…) it pulled ~630 kB of @mui/* into the bundle EVERY STOREFRONT
+// VISITOR downloads, for a layout only a signed-in administrator ever sees.
+// Prompt 22's Lighthouse pass on `/` found it. It is a layout route inside the
+// same <Suspense fallback={<RouteFallback/>}> as the pages it wraps, so it
+// loads exactly the way they already do.
+const AdminLayout = React.lazy(() => import("./components/AdminLayout/AdminLayout"));
+
 const AdminLogin = React.lazy(() => import("./pages/Admin/AdminLogin"));
 const AdminDashboard = React.lazy(() => import("./pages/Admin/AdminDashboard"));
 const AdminProducts = React.lazy(() => import("./pages/Admin/AdminProducts"));

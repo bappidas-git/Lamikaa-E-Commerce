@@ -186,9 +186,11 @@ export const productPath = (product) => {
 };
 
 // The merchandising flags a merchant sets by hand in
-// Admin → Products → Visibility & Flags. `featured` already owns two surfaces of
-// its own (Home's "Chosen this season" edit and the gold PREMIUM ribbon), so the
-// two that need a mark of their own are `trending` and `hot`.
+// Admin → Products → Visibility & Flags. `featured` still owns the gold PREMIUM
+// ribbon, so the two that need a mark of their own are `trending` and `hot`.
+// (It used to own a home-page grid as well; Prompt 22 removed that band — the
+// home page now shows the whole range in the owner's own hero order, so a
+// "featured" subset had nothing left to say there.)
 //
 // ONE reader, so the card, the PDP and the listing facet can never disagree
 // about what "Trending" means — and `=== true` on purpose: the same honest-data

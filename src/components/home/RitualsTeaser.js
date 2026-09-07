@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import apiService from "../../services/api";
 import { reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
 import { Button, SectionHeading, Skeleton } from "../ui";
@@ -37,31 +36,22 @@ import styles from "./RitualsTeaser.module.css";
 // below moves when the data lands.
 const SKELETON_COUNT = 3;
 
-const RitualsTeaser = () => {
+/**
+ * @param {object} props
+ * @param {object[]|null|undefined} props.rituals   the routines, from useHomeData()
+ * @param {object[]|null|undefined} props.products  the catalogue the steps resolve against
+ *
+ * `undefined` is "still in flight" (skeletons); `null` is a read that failed
+ * (the section takes itself off the page, exactly as it did when it owned the
+ * request and caught the rejection).
+ */
+const RitualsTeaser = ({ rituals: ritualRows, products: productRows }) => {
   const reduceMotion = useReducedMotion();
-  const [data, setData] = useState(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([apiService.rituals.getAll(), apiService.products.getAll()])
-      .then(([rituals, products]) => {
-        if (!active) return;
-        setData({
-          rituals: Array.isArray(rituals) ? rituals : [],
-          products: Array.isArray(products) ? products : [],
-        });
-      })
-      .catch(() => {
-        if (active) setFailed(true);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const failed = ritualRows === null || productRows === null;
+  const loading = !failed && (ritualRows === undefined || productRows === undefined);
+  const data = loading || failed ? null : { rituals: ritualRows, products: productRows };
 
   const rituals = data?.rituals || [];
-  const loading = !data && !failed;
 
   // Nothing to say, or nothing to say it with.
   if (failed || (data && rituals.length === 0)) return null;

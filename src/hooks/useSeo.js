@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import brand from "../config/brand";
+import { cld } from "../utils/cloudinary";
+import { ROUTES } from "../utils/constants";
 import { isPlaceholder } from "../utils/placeholders";
+import { SOCIAL_PLATFORM_KEYS, normalizeSocialLinks } from "../utils/socialLinks";
 import {
   releasePageTitle,
   setPageTitle,
@@ -108,6 +111,82 @@ export const seoOrigin = () => {
     return withScheme.replace(/\/+$/, "");
   }
   return typeof window !== "undefined" ? window.location.origin : "";
+};
+
+// =============================================================================
+// SITE-LEVEL STRUCTURED DATA
+// =============================================================================
+//
+// The two graphs a crawler wants once per site, published by the page that IS
+// the site: `/` (Prompt 22). Product, FAQPage and Breadcrumb graphs belong to
+// the pages that carry those things and live in `utils/seo.js` (Prompt 27).
+//
+// EVERY VALUE IS BRAND CONFIG OR THE LIVE SETTINGS RECORD. Nothing here is
+// typed twice, and nothing unresolved is published: a `{{TOKEN}}` in a
+// structured-data field is a fabricated fact as far as a crawler is concerned,
+// so an unresolved value drops its property rather than printing.
+
+/** Drop the keys a graph should not carry rather than emit empty strings. */
+const compact = (object) =>
+  Object.fromEntries(
+    Object.entries(object).filter(([, value]) =>
+      Array.isArray(value) ? value.length > 0 : value != null && value !== ""
+    )
+  );
+
+/**
+ * The `Organization` graph: who this shop is, and where else to find them.
+ *
+ * @param {object} [options]
+ * @param {object} [options.social]  the live `settings.social` map from
+ *        StoreSettingsContext. Omitted, the brand config's own map is used —
+ *        which for LAMIKAA is entirely unresolved tokens, so `sameAs` is
+ *        dropped until the owner fills in Admin > Settings > Social Links.
+ * @returns {object} schema.org Organization
+ */
+export const organizationJsonLd = ({ social } = {}) => {
+  const links = normalizeSocialLinks(social || brand.social);
+  // `normalizeSocialLinks` has already blanked every placeholder and repaired
+  // every bare host, so what is left is a set of real, absolute profile URLs.
+  const sameAs = SOCIAL_PLATFORM_KEYS.map((key) => links[key]).filter(Boolean);
+
+  return compact({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: brand.name,
+    legalName: isPlaceholder(brand.legalName) ? "" : brand.legalName,
+    url: seoOrigin(),
+    logo: cld(brand.logoUrl, { w: 600 }),
+    sameAs,
+  });
+};
+
+/**
+ * The `WebSite` graph, with the SearchAction that lets a search engine offer a
+ * sitelinks search box straight into `/search?q=…` — the results page Prompt 11
+ * built, so the target is a route that actually answers.
+ *
+ * @returns {object} schema.org WebSite
+ */
+export const websiteJsonLd = () => {
+  const url = seoOrigin();
+
+  return compact({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: brand.name,
+    url,
+    potentialAction: url
+      ? {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${url}${ROUTES.SEARCH}?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        }
+      : null,
+  });
 };
 
 /**
