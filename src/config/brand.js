@@ -96,6 +96,12 @@ export const brand = {
   // Owner-mandated card badges (BRAND.md §3.9 rule 4): configurable here, never
   // hard-coded in a component, so the wording can be adjusted for compliance.
   trustBadges: ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+  // The fourth promise on the home trust strip. Not a product badge — it is the
+  // brand's provenance line, condensed from BRAND.md §3.1 ("Rooted in the
+  // indigenous knowledge and rich natural heritage of Assam and Northeast
+  // India"), and it lives here for the same reason the three above do: brand
+  // copy is edited in this file, never inside a component.
+  originBadge: "Rooted in Assam & Northeast India",
   // As printed on the packaging roundels — quoted, not claimed. Shown only in
   // the PDP's "As printed on the pack" block. Owner to confirm ({{CERTIFICATIONS}});
   // remove any the owner cannot substantiate.

@@ -552,6 +552,120 @@ component.
 - `pages/Home/Home.js`: imports `components/home/HeroCarousel` and renders it in
   the existing `.heroSection` wrapper. Nothing else on the page changed.
 
+**Updated by Prompt 15.** The trust strip, the shop-by-category/concern section
+and the shared product card. `components/catalogue/` is a NEW folder (the
+components that present the SHAPE of the range — Prompts 18, 23 and 24 fill it).
+
+- `TrustStrip/TrustStrip.js` (86) + `.module.css` (161) + `.test.js` (29) —
+  **rewritten**. A `.sf-glass` band, 56px tall (48px ≤639px), carrying FOUR
+  promises read from the brand config and never typed in the component:
+  `brand.trustBadges` ×3 plus `brand.originBadge` ("Rooted in Assam & Northeast
+  India", new in `config/brand.js`, condensed from BRAND.md §3.1). Icons are the
+  component's own, matched by POSITION — `mdi:sprout-outline`, `mdi:leaf`,
+  `mdi:star-four-points-outline`, `mdi:map-marker-outline`, with
+  `mdi:check-decagram-outline` as the fallback if the owner adds a fifth
+  promise. Gold 20px glyph + Manrope 600 13px label, centred inside
+  `--sf-container-max`.
+  **Contract:** `items` (override) and `className`; one named export
+  `trustPromises()`. Markup is `<div class="sf-glass">` > `<ul
+  aria-label="Our promises" tabIndex={0}>` — the name is on the LIST (an
+  `aria-label` on a role-less `<div>` is ignored) and the list is focusable
+  because below 640px it is an overflow region (WCAG 2.1.1), the same rule
+  `Home.js`'s `ScrollRow` follows.
+  **Below 640px** it is a horizontal snap scroller (`x proximity`) with edge
+  fades painted on the WRAPPER so they stay pinned while the content moves; the
+  labels never wrap (`white-space: nowrap`). **At ≤768px it drops its backdrop
+  blur entirely** and paints `--sf-glass-fallback` — a blurred surface that also
+  scrolls is the one combination that janks on a phone.
+- `catalogue/CategoryCard.js` (94) + `.module.css` (114) — **new**. `GlassCard
+  as="article" interactive glow="violet" padding="sm"` wrapping ONE `<Link>`
+  (a category tile has one destination; two links would be two tab stops and two
+  announcements of the same words). Inside: a 1:1 `.sf-plate` with
+  `stageSrc(product, { w: 480 })`, the `displayName` in Fraunces 20px, the
+  category's own description clamped to ONE line, and a count chip.
+  `aria-label="{displayName}, N products"`; the plate image is decorative
+  (`alt=""`).
+  **Props:** `category` · `product` (may be null — the plate then renders empty
+  rather than borrowing a stand-in) · `count` · `countNoun` (default
+  `"products"`; the Rituals card passes `"rituals"`) · `className`. The noun is
+  singularised for a count of 1 ("1 product").
+  **The glow is a HOVER event**, not a resting lamp: `--sf-glow-opacity: .2` on
+  the card and the glow NODE's own opacity animated 0 → 1 by `:hover` and
+  `:focus-within`.
+- `catalogue/index.js` (9) — **new** barrel.
+- `home/ShopByCategory.js` (170) + `.module.css` (143) — **new**. `SectionHeading`
+  ("Shop by category" / "Find your **step**" with `gradientWord={2}` / "Seven
+  ways into the Black Rice range." / `rule`), the seven cards, then a hairline
+  and the eleven concern chips (`Chip variant="concern" as={Link}
+  to={concernPath(slug)} tone={slug}`).
+  **Data: FOUR reads in ONE `Promise.all`** — `categories.getAll`,
+  `concerns.getAll`, `products.getHeroProducts` (so "the first product in this
+  category" is the one the owner ordered first) and `rituals.getAll`. The fourth
+  is not decoration: no product carries `categoryId: 7`, so the Rituals card's
+  count would be 0 and "3 rituals" would have had to be a typed number. It also
+  supplies that card's plate — the product named by the FIRST STEP of the first
+  ritual, resolved against the catalogue. Counts for the other six come from
+  `productsForCategory()` in `utils/catalogue.js`, the same membership rule the
+  mega panel, the mobile drawer and `api.getByCategorySlug()` apply.
+  Seven `Skeleton variant="card"` while loading; **any rejection, or an empty
+  category list, and the section renders NOTHING**.
+  **Grid:** ≥1280 is EIGHT tracks with every card `span 2` and the 5th card
+  starting at track 2 — that is 4 + 3 with the second row centred, which a
+  four-track grid cannot express (measured: both rows centre on 640px at a 1280
+  viewport). ≥1024 three columns, ≥481 two, ≤480 a 76vw snap scroller that
+  breaks the container's padding and puts it back inside the track.
+- `storefront/ProductCard.js` (304) + `.module.css` (370) + `.test.js` (112) —
+  **rewritten**. **The prop contract is unchanged** (`product`, `onAddToCart`,
+  `onToggleWishlist`, `isWishlisted`, `showAddToCart`) and so is the DOM order
+  (media → body → action last), so Home, Shop, Search, Wishlist and
+  `RelatedProducts`/`FrequentlyBoughtTogether` needed no change at all.
+  `GlassCard as="article" interactive glow="pink" padding="sm"` with the grid on
+  an INNER element (GlassCard owns `display` on the card node).
+  **Composition:** 1:1 `.sf-plate` with the label crop → eyebrow row (ritual step
+  `01 · Cleanse` + up to 2 concern chips + whatever `productFlagMarks` the
+  merchant has switched on) → Fraunces 20px name → `promise` clamped to 2 lines
+  → `product.badges` as `Chip variant="trust"` at 11px → `Price product size="sm"
+  live={false}` → the rating row **only when `totalReviews > 0`**. A 44px glass
+  heart (`Button variant="icon"`, `aria-pressed`) and the discount badge sit on
+  the plate; `Button variant="addToCart" block` is last.
+  **Gone:** `isPremium`/`bridal`/`featured` ribbon logic, `.sf-ribbon-premium`,
+  `truncateText(…, 48)` and the "No ratings yet" line.
+  **Named exports, all pure and unit-tested:** `concernLabel(slug)`
+  (`"even-tone"` → `"Even tone"`; matches all eleven seeded concern names, and
+  exists because the card is a leaf that must never fetch), `stepLabel(product)`
+  and `plateSources(product)` (`stageSrc` at 640 plus a 320/480/640/900w srcSet —
+  **only when the primary image is a Cloudinary upload**, because `cld()` returns
+  a non-Cloudinary URL unchanged and four identical candidates is a lie).
+  **It normalises its own input** (`normalizeProduct`, memoised): four consumers
+  hand it a catalogue row and `Wishlist` hands it a flat snapshot with `image`
+  and no `media[]`, `badges`, `concerns` or `priceTBA`.
+  **The action's two homes** are carried over verbatim from the card it replaces:
+  `(hover: hover) and (pointer: fine)` moves it into the media row and reveals it
+  on `:hover`/`:focus-within` (it stays in the tab order while hidden);
+  `(any-pointer: coarse)`, declared after, puts it back in row 3 for hybrids.
+  Labels: "Add to Cart" / **"Coming soon"** when `priceTBA` / **"Out of stock"**
+  when `stock === 0`, the last two disabled and the plate dimmed.
+- `theme/tokens.js`: `TRUST_BADGE_CATALOG` gains `farmerOwned` / `organic` /
+  `resultOriented`, whose **labels are `brand.trustBadges[i]`, not literals**;
+  `STOREFRONT_CONFIG.trustBadges` becomes
+  `["farmerOwned", "organic", "resultOriented", "securePayment"]`. `easyReturns`
+  keeps its `dynamic: "returns"` rule untouched. The module now imports
+  `config/brand` (no cycle: brand → cloudinary only).
+- `storefront/TrustBadges.js`: three new 24×24 stroke paths (`sprout`, `leaf`,
+  `spark`) on the existing grid, and its filter is now `b.icon && b.label` so a
+  catalogue entry whose label is read from a shortened `brand.trustBadges` is
+  dropped rather than drawn blank.
+- `theme/storefront-primitives.css`: `button.sf-chip, a.sf-chip` now reset
+  `text-decoration` — a chip is a pill, never an underlined phrase, and
+  `MegaPanel.module.css` had already had to work around it locally.
+- `pages/Home/Home.js` / `.module.css`: `<TrustStrip/>` (inside `.trustEdge`,
+  `margin-top: -28px` at ≥769px, 0 below) then `<ShopByCategory/>`, both directly
+  under the hero. The page's **closing "PROMISES" section is deleted** — it
+  printed the same `brand.trustBadges` under the same
+  `aria-label="Our promises"`, so keeping it would have stated the promises twice
+  and given the page two identically named regions. Sections 1–6 are untouched;
+  Prompt 22 replaces them.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.

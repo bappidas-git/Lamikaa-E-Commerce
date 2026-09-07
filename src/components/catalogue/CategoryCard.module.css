@@ -1,0 +1,114 @@
+/* =============================================================================
+ * CategoryCard
+ * =============================================================================
+ * `.sf-card` / `.sf-card--hover` (via GlassCard) own the glass ground, the
+ * radius, the 4px lift, the firming hairline and the photograph's breath. Only
+ * the composition is here: a 1:1 plate, then the name, the description and the
+ * count, all inside one anchor.
+ *
+ * THE GLOW IS A HOVER EVENT. GlassCard's tone glow renders as its own inert
+ * node; left at rest, seven violet lamps in a row would read as decoration
+ * rather than as a response. So the node is held at zero and fades in with the
+ * rest of the hover gesture — and with `:focus-within`, so a keyboard visitor
+ * gets the same answer a pointer does. `--sf-glow-opacity` sets its strength
+ * (0.2, per the spec); the span's own opacity is what animates, because a
+ * transition needs a property on a real element, not a custom property on a
+ * pseudo.
+ * ========================================================================== */
+
+.card {
+  --sf-glow-opacity: 0.2;
+  height: 100%;
+}
+
+.card :global(.sf-glow) {
+  opacity: 0;
+  transition: opacity var(--sf-transition);
+}
+
+.card:hover :global(.sf-glow),
+.card:focus-within :global(.sf-glow) {
+  opacity: 1;
+}
+
+/* The single anchor. It fills the card so the whole tile is the target, and it
+   is a grid so the plate keeps its ratio while the text stack takes the rest. */
+.link {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--sf-space-4);
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.link:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-md);
+}
+
+/* `.sf-plate` brings the 1:1, the sunken ground, the hairline and
+   `object-fit: contain` — packaging is never cropped to fill a square. */
+.plate {
+  width: 100%;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+/* One line, always. A category description is a signpost, not a paragraph: the
+   card's height is set by the plate and the grid row it sits in, and a
+   two-line description on one card would rag the whole row. */
+.description {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The count chip — a quiet fact, not a badge. It is a <span> inside the anchor,
+   so it borrows `.sf-chip`'s geometry rather than the class itself (a chip
+   inside a link should not claim the 44px control height). */
+.count {
+  display: inline-flex;
+  align-items: center;
+  margin-top: auto;
+  padding: var(--sf-space-1) var(--sf-space-3);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-badge-bg);
+  color: var(--sf-color-text-muted);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.card:hover .name {
+  color: var(--sf-color-gold-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card :global(.sf-glow) {
+    transition: none;
+  }
+}

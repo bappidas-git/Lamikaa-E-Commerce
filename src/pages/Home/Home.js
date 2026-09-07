@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { Icon } from "@iconify/react";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
@@ -10,9 +9,11 @@ import { categoryPath } from "../../utils/categories";
 import { resolveCountdownTarget, diffToParts } from "../../utils/dealsConfig";
 import { reveal as sharedReveal } from "../../theme/motion";
 import HeroCarousel from "../../components/home/HeroCarousel";
+import ShopByCategory from "../../components/home/ShopByCategory";
+import TrustStrip from "../../components/TrustStrip";
 import ProductCard from "../../components/storefront/ProductCard";
 import useSeo from "../../hooks/useSeo";
-import { ROUTES, TRUST_BADGES } from "../../utils/constants";
+import { ROUTES } from "../../utils/constants";
 import { getProductMinPrice, onImageError } from "../../utils/helpers";
 import styles from "./Home.module.css";
 
@@ -22,21 +23,31 @@ import styles from "./Home.module.css";
 // Below the Prompt 14 hero the page is no longer a stack of marketplace rails.
 // It is a sequence of few, large, well-spaced spreads:
 //
+//   0. HERO             the product carousel (Prompt 14)
+//   0b TRUST STRIP      the four promises, on the hero's bottom edge  (15)
+//   0c SHOP BY …        seven category cards + the concern chips      (15)
 //   1. WHERE TO BEGIN   collection stories (categories.getAll)
 //   2. THE EDIT         featured, staggered editorial grid (products.getFeatured)
 //   3. ON OFFER         the deals rail + one tracked countdown line   [conditional]
 //   4. OUR CRAFT        full-bleed heritage interlude
 //   5. TRENDING         a rail (products.getTrending)
 //   6. RECENTLY VIEWED  a compact rail off localStorage               [conditional]
-//   7. PROMISES         one hairline row of store-attested policy
 //
 // Cadence comes from alternating a contained spread against a full-bleed band,
 // and from the three rails each sitting in a different frame (sunken band /
 // plain / compact footnote) so no two sections read the same.
 //
-// Every data contract is unchanged: same three API calls, the same deals pool
-// derivation (real discounts only, capped 12), the same admin countdown
-// resolution, the same recently-viewed key, the same card handlers.
+// PROMPT 15 replaced the page's closing "PROMISES" row: it stated the three
+// `brand.trustBadges` under an `aria-label="Our promises"` region, which is
+// exactly what <TrustStrip/> now does at the top of the page from the same
+// config. Keeping both would have printed the promises twice and given the page
+// two identically named regions, so the row went and the strip stands in for it.
+// Sections 1-6 are the pre-rebuild page and still carry pre-rebuild copy; they
+// are Prompt 22's to replace.
+//
+// This page's own data contract is unchanged: same three API calls, the same
+// deals pool derivation (real discounts only, capped 12), the same admin
+// countdown resolution, the same recently-viewed key, the same card handlers.
 // =============================================================================
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -50,30 +61,6 @@ const RECENTLY_VIEWED_KEY = "recentlyViewed";
 // section is a statement, not a directory. (The hero's index line lists hero
 // PRODUCTS since Prompt 14, not collections.)
 const COLLECTION_STORIES = 3;
-
-// The promises row. Titles come from TRUST_BADGES (constants.js) so the store's
-// four policies are stated from one source — the same four the header strip
-// carries — and each is expanded here with the owner-attested line the retired
-// "Shop with Confidence" cards used to carry. Keyed by badge copy, with a
-// fallback so a copy edit degrades to a bare label rather than breaking.
-const PROMISE_DETAIL = {
-  "7-Day Easy Returns": {
-    icon: "mdi:backup-restore",
-    text: "Changed your mind? Return any piece within seven days.",
-  },
-  "100% Money Back": {
-    icon: "mdi:cash-refund",
-    text: "A full refund if your order isn't right — no questions asked.",
-  },
-  "Free Shipping": {
-    icon: "mdi:truck-fast-outline",
-    text: "Complimentary delivery across India, on every order.",
-  },
-  "Authentic Silk": {
-    icon: "mdi:certificate-outline",
-    text: "Genuine handloom silk, woven by master artisans.",
-  },
-};
 
 // Where the section "View all" links go. `sort=featured` / `sort=trending` are
 // still NOT sort values (see `normalizeSort` / `SORT_ALIASES` in
@@ -421,6 +408,20 @@ const Home = () => {
         <HeroCarousel />
       </section>
 
+      {/* The hero's bottom EDGE, not a section of its own: on a desktop the
+          strip is pulled up 28px so it overlaps the hero's ground and reads as
+          the band the spread closes on. On a phone it simply stacks (see
+          .trustEdge) — 28px of overlap on a 48px band would eat the promises.
+          Rendered here rather than inside HeroCarousel because the carousel
+          also draws the brand-slide fallback, and the promises belong to the
+          page whichever slide the hero settled on. */}
+      <div className={styles.trustEdge}>
+        <TrustStrip />
+      </div>
+
+      {/* ── SHOP BY CATEGORY / CONCERN — the seven ways in ────────────────── */}
+      <ShopByCategory />
+
       {/* ── 1. WHERE TO BEGIN — the collections, told as stories ──────────── */}
       {showCollections && (
         <section
@@ -683,33 +684,6 @@ const Home = () => {
           </div>
         </section>
       )}
-
-      {/* ── 7. PROMISES — one hairline row, store-attested, no accent cards ─ */}
-      <section
-        className={`${styles.section} ${styles.ruled} ${styles.promises}`}
-        aria-label="Our promises"
-      >
-        <div className={styles.container}>
-          <ul className={styles.promisesRow}>
-            {TRUST_BADGES.map((badge, i) => {
-              const detail = PROMISE_DETAIL[badge];
-              return (
-                <motion.li className={styles.promise} key={badge} {...reveal(i)}>
-                  <Icon
-                    className={styles.promiseIcon}
-                    icon={detail?.icon || "mdi:check-decagram"}
-                    aria-hidden="true"
-                  />
-                  <span className={styles.promiseTitle}>{badge}</span>
-                  {detail?.text && (
-                    <span className={styles.promiseText}>{detail.text}</span>
-                  )}
-                </motion.li>
-              );
-            })}
-          </ul>
-        </div>
-      </section>
     </div>
   );
 };

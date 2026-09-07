@@ -1,91 +1,156 @@
-/* TrustStrip — the "promises" hairline. A quiet row of store-attested policies
-   set in small tracked uppercase with thin gold glyphs, bounded by hairlines
-   rather than a filled band. Mobile-first: 2×2 grid, four-across from tablet up.
-
-   It is rendered in two places with very different grounds — under the header
-   nav on the storefront, and inside the SidebarMenu hero (a rounded, bordered
-   box that also compacts it by overriding --sf-space-3/-4 on the wrapper). So
-   the strip paints NO ground and NO border of its own: each host draws the
-   bounding rules (see Header's .promises), which keeps the sidebar from showing
-   a doubled hairline just inside its box. The padding keeps reading the spacing
-   tokens so the sidebar's compacting override still works. */
+/* =============================================================================
+ * TrustStrip — the slim glass band on the hero's bottom edge
+ * =============================================================================
+ * A 56px rule of glass (48px on a phone) carrying four promises: gold glyph,
+ * then a 13px Manrope 600 label, the set centred in the container. The `.sf-glass`
+ * surface, the hairlines and the radius all come from the primitives and the
+ * token layer — nothing here invents a colour, a blur or a shadow.
+ *
+ * TWO LAYOUTS, ONE BAND
+ *   >= 640px  the four items sit centred on one line with generous gaps.
+ *   <  640px  the list becomes a horizontal snap scroller. Four promises cannot
+ *             share a 360px line, and wrapping them into a 2x2 block would turn
+ *             the hero's edge into a paragraph — so the band keeps its height
+ *             and the reader swipes. Edge fades say there is more to the side;
+ *             they are painted on the WRAPPER, not the track, so they do not
+ *             travel with the content.
+ *
+ * NO BLUR ON A PHONE. `.sf-glass` brings a backdrop-filter; a blurred surface
+ * that is also a scroll container is the one combination that janks on a phone,
+ * so <= 768px the filter is dropped and the band paints the opaque glass
+ * fallback instead. Identical to read, far cheaper to composite.
+ * ========================================================================== */
 
 .strip {
+  position: relative;
   width: 100%;
-  background: transparent;
+  /* The band is a rule across the page, not a floating card: the `.sf-glass`
+     border becomes two hairlines, top and bottom, and the corners stay square
+     so the strip reads as the hero's edge. */
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
   color: var(--sf-color-text-secondary);
   font-family: var(--sf-font-family);
+  /* The lamps behind the hero bleed; the band must not add a second scrollbar
+     of its own at any width. */
+  overflow: hidden;
 }
 
+/* The track. Centred so the four promises sit under the middle of the hero
+   however wide the viewport is, and held to the container measure so they line
+   up with everything else on the page. */
 .list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--sf-space-3) var(--sf-space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sf-space-8);
   width: 100%;
   max-width: var(--sf-container-max);
+  min-height: 56px;
   margin: 0 auto;
-  padding: var(--sf-space-3) var(--sf-space-4);
+  padding: 0 var(--sf-space-6);
   list-style: none;
+}
+
+.list:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 2px var(--sf-color-focus-ring);
 }
 
 .item {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--sf-space-2);
   min-width: 0;
-  text-align: center;
+  /* One promise never breaks across two lines: the band is a fixed-height rule
+     and a wrapped label would burst it. Below 640px the scroller is what makes
+     that safe. */
+  white-space: nowrap;
 }
 
 .icon {
   flex: none;
-  font-size: var(--sf-text-base);
-  color: var(--sf-color-gold-deep);
+  font-size: 20px;
+  color: var(--sf-color-gold);
 }
 
-/* Narrow hosts (the SidebarMenu hero) give each item ~110px of label width,
-   which tracked uppercase does not fit on one line — so wrap rather than
-   ellipsise a policy the customer is meant to read. The single-line treatment
-   comes back at ≥640px, where there is room for it. */
 .label {
-  font-size: 0.6875rem;
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.8125rem;
+  font-weight: var(--sf-font-semibold);
   line-height: var(--sf-leading-tight);
-  overflow-wrap: anywhere;
+  letter-spacing: 0.01em;
+  color: var(--sf-color-text);
 }
 
-/* Very narrow phones: stay readable, allow the label to shrink gracefully. */
-@media (max-width: 360px) {
+/* ---- Phone: one band, swiped ---------------------------------------------
+   `scroll-snap-type: x proximity` rather than `mandatory`: a promise should
+   settle where it is let go, not be yanked to the next one mid-flick. */
+@media (max-width: 639px) {
   .list {
-    gap: var(--sf-space-2);
-    padding: var(--sf-space-3) var(--sf-space-2);
+    justify-content: flex-start;
+    gap: var(--sf-space-6);
+    min-height: 48px;
+    padding: 0 var(--sf-space-5);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+
+  .list::-webkit-scrollbar {
+    display: none;
+  }
+
   .item {
-    gap: var(--sf-space-1);
+    flex: none;
+    scroll-snap-align: center;
   }
-  .label {
-    letter-spacing: 0.04em;
+
+  /* The edge fades. Inert, and painted over the track from the wrapper so they
+     stay pinned while the content moves under them. */
+  .strip::before,
+  .strip::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--sf-space-8);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .strip::before {
+    left: 0;
+    background: linear-gradient(
+      to right,
+      var(--sf-color-bg),
+      transparent
+    );
+  }
+
+  .strip::after {
+    right: 0;
+    background: linear-gradient(
+      to left,
+      var(--sf-color-bg),
+      transparent
+    );
   }
 }
 
-/* Tablet and up: four across on one line, with the full editorial tracking. */
-@media (min-width: 640px) {
-  .list {
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--sf-space-4);
-    padding: var(--sf-space-3) var(--sf-space-6);
-  }
-  .icon {
-    font-size: var(--sf-text-lg);
-  }
-  .label {
-    font-size: var(--sf-text-xs);
-    letter-spacing: var(--sf-tracking-wider);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+/* ---- No backdrop blur on a phone -----------------------------------------
+   Declared after `.sf-glass` reaches this element in the cascade would not be
+   enough on its own (the primitive is a global class and this is a module
+   class), so the property is unset here at equal specificity and later source
+   order — CSS Modules ship after the primitives in the bundle. The opaque
+   fallback ground is the same one `@supports not (backdrop-filter)` uses. */
+@media (max-width: 768px) {
+  .strip {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--sf-glass-fallback);
   }
 }
 
