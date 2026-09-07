@@ -33,8 +33,25 @@
 //   normalizeHeroConfig() is the same kind of tolerant: the seeded record is
 //   now much smaller (behaviour only — no `heights`, `openers`, `secondaryCta`
 //   or `overlayOpacity`), and every one of those missing keys resolves to the
-//   designed default rather than to undefined. Prompt 14 rebuilds the hero and
-//   retires the keys it no longer reads.
+//   designed default rather than to undefined.
+//
+// UPDATED BY PROMPT 14
+//   `components/home/HeroCarousel` is the hero now, and it reads exactly seven
+//   keys: `enabled`, `autoplay`, `intervalMs`, `transition`, `pauseOnHover`,
+//   and the chrome flags `showControls` / `showCounter` / `showProgress` /
+//   `showArrows` / `showPause`. Two things changed for it:
+//
+//     • `showPause` (new, default on) is the pause/play control. The carousel
+//       does not merely hide the button when it is off — it stops autoplaying,
+//       because motion that starts by itself must be stoppable (WCAG 2.2.2).
+//     • `intervalMs` defaults to 6500 and is clamped to 3000–15000. The old
+//       1000–60000 guard rail was for hand-written banner slides; a slide that
+//       carries a headline, a price and two CTAs cannot be read in one second,
+//       and one that sits for a minute is not a carousel.
+//
+//   EVERYTHING BELOW MARKED `@deprecated` IS SLIDE-STORE MACHINERY. The hero no
+//   longer reads any of it; only the temporary Admin → Hero screen still
+//   imports it, and Prompt 34 rebuilds that screen and deletes these exports.
 // =============================================================================
 
 import brand from "../config/brand";
@@ -42,6 +59,8 @@ import { APP_NAME, ROUTES } from "./constants";
 
 // ─── Vocabularies (shared by the admin selects and the renderer) ─────────────
 
+/** @deprecated — removed in Prompt 34. Slide backgrounds; the hero renders
+    product media through `CloudinaryImage`, which has no background type. */
 export const HERO_BACKGROUND_TYPES = [
   { value: "gradient", label: "Gradient", icon: "mdi:gradient-horizontal" },
   { value: "image", label: "Image", icon: "mdi:image-outline" },
@@ -54,14 +73,16 @@ export const HERO_TRANSITIONS = [
   { value: "none", label: "None", hint: "Instant swap, no motion" },
 ];
 
+/** @deprecated — removed in Prompt 34. The carousel's copy column has one
+    alignment: the one the two-column composition gives it. */
 export const HERO_TEXT_ALIGNMENTS = [
   { value: "left", label: "Left", icon: "mdi:format-align-left" },
   { value: "center", label: "Centre", icon: "mdi:format-align-center" },
   { value: "right", label: "Right", icon: "mdi:format-align-right" },
 ];
 
-// object-position values for a cover-cropped background image. The default
-// pushes the art right, away from the (left-aligned) copy column.
+/** @deprecated — removed in Prompt 34. object-position for a cover-cropped
+    background; the label card is contained and padded, never cropped. */
 export const HERO_IMAGE_POSITIONS = [
   { value: "right center", label: "Right" },
   { value: "center center", label: "Centre" },
@@ -70,8 +91,8 @@ export const HERO_IMAGE_POSITIONS = [
   { value: "center bottom", label: "Bottom" },
 ];
 
-// The three breakpoints the stylesheet actually switches on, so the admin's
-// device columns and the CSS media queries can never drift apart.
+/** @deprecated — removed in Prompt 34. Per-device stage heights are gone: the
+    hero is `calc(100svh - 100px)` from 769px up and content-driven below. */
 export const HERO_DEVICES = [
   { key: "desktop", label: "Desktop", icon: "mdi:monitor", hint: "1025px and wider" },
   { key: "tablet", label: "Tablet", icon: "mdi:tablet", hint: "769px to 1024px" },
@@ -80,20 +101,23 @@ export const HERO_DEVICES = [
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 
-// These reproduce the stage heights the stylesheet used to hardcode:
-//   clamp(520px, 78vh, 780px) / clamp(480px, 70vh, 640px) / clamp(460px, 66vh, 600px)
+/** @deprecated — removed in Prompt 34, with HERO_DEVICES. */
 export const DEFAULT_HERO_HEIGHTS = {
   desktop: { min: 520, vh: 78, max: 780 },
   tablet: { min: 480, vh: 70, max: 640 },
   mobile: { min: 460, vh: 66, max: 600 },
 };
 
+/** @deprecated — removed in Prompt 34. The carousel's second CTA is Add to
+    Cart, which is a product action, not an editable link. */
 export const DEFAULT_HERO_SECONDARY_CTA = {
   enabled: true,
   label: "Our Story",
   link: "/about",
 };
 
+/** @deprecated — removed in Prompt 34. The index under the hero lists the
+    hero PRODUCTS now; the collection openers moved to the mega panel. */
 export const DEFAULT_HERO_OPENERS = {
   enabled: true,
   label: "Collections",
@@ -110,13 +134,18 @@ export const DEFAULT_HERO_CONFIG = {
   enabled: true,
   source: HERO_SOURCE_PRODUCTS,
   autoplay: true,
-  intervalMs: 5000,
+  // Long enough to read a headline, a price, one line of subtext and reach a
+  // CTA before the slide moves on.
+  intervalMs: 6500,
   transition: "fade",
   pauseOnHover: true,
   showControls: true,
   showCounter: true,
   showProgress: true,
   showArrows: false,
+  // The pause/play control. Turning it OFF turns autoplay off with it — see
+  // normalizeHeroConfig() below and HeroCarousel's `autoplayOn`.
+  showPause: true,
   // Scrim strength as a percentage of the stylesheet's designed gradient.
   // 100 = as designed, 0 = no scrim at all (bare media).
   overlayOpacity: 100,
@@ -125,6 +154,8 @@ export const DEFAULT_HERO_CONFIG = {
   openers: DEFAULT_HERO_OPENERS,
 };
 
+/** @deprecated — removed in Prompt 34. There is no slide record any more: a
+    slide IS a product, and its copy lives on the product. */
 export const DEFAULT_HERO_SLIDE = {
   title: "",
   subtitle: "",
@@ -151,11 +182,23 @@ export const DEFAULT_HERO_SLIDE = {
   sortOrder: 0,
 };
 
-// Timer guard rails — shared by the admin inputs and the runtime, so a hand-
-// edited db.json can never leave the carousel spinning at 50ms.
+/** @deprecated — removed in Prompt 34, with the per-slide `durationMs` they
+    guard. The SECTION timer uses HERO_INTERVAL_MIN/MAX_MS below. */
 export const HERO_MIN_DURATION_MS = 1000;
+/** @deprecated — removed in Prompt 34. See HERO_INTERVAL_MAX_MS. */
 export const HERO_MAX_DURATION_MS = 60000;
 
+// The product carousel's own timer guard rails, tighter than the old banner
+// pair because a slide now carries a headline, a price, two CTAs and a badge
+// row: under three seconds nobody finishes reading it, and over fifteen the
+// hero has stopped being a carousel. Shared by the admin input and the runtime,
+// so a hand-edited db.json can never leave the hero strobing.
+export const HERO_INTERVAL_MIN_MS = 3000;
+export const HERO_INTERVAL_MAX_MS = 15000;
+
+/** @deprecated — removed in Prompt 34. HeroCarousel renders its own brand
+    slide (wordmark + `brand.tagline` + one CTA) when nothing resolves; it needs
+    no slide record to do it. */
 // Shown only when the catalogue is unreachable, so the storefront never opens
 // on an empty stage. The real slides are the products themselves.
 //
@@ -200,6 +243,7 @@ const oneOf = (value, allowed, fallback) =>
 
 // ─── heroConfig ──────────────────────────────────────────────────────────────
 
+/** @deprecated — removed in Prompt 34, with HERO_DEVICES. */
 export const normalizeHeroHeights = (raw) => {
   const src = raw && typeof raw === "object" ? raw : {};
   const out = {};
@@ -235,8 +279,8 @@ export const normalizeHeroConfig = (raw) => {
     autoplay: cfg.autoplay !== false,
     intervalMs: clampInt(
       cfg.intervalMs,
-      HERO_MIN_DURATION_MS,
-      HERO_MAX_DURATION_MS,
+      HERO_INTERVAL_MIN_MS,
+      HERO_INTERVAL_MAX_MS,
       DEFAULT_HERO_CONFIG.intervalMs
     ),
     transition: oneOf(cfg.transition, HERO_TRANSITIONS, DEFAULT_HERO_CONFIG.transition),
@@ -247,6 +291,10 @@ export const normalizeHeroConfig = (raw) => {
     // The arrows are the one piece of chrome that is off by default — the
     // hairline controls carried the whole affordance before this screen existed.
     showArrows: cfg.showArrows === true,
+    // WCAG 2.2.2. This is not merely "draw the button": HeroCarousel refuses to
+    // autoplay while it is false, so switching the control off can only ever
+    // make the hero quieter, never make it unstoppable.
+    showPause: cfg.showPause !== false,
     overlayOpacity: clampInt(cfg.overlayOpacity, 0, 100, DEFAULT_HERO_CONFIG.overlayOpacity),
     heights: normalizeHeroHeights(cfg.heights),
     secondaryCta: {
@@ -276,6 +324,7 @@ const inferBackgroundType = (raw) => {
   return "gradient";
 };
 
+/** @deprecated — removed in Prompt 34, with DEFAULT_HERO_SLIDE. */
 export const normalizeHeroSlide = (raw, index = 0) => {
   const slide = raw && typeof raw === "object" ? raw : {};
   // `imageUrl` is the legacy field name; both have always been read.
@@ -322,9 +371,8 @@ export const normalizeHeroSlide = (raw, index = 0) => {
   };
 };
 
-// Normalize, optionally drop the inactive rows, and put them in the admin's
-// order. Both the storefront and the admin preview go through here, so what an
-// admin sees in the preview is exactly what shoppers get.
+/** @deprecated — removed in Prompt 34. The storefront's slides come from
+    apiService.products.getHeroProducts(), already ordered. */
 export const normalizeHeroSlides = (list, { activeOnly = false } = {}) => {
   if (!Array.isArray(list)) return [];
   return list
@@ -333,7 +381,8 @@ export const normalizeHeroSlides = (list, { activeOnly = false } = {}) => {
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 };
 
-// How long this slide stays up: its own override, else the section default.
+/** @deprecated — removed in Prompt 34. Every slide runs for the section's
+    `intervalMs`; a per-product timer is a setting nobody asked for. */
 export const heroSlideDuration = (slide, config) =>
   clampInt(
     slide?.durationMs || config?.intervalMs,
@@ -342,16 +391,16 @@ export const heroSlideDuration = (slide, config) =>
     DEFAULT_HERO_CONFIG.intervalMs
   );
 
-// The scrim strength in play for a slide: its own override, else the section's.
+/** @deprecated — removed in Prompt 34. There is no scrim: the page ground
+    shows through the hero and nothing is laid over the media. */
 export const heroSlideOverlay = (slide, config) => {
   const own = slide?.overlayOpacity;
   const value = own === null || own === undefined ? config?.overlayOpacity : own;
   return clampInt(value, 0, 100, DEFAULT_HERO_CONFIG.overlayOpacity);
 };
 
-// The section's CSS custom properties, handed to the hero as an inline style.
-// The stylesheet declares the same names with the designed defaults, so the
-// hero still renders correctly if this ever returns nothing.
+/** @deprecated — removed in Prompt 34, with HERO_DEVICES/DEFAULT_HERO_HEIGHTS.
+    HeroCarousel.module.css owns its own height budget. */
 export const heroStageVars = (config) => {
   const h = normalizeHeroHeights(config?.heights);
   const vars = {};

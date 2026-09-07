@@ -67,7 +67,7 @@ Alternates to verify from the developer machine (brief §11): `https://commondat
 | Why Black Rice spotlight | `https://picsum.photos/seed/lamikaa-black-rice/1200/1200` | `siteContent.home.whyBlackRice.image` | Black rice macro photo |
 | Full-page CTA background | `https://picsum.photos/seed/lamikaa-cta/1920/1080` | `siteContent.home.fullPageCta.image` (behind a 70 % `--sf-color-bg` wash + gradient) | Editorial brand photograph |
 | Why LAMIKAA page opening | `https://picsum.photos/seed/lamikaa-why/1920/1080` | `siteContent.whyLamikaa.heroImage` | Brand photograph |
-| Hero fallback (only when no hero product resolves) | `https://picsum.photos/seed/lamikaa-hero-fallback/1600/900` | `src/utils/heroConfig.js → HERO_FALLBACK_IMAGE` (Prompt 14) | Any brand photograph; the fallback is never shown once products are seeded. **Not in `db.json`** — it lives in code, so it is the one row here Prompt 06 did not seed |
+| ~~Hero fallback~~ **RETIRED (Prompt 14)** | — | — | `HERO_FALLBACK_IMAGE` was deleted in Prompt 07 and never restored: `home/HeroCarousel`'s fallback is a BRAND SLIDE (wordmark + `brand.tagline` + one CTA) and the hero carries no background imagery at all, so there is no placeholder photograph to inventory |
 | Contact page | none | — | — |
 | OG default image | real logo (`brand.logoUrl`, `cld(…,{w:1200})`) | `brand.seo.ogImage` | A 1200×630 branded share image (optional) |
 

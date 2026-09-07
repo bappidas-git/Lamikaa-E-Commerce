@@ -486,6 +486,72 @@ component.
   `{freeShipping}` handling, because FAQ 6 still carries the token and still
   loses its whole sentence while no shipping method sets `freeAbove`.
 
+**Updated by Prompt 14.** The hero is rebuilt as a product carousel;
+`components/HeroSection/` is deleted (both files).
+
+- `home/HeroCarousel.js` (new) + `home/HeroCarousel.module.css` (new): the home
+  page's opening spread. Reads `products.getHeroProducts()` and
+  `hero.getConfig()` in ONE `Promise.allSettled`, then falls back
+  `getFeatured(8)` → a **brand slide** (wordmark, `brand.tagline`, "Shop the
+  Black Rice Range" → `/shop`) — never a fabricated product. Config goes through
+  `normalizeHeroConfig`; the component reads only `enabled`, `autoplay`,
+  `intervalMs`, `transition`, `pauseOnHover`, `showControls`, `showCounter`,
+  `showProgress`, `showArrows`, `showPause`.
+  **Contract:** no props, no context beyond `useCart`; renders
+  `<div id="hero-sentinel">` (the hero's opening 140px — `Header.js`'s observer
+  is unchanged) and the page's single `h1`.
+  **Named exports, all pure and unit-tested:** `padIndex(n)`,
+  `heroEyebrow(index, total)`, `heroHeadline(p)` (`heroHeadline` → `promise`),
+  `heroSubtext(p)` (`heroSubtext` → `shortDescription`), `exploreLabel(p)`,
+  `slideLabel(p, i, n)`, `resolveHeroSlides(heroProducts, featured)`.
+  **The copy is rendered ONCE and swapped in place** (single `h1`, no off-screen
+  CTA in the tab order); only the MEDIA is stacked, one absolutely-positioned
+  `role="group" aria-roledescription="slide"` layer per product inside ONE
+  `GlowWrap tone="duo" intensity={0.24} breathe`. Slide 1 is `priority`; the
+  rest mount in a `requestIdleCallback` pass and load lazily.
+  **`.copySizer`** is the CLS mechanism and the thing to preserve: every slide's
+  full copy block (eyebrow, headline, `Price`, subtext, both `Button`s, the
+  badge chips) stacked in one grid cell at `visibility: hidden` + `aria-hidden`,
+  with the live copy laid over it — so the copy column is always the tallest
+  slide's height for ANY copy, at any width, and nothing below it moves when a
+  slide changes. A fixed em reservation cannot do this: hero copy is edited on
+  the products. The em min-heights that remain (headline 3 lines, subtext 3/2,
+  price 36px, `.rail` 116/168px) are the PRE-DATA floor only.
+  Autoplay banks its remaining time (`remainingRef`) and stops on hover
+  (`pauseOnHover`), focus within, hidden tab, the pause button and
+  `body[data-drawer-open]` (a `MutationObserver` on the flag
+  `hooks/useOverlayFlag` reference-counts). `showPause: false` turns autoplay
+  OFF rather than hiding the control (WCAG 2.2.2). Pointer swipe on the stage
+  (40px, `touch-action: pan-y`), ←/→ + Home/End anywhere inside the section,
+  ≤8px parallax written to `--sf-hero-parallax-x/-y` on
+  `(min-width: 1025px) and (pointer: fine)` and never under reduced motion.
+- `home/HeroIndex.js` (new): the control rail, and the **only** consumer of
+  `HeroCarousel.module.css` besides the carousel (deliberate — the rail is part
+  of the hero's composition and shares its grid, rhythm and breakpoints).
+  Props: `index`, `total`, `names`, `shortNames`, `intervalMs`, `autoplayOn`,
+  `paused`, `userPaused`, `showArrows`, `showCounter`, `showProgress`,
+  `showIndex`, `onSelect`, `onPrev`, `onNext`, `onTogglePause`. Prev/next and
+  pause are 44px glass circles; the counter is `aria-hidden` (the eyebrow says
+  it in words); the progress hairline is keyed on the slide so it restarts, and
+  freezes with `animation-play-state` in step with the banked timer. The index
+  is plain `<button>`s with `aria-current` and
+  `aria-label="Show slide 3: Black Rice Body Wash"` — **not** a tablist, because
+  the media it controls is not a tabpanel. With `total < 1` it returns an EMPTY
+  `.rail` div, not `null`: the CSS reservation needs an element to sit on.
+- `HeroSection/` — **deleted**, both files. Its two stale citations went with it
+  (`ui/CloudinaryImage.js:28`, `pages/Home/Home.module.css:65`);
+  `grep -rn "HeroSection" src` now returns only `AdminHeroSection`, which
+  Prompt 34 replaces.
+- `utils/heroConfig.js`: `showPause` (default true) and
+  `HERO_INTERVAL_MIN_MS`/`HERO_INTERVAL_MAX_MS` (3000/15000) are new;
+  `DEFAULT_HERO_CONFIG.intervalMs` is 6500 and `normalizeHeroConfig` clamps to
+  the new pair. Seventeen slide-store exports are marked
+  `@deprecated — removed in Prompt 34`. `db.json → heroConfig` and
+  `Admin → Hero Section → Section settings` carry `showPause` and the 3–15s
+  bound in step.
+- `pages/Home/Home.js`: imports `components/home/HeroCarousel` and renders it in
+  the existing `.heroSection` wrapper. Nothing else on the page changed.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.

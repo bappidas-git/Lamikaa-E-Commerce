@@ -25,7 +25,7 @@ import styles from "./CloudinaryImage.module.css";
 // loading plus `fetchpriority="high"`. The attribute is spelled in LOWERCASE
 // deliberately — React 18.2 does not know the camelCase `fetchPriority` prop and
 // warns on it, while the lowercase spelling passes straight through to the DOM.
-// HeroSection.js:384 already does exactly this.
+// `home/HeroCarousel` passes `priority` on its first slide for exactly this.
 //
 // A broken URL falls back to the inline SVG placeholder once (`onImageError` is
 // loop-guarded), so a dead link degrades to an on-palette well rather than to a
