@@ -1,0 +1,158 @@
+/* =============================================================================
+ * Pillars — four cards, three layouts, one set of measurements
+ * =============================================================================
+ * Every distance the grid needs is a custom property on the list, so `compact`
+ * is four value changes rather than a second stylesheet — the same shape
+ * ValueChain.module.css uses for its own variant.
+ *
+ *   --pl-icon    the glass circle behind the glyph      44px (36 compact)
+ *   --pl-glyph   the glyph inside it                    24px (20 compact)
+ *   --pl-title   the card's headline                    22px (20 compact)
+ *   --pl-text    the card's sentence                    15px
+ *
+ * WHY TWO OF THOSE ARE NOT TOKENS. The type scale (DESIGN_SYSTEM §6) steps
+ * 14 → 16 → 17 → 20 → clamp(22…28); the brief asks for 22px and 15px, and
+ * neither is a step. 22px IS the floor of --sf-text-xl, but --sf-text-xl grows
+ * to 28px by 1440 and a four-up card cannot carry a headline that grows with
+ * the viewport — so both are declared here, once, as named variables rather
+ * than as numbers scattered through the rules.
+ *
+ * LAYOUT. 4 columns from 1025px, 2 from 769px, one stacked below — 16px gaps
+ * throughout, per the brief. `minmax(0, 1fr)` rather than `1fr` at every step:
+ * a grid track's default floor is min-content, and one long ingredient word in
+ * a card would push the row past the container.
+ * ========================================================================== */
+
+.grid {
+  --pl-icon: 44px;
+  --pl-glyph: 24px;
+  --pl-title: 1.375rem; /* 22px */
+  --pl-text: 0.9375rem; /* 15px */
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-4);
+  margin: 0;
+  padding: 0;
+  /* The cards ARE the markers. `role="list"` on the element puts back the
+     semantics Safari drops the moment a list loses its bullets. */
+  list-style: none;
+}
+
+.compact {
+  --pl-icon: 36px;
+  --pl-glyph: 20px;
+  --pl-title: var(--sf-text-lg);
+}
+
+@media (min-width: 769px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1025px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---- The card -------------------------------------------------------------
+   Two classes (0,2,0) so the column layout beats GlassCard's own
+   `.card { display: block }` (0,1,0) without depending on which module the
+   bundler happens to emit last. */
+.grid .card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  min-width: 0;
+}
+
+/* The glyph and the numeral share one row, pushed to the two edges: the icon
+   says what the pillar is about, the numeral says where it sits in the four. */
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-3);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--pl-icon);
+  height: var(--pl-icon);
+  border-radius: 50%;
+  /* The card is already ONE blurred layer; a second backdrop-filter inside it
+     would buy nothing and cost a compositor pass (DESIGN_SYSTEM §4 budgets two
+     in view). So the circle takes the glass GROUND and the glass HAIRLINE and
+     leaves the filter to its host. */
+  background: var(--sf-glass-bg);
+  border: 1px solid var(--sf-glass-border);
+  color: var(--sf-color-gold);
+  font-size: var(--pl-glyph);
+  line-height: 1;
+}
+
+/* The numeral is decoration on an unordered list, so it steps back from the
+   title it sits beside rather than competing with it. */
+.numeral {
+  opacity: 0.75;
+}
+
+.grid .title {
+  font-family: var(--sf-font-display);
+  font-size: var(--pl-title);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.grid .text {
+  margin: 0;
+  font-family: var(--sf-font-family);
+  font-size: var(--pl-text);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- The hover lamp -------------------------------------------------------
+   `glow` alternating gold and violet, ON HOVER. GlassCard renders the tone as
+   an inert, negative-z-index node inside the card; this holds it at zero and
+   fades it in from the card's own hover, which is the only way to get a hover
+   glow without `interactive` — and `interactive` is exactly what these cards
+   must not wear, because its 4px lift and focus ring promise a destination
+   they do not have.
+
+   `:focus-within` is here for the page variant (Prompt 28), where a pillar may
+   one day carry a link; today nothing inside a card is focusable and the
+   selector simply never matches.
+
+   The shared reduced-motion block zeroes --sf-transition, so the lamp appears
+   instead of fading. Nothing else about the card moves at any setting. */
+.grid .card :global(.sf-glow) {
+  opacity: 0;
+  transition: opacity var(--sf-transition);
+}
+
+.grid .card:hover :global(.sf-glow),
+.grid .card:focus-within :global(.sf-glow) {
+  opacity: 1;
+}
+
+/* ---- No backdrop blur on a phone -----------------------------------------
+   Stacked, each card is most of the screen, and four blurred panels in one
+   scroll is the case DESIGN_SYSTEM §4 budgets against — the sticky masthead
+   has already spent one of the two layers. Below the breakpoint the card
+   paints the same opaque ground `@supports not (backdrop-filter)` uses. The
+   property is unset here rather than left to the cascade: `.card` in
+   GlassCard.module.css and `.card` here tie on specificity. */
+@media (max-width: 768px) {
+  .grid .card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--sf-glass-fallback);
+  }
+}

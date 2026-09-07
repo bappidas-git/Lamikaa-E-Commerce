@@ -23,7 +23,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 17 | About LAMIKAA section and value-chain visual | complete | 2026-09-07 | (this commit) | The farmer-owned story now has a surface. **`brand/ValueChain`** draws BRAND.md §3.3's journey as a real `<ol role="list" aria-label="How value reaches farmers">` of seven `motion.li` — a 32px `Chip variant="step"` numeral, a 14px Manrope 600 label ("LAMIKAA Naturals" in gold, matched against `brand.runningName` rather than by index) and a 60%-opacity signature-gradient connector with an 8px arrow, `aria-hidden`. Three layouts from ONE markup: one row ≥1025px, 4 + 3 at 769–1024px, a 40px vertical rail ≤768px — **measured at 360/390/414/768/1024/1025/1060/1100/1200/1280/1366/1440/1920: rows 7/7/7/7/2/1/1/1/1/1/1/1/1, connectors 24→48px, no overflow at any of them and no element past the section's box.** Zero tab stops (the band's only stop is its CTA); the aria tree reads "01 Farmer" … "07 Farmer Members". **`home/AboutTeaser`** mounts it under the pull-quote, the placeholder landscape and the two BRAND.md §3.1 paragraphs, over `LegalNote` and "Our Story". **Not one word of company copy is in the component** — it is `siteContent.home.aboutTeaser`, and a missing/unpublished/unreachable block leaves only the signature line and the legal note (exercised by aborting the request: quote + chain + note + CTA, no image, no paragraphs). **Two real defects found and fixed in the browser, not by reading:** the global `overflow-wrap: anywhere` on `li` was inherited by the labels and let flex shrink split "FPC" over two lines; and `AnimatePresence initial={false}` in App.js silently disables `reveal(…, { inView: true })` for anything that ships with the route, so the chain landed finished — naming the resting state as `animate` as well restores the sequential wave (measured: opacity 0 → 1 across all seven over ~0.7s; under reduced motion, no style attribute at all, at any point). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (11 suites, **104 passed**, 9 new). Contrast on the band: labels 16.5:1, gold 13.0:1, legal note 9.0:1. |
 | 18 | Why Black Rice spotlight and rituals teaser | complete | 2026-09-07 | (this commit) | Two sections and the card the rituals pages will reuse. **`home/WhyBlackRice`** is the ingredient spotlight: a 1:1 placeholder under `GlowWrap tone="gold" intensity={0.16}` on the left, and on the right the `SectionHeading` ("The hero ingredient" / "Why black rice?", the gradient on **black**, found in the headline rather than pinned to an index), the THREE seeded `siteContent.home.whyBlackRice` points at 17px behind 20px gold `mdi:check-circle-outline` glyphs, and a "Carried by" row of the eight `products.getHeroProducts()` as 56px `.sf-plate` links to their PDPs. **No fallback copy for the points** — an unpublished or unreachable block renders NOTHING, because a spotlight that invents a cosmetic claim is worse than no spotlight. **`catalogue/RitualCard`** is ONE `<Link>` per routine (verified: one tab stop, zero nested controls) carrying a 16:10 photograph, "Ritual · N steps", the name at 22px Fraunces, the tagline (or the story's first WHOLE sentence), a step strip of up to five 40px plates at −8px overlap with 24px gradient-ring numerals — the body ritual's `alternativeProductId` peeking out from behind step 01 — the duration and a ghost "See the ritual →". It resolves its own steps through the pure `resolveRitualSteps`, so Prompt 24's index needs only the same two inputs. **`home/RitualsTeaser`** is the triptych: `rituals.getAll()` + `products.getAll()` in one `Promise.all`, three cards at 769px+, one column 481–768, an 84vw snap scroller ≤480, and a primary "Build your ritual" → `/rituals` under the grid. Measured at 360/390/414/480/481/768/769/1024/1280/1440: **document overflow 0 at every width**; media 1:1 (533² at 1280) and 16:10 (355×222); the desktop body `532.8px 651.2px` (0.9fr/1.1fr) at 56px gutter from 1025px. 12 tab stops across both sections (8 PDP thumbs, 3 cards, 1 CTA). Under `prefers-reduced-motion: reduce` no reveal wrapper carries a non-1 opacity. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 12 suites / 118 passed (15 new in `RitualCard.test.js`, 1 suite / 50 tests skipped — the live-API suite). No `db.json` or `api.js` change: reads only. |
 | 19 | Full-page CTA section | complete | 2026-09-07 | (this commit) | The page now stops for one screen and asks. **`brand/NewsletterForm`** is the footer's capture, extracted: the `isEmailValid()` gate, `apiService.leads.createNewsletter`, the six-second success revert and the `role="status"` / `role="alert"` pair move out of `Footer.js` whole, and both surfaces mount the same component (`variant="footer" | "cta"`, own `id` base so the two forms' ids cannot collide). Both were subscribed for real in Chromium and both leads landed in `/leads` as `type: "newsletter"`, `status: "subscribed"` rows the admin table renders. **`home/FullPageCta`** is four layers — a lazy `alt=""` photograph, the 82%→94% `--sf-color-bg` wash, the signature gradient at 12% `screen`, and a `GlassCard strong scrim padding="lg"` (max 760px) under one `GlowWrap tone="duo" intensity={0.22} breathe` — with **no backdrop blur on the ground** (measured: section `backdrop-filter: none`, card `blur(20px)`). `min-height` **100svh from 769px, 80svh below**, `vh` fallback above each. **Two defects found in the primitives and fixed**: `prefers-reduced-motion` never stopped a DUO glow's second lamp (`.sf-glow--duo.sf-glow--breathe::after` out-specificities the one-class reset — the hero has had this since Prompt 14; `document.getAnimations()` 2 → 0), and `.sf-glass--scrim::before` painted **over** the content it exists to make legible (a warm-white headline capped at rgb(165,163,161); now `z-index: -1` inside an isolated context, headline back to rgb(247,245,240)). Contrast on the card, measured against a deliberately near-white photograph: headline **12.9:1**, eyebrow 9.9, lede 6.9, hint 6.9, ownership note 5.9, and the one gradient keyword's darkest stop **3.1:1** — inside the large-text floor at 72px/36px. One breathing glow visible at every one of the 176 scroll positions scanned. `CI=true npm run build` **exit 0, Compiled successfully, no warnings**; `npm test -- --watchAll=false` 13 suites / **127 passed** (9 new). No `db.json` and no `api.js` change. |
-| 20 | Why LAMIKAA section (pillars and impact) | pending | | | |
+| 20 | Why LAMIKAA section (pillars and impact) | complete | 2026-09-07 | (this commit) | The band that says what the brand stands on, built as two components the Why LAMIKAA page (Prompt 28) mounts unchanged. **`brand/Pillars`** is BRAND.md §3.2's four pillars as one `<ul role="list">` of four `GlassCard as={motion.li}` — a 44px glass circle carrying a 24px gold glyph (`mdi:leaf`, `mdi:flask-outline`, `mdi:account-group-outline`, `mdi:earth`, resolved by KEY with a positional fallback so a renamed key cannot silently swap two icons), a `Chip variant="step"` numeral 01–04, the title in Fraunces 22px and the sentence in Manrope 15px secondary — **every word of it from `brand.pillars`, none of it typed in the component**. 4 columns ≥1025px / 2 at 769–1024 / 1 stacked ≤768, 16px gaps, measured at all seven widths. **The cards are deliberately NOT `interactive`**: a card that lifts 4px and shows a focus ring promises a destination it does not have, so the alternating gold/violet tone glow is faded in by a hover rule of the module's own (`:global(.sf-glow)` held at 0 → 1) and the grid stays keyboard-transparent — **measured: one tab stop in the whole section, the CTA, and `transform: none` on every card at every hover**. **`brand/ImpactTriptych`** is `siteContent.impact.items` as three columns under a 60% signature-gradient hairline: the eyebrow DERIVED from the key (Financial / Social / Environmental), the title with that category prefix taken off — but only when a dash follows it, so "Financially Sustainable" keeps its first word — and the three points at 15px behind 18px gold bullets. **A bullet, not a tick**: these are aims, and a check mark in front of "Farmers can benefit from the profitability of their own enterprise" reads as a claim that it has already happened. Points render **verbatim** — no truncation, no summarising — which is what preserves the BRAND.md §3.9 qualifiers; asserted in the suite and re-checked against the seed (0 dividend mentions without "can reach the member farmers through dividends"). `showImages` false here, true on the page. **`home/WhyLamikaaSection`** fetches `siteContent.get("impact")` and composes the two: `brand.philosophy` as the h2 over the new `brand.philosophyLede` (BRAND.md §3.2's first sentence), the pillars, a second heading row, the triptych and `Button variant="secondary"` → `/why-lamikaa`. **The two halves fail separately** — the pillars come from a module the bundle always has and always render; a missing, unpublished or unreachable impact block takes its own heading with it rather than standing over an empty space (exercised for real: the first QA run reached the live host and the section rendered philosophy + 4 cards + CTA, nothing invented). **One defect the test found and reading did not:** `impactColumns` filtered rows before normalising them, so a row carrying three blank strings passed a `points.length` check and rendered as an empty column; the filter now runs after. Outline verified in the browser: 1 page `h1`, this section's `h2` at 52px, 4 pillar `h3` at 22px, the impact `h3` at 40px, 3 column `h4` at 20px, 4 `role="list"` lists, 0 nested landmarks. Contrast on the page ground 18.05 / 13.88 / 9.62:1 and on the card ground 15.95 / 12.27 / 8.5:1. Under `prefers-reduced-motion` framer-motion attaches **no style attribute at all** and 0 animations run. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 14 suites / **151 passed** (24 new). No `db.json` and no `api.js` change: reads only. See "Prompt 20 record" below. |
 | 21 | Home FAQs section and accordion | pending | | | |
 | 22 | Home assembly, performance and SEO | pending | | | |
 | 23 | Shop page — chaptered editorial listing | pending | | | |
@@ -262,11 +262,25 @@ Record every decision a prompt had to make that the reference files did not sett
 - `19 · 2026-09-07 · The wash and the gradient are absolutely-positioned layers, not cells of a shared grid · `align-self: stretch` does nothing to an `<img>` — a replaced element with an intrinsic ratio treats it as `start` (CSS Box Alignment §6.5) — so the photograph would have sat at its natural size in the middle of the section. Absolute positioning over the section's box makes the card the only child in flow, which is what lets the section's height be the card's.
 - `19 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are again left untouched · `Home.js` is touched only to import and mount `<FullPageCta/>` after `<RitualsTeaser/>` and to extend its own section map with `0h`. Same posture as Prompts 15–18; those sections are Prompt 22's to delete.
 
+- `20 · 2026-09-07 · The philosophy lede is a NEW `brand.philosophyLede` key rather than a string in the component · The prompt makes `brand.philosophy` the band's headline, which leaves its lede — BRAND.md §3.2's first sentence, qualifier included ("can be inspired") — with nowhere to live. `config/brand.js` is where the programme puts brand copy (Prompt 15 added `originBadge` for exactly this reason: "brand copy is edited in this file, never inside a component"), and the pillars this lede introduces already come from there. `siteContent.whyLamikaa.body` also opens on the same sentence, but the prompt's data contract for this section is `siteContent.get("impact")` alone, and fetching a second block to quote one sentence would make the band's own heading depend on the CMS being reachable.`
+- `20 · 2026-09-07 · The pillar cards do NOT take `GlassCard interactive`, and the alternating glow is a hover rule in the module instead · The brief asks for "`glow` alternating gold/violet on hover" on cards that are explicitly "not links". `interactive` is the only thing in the primitives that gives a card a hover lamp, and it also gives it a 4px lift, a firmed hairline and a `:focus-visible` ring — three affordances promising a destination that does not exist, on a surface whose acceptance criterion is "keyboard-transparent". So `glow` supplies the tone node and `.grid .card:hover :global(.sf-glow) { opacity: 1 }` supplies the hover. Measured: `transform: none` on all four cards under hover, one tab stop in the section, tones gold/violet/gold/violet. `:focus-within` is included for Prompt 28's page variant; nothing inside a card is focusable today.`
+- `20 · 2026-09-07 · The impact bullet is `mdi:circle-medium`, not the `mdi:check-circle-outline` the ingredient spotlight uses · The spotlight's three points are statements about black rice; these three are AIMS ("Farmers can benefit from the profitability of their own enterprise"). A tick in front of an aim reads as a claim that it has already happened, which is the class of statement BRAND.md §3.9 and this prompt's own guardrail ("no percentages, counts or promises") exist to prevent. A dot carries the list structure and claims nothing.`
+- `20 · 2026-09-07 · The eyebrow is derived from `item.key` and the same word is stripped off the title, matched by hand rather than by a RegExp built from the data · The seed writes the category into the title as well ("Financial — From Raw Produce to Shared Value") because the CMS field is one string, and printing both would set "Financial" twice in a 20px stack. A key is owner-editable, so compiling it into a pattern would let a key change what the expression means; the prefix is matched with `startsWith` and only comes off when a dash follows it, which is what keeps "Financially Sustainable Farming" whole.`
+- `20 · 2026-09-07 · 22px and 15px are declared as named custom properties on each grid, not as bare numbers · The scale (DESIGN_SYSTEM §6) steps 14 → 16 → 17 → 20 → clamp(22…28), and neither size the brief names is a step. 22px IS the floor of `--sf-text-xl`, but that token reaches 28px by 1440 and a four-up card cannot carry a headline that grows with the viewport. `--pl-title` / `--pl-text` / `--it-point` / `--it-glyph` keep the departure in one documented place per module and give `compact` four values to change, the shape `ValueChain.module.css` already uses.`
+- `20 · 2026-09-07 · The pillar cards drop their backdrop blur ≤768px; the impact columns never had one · Stacked, each card is most of the screen, and four blurred panels in one scroll is what DESIGN_SYSTEM §4's two-layer budget is against — the sticky masthead has already spent one. Below the breakpoint the card paints `--sf-glass-fallback`, the same ground `@supports not (backdrop-filter)` gives it, exactly as `ProductChapter` does for its eight panels. The impact columns are a hairline and words on the page ground, so the section adds no second blurred layer at any width. The icon circle inside a card takes the glass GROUND and HAIRLINE without the filter, for the same reason.`
+- `20 · 2026-09-07 · The impact half renders nothing — heading included — when its block is missing, unpublished or unreachable, while the pillars always render · The two sources fail differently and the section is built to let them: `brand.pillars` is a module the bundle always has, so the philosophy, the four cards and the CTA are always true; `siteContent.impact` can be absent, and an impact heading standing over nothing is a promise the page cannot keep. Same rule `WhyBlackRice` states for the ingredient claims. Exercised for real rather than by reading: the first browser run served a build pointed at the live host, and the section rendered philosophy + 4 pillars + CTA with the impact half absent and no console error.`
+- `20 · 2026-09-07 · The stacked impact columns take a 32px gap where the three-column row takes the specified 24px · At ≥1025px the 24px gutter separates three columns that are already separated by their hairlines and their own width. Stacked, each column is full-width and 24px between two full-width blocks reads as one block that lost its rhythm; `--sf-space-8` is the distance the rest of the page uses between stacked editorial blocks.`
+- `20 · 2026-09-07 · `Pillars` and `ImpactTriptych` take `titleAs` beyond the prompt's two-prop contract · The home band's outline is h2 → h3 (pillars, impact heading) → h4 (columns); Prompt 28's page makes the same content the page's subject and shifts the whole run up one level. A hard-coded tag would force that page either to skip a level or to fork the component. `className` is the same shape `ValueChain` already exposes.`
+- `20 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are again left untouched · `Home.js` is touched only to import and mount `<WhyLamikaaSection/>` after `<FullPageCta/>` and to extend its own section map with `0i`. Same posture as Prompts 15–19; those sections are Prompt 22's to delete.`
+
 ## Open TODOs
 
 Carry-overs that a later prompt (or the developer/owner) must pick up (format: `NN · item · owner · target prompt`).
 
 - `16 · The live Laravel database still holds the PRE-CORRECTION `media[0].crop` rectangles for five products (soap, body wash, face mask, face scrub, face serum). Mock mode reads the fixed values from db.json; live mode will still show a white stripe on the soap plate, white corners on the body wash, white rules on the face mask, a light-grey letterbox on the scrub and a clipped gold band on the serum until it is reseeded from PRODUCTS.md §2. No schema change — five JSON values. · backend/owner · 39`
+
+- `20 · `ImpactTriptych showImages` is shipped but only exercised as `false`: the three 4:3 placeholder photographs it turns on belong to the Why LAMIKAA page, and that layout wants one browser pass once the page exists. · Prompt 28 · 28`
+- `20 · No placeholder photograph could be seen rendered in the browser in this sandbox — `res.cloudinary.com` and `picsum.photos` reset Chromium's TLS tunnel through the agent proxy (curl gets 200), the same limitation Prompt 19 recorded. Nothing in this section depends on one, but the home page's images as a whole want one run on a developer machine. · developer · 37`
 
 - `01 · Baseline works: add to cart from a card (guest, 0 → 1) and from the PDP (5 → 6 items); quantity + in the drawer (6 → 7); remove line (7 → 2); coupon MUGA500 (−₹500.00 — savings −₹3,500 → −₹4,000, total ₹18,500 → ₹18,000); checkout through all four steps to an order confirmation on COD (ORD-MTPU49W5-8QEA); that order then listed in /orders (4 rows) and in Admin → Orders (12 rows); wishlist toggle as guest (0 → 1) and as a signed-in user (1 → 0 → 1, both directions); search "Muga" (26 product links); light/dark toggle (body "dark react-loaded" ↔ "react-loaded light" — to be removed by Prompt 03); review from a delivered order (created review id 13, product 22, rating 4, status "pending"); cancel a processing order (ORD-MTPU49W5-8QEA → fulfillmentStatus "cancelled", paymentStatus "voided" — the cascade ran); address book in /profile → Addresses: add, edit (city Guwahati → Jorhat, persisted) and delete all confirmed against the API. · developer · —`
 - `01 · db.json product 1 ("Sualkuchi Muga Mekhela Chador — Natural Gold") carries corrupted prices in the committed seed: price 41, comparePrice 380000000000, variants ₹3,25,00,00,000 and ₹3,35,00,00,00,000 (the PDP renders them). Left as-is — Prompt 06 reseeds db.json wholesale — but do not treat these numbers as a pricing reference. · Prompt 06 · 06`
@@ -2285,3 +2299,141 @@ from `db.json` afterwards (`git diff --stat db.json` → empty).
 stand-in — deliberately the worst case for the wash, so the real frame can only improve the figures. The
 composition wants one look at the real photograph, and the desktop card's 1060px height wants Prompt 22's
 verdict. Both carried into Open TODOs.
+
+## Prompt 20 record (2026-09-07)
+
+### What was built
+
+Three components, two of them shared with the Why LAMIKAA page (Prompt 28), and one new brand-config key.
+
+- **`brand/Pillars.js` + `.module.css` + `.test.js`** — BRAND.md §3.2's four pillars as one
+  `<ul role="list">` of four `GlassCard as={motion.li}`. Each card: a 44px glass circle carrying a
+  24px gold glyph, a `Chip variant="step"` numeral 01–04 pushed to the opposite edge, the title in
+  Fraunces 22px and the sentence in Manrope 15px `--sf-color-text-secondary`, at 24px padding.
+  **Contract:** `pillars` (default `brand.pillars`) · `compact` (drops the circle to 36px, the glyph
+  to 20px, the title to `--sf-text-lg` and the padding to 16px) · `titleAs` (default `h3`) ·
+  `className` · rest spread onto the `<ul>`.
+  **Copy:** every title and every sentence is `brand.pillars`; not one word is typed in the component.
+  **Icons** are matched by KEY (`indigenous-knowledge` → `mdi:leaf`, `modern-science` →
+  `mdi:flask-outline`, `farmer-ownership` → `mdi:account-group-outline`, `responsible-beauty` →
+  `mdi:earth`) with a positional fallback and a neutral `mdi:star-four-points-outline` for a fifth
+  pillar this file has never seen — so a renamed key degrades to the right glyph in the right slot
+  rather than silently swapping two.
+  **Three exported pure functions:** `pillarIcon`, `pillarNumeral`, `pillarTone`.
+- **`brand/ImpactTriptych.js` + `.module.css`** — `siteContent.impact.items` as three columns, each
+  opening on a 1px signature-gradient hairline at 60%, then an optional 4:3 `.sf-placeholder-media`
+  photograph (`showImages`), the eyebrow, the title in Fraunces 20px and the three points at 15px
+  behind 18px gold bullets.
+  **Contract:** `items` · `showImages` (false on the home band, true on the page) · `titleAs`
+  (default `h3`) · `className` · rest.
+  **Two exported pure functions plus the normaliser:** `impactEyebrow`, `impactTitle`,
+  `impactColumns`.
+- **`home/WhyLamikaaSection.js` + `.module.css`** — `siteContent.get("impact")`, then:
+  `SectionHeading` (eyebrow "Why LAMIKAA", `brand.philosophy` as the `h2` at `--sf-text-3xl` with **no
+  gradient word** — it is the philosophy line, and lighting one of its three sentences would be an
+  argument the brand has not made, lede `brand.philosophyLede`) → `Pillars` → a second heading row at
+  `h3` → `ImpactTriptych showImages={false} titleAs="h4"` → `Button variant="secondary"` "Why LAMIKAA"
+  → `/why-lamikaa`. One exported pure function: `impactCopy`.
+- **`config/brand.js`** — one new key, `philosophyLede`, BRAND.md §3.2's first sentence verbatim,
+  beside `philosophy` and `pillars`. See the decisions log.
+- **`pages/Home/Home.js`** — `<WhyLamikaaSection/>` mounts directly after `<FullPageCta/>`, and the
+  file's own section map gains `0i`. Nothing else on the page changed.
+
+### The defect the test found, and reading did not
+
+`impactColumns` filtered its rows **before** normalising them: a row whose `points` array carried
+three blank strings passed the `points.length > 0` check, then lost all three to the per-point filter
+and rendered as a column with a hairline, no title and no list — a hole in the triptych rather than a
+missing column. The filter now runs after the map, on the normalised shape, so "nothing to say" is
+decided on what would actually be printed. Caught by
+`it("drops empty points and rows with nothing to say")` on the first run of the new suite.
+
+### The empty state, exercised rather than reasoned about
+
+The first browser pass ran against a production build, which reads `.env.production` and therefore
+points at `https://core.lamikanaturals.com/api/v1` — unreachable from this sandbox. That is the exact
+failure the section is designed for, so it was measured rather than discarded: the band rendered the
+philosophy line, its lede, four pillar cards and the CTA, with the impact heading and triptych absent
+and no console error from this section. The pillars come from a module the bundle always has; the
+impact half is the only part that can go missing, and it takes its own heading with it.
+
+### Measurements (Chromium 1194, mock mode, 7 widths)
+
+Google Fonts and the Iconify API reset Chromium's TLS tunnels through the sandbox proxy (curl gets
+200), so both were fetched with curl and served to the browser through `page.route` — same bytes,
+real Fraunces + Manrope, real `mdi` SVGs (4 distinct pillar glyphs, 3 bullets per column, verified per
+run).
+
+| width | pillar grid | impact grid | card blur | doc overflow | tab stops |
+|---|---|---|---|---|---|
+| 360 | 1 × 4 | 1 × 3 | none | 0 | 1 |
+| 390 | 1 × 4 | 1 × 3 | none | 0 | 1 |
+| 414 | 1 × 4 | 1 × 3 | none | 0 | 1 |
+| 768 | 1 × 4 | 1 × 3 | none | 0 | 1 |
+| 1024 | 2 × 2 | 1 × 3 | blur(20px) | 0 | 1 |
+| 1280 | 4 × 1 | 3 × 1, 24px gutter | blur(20px) | 0 | 1 |
+| 1440 | 4 × 1 | 3 × 1, 24px gutter | blur(20px) | 0 | 1 |
+
+`document.scrollWidth === window.innerWidth` at every width, and no descendant of the section extends
+past the section's own box (widest child 1360 of 1440). Card gap 16px throughout; card padding 24px;
+icon circle exactly 44 × 44 with a 24px glyph in `rgb(245,215,110)`; pillar title 22px Fraunces;
+pillar text and impact points 15px; bullets 18px gold; section ground `rgb(11,11,13)` with
+`--sf-section-y` = 140px at 1440.
+
+### The hover glow, and what it is not
+
+Hovering each card in turn: tones `gold`, `violet`, `gold`, `violet`, each going from
+`opacity: 0` to `1`, each lamp the matching `--sf-glow-*` radial — and `transform: none` on all four,
+at rest and hovered. The section's whole tab order is one stop, the CTA link; the cards contain no
+anchor, no button and no `tabindex`.
+
+### Heading outline and list semantics
+
+`h1` count on the page: 1 (the hero's). Inside the section: `h2` 52px "Indigenous Wisdom. Modern
+Science. Responsible Beauty." (the section's `aria-labelledby` target) → four `h3` 22px, the pillar
+titles → one `h3` 40px "Beauty That Creates Prosperity for Farmers" → three `h4` 20px, the column
+titles. Four `role="list"` lists (pillars ×4 items, points ×3 ×3) and **zero** nested landmarks.
+
+### Contrast (WCAG AA, computed against the rendered grounds)
+
+| text | on page ground `#0B0B0D` | on card ground (6% white composited, `rgb(26,26,28)`) |
+|---|---|---|
+| philosophy `h2` / pillar titles / impact `h3`, `h4` / CTA label | 18.05 | 15.95 |
+| gold eyebrow, numeral, bullets | 13.88 | 12.27 |
+| lede / pillar text / impact points (15px) | 9.62 | 8.50 |
+
+All far above the 4.5:1 floor; the smallest text on the lightest ground still measures 8.5:1.
+
+### Reduced motion
+
+With `prefers-reduced-motion: reduce`, framer-motion attaches **no `style` attribute at all** to any
+element in the section (`reveal()` returns `{}`), `document.getAnimations()` reports 0 inside it, and
+nothing is left below full opacity. Without it, the staggered reveals all land at
+`opacity: 1; transform: none` — 0 elements stuck hidden after the scroll.
+
+### The legal qualifiers
+
+The points render verbatim: no truncation, no summarising, no "and 3 more". Asserted in the suite
+(`keeps every point WORD FOR WORD`) and re-checked against the seed — every string in
+`siteContent.impact` that mentions dividends carries "can reach the member farmers through dividends"
+(0 offenders). `grep -rn "guarantee\|% of profits\|percent"` over both new components: 0. No digit,
+`%`, "percent", "guarantee" or "promise" appears anywhere in `brand.pillars` either (asserted).
+
+### Verification run
+
+- `CI=true npm run build` — exit 0, **Compiled successfully, 0 warnings**.
+- `npm test -- --watchAll=false` — 14 suites (1 skipped: the live API), **151 passed**, 24 of them new.
+- `grep -n "WhyLamikaaSection" src/pages/Home/Home.js` → 2 (the import and the mount).
+- No hard-coded colour, `rgb()` or `hsl()` in either new stylesheet; every value is a `--sf-*` token or
+  a documented local custom property built from one. No Meghali-era name, asset, colour or identifier
+  in any touched file (word-boundary sweep: 0). No `dangerouslySetInnerHTML`.
+- No `db.json` and no `api.js` change. The section READS `siteContent.impact`, which both api modes
+  already serve identically (`GET /siteContent` in mock, `GET /content/impact` live).
+
+### Left for later
+
+`showImages` is exercised only as `false` here — the three 4:3 placeholder photographs it turns on are
+the page's (Prompt 28), and their composition wants one look at that layout. `res.cloudinary.com` and
+`picsum.photos` remain unreachable from the browser in this sandbox (the same tunnel resets Prompt 19
+recorded), so no placeholder photograph on the home page was seen rendered in this run; nothing in
+this section depends on one. Carried into Open TODOs.

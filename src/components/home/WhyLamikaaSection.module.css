@@ -1,0 +1,85 @@
+/* =============================================================================
+ * WhyLamikaaSection — the philosophy band
+ * =============================================================================
+ * `.sf-section` supplies the vertical rhythm (--sf-section-y) and
+ * `.sf-container` the measure; both come from the primitives and are not
+ * restated here.
+ *
+ * THE GROUND IS STATED RATHER THAN INHERITED. The section directly above is the
+ * full-page CTA, whose photograph, wash and gradient run the whole viewport;
+ * naming --sf-color-bg here is what guarantees the page comes back to its own
+ * colour underneath it instead of relying on nothing else having been painted.
+ *
+ * RHYTHM INSIDE THE BAND. Three stops — the philosophy, the pillars, the impact
+ * — at 40 / 64 / 64px. The pillars sit closer to the line they illustrate than
+ * to the impact half that follows, which is the whole reason the two heading
+ * rows are not the same distance apart.
+ * ========================================================================== */
+
+.section {
+  position: relative;
+  background-color: var(--sf-color-bg);
+  /* The pillar cards' hover lamps are clipped to their cards, but the heading's
+     gradient rule and the columns' hairlines run to the container's edges — the
+     same guard the rest of the home page uses, and it costs nothing when
+     nothing bleeds. */
+  overflow-x: clip;
+}
+
+/* The philosophy is three short sentences, so it is set as the band's statement
+   rather than as a signpost: the full display step, a measure that breaks it
+   into two or three lines, and `balance` so those lines are of a length. */
+.heading h2 {
+  max-width: 22ch;
+  font-size: var(--sf-text-3xl);
+  text-wrap: balance;
+}
+
+.pillars {
+  margin-block-start: var(--sf-space-10);
+}
+
+.impact {
+  margin-block-start: var(--sf-space-16);
+}
+
+.impactHeading {
+  margin-block-end: var(--sf-space-8);
+}
+
+/* The impact headline is a level below the philosophy and reads as one: the
+   2xl step rather than the 3xl above it. */
+.impactHeading h3 {
+  max-width: 26ch;
+  font-size: var(--sf-text-2xl);
+  text-wrap: balance;
+}
+
+/* Three text blocks the width of the columns they stand in for, so the band
+   does not reflow when the copy lands. */
+.skeleton {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-8);
+}
+
+@media (min-width: 1025px) {
+  .skeleton {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sf-space-6);
+  }
+}
+
+.close {
+  display: flex;
+  margin-block-start: var(--sf-space-12);
+}
+
+/* A lone secondary pill goes full width on a phone rather than sitting as a
+   short tab under a full-width band — the pattern the chapters and the CTA
+   already use below 560px. */
+@media (max-width: 559px) {
+  .cta {
+    width: 100%;
+  }
+}
