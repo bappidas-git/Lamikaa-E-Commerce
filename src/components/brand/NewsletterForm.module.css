@@ -1,0 +1,175 @@
+/* =============================================================================
+ * NewsletterForm — one field, two placements
+ * =============================================================================
+ * The FIELD is the design system's input (DESIGN_SYSTEM.md §7): the
+ * --sf-color-surface-2 ground behind a 1px --sf-glass-border hairline, warm
+ * white type, a gold focus ring, and an error that carries a message rather
+ * than only a colour. It is 48px tall — one step above the 44px WCAG floor,
+ * which is what puts it on the same baseline as the pill beside it.
+ *
+ * The VARIANTS change nothing about the control. `footer` is left-aligned with
+ * the field capped at a comfortable 34rem; `cta` is centred inside the
+ * full-page CTA's card, where the measure is the card's and the row stacks
+ * sooner because the card is narrower than a footer column.
+ *
+ * No hard-coded colour, duration, radius or font lives in this file.
+ * ========================================================================== */
+
+.wrap {
+  min-width: 0;
+}
+
+/* `.sf-eyebrow` carries the whole look (gold, 12px, 600, tracked, uppercase);
+   only the space under it belongs to this form. */
+.label {
+  margin: 0 0 var(--sf-space-3);
+}
+
+.hint {
+  max-width: 46ch;
+  margin: 0 0 var(--sf-space-5);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.form {
+  margin: 0;
+}
+
+/* Field and pill share one baseline; `stretch` is what keeps the button the
+   same 48px as the input without either restating the other's height. */
+.field {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sf-space-3);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  /* 48px. --sf-space-12 IS 48px on the scale, and a control height that is a
+     scale step is a control height nobody has to remember. */
+  min-height: var(--sf-space-12);
+  padding: var(--sf-space-2) var(--sf-space-5);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface-2);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  color: var(--sf-color-text);
+  outline: none;
+  transition: border-color var(--sf-transition-fast);
+}
+
+.input::placeholder {
+  color: var(--sf-color-text-muted);
+}
+
+.input:hover,
+.input:focus {
+  border-color: var(--sf-color-border-strong);
+}
+
+.input:disabled {
+  color: var(--sf-color-text-muted);
+  cursor: not-allowed;
+}
+
+/* The error state is announced (role="alert") and written out below the field;
+   the hairline only seconds it, so colour is never the sole carrier. */
+.inputError {
+  border-color: var(--sf-color-danger);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--sf-color-focus-ring);
+  outline-offset: 3px;
+}
+
+.submit {
+  flex-shrink: 0;
+  min-height: var(--sf-space-12);
+}
+
+.error,
+.success {
+  margin: var(--sf-space-3) 0 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+}
+
+.error {
+  color: var(--sf-color-danger);
+}
+
+/* Success replaces the form entirely — one line, no chrome. */
+.success {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-style: italic;
+  color: var(--sf-color-gold-light);
+}
+
+/* =============================================================================
+ * VARIANT — footer
+ * ========================================================================== */
+
+.footer .field {
+  max-width: 34rem;
+}
+
+/* The close of the page stacks its field at the phone breakpoint the footer's
+   own grid collapses on, so the button never gets a 90px track of its own. */
+@media (max-width: 480px) {
+  .footer .field {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sf-space-4);
+  }
+}
+
+/* =============================================================================
+ * VARIANT — cta
+ * The full-page CTA's card is a centred column, so the label, the hint and the
+ * two lines the form can answer with are centred with it, and the field takes
+ * the card's measure rather than a cap of its own.
+ * ========================================================================== */
+
+.cta {
+  width: 100%;
+}
+
+.cta .label {
+  justify-content: center;
+}
+
+.cta .hint {
+  max-width: 44ch;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.cta .success,
+.cta .error {
+  text-align: center;
+}
+
+/* 544px is narrower than the card's 760: a single field running the full width
+   of a display headline reads as a search bar, not as an invitation. */
+.cta .field {
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+/* The card is narrower than a footer column, so the row stacks a breakpoint
+   earlier — a pill and a field sharing 296px of a 360px phone leaves the field
+   too short to show an address being typed. */
+@media (max-width: 639px) {
+  .cta .field {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sf-space-4);
+  }
+}

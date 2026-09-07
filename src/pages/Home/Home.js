@@ -14,6 +14,7 @@ import ProductShowcase from "../../components/home/ProductShowcase";
 import AboutTeaser from "../../components/home/AboutTeaser";
 import WhyBlackRice from "../../components/home/WhyBlackRice";
 import RitualsTeaser from "../../components/home/RitualsTeaser";
+import FullPageCta from "../../components/home/FullPageCta";
 import TrustStrip from "../../components/TrustStrip";
 import ProductCard from "../../components/storefront/ProductCard";
 import useSeo from "../../hooks/useSeo";
@@ -34,6 +35,8 @@ import styles from "./Home.module.css";
 //   0e ABOUT LAMIKAA    the farmer-owned story + the value chain      (17)
 //   0f WHY BLACK RICE   the ingredient spotlight + the eight labels   (18)
 //   0g RITUALS          three routine cards + "Build your ritual"     (18)
+//   0h FULL-PAGE CTA    one screen: the three signature lines, two ways
+//                       on, and the newsletter                          (19)
 //   1. WHERE TO BEGIN   collection stories (categories.getAll)
 //   2. THE EDIT         featured, staggered editorial grid (products.getFeatured)
 //   3. ON OFFER         the deals rail + one tracked countdown line   [conditional]
@@ -441,6 +444,13 @@ const Home = () => {
 
       {/* ── RITUALS — the order the range was designed to be used in ──────── */}
       <RitualsTeaser />
+
+      {/* ── FULL-PAGE CTA — the page stops, and asks ──────────────────────────
+          The page's SECOND and last breathing glow (the hero owns the first).
+          Everything above it — eight product chapters, the About band, the
+          spotlight, the triptych — is what guarantees the two can never share a
+          viewport, whatever the screen height. */}
+      <FullPageCta />
 
       {/* ── 1. WHERE TO BEGIN — the collections, told as stories ──────────── */}
       {showCollections && (

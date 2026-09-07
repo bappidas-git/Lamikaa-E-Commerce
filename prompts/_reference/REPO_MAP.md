@@ -915,6 +915,84 @@ No `db.json` or `api.js` change — both sections read only
 (`siteContent.home.whyBlackRice`, `rituals.getAll`, `products.getAll`,
 `products.getHeroProducts`), all already served identically by both api modes.
 
+**Updated by Prompt 19.** The full-page CTA, and the newsletter capture the
+footer and the CTA now share.
+
+- `brand/NewsletterForm.js` (172) + `.module.css` (175) — **new**, extracted
+  from `Footer.js`. ONE newsletter contract, asked in two places.
+  **Contract:** `variant` `"footer" | "cta"` · `label` (the visible gold
+  eyebrow) · `hint` (wired through `aria-describedby`) · `buttonLabel`
+  (default `"Subscribe"`) · `id` (the BASE for `-email`, `-hint`, `-error`;
+  `useId()` when omitted, so two mounts on one page cannot collide) ·
+  `className`.
+  **The behaviour is the footer band's, unchanged:** `isEmailValid()` gate →
+  `apiService.leads.createNewsletter(email)` → a `role="status"` thank-you that
+  reverts to the field after **6 s**, or a `role="alert"` message with
+  `aria-invalid` and the error id appended to `aria-describedby`. A network or
+  5xx failure is surfaced, never dressed as a success. The lead lands in
+  Admin → Leads as a `newsletter` / `subscribed` row.
+  **The field is the design system's input** (§7): `--sf-color-surface-2`
+  behind a 1px `--sf-glass-border`, pill radius, **48px** (`--sf-space-12`),
+  with the pill primary on the same baseline. It replaces the footer's Prompt 13
+  hairline-underline field, so the storefront has ONE field design; `variant`
+  changes only alignment, measure and the width at which the pill drops below
+  the field (footer ≤480px, cta ≤639px).
+  **Footer.js keeps only the grid placement** (`.newsletter`) — its form, state,
+  reset timer and `isEmailValid` import are gone, and `.eyebrow` there is now
+  the four directory headings' class alone.
+- `home/FullPageCta.js` (252) + `.module.css` (235) + `.test.js` (85) —
+  **new**. One full-viewport stop, **four layers**: a `loading="lazy"`
+  `alt=""` `<img class="sf-placeholder-media">` at `object-fit: cover` → the
+  wash `color-mix(--sf-color-bg 82% → 94%)` → `--sf-gradient-signature` at
+  **12% `mix-blend-mode: screen`** (the section sets `isolation: isolate` so the
+  blend stays inside it) → the card. The three grounds are absolutely
+  positioned, not grid cells: `align-self: stretch` does nothing to an `<img>`.
+  **NO backdrop blur on the ground** (DESIGN_SYSTEM §4) — verified
+  `backdrop-filter: none` on the section, `blur(20px)` on the card.
+  **Height:** `min-height: 100svh` from **769px**, `80svh` below, each with a
+  `vh` line above it as the fallback. Section padding is `--sf-space-16`, not
+  `--sf-section-y`: the floor is what gives the section its air.
+  **Card:** `GlassCard strong scrim padding="lg"`, max-width **760px**, centred,
+  inside `GlowWrap tone="duo" intensity={0.22} size={130} breathe` — the page's
+  **second and last** breathing glow (the hero owns the first; scanned at 176
+  scroll positions, never two in one viewport). `scrim` is not optional: without
+  it the signature gradient's violet stop measures 1.6:1 on the headline over a
+  bright photograph, against 3.1:1 with it.
+  **Composition:** `.sf-eyebrow` "Beauty with a purpose" → an `<h2>` of three
+  `<span>` blocks 8px apart in Fraunces `--sf-text-4xl` (`--sf-text-3xl` below
+  769px), the FIRST carrying the section's one gradient keyword → `brand.tagline`
+  as the lede → `Button variant="primary" size="lg"` and
+  `variant="secondary" size="lg"`, stacked full-width below 640px →
+  `NewsletterForm variant="cta"` under a `--sf-glass-border` rule →
+  `LegalNote compact`.
+  **Copy is `siteContent.home.fullPageCta` with a real fallback** —
+  `brand.signatureLines.slice(0, 3)` plus `/shop` and `/about` — unlike the
+  ingredient spotlight, which has none: these are the brand's own signature
+  lines, not a cosmetic claim. Only the photograph has no fallback.
+  **Two named exports, pure and unit-tested:** `splitOnWord(line, word)` (splits
+  around a whole-word, regex-escaped match so the sentence's own full stop stays
+  out of the gradient; `null` when the word is gone) and `ctaCopy(block)`.
+- `pages/Home/Home.js`: `<FullPageCta/>` mounts directly after
+  `<RitualsTeaser/>`. Sections 1–6 still follow; Prompt 22 replaces them.
+- `theme/storefront-primitives.css`: **two pre-existing defects fixed**, both in
+  the contract this section depends on.
+  `.sf-glow--duo.sf-glow--breathe::after` (0,2,1) out-specificities the
+  reduced-motion reset `.sf-glow--breathe::after` (0,1,1), so a duo glow's
+  second lamp kept breathing with reduced motion on — the hero has carried this
+  since Prompt 14. A third selector at matching specificity was added.
+  `.sf-glass--scrim::before` was absolutely positioned with no `z-index`, so it
+  painted in the positioned-descendant layer, ABOVE the host's in-flow text —
+  the wash dimmed the type it exists to make legible (a warm-white headline
+  capped at `rgb(165,163,161)`). It now takes `z-index: -1` inside an
+  `isolation: isolate` host, which is what `.sf-card--hover::before` already
+  does and what the class name has always promised. `BottomNav` is the only
+  other consumer and was re-checked.
+
+No `db.json` or `api.js` change. The section READS
+`siteContent.home.fullPageCta` and WRITES through the existing
+`apiService.leads.createNewsletter` — `POST /leads` in mock,
+`POST /leads/newsletter` live — so both api modes are unchanged.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.
@@ -1146,7 +1224,7 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/components/HeroSection/*` | R | Product-driven hero carousel (Prompt 14). |
 | `src/components/FAQ/*` | K | Glass accordion (Prompt 21). |
 | `src/components/AuthModal/*`, `ReviewModal/*`, `Breadcrumb/*`, `ScrollToTop/*`, `ErrorBoundary/*` | K | Restyle; ErrorBoundary literals re-synced (03). |
-| `src/components/BottomDrawer/*`, `CTASection/*`, `FeaturedProducts/*`, `Newsletter/*` | X | Unused duplicates (Prompt 35 deletes; Footer keeps the newsletter). |
+| `src/components/BottomDrawer/*`, `CTASection/*`, `FeaturedProducts/*`, `Newsletter/*` | X | Unused duplicates (Prompt 35 deletes; `Newsletter/` was deleted by Prompt 13, and the capture now lives in `brand/NewsletterForm` — Prompt 19). |
 | `src/components/AdminLayout/*` | K | Rebrand, single theme (Prompts 03, 32). |
 | `src/components/storefront/ProductCard.*` | R | Glass label-card (Prompt 15/16 shared card). |
 | `src/components/storefront/ProductGallery.*` | R | Media gallery with videos (Prompt 26). |

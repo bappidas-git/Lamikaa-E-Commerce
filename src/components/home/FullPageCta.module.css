@@ -1,0 +1,235 @@
+/* =============================================================================
+ * FullPageCta — the full-viewport stop
+ * =============================================================================
+ * FOUR LAYERS, bottom to top: the photograph, the wash, the signature gradient,
+ * the card. The three grounds are absolutely positioned over the section's own
+ * box and the card is the one child in flow, so the section's height is the
+ * CARD's (or the viewport floor below, whichever is taller) and the grounds
+ * follow it — no layer has to be told how tall the others are. Absolute rather
+ * than a shared grid cell because `align-self: stretch` does nothing to an
+ * <img>: a replaced element with an intrinsic ratio treats it as `start`, and
+ * the photograph would sit at its natural size in the middle of the section.
+ *
+ * HEIGHT. `min-height: 80svh` on a phone and `100svh` from the tablet up, each
+ * with a `vh` line above it as the fallback for a browser without the small
+ * viewport unit. `svh` is the unit that survives mobile chrome collapsing: with
+ * `vh` the section is a scrollbar taller than the screen the moment the address
+ * bar retracts.
+ *
+ * NO BACKDROP BLUR ON THE GROUND. DESIGN_SYSTEM.md §4 forbids one on a
+ * full-page scrolling background, and it would be the wrong tool anyway — the
+ * wash is already near-opaque. The CARD blurs (GlassCard's own backdrop-filter)
+ * and that, with the sticky masthead, is the whole two-layer budget.
+ *
+ * THE CARD ALSO CARRIES `scrim` — text on glass over imagery, which is the case
+ * DESIGN_SYSTEM.md §4 names it for. It is what keeps the card's ground near the
+ * page ground the palette's contrast figures were measured against; the numbers
+ * are at .lede below.
+ *
+ * NO HARD-CODED COLOUR. The wash's rgba(11,11,13,.82 -> .94) is
+ * --sf-color-bg at those two alphas, written as a color-mix() of the token that
+ * produces it — the idiom the primitives sheet uses wherever a spec names a
+ * literal (see storefront-primitives.css, RULES).
+ * ========================================================================== */
+
+.section {
+  position: relative;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+
+  /* Phone: 80% of the small viewport. A full screen on a 360x640 phone is a
+     card the shopper has to scroll THROUGH rather than past. */
+  min-height: 80vh;
+  min-height: 80svh;
+
+  /* NOT --sf-section-y. The viewport floor above is what gives this section its
+     air; the padding's only job is to keep the card off the section's edges
+     once the composition outgrows the floor, and the full 140px rhythm there
+     pushes a card that is already taller than the screen further past it. */
+  padding-block: var(--sf-space-16);
+
+  /* The lamp behind the card bleeds past its box by design, and this box is as
+     wide as the viewport — `clip` takes the sideways scroll away without making
+     the section a scroll container. The same guard the hero, the About band,
+     the chapters and the footer use. */
+  overflow-x: clip;
+
+  /* The gradient layer blends with the two layers under it and with nothing
+     else: `isolation` keeps `mix-blend-mode: screen` inside this section rather
+     than letting it reach the page behind it. */
+  isolation: isolate;
+}
+
+/* The three grounds, over the section's whole box and never a click target. */
+.photo,
+.wash,
+.gradient {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---- 1. The photograph ---------------------------------------------------
+   `.sf-placeholder-media` carries the placeholder treatment (desaturated to
+   0.6, dimmed to 0.85). Its `::after` wash does not paint here — a replaced
+   element generates no pseudo-element box — which is why the wash below is a
+   layer of its own rather than a class on the image. */
+.photo {
+  object-fit: cover;
+  z-index: 0;
+  user-select: none;
+}
+
+/* ---- 2. The wash ---------------------------------------------------------
+   82% of the page ground at the top edge, 94% at the bottom: the photograph is
+   a texture under the type, not a picture the eye is asked to read. */
+.wash {
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sf-color-bg) 82%, transparent),
+    color-mix(in srgb, var(--sf-color-bg) 94%, transparent)
+  );
+}
+
+/* ---- 3. The signature gradient ------------------------------------------
+   12%, screened, so the champagne / pink / violet come THROUGH the dark rather
+   than sitting on top of it. One gradient wash per page, and this is it. */
+.gradient {
+  z-index: 2;
+  background-image: var(--sf-gradient-signature);
+  opacity: 0.12;
+  mix-blend-mode: screen;
+}
+
+/* ---- 4. The card --------------------------------------------------------- */
+.inner {
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* The lamp is sized past the card (130%) so it reads as light around it rather
+   than as a halo pinned to its edge. */
+.glow {
+  display: block;
+  width: 100%;
+  max-width: 760px;
+}
+
+.cardWrap {
+  width: 100%;
+}
+
+.card {
+  width: 100%;
+  text-align: center;
+  border-radius: var(--sf-radius-xl);
+}
+
+/* `.sf-eyebrow` is an inline-flex, so it centres by its own axis rather than by
+   the card's text-align. */
+.eyebrow {
+  margin: 0 0 var(--sf-space-5);
+  justify-content: center;
+}
+
+/* ---- The three lines -----------------------------------------------------
+   Each line is its own block, 8px apart, so the break is the composition and
+   the copy never has to carry a <br>. `balance` keeps a line that wraps on a
+   phone from breaking one word onto a row of its own. */
+.headline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+  text-wrap: balance;
+}
+
+.line {
+  display: block;
+  min-width: 0;
+}
+
+/* Measured over the WORST ground this section can produce — a near-white
+   photograph under the wash, the 12% gradient and 8% white glass, with the
+   card's scrim on top of that: 6.9:1. Every other line on the card was measured
+   the same way (headline 12.9, eyebrow 9.9, hint 6.9, ownership note 5.9), and
+   the one gradient keyword clears the large-text floor at 3.1:1 on its darkest
+   stop. Without the scrim the same measurements read 5.3 / 10.0 / 7.7 / 5.3 /
+   4.9 and the gradient's violet tail falls to 1.6:1 — which is what the scrim
+   is there for. */
+.lede {
+  max-width: 46ch;
+  margin: var(--sf-space-6) auto 0;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- The two ways on -----------------------------------------------------
+   Stacked and full-width on a phone — two pills side by side inside a card
+   inside a 360px viewport leaves neither label room to be read. */
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sf-space-3);
+  margin-top: var(--sf-space-8);
+}
+
+/* ---- The invitation, and the qualifier under it -------------------------- */
+.newsletter {
+  margin-top: var(--sf-space-10);
+  padding-top: var(--sf-space-8);
+  border-top: 1px solid var(--sf-glass-border);
+}
+
+.legal {
+  margin-top: var(--sf-space-8);
+  text-align: center;
+}
+
+/* =============================================================================
+ * RESPONSIVE  (mobile first)
+ * ========================================================================== */
+
+/* ---- 640px and up: the pills sit side by side --------------------------- */
+@media (min-width: 640px) {
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sf-space-4);
+  }
+}
+
+/* ---- 769px and up: the full screen, and the display headline ------------ */
+@media (min-width: 769px) {
+  .section {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
+  .headline {
+    font-size: var(--sf-text-4xl);
+  }
+}
+
+/* =============================================================================
+ * REDUCED MOTION
+ * The breathe loop is stopped by the primitives sheet, which owns the keyframe;
+ * the card's arrival is stopped by `reveal(reduceMotion)` in the component. So
+ * there is nothing left for this file to turn off — and a rule that repeated
+ * either would be a second place to keep them in step.
+ * ========================================================================== */
