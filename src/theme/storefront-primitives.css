@@ -131,11 +131,23 @@
    positioned parent; the scrim is inert and never eats a click. */
 .sf-glass--scrim {
   position: relative;
+  /* The scrim is a GROUND, not a veil, so it needs a stacking context to sit
+     inside — the same device `.sf-glow` uses. Without one, the negative
+     z-index below drops the wash behind the host's own background and it
+     disappears; with one, it lands between the glass and the content. */
+  isolation: isolate;
 }
 
 .sf-glass--scrim::before {
   content: "";
   position: absolute;
+  /* BEHIND THE CONTENT. An absolutely-positioned pseudo-element paints in the
+     positioned-descendant layer, which is ABOVE the host's in-flow text — so
+     without this the wash dims the very type it exists to make legible
+     (measured: a warm-white headline capped at rgb(165,163,161)). `-1` is what
+     `.sf-card--hover::before` already uses for its lamp, and what the class
+     name has always promised. */
+  z-index: -1;
   inset: 0;
   background: color-mix(in srgb, var(--sf-color-bg) 35%, transparent);
   border-radius: inherit;
@@ -878,8 +890,14 @@ a.sf-chip {
     transform: none;
   }
 
+  /* The duo's SECOND lamp is declared by `.sf-glow--duo.sf-glow--breathe::after`
+     (two classes), so a one-class reset here loses the cascade to it and the
+     violet keeps breathing with reduced motion on — measured on the hero and on
+     the full-page CTA, the only two duo breathers on the storefront. The third
+     selector matches that specificity, so the reset actually lands. */
   .sf-glow--breathe::before,
-  .sf-glow--breathe::after {
+  .sf-glow--breathe::after,
+  .sf-glow--duo.sf-glow--breathe::after {
     animation: none;
   }
 

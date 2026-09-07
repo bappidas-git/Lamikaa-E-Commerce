@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMediaQuery } from "@mui/material";
 import { useDealsConfig } from "../../context/DealsConfigContext";
@@ -8,10 +8,10 @@ import { ROUTES, SUPPORT_HOURS } from "../../utils/constants";
 import { categoryPath, ritualPath } from "../../utils/categories";
 import brand from "../../config/brand";
 import { resolveOrNull } from "../../utils/placeholders";
-import { isEmailValid } from "../../utils/helpers";
 import Logo from "../brand/Logo";
 import LegalNote from "../brand/LegalNote";
-import { Accordion, Button } from "../ui";
+import NewsletterForm from "../brand/NewsletterForm";
+import { Accordion } from "../ui";
 import styles from "./Footer.module.css";
 
 // =============================================================================
@@ -46,11 +46,14 @@ import styles from "./Footer.module.css";
 // behind them (utils/placeholders.js) — an unresolved fact costs no label, no
 // hairline and no empty row, and a `{{TOKEN}}` never reaches type.
 //
-// THE NEWSLETTER CONTRACT IS UNCHANGED from the band this file replaces:
-// `isEmailValid()` gate → `apiService.leads.createNewsletter(email)` → success
-// or error, with the success line reverting to the field after six seconds so a
-// second visitor on the same screen can subscribe too. The lead lands in
-// Admin → Leads as a `newsletter` row.
+// THE NEWSLETTER IS `brand/NewsletterForm` (Prompt 19), not this file's own
+// form: the full-page CTA asks the same question further up the page, and one
+// contract answered in two places is one contract to keep working. The
+// behaviour is the band's, unchanged — `isEmailValid()` gate →
+// `apiService.leads.createNewsletter(email)` → success or error, with the
+// success line reverting to the field after six seconds so a second visitor on
+// the same screen can subscribe too. The lead lands in Admin → Leads as a
+// `newsletter` row.
 //
 // The ONLY literal colours in this file are the payment networks' own brand
 // hexes. They are mandated marks that must not be re-skinned, and they are the
@@ -59,9 +62,10 @@ import styles from "./Footer.module.css";
 
 const WORDMARK_WIDTH = 220;
 
-const EMAIL_INPUT_ID = "footer-newsletter-email";
-const EMAIL_ERROR_ID = "footer-newsletter-error";
-const NEWSLETTER_NOTE_ID = "footer-newsletter-note";
+// The base the shared form derives its three ids from
+// (`-email`, `-hint`, `-error`) — one per page, so the CTA's copy of the form
+// cannot collide with this one.
+const NEWSLETTER_ID = "footer-newsletter";
 const HEADING_ID = "footer-heading";
 
 // The phone breakpoint at which the four columns become disclosures. Kept in
@@ -149,47 +153,6 @@ const Footer = () => {
       active = false;
     };
   }, []);
-
-  // ---- Newsletter (contract unchanged) -----------------------------------
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [subscribeStatus, setSubscribeStatus] = useState("idle"); // idle | success | error
-  const [errorMsg, setErrorMsg] = useState("");
-  const resetTimer = useRef(null);
-
-  useEffect(() => () => clearTimeout(resetTimer.current), []);
-
-  const handleSubscribe = async (e) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-
-    const trimmed = email.trim();
-    if (!isEmailValid(trimmed)) {
-      setSubscribeStatus("error");
-      setErrorMsg("Please enter a valid email address.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await apiService.leads.createNewsletter(trimmed);
-      setSubscribeStatus("success");
-      setEmail("");
-      // The success line replaces the form; reset back to the input after a few
-      // seconds so a second visitor on the same screen can subscribe too.
-      clearTimeout(resetTimer.current);
-      resetTimer.current = setTimeout(() => setSubscribeStatus("idle"), 6000);
-    } catch {
-      // Surface genuine failures instead of a fake "success". We still don't
-      // reveal whether this address was already subscribed — the API returns a
-      // uniform response for that — but a network/5xx error must not look like
-      // a win, otherwise real failures stay invisible and nothing is recorded.
-      setSubscribeStatus("error");
-      setErrorMsg("Something went wrong. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // ---- The four columns ---------------------------------------------------
   // Categories and rituals are DATA: the admin publishes seven categories and
@@ -313,71 +276,13 @@ const Footer = () => {
             <p className={styles.signature}>{brand.signatureLines[3]}</p>
           </div>
 
-          <div className={styles.newsletter}>
-            <p className={styles.eyebrow}>Stay close to the farm</p>
-            <p className={styles.newsletterNote} id={NEWSLETTER_NOTE_ID}>
-              New products, farm stories and the occasional offer — no noise.
-            </p>
-
-            {subscribeStatus === "success" ? (
-              <p className={styles.formSuccess} role="status">
-                Thank you — you are on the list.
-              </p>
-            ) : (
-              <form
-                className={styles.form}
-                onSubmit={handleSubscribe}
-                noValidate
-              >
-                <label className="sf-visually-hidden" htmlFor={EMAIL_INPUT_ID}>
-                  Email address
-                </label>
-                <div className={styles.field}>
-                  <input
-                    id={EMAIL_INPUT_ID}
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    className={`${styles.input} ${
-                      subscribeStatus === "error" ? styles.inputError : ""
-                    }`}
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (subscribeStatus === "error") {
-                        setSubscribeStatus("idle");
-                      }
-                    }}
-                    disabled={isSubmitting}
-                    aria-invalid={subscribeStatus === "error"}
-                    aria-describedby={
-                      subscribeStatus === "error"
-                        ? `${NEWSLETTER_NOTE_ID} ${EMAIL_ERROR_ID}`
-                        : NEWSLETTER_NOTE_ID
-                    }
-                  />
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmitting}
-                    className={styles.submit}
-                  >
-                    {isSubmitting ? "Sending" : "Subscribe"}
-                  </Button>
-                </div>
-                {subscribeStatus === "error" && (
-                  <p
-                    className={styles.formError}
-                    id={EMAIL_ERROR_ID}
-                    role="alert"
-                  >
-                    {errorMsg}
-                  </p>
-                )}
-              </form>
-            )}
-          </div>
+          <NewsletterForm
+            variant="footer"
+            id={NEWSLETTER_ID}
+            label="Stay close to the farm"
+            hint="New products, farm stories and the occasional offer — no noise."
+            className={styles.newsletter}
+          />
         </div>
       </div>
 

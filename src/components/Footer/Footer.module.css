@@ -110,14 +110,19 @@
   color: var(--sf-color-text-secondary);
 }
 
-/* ---- Newsletter --------------------------------------------------------- */
+/* ---- Newsletter ----------------------------------------------------------
+   The label, the hint, the 48px glass field, the pill and the two lines it can
+   answer with all belong to `brand/NewsletterForm` (Prompt 19) — the full-page
+   CTA asks the same question with the same component. What is left here is the
+   one thing the shared form cannot know: where in this grid it sits. */
 
 .newsletter {
   min-width: 0;
 }
 
-/* The column-heading voice, shared by the newsletter label and the four
-   directory headings: gold, tracked, 12px, upper case. */
+/* The column-heading voice for the four directory headings: gold, tracked,
+   12px, upper case. The newsletter's own label wears the `.sf-eyebrow`
+   primitive this was modelled on, inside the shared form. */
 .eyebrow {
   margin: 0 0 var(--sf-space-3);
   font-family: var(--sf-font-family);
@@ -126,84 +131,6 @@
   letter-spacing: var(--sf-tracking-wide);
   text-transform: uppercase;
   color: var(--sf-color-gold);
-}
-
-.newsletterNote {
-  max-width: 46ch;
-  margin: 0 0 var(--sf-space-5);
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
-}
-
-.form {
-  margin: 0;
-}
-
-/* Hairline field + pill button, sharing one baseline. */
-.field {
-  display: flex;
-  align-items: stretch;
-  gap: var(--sf-space-3);
-  max-width: 34rem;
-}
-
-.input {
-  flex: 1;
-  min-width: 0;
-  min-height: var(--sf-tap-target);
-  padding: var(--sf-space-2) 0;
-  border: 0;
-  border-bottom: 1px solid var(--sf-color-border);
-  border-radius: 0;
-  background: transparent;
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-base);
-  color: var(--sf-color-text);
-  outline: none;
-  transition: border-color var(--sf-transition-fast);
-}
-
-.input::placeholder {
-  color: var(--sf-color-text-muted);
-}
-
-.input:hover,
-.input:focus {
-  border-bottom-color: var(--sf-color-gold);
-}
-
-.input:disabled {
-  color: var(--sf-color-text-muted);
-  cursor: not-allowed;
-}
-
-.inputError {
-  border-bottom-color: var(--sf-color-danger);
-}
-
-.submit {
-  flex-shrink: 0;
-}
-
-.formError,
-.formSuccess {
-  margin: var(--sf-space-3) 0 0;
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-normal);
-}
-
-.formError {
-  color: var(--sf-color-danger);
-}
-
-/* Success replaces the form entirely — one line, no chrome. */
-.formSuccess {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-xl);
-  font-style: italic;
-  color: var(--sf-color-gold-light);
 }
 
 /* =============================================================================
@@ -454,8 +381,7 @@
 .footerLink:focus-visible,
 .microLink:focus-visible,
 .contactLink:focus-visible,
-.socialLink:focus-visible,
-.input:focus-visible {
+.socialLink:focus-visible {
   outline: 2px solid var(--sf-color-focus-ring);
   outline-offset: 3px;
   border-radius: var(--sf-radius-sm);
@@ -469,12 +395,6 @@
 @media (max-width: 480px) {
   .wordmark {
     width: 160px;
-  }
-
-  .field {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--sf-space-4);
   }
 }
 

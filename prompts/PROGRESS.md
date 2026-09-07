@@ -22,7 +22,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 16 | Home product showcase sections | complete | 2026-09-07 | (this commit) | Every product now has its own full editorial spread on the home page. **`catalogue/ProductChapter`** (new, shared with Prompt 23 through `variant`) renders `<section id data-chapter aria-labelledby class="sf-section">`: a `GlowWrap` (violet/pink by parity) around a 4:5 `.sf-plate` on one side and a `GlassCard` panel on the other carrying the 36px numeral chip, the ritual eyebrow, the `h2` name, the promise, the description at 52ch, up to five `keyIngredients` as glass chips, `product.badges` as trust chips, `fragranceNote`, `Price size="lg"` and the two 48px CTAs ("Explore more" → `productPath`, "Add to Cart" → `useCart().addToCart(buildCartItem(p),1)`, disabled as "Coming soon"/"Out of stock"). Desktop: media 42% at ≥769px then 1fr 1fr with a 64px gutter at ≥1280px, `flip` swapping the columns by `grid-column` so the DOM order stays media → words; the pack is `position: sticky; top: 112px` inside a grid floored at `min-height: 80svh`. Mobile: one column, pack first at 92vw, CTAs stacked full width ≤560px, and the panel drops its backdrop blur ≤768px. **`home/ProductShowcase`** (new) opens with one `SectionHeading` ("The Black Rice range" / "Eight steps. One **ritual.**" / the BRAND.md §3.1 lede) and then eight chapters with a hairline between them; `getHeroProducts()` with a `getAll()`+`heroOrder ?? 99` fallback, two skeleton chapters while loading, nothing at all on error. Mounted in `Home.js` right after `<ShopByCategory/>`. **Two fixes the browser found, both recorded in the decisions log:** a full-width 4:5 plate is exactly as tall as its own grid row, so the sticky never engaged until the pack was capped at `max-width: calc(0.8 * 62svh)`; and the plate's lamp bleeds 5% past its box, which widened the document by 22–69px until the section took `overflow-x: clip`. **Five `media[0].crop` rectangles corrected** after checking all eight at 4:5/900px against their originals — soap (white carton canvas at the foot), body wash (white in all four rounded corners), face mask (white rules at rows 0–8 and 397–400), face scrub (a 1px light-grey rim that made `b_auto` pad the whole frame light grey), face serum (the gold band ran edge to edge); face wash, face mist and moisturizer gel verified unchanged. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 10 suites / 95 passed (10 new). Browser QA at 360/390/414/768/1024/1280/1440: 8 chapters, **0 horizontal overflow at every width**, sticky measured at exactly 112px through 1440/1280/1024 and `static` on a phone, quick add opens the drawer with a toast, 5 TBA products disabled as "Coming soon", both CTAs keyboard-reachable per chapter, reduced motion static, **CLS 0.038 desktop / 0.040 mobile with every recorded shift attributed to the hero and header — none to a chapter**. See "Prompt 16 record" below. |
 | 17 | About LAMIKAA section and value-chain visual | complete | 2026-09-07 | (this commit) | The farmer-owned story now has a surface. **`brand/ValueChain`** draws BRAND.md §3.3's journey as a real `<ol role="list" aria-label="How value reaches farmers">` of seven `motion.li` — a 32px `Chip variant="step"` numeral, a 14px Manrope 600 label ("LAMIKAA Naturals" in gold, matched against `brand.runningName` rather than by index) and a 60%-opacity signature-gradient connector with an 8px arrow, `aria-hidden`. Three layouts from ONE markup: one row ≥1025px, 4 + 3 at 769–1024px, a 40px vertical rail ≤768px — **measured at 360/390/414/768/1024/1025/1060/1100/1200/1280/1366/1440/1920: rows 7/7/7/7/2/1/1/1/1/1/1/1/1, connectors 24→48px, no overflow at any of them and no element past the section's box.** Zero tab stops (the band's only stop is its CTA); the aria tree reads "01 Farmer" … "07 Farmer Members". **`home/AboutTeaser`** mounts it under the pull-quote, the placeholder landscape and the two BRAND.md §3.1 paragraphs, over `LegalNote` and "Our Story". **Not one word of company copy is in the component** — it is `siteContent.home.aboutTeaser`, and a missing/unpublished/unreachable block leaves only the signature line and the legal note (exercised by aborting the request: quote + chain + note + CTA, no image, no paragraphs). **Two real defects found and fixed in the browser, not by reading:** the global `overflow-wrap: anywhere` on `li` was inherited by the labels and let flex shrink split "FPC" over two lines; and `AnimatePresence initial={false}` in App.js silently disables `reveal(…, { inView: true })` for anything that ships with the route, so the chain landed finished — naming the resting state as `animate` as well restores the sequential wave (measured: opacity 0 → 1 across all seven over ~0.7s; under reduced motion, no style attribute at all, at any point). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (11 suites, **104 passed**, 9 new). Contrast on the band: labels 16.5:1, gold 13.0:1, legal note 9.0:1. |
 | 18 | Why Black Rice spotlight and rituals teaser | complete | 2026-09-07 | (this commit) | Two sections and the card the rituals pages will reuse. **`home/WhyBlackRice`** is the ingredient spotlight: a 1:1 placeholder under `GlowWrap tone="gold" intensity={0.16}` on the left, and on the right the `SectionHeading` ("The hero ingredient" / "Why black rice?", the gradient on **black**, found in the headline rather than pinned to an index), the THREE seeded `siteContent.home.whyBlackRice` points at 17px behind 20px gold `mdi:check-circle-outline` glyphs, and a "Carried by" row of the eight `products.getHeroProducts()` as 56px `.sf-plate` links to their PDPs. **No fallback copy for the points** — an unpublished or unreachable block renders NOTHING, because a spotlight that invents a cosmetic claim is worse than no spotlight. **`catalogue/RitualCard`** is ONE `<Link>` per routine (verified: one tab stop, zero nested controls) carrying a 16:10 photograph, "Ritual · N steps", the name at 22px Fraunces, the tagline (or the story's first WHOLE sentence), a step strip of up to five 40px plates at −8px overlap with 24px gradient-ring numerals — the body ritual's `alternativeProductId` peeking out from behind step 01 — the duration and a ghost "See the ritual →". It resolves its own steps through the pure `resolveRitualSteps`, so Prompt 24's index needs only the same two inputs. **`home/RitualsTeaser`** is the triptych: `rituals.getAll()` + `products.getAll()` in one `Promise.all`, three cards at 769px+, one column 481–768, an 84vw snap scroller ≤480, and a primary "Build your ritual" → `/rituals` under the grid. Measured at 360/390/414/480/481/768/769/1024/1280/1440: **document overflow 0 at every width**; media 1:1 (533² at 1280) and 16:10 (355×222); the desktop body `532.8px 651.2px` (0.9fr/1.1fr) at 56px gutter from 1025px. 12 tab stops across both sections (8 PDP thumbs, 3 cards, 1 CTA). Under `prefers-reduced-motion: reduce` no reveal wrapper carries a non-1 opacity. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 12 suites / 118 passed (15 new in `RitualCard.test.js`, 1 suite / 50 tests skipped — the live-API suite). No `db.json` or `api.js` change: reads only. |
-| 19 | Full-page CTA section | pending | | | |
+| 19 | Full-page CTA section | complete | 2026-09-07 | (this commit) | The page now stops for one screen and asks. **`brand/NewsletterForm`** is the footer's capture, extracted: the `isEmailValid()` gate, `apiService.leads.createNewsletter`, the six-second success revert and the `role="status"` / `role="alert"` pair move out of `Footer.js` whole, and both surfaces mount the same component (`variant="footer" | "cta"`, own `id` base so the two forms' ids cannot collide). Both were subscribed for real in Chromium and both leads landed in `/leads` as `type: "newsletter"`, `status: "subscribed"` rows the admin table renders. **`home/FullPageCta`** is four layers — a lazy `alt=""` photograph, the 82%→94% `--sf-color-bg` wash, the signature gradient at 12% `screen`, and a `GlassCard strong scrim padding="lg"` (max 760px) under one `GlowWrap tone="duo" intensity={0.22} breathe` — with **no backdrop blur on the ground** (measured: section `backdrop-filter: none`, card `blur(20px)`). `min-height` **100svh from 769px, 80svh below**, `vh` fallback above each. **Two defects found in the primitives and fixed**: `prefers-reduced-motion` never stopped a DUO glow's second lamp (`.sf-glow--duo.sf-glow--breathe::after` out-specificities the one-class reset — the hero has had this since Prompt 14; `document.getAnimations()` 2 → 0), and `.sf-glass--scrim::before` painted **over** the content it exists to make legible (a warm-white headline capped at rgb(165,163,161); now `z-index: -1` inside an isolated context, headline back to rgb(247,245,240)). Contrast on the card, measured against a deliberately near-white photograph: headline **12.9:1**, eyebrow 9.9, lede 6.9, hint 6.9, ownership note 5.9, and the one gradient keyword's darkest stop **3.1:1** — inside the large-text floor at 72px/36px. One breathing glow visible at every one of the 176 scroll positions scanned. `CI=true npm run build` **exit 0, Compiled successfully, no warnings**; `npm test -- --watchAll=false` 13 suites / **127 passed** (9 new). No `db.json` and no `api.js` change. |
 | 20 | Why LAMIKAA section (pillars and impact) | pending | | | |
 | 21 | Home FAQs section and accordion | pending | | | |
 | 22 | Home assembly, performance and SEO | pending | | | |
@@ -250,6 +250,18 @@ Record every decision a prompt had to make that the reference files did not sett
 - `18 · 2026-09-07 · Both new sections sit on the page ground (`.sf-section`), not on `--sf-color-surface` · `AboutTeaser` immediately above IS a full-bleed surface band, and a second band butted against it would merge into one. The alternation the home page reads by is band → ground, which is what these two continue.
 - `18 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are left untouched, pre-rebuild copy included · The file is touched only to import and mount the two new sections and to extend its own section map. Those sections are Prompt 22's to delete (00_INDEX §3.13, and the note the file itself carries); removing them here would drop functionality — recently viewed, the deals countdown — that Prompt 22 decides the fate of. Same posture Prompts 15–17 took.
 
+- `19 · 2026-09-07 · The full-page CTA DOES have fallback copy — `brand.signatureLines.slice(0, 3)` and the two default links — where the ingredient spotlight deliberately has none · The two sections look symmetrical and are not. Prompt 18's subject is three cosmetic ingredient claims, which must never be hard-coded. This section's subject is the brand's own signature lines (BRAND.md §3.8), which `config/brand.js` already states verbatim and which the CMS block only mirrors. A fallback here restates the brand to itself; a fallback there would invent a claim. The PHOTOGRAPH is the one part with no fallback: no image is simply the wash over the page ground, which is a composition in its own right.
+- `19 · 2026-09-07 · `prefers-reduced-motion` did not stop the second lamp of a `duo` breathing glow, and the fix is in the primitives · `.sf-glow--duo.sf-glow--breathe::after` (two classes) out-specificities the reset's `.sf-glow--breathe::after` (one class), so the violet lamp kept its 10s loop with reduced motion on — measured in Chromium as `getAnimations().length === 2` and `animationName: sf-breathe` on the `::after`. The hero has carried this since Prompt 14; this section would have been the second. A third selector at matching specificity was added to the reduced-motion block. Now 0 animations and `animation: none` on both pseudo-elements.
+- `19 · 2026-09-07 · `.sf-glass--scrim::before` painted OVER the card's own text, not under it, and the fix is in the primitives · An absolutely-positioned pseudo-element paints in the positioned-descendant layer, above the host's in-flow inline text — so the wash dimmed the very type it exists to make legible (measured: the brightest headline pixel capped at rgb(165,163,161) instead of `--sf-color-text` rgb(247,245,240), and every "improved" contrast figure was both text and ground being dimmed together). `z-index: -1` plus `isolation: isolate` puts it where the class name has always promised — over the glass, under the content — which is exactly what `.sf-card--hover::before` already does with its lamp. This section is the `scrim` prop's first real consumer; `BottomNav` is the other user of the class and its labels were being dimmed the same way, and are now not.
+- `19 · 2026-09-07 · The card takes `scrim` although the prompt's composition line names only `strong padding="lg"` · The prompt's own acceptance criterion says "text contrast on the card ≥ 4.5:1 **with the scrim**", and DESIGN_SYSTEM.md §4 names `.sf-glass--scrim` for exactly this case (text on glass over imagery). Without it, over a near-white photograph the signature gradient's violet stop measures 1.6:1 on the headline — the palette's quoted 4.65:1 for `#8B5CF6` is against the PAGE GROUND (`#0B0B0D`), and 8% white glass over a bright photo is not that ground. With the scrim the card's ground measures rgb(57,44,54) and the three gradient stops read 9.3 / 4.6 / 3.1:1.
+- `19 · 2026-09-07 · The 48px glass field is now the newsletter's field in BOTH placements, so the footer's hairline-underline input from Prompt 13 is gone · The prompt states the shared component's field as "labelled, 48px tall, glass" and scopes the footer's preservation guarantee to "behaviour identical" — which it is, contract for contract. DESIGN_SYSTEM.md §7 already specifies every storefront input as a `--sf-color-surface-2` ground behind a 1px `--sf-glass-border`, so the extraction moves the footer ONTO the system rather than off it. One field design asked twice beats two, and `variant` is left to carry only what differs: alignment, measure, and the width at which the pill drops below the field.
+- `19 · 2026-09-07 · `variant` changes layout only — never the control · `footer` is left-aligned with the field capped at 34rem and stacking at 480px (the breakpoint the footer's own grid collapses on); `cta` is centred inside a 760px card and stacks at 639px, because a pill and a field sharing 296px of a 360px phone leaves the field too short to show an address being typed. The input, the button, the error and the success line are byte-identical between them.
+- `19 · 2026-09-07 · The background `<img>` uses a local `onError` that DROPS the photograph, not the shared `onImageError` · `onImageError` swaps in `PLACEHOLDER_IMG`, a "No Image" plate — right for a product plate, and wrong for a decorative ground the size of a screen, where it would print those two words across the viewport behind the headline. The state records the URL that failed rather than a boolean, so it resets itself the moment the owner publishes a different photograph.
+- `19 · 2026-09-07 · The section's own padding is `--sf-space-16` (64px), not `--sf-section-y` · The 100svh floor is what gives this section its air; the padding's only job is to keep the card off the edges once the composition outgrows that floor, and the full fluid rhythm (140px at desktop) pushes a card that is already taller than the screen 152px further past it.
+- `19 · 2026-09-07 · The three signature lines WRAP at `--sf-text-4xl` inside a 760px card, and that is left as specified · At 72px the longest line needs about 1150px and the card's measure is 696px, so each of the three renders as two — the spec's 4xl, its 760px card and "each on its own line" cannot all hold at once for 33-character sentences. "Each on its own line" is honoured as composition (three blocks, 8px apart, `text-wrap: balance`), which is the part that is a markup decision. The consequence is that the card runs 1060px at desktop and a 900px laptop scrolls once through the section; flagged for Prompt 22's assembly pass rather than decided here by moving off the specified token.
+- `19 · 2026-09-07 · The wash and the gradient are absolutely-positioned layers, not cells of a shared grid · `align-self: stretch` does nothing to an `<img>` — a replaced element with an intrinsic ratio treats it as `start` (CSS Box Alignment §6.5) — so the photograph would have sat at its natural size in the middle of the section. Absolute positioning over the section's box makes the card the only child in flow, which is what lets the section's height be the card's.
+- `19 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are again left untouched · `Home.js` is touched only to import and mount `<FullPageCta/>` after `<RitualsTeaser/>` and to extend its own section map with `0h`. Same posture as Prompts 15–18; those sections are Prompt 22's to delete.
+
 ## Open TODOs
 
 Carry-overs that a later prompt (or the developer/owner) must pick up (format: `NN · item · owner · target prompt`).
@@ -336,6 +348,11 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `18 · A ritual card links to `/rituals/<slug>`, which is a stub until Prompt 24 builds the page · owner of 24 · 24
 - `18 · `RitualCard`'s `compact` variant (no photograph) has no consumer yet — it is built to the prompt's contract for the rituals index and the PDP cross-links · owner of 24 · 24
 
+- `19 · The full-page CTA's background photograph could not be seen with the real asset: `picsum.photos` answers `net::ERR_CONNECTION_RESET` to the browser in this sandbox (curl reaches it with a 200). Every measurement — the wash, the 12% gradient, the card ground, all six contrast figures — was taken against a locally-served stand-in chosen to be the WORST case (near-white with dark bands), so the real frame can only improve them. Look at the composition once against `picsum.photos/seed/lamikaa-cta/1920/1080` on a machine with outbound HTTPS · developer · 37`
+- `19 · At desktop the card measures 1060px and the section 1188px, so a 900px laptop scrolls ~290px through a section whose floor is 100svh. It is inherent to `--sf-text-4xl` inside a 760px card (each signature line wraps to two), not to the implementation — see the decision above. If the owner wants the whole card on one screen, the levers are the card's max-width or the headline token, and Prompt 22's assembly pass is where the home page's vertical budget is decided as a whole · Prompt 22 · 22`
+- `19 · `NewsletterForm`'s `buttonLabel` prop has no consumer yet — both call sites take the "Subscribe" default. It is built to the prompt's contract for a later surface (a policy page footer, a post-purchase capture) · owner of 28 · 28`
+- `19 · The reduced-motion and scrim fixes both landed in `theme/storefront-primitives.css`, which is shared. Neither changes a look that any component asked for — one stops an animation with reduced motion on, the other stops a wash dimming its own text — and `BottomNav` (the only other `.sf-glass--scrim` user) was re-checked in Chromium at 390px. Worth one pass over the hero with reduced motion on during the responsive/a11y sweeps · developer · 37`
+
 ## Placeholders introduced / resolved
 
 Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token · introduced|resolved · where`).
@@ -376,6 +393,8 @@ Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token 
 
 
 - `18 · (none introduced) · — · Both images the two sections render — `siteContent.home.whyBlackRice.image` (`picsum.photos/seed/lamikaa-black-rice/1200/1200`) and `rituals[*].image` (`…/lamikaa-ritual-{morning,evening,body}/1200/1500`) — were seeded and inventoried by Prompt 06 and are already listed in `PLACEHOLDER_ASSETS.md`. No `{{…}}` token is read or rendered by either section.
+
+- `19 · (none introduced, none resolved) · — · The only asset this section reads is `siteContent.home.fullPageCta.image` (`picsum.photos/seed/lamikaa-cta/1920/1080`), seeded and inventoried by Prompt 06 and already listed in `PLACEHOLDER_ASSETS.md` as "Full-page CTA background". No `{{…}}` token is read or rendered by either new component; the ownership note under the card is `brand.legalNote` through `LegalNote`, verbatim.
 
 ## Baseline record (Prompt 01, 2026-09-06)
 
@@ -2127,3 +2146,142 @@ rituals-teaser   <a> "Build your ritual"                   → /rituals
 The boxes, the ring, the overlap and the colour were measured; the pictures themselves want one look on a
 machine with outbound HTTPS. Carried into Open TODOs, with the `/rituals/<slug>` stub and the unused `compact`
 variant, both of which are Prompt 24's.
+
+## Prompt 19 record (2026-09-07)
+
+### What was built
+
+| File | Lines | What it is |
+|---|---|---|
+| `src/components/brand/NewsletterForm.js` | 172 | The footer's newsletter capture, extracted whole. `{ variant, label, hint, buttonLabel, id, className }`. |
+| `src/components/brand/NewsletterForm.module.css` | 175 | One 48px glass field + pill, and the two placements' alignment and stacking widths. |
+| `src/components/home/FullPageCta.js` | 252 | The full-viewport stop: photograph, wash, gradient, breathing duo lamp, and the card. |
+| `src/components/home/FullPageCta.module.css` | 235 | The four layers, the svh floors, the headline stack and the two-way action row. |
+| `src/components/home/FullPageCta.test.js` | 85 | 9 tests over the two pure exports (`splitOnWord`, `ctaCopy`). |
+| `src/components/Footer/Footer.js` | +22 / −117 | Mounts `NewsletterForm`; its own form, state, timer and `isEmailValid` import are gone. |
+| `src/components/Footer/Footer.module.css` | +9 / −89 | The field's rules move with the field; `.newsletter` keeps only its grid placement. |
+| `src/pages/Home/Home.js` | +10 | `<FullPageCta/>` after `<RitualsTeaser/>`; the section map extended with `0h`. |
+| `src/theme/storefront-primitives.css` | +19 / −1 | Two fixes: the reduced-motion reset for a duo breather, and the scrim's paint order. |
+
+No `db.json` and no `api.js` change. The section READS `siteContent.home.fullPageCta` (seeded in Prompt 06;
+`GET /siteContent` in mock, `GET /content/home` live) and WRITES through the existing
+`apiService.leads.createNewsletter` (`POST /leads` in mock, `POST /leads/newsletter` live). The content editor
+for the block and the Leads table are Prompt 34's and the admin's respectively.
+
+### The two defects the browser found, and reading did not
+
+Both are in `theme/storefront-primitives.css`, both predate this prompt, and both are exactly what this
+section's acceptance criteria are about.
+
+**1. Reduced motion never stopped a duo glow's second lamp.** The reset is written
+`.sf-glow--breathe::before, .sf-glow--breathe::after` (one class, specificity 0,1,1); the duo's second lamp is
+declared `.sf-glow--duo.sf-glow--breathe::after` (0,2,1) and wins. With `prefers-reduced-motion: reduce` the
+violet lamp kept its 10s loop — on this section, and on the hero, which has carried it since Prompt 14.
+
+```
+before   ::before animation: none   ::after animation: sf-breathe   document.getAnimations() → 2
+after    ::before animation: none   ::after animation: none         document.getAnimations() → 0
+```
+
+**2. `.sf-glass--scrim::before` painted over the content, not under it.** An absolutely-positioned
+pseudo-element paints in the positioned-descendant layer, which is above the host's in-flow inline text, so the
+wash dimmed the very type it exists to make legible. The class is documented — in `GlassCard.js` and in
+`BottomNav.js` — as sitting *under* the content. This section is the `scrim` prop's first real consumer.
+
+```
+before   brightest headline pixel  rgb(165,163,161)   ( = --sf-color-text under a 35% --sf-color-bg wash )
+after    brightest headline pixel  rgb(247,245,240)   ( = --sf-color-text )
+```
+
+`z-index: -1` on the pseudo-element plus `isolation: isolate` on the host — the same device `.sf-glow` uses, and
+what `.sf-card--hover::before` already does with its lamp. `BottomNav`, the only other user of the class, was
+re-checked at 390px: its labels are no longer dimmed and the wash still darkens the page passing beneath it.
+
+### Contrast on the card (Chromium 1194, sampled from the composited page)
+
+Measured against the WORST ground this section can produce: a near-white photograph, desaturated and dimmed by
+`.sf-placeholder-media`, under the 82%→94% wash, the 12% screened gradient and 8% white glass. The card ground
+sampled **rgb(57,44,54)**. The "no scrim" column is the same measurement with `scrim` off.
+
+| Element | Colour | With scrim | No scrim | Floor |
+|---|---|---|---|---|
+| Headline (72px / 36px) | `--sf-color-text` | **12.9:1** | 10.0:1 | 3:1 (large) |
+| Gradient keyword, gold stop | `#F5D76E` | **9.3:1** | 6.8:1 | 3:1 (large) |
+| Gradient keyword, pink stop | `#FF4FD8` | **4.6:1** | 3.3:1 | 3:1 (large) |
+| Gradient keyword, violet stop | `#8B5CF6` | **3.1:1** | **1.6:1** | 3:1 (large) |
+| Eyebrow | `--sf-color-gold` | **9.9:1** | 7.7:1 | 4.5:1 |
+| Lede (`brand.tagline`) | `--sf-color-text-secondary` | **6.9:1** | 5.3:1 | 4.5:1 |
+| Newsletter hint | `--sf-color-text-secondary` | **6.9:1** | 5.3:1 | 4.5:1 |
+| Ownership note | `--sf-color-text-muted` | **5.9:1** | 4.9:1 | 4.5:1 |
+
+The violet stop at 1.6:1 is the row that made `scrim` non-optional. The palette's own quoted figure for
+`#8B5CF6` is 4.65:1 — against the PAGE GROUND `#0B0B0D`, which 8% white glass over a bright photograph is not.
+
+### Responsive measurements (Chromium 1194, mock mode, dev server)
+
+`ovf` is `documentElement.scrollWidth - clientWidth`; `secH` includes the section's 64px of padding.
+
+| Viewport | ovf | min-height | secH | card | headline | actions |
+|---|---|---|---|---|---|---|
+| 360 × 640 | 0 | 512px (80svh) | 1151 | 347 | 36px | column, full width |
+| 390 × 844 | 0 | 675px (80svh) | 1151 | 358 | 36px | column, full width |
+| 414 × 896 | 0 | 717px (80svh) | 1154 | 382 | 36.4px | column, full width |
+| 768 × 1024 | 0 | 819px (80svh) | 857 | 736 | 45.6px | row, centred |
+| 1024 × 768 | 0 | 768px (100svh) | 1173 | 760 | 69.8px | row, centred |
+| 1280 × 800 | 0 | 800px (100svh) | 1188 | 760 | 72px | row, centred |
+| 1440 × 900 | 0 | 900px (100svh) | 1188 | 760 | 72px | row, centred |
+| 1440 × 1080 | 0 | 1080px (100svh) | 1188 | 760 | 72px | row, centred |
+
+Fixed geometry: card max-width **760px**, radius 28px, `backdrop-filter: blur(20px)` — and the SECTION's
+`backdrop-filter` is **`none`**, which is the prompt's own guardrail. Field **48px**, pill radius. Glow
+`tone="duo" intensity={0.22} size={130} breathe`, 10s with a 2s stagger on the second lamp.
+
+### The glow budget, scanned rather than eyeballed
+
+`.sf-glow--breathe` exists twice on the home page (the hero's stage, this section's card). Every 100px of the
+18 410px document was checked against a 900px viewport — **176 positions, maximum 1 breathing glow visible, 0
+offenders**. Eight product chapters, the About band, the spotlight and the rituals triptych sit between them, so
+no viewport height brings the two together.
+
+### Keyboard and the two forms
+
+Four tab stops in the section, in this order and at every width:
+
+```
+<a> "Shop the Black Rice Range"   → /shop     (Button variant="primary" size="lg")
+<a> "Meet the farmer-owners"      → /about    (Button variant="secondary" size="lg")
+<input id="cta-newsletter-email" type="email">   labelled by a visually-hidden <label>
+<button type="submit"> "Subscribe"
+```
+
+Both forms were driven for real against JSON Server:
+
+| Surface | Input | Result | Lead |
+|---|---|---|---|
+| CTA | a valid address | `role="status"` — "Thank you — you are on the list." | `POST /leads` → `type: "newsletter"`, `status: "subscribed"` |
+| CTA | `nope` | `role="alert"` — "Please enter a valid email address.", `aria-invalid="true"`, `aria-describedby="cta-newsletter-hint cta-newsletter-error"` | none — the gate fires before the request |
+| Footer | a valid address | `role="status"` — the same line, from the same component | `POST /leads` → the same shape |
+
+The two forms' ids are derived from their own `id` base (`cta-newsletter-*`, `footer-newsletter-*`), so the two
+mounts on one page cannot collide; a caller that passes no base gets `useId()`. The four QA leads were removed
+from `db.json` afterwards (`git diff --stat db.json` → empty).
+
+### Verification run
+
+- `CI=true npm run build` — exit 0, **Compiled successfully, no warnings**.
+- `npm test -- --watchAll=false` — 13 suites (1 skipped: the live API), **127 passed**, 9 of them new.
+- `grep -n "NewsletterForm" src/components/Footer/Footer.js src/components/home/FullPageCta.js` → 5 (2 imports,
+  2 mounts, 1 header note).
+- No hard-coded colour, `rgb()` or `hsl()` in either new stylesheet — the wash's `rgba(11,11,13,.82→.94)` is
+  written as `color-mix(in srgb, var(--sf-color-bg) 82%|94%, transparent)`, the idiom the primitives sheet
+  names. No Meghali-era name, asset or identifier in any touched file; no `dangerouslySetInnerHTML`.
+- Manual QA at 360 / 390 / 414 / 768 / 1024 / 1280 / 1440 (and 1440×1080), each with and without
+  `prefers-reduced-motion`. Zero page errors in the console across every run.
+
+### Left for later
+
+`picsum.photos` is unreachable from the browser in this sandbox (curl gets a 200, the browser gets
+`net::ERR_CONNECTION_RESET`), so every measurement above was taken against a locally-served near-white
+stand-in — deliberately the worst case for the wash, so the real frame can only improve the figures. The
+composition wants one look at the real photograph, and the desktop card's 1060px height wants Prompt 22's
+verdict. Both carried into Open TODOs.
