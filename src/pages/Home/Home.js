@@ -12,6 +12,8 @@ import HeroCarousel from "../../components/home/HeroCarousel";
 import ShopByCategory from "../../components/home/ShopByCategory";
 import ProductShowcase from "../../components/home/ProductShowcase";
 import AboutTeaser from "../../components/home/AboutTeaser";
+import WhyBlackRice from "../../components/home/WhyBlackRice";
+import RitualsTeaser from "../../components/home/RitualsTeaser";
 import TrustStrip from "../../components/TrustStrip";
 import ProductCard from "../../components/storefront/ProductCard";
 import useSeo from "../../hooks/useSeo";
@@ -30,6 +32,8 @@ import styles from "./Home.module.css";
 //   0c SHOP BY …        seven category cards + the concern chips      (15)
 //   0d THE RANGE        eight product chapters, alternating spreads   (16)
 //   0e ABOUT LAMIKAA    the farmer-owned story + the value chain      (17)
+//   0f WHY BLACK RICE   the ingredient spotlight + the eight labels   (18)
+//   0g RITUALS          three routine cards + "Build your ritual"     (18)
 //   1. WHERE TO BEGIN   collection stories (categories.getAll)
 //   2. THE EDIT         featured, staggered editorial grid (products.getFeatured)
 //   3. ON OFFER         the deals rail + one tracked countdown line   [conditional]
@@ -431,6 +435,12 @@ const Home = () => {
 
       {/* ── ABOUT LAMIKAA — who owns this, and where the value goes ───────── */}
       <AboutTeaser />
+
+      {/* ── WHY BLACK RICE — the one ingredient, and the eight that carry it ─ */}
+      <WhyBlackRice />
+
+      {/* ── RITUALS — the order the range was designed to be used in ──────── */}
+      <RitualsTeaser />
 
       {/* ── 1. WHERE TO BEGIN — the collections, told as stories ──────────── */}
       {showCollections && (
