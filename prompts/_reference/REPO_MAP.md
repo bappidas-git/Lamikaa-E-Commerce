@@ -993,6 +993,88 @@ No `db.json` or `api.js` change. The section READS
 `apiService.leads.createNewsletter` — `POST /leads` in mock,
 `POST /leads/newsletter` live — so both api modes are unchanged.
 
+**Updated by Prompt 20.** The Why LAMIKAA band on the home page, and the two brand
+components the Why LAMIKAA page (Prompt 28) mounts unchanged.
+
+- `brand/Pillars.js` (142) + `.module.css` (158) + `.test.js` (196, shared with the
+  other two components of this prompt) — **new**. BRAND.md §3.2's four pillars as
+  glass cards.
+  **Contract:** `pillars` (default `brand.pillars`) · `compact` · `titleAs`
+  (default `"h3"`) · `className` · rest spread onto the `<ul>`.
+  **Markup:** one `<ul role="list">` of four `GlassCard as={motion.li}` at
+  `padding="md"` (16px when `compact`), each carrying a 44px glass circle with a
+  24px gold glyph, a `Chip variant="step"` numeral "01"–"04" (`aria-hidden` — a
+  visual ordinal on an unordered list), the title in Fraunces 22px and the text in
+  Manrope 15px `--sf-color-text-secondary`. **Not one word of copy is in the
+  component**; it is all `brand.pillars`.
+  **Icons** resolve by KEY first (`indigenous-knowledge` → `mdi:leaf`,
+  `modern-science` → `mdi:flask-outline`, `farmer-ownership` →
+  `mdi:account-group-outline`, `responsible-beauty` → `mdi:earth`), then by
+  position, then to `mdi:star-four-points-outline`.
+  **The cards are NOT links and never take `interactive`** — its 4px lift, firmed
+  hairline and focus ring promise a destination that does not exist. The
+  `glow` tone node is instead held at `opacity: 0` and faded in by
+  `.grid .card:hover :global(.sf-glow)`, alternating gold/violet by index.
+  **Measured: one tab stop in the whole section (the CTA) and `transform: none` on
+  every card, hovered or not.**
+  **Layout:** 4 columns ≥1025px, 2 at 769–1024px, 1 stacked ≤768px, 16px gaps,
+  `minmax(0, 1fr)` at every step. Backdrop blur is dropped ≤768px
+  (`--sf-glass-fallback`), the same guard `ProductChapter` uses.
+  **Exports:** default plus `PILLAR_ICONS`, `pillarIcon(pillar, index)`,
+  `pillarNumeral(index)`, `pillarTone(index)` — all pure, all unit-tested.
+- `brand/ImpactTriptych.js` (184) + `.module.css` (128) — **new**.
+  `siteContent.impact.items` as three columns.
+  **Contract:** `items` · `showImages` (false on the home band, true on the page) ·
+  `titleAs` (default `"h3"`) · `className` · rest.
+  **Each column:** a 1px signature-gradient hairline at 60% opacity across the top
+  (a `::before`, so it stays out of the accessibility tree), an optional 4:3
+  `.sf-placeholder-media` photograph with `alt=""`, the eyebrow, the title in
+  Fraunces `--sf-text-lg`, and the points as a `<ul role="list">` at 15px behind
+  18px gold `mdi:circle-medium` bullets. **A bullet, not a tick**: these are aims,
+  and a check mark in front of one reads as a claim it has already happened.
+  **Layout:** `repeat(3, minmax(0, 1fr))` at a 24px gutter from 1025px, stacked at
+  32px below. No blurred layer at any width.
+  **The eyebrow is DERIVED from `item.key`** ("financial" → "Financial") and the
+  same word is stripped off `item.title` — but only when a dash follows it, so
+  "Financially Sustainable" keeps its first word. The seed writes the category into
+  both fields because the CMS field is one string.
+  **The points render VERBATIM** — no truncation, no summarising — which is what
+  preserves BRAND.md §3.9's qualifiers ("can reach the member farmers through
+  dividends"). There is no fallback copy: a missing, unpublished or unreachable
+  block renders `null`.
+  **Exports:** default plus `impactEyebrow(item)`, `impactTitle(item)`,
+  `impactColumns(items)` — pure and unit-tested, including the verbatim property.
+- `home/WhyLamikaaSection.js` (141) + `.module.css` (85) — **new**. The band that
+  composes the two, mounted between the full-page CTA and Prompt 22's remaining
+  sections.
+  **Composition:** `SectionHeading` (eyebrow "Why LAMIKAA", `brand.philosophy` as
+  the `h2` at `--sf-text-3xl`, **no gradient word** — the headline is the
+  philosophy, and lighting one of its three sentences would be an argument the
+  brand has not made; lede `brand.philosophyLede`) → `Pillars` → a second
+  `SectionHeading as="h3"` (eyebrow and title from the fetched block, defaults
+  "Our impact" / "Beauty That Creates Prosperity for Farmers") →
+  `ImpactTriptych showImages={false} titleAs="h4"` → `Button variant="secondary"`
+  "Why LAMIKAA" → `ROUTES.WHY` (`/why-lamikaa`, a stub until Prompt 28).
+  **The two halves fail separately:** the philosophy, the pillars and the CTA come
+  from `config/brand.js` and always render; the impact half renders nothing —
+  heading included — when its block is missing, unpublished or unreachable. While
+  loading it shows its heading over three text skeletons at the column widths.
+  **Outline:** page `h1` (hero) → this `h2` → pillar `h3` ×4 and the impact `h3` →
+  column `h4` ×3. Prompt 28 shifts the run up one level through `as` / `titleAs`.
+  **Exports:** default plus `impactCopy(block)`.
+- `config/brand.js`: one new key, **`philosophyLede`** — BRAND.md §3.2's first
+  sentence verbatim, qualifier included ("can be inspired"). `philosophy` IS the
+  band's headline, so its lede is brand copy too, and brand copy lives in this file
+  (the rule `originBadge` was added under in Prompt 15). Nothing else in the file
+  changed.
+- `pages/Home/Home.js`: `<WhyLamikaaSection/>` mounts directly after
+  `<FullPageCta/>`, and the file's section map gains `0i`. Sections 1–6 still
+  follow; Prompt 22 replaces them.
+
+No `db.json` and no `api.js` change. The section READS `siteContent.impact` —
+`GET /siteContent` in mock, `GET /content/impact` live — which both modes already
+serve identically, and writes nothing.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.

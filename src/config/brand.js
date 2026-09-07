@@ -39,6 +39,14 @@ export const brand = {
   // ---- Voice (BRAND.md §3.8, §3.2) ----------------------------------------
   tagline: "Indigenous Wisdom. Modern Beauty. Shared Prosperity.",
   philosophy: "Indigenous Wisdom. Modern Science. Responsible Beauty.",
+  // The sentence the philosophy line opens on — BRAND.md §3.2's first sentence,
+  // verbatim. It lives here beside `philosophy` and `pillars` for the reason
+  // `originBadge` does: `philosophy` IS the heading of the Why LAMIKAA band, so
+  // the band's lede is brand copy too, and brand copy is edited in this file,
+  // never inside a component. Note the qualifier ("can be inspired") — BRAND.md
+  // §3.9 makes it part of the sentence.
+  philosophyLede:
+    "LAMIKAA Naturals believes that the future of beauty can be inspired by the wisdom of the past.",
   signatureLines: [
     "Beauty that creates value.",
     "Value that reaches farmers.",

@@ -15,6 +15,7 @@ import AboutTeaser from "../../components/home/AboutTeaser";
 import WhyBlackRice from "../../components/home/WhyBlackRice";
 import RitualsTeaser from "../../components/home/RitualsTeaser";
 import FullPageCta from "../../components/home/FullPageCta";
+import WhyLamikaaSection from "../../components/home/WhyLamikaaSection";
 import TrustStrip from "../../components/TrustStrip";
 import ProductCard from "../../components/storefront/ProductCard";
 import useSeo from "../../hooks/useSeo";
@@ -37,6 +38,8 @@ import styles from "./Home.module.css";
 //   0g RITUALS          three routine cards + "Build your ritual"     (18)
 //   0h FULL-PAGE CTA    one screen: the three signature lines, two ways
 //                       on, and the newsletter                          (19)
+//   0i WHY LAMIKAA      the philosophy line, the four pillars and the
+//                       financial/social/environmental triptych         (20)
 //   1. WHERE TO BEGIN   collection stories (categories.getAll)
 //   2. THE EDIT         featured, staggered editorial grid (products.getFeatured)
 //   3. ON OFFER         the deals rail + one tracked countdown line   [conditional]
@@ -451,6 +454,13 @@ const Home = () => {
           spotlight, the triptych — is what guarantees the two can never share a
           viewport, whatever the screen height. */}
       <FullPageCta />
+
+      {/* ── WHY LAMIKAA — the four pillars, and what the business is for ───
+          The band the CTA above hands over to: the philosophy line, the four
+          pillars from the brand config, and the impact triptych from
+          siteContent. Both halves are shared with the Why LAMIKAA page
+          (Prompt 28), which mounts the same two components. */}
+      <WhyLamikaaSection />
 
       {/* ── 1. WHERE TO BEGIN — the collections, told as stories ──────────── */}
       {showCollections && (
