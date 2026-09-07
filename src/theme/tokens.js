@@ -1,3 +1,4 @@
+import brand from "../config/brand";
 import { formatCurrency } from "../utils/helpers";
 
 // =============================================================================
@@ -50,6 +51,15 @@ export const TOKENS = {
 // `dynamic` badges (e.g. free-shipping threshold) have their value filled from
 // live settings/shipping data at render time, so the number is never stale.
 export const TRUST_BADGE_CATALOG = {
+  // The three owner-mandated LAMIKAA badges (BRAND.md §3.9 rule 4). Their
+  // LABELS are read from `brand.trustBadges` by position rather than typed
+  // here, so the owner adjusts the wording for compliance in ONE file and the
+  // PDP badges, the hero chips, the product cards and the trust strip all
+  // follow. An id whose label has been removed from the brand config resolves
+  // to `undefined` and is dropped by <TrustBadges/> rather than printing blank.
+  farmerOwned: { icon: "sprout", label: brand.trustBadges[0] },
+  organic: { icon: "leaf", label: brand.trustBadges[1] },
+  resultOriented: { icon: "spark", label: brand.trustBadges[2] },
   genuine: { icon: "shield", label: "100% Genuine" },
   securePayment: { icon: "lock", label: "Secure Payment" },
   easyReturns: { icon: "rotate", label: "Easy Returns", dynamic: "returns" },
@@ -61,8 +71,12 @@ export const TRUST_BADGE_CATALOG = {
 
 // --- The per-client storefront configuration --------------------------------
 export const STOREFRONT_CONFIG = {
-  // Which trust badges appear near the buy box, in order.
-  trustBadges: ["easyReturns", "genuine", "freeShipping", "support"],
+  // Which trust badges appear near the buy box, in order. The first three are
+  // the owner-mandated LAMIKAA promises (labels from `brand.trustBadges`); the
+  // fourth is the one policy the buy box still has to state. "Free shipping"
+  // is deliberately NOT here — no shipping method sets a `freeAbove` yet, so
+  // the badge would promise a threshold nobody has configured.
+  trustBadges: ["farmerOwned", "organic", "resultOriented", "securePayment"],
 
   // Returns policy window (days). Drives the "Easy Returns" badge + the
   // Delivery & Returns panel copy. Set to 0 to advertise "no returns".

@@ -655,10 +655,13 @@
 }
 
 /* When used as an interactive control, meet the touch-target minimum — which
-   is taller than the chip's own resting height, and deliberately so. */
+   is taller than the chip's own resting height, and deliberately so. A chip is
+   a pill, never an underlined phrase: `text-decoration` is reset here rather
+   than in each caller, which is where it had started to be duplicated. */
 button.sf-chip,
 a.sf-chip {
   min-height: var(--sf-tap-target);
+  text-decoration: none;
 }
 
 .sf-chip:hover {

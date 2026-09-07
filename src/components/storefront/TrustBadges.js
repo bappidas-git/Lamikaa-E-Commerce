@@ -25,6 +25,27 @@ import styles from "./TrustBadges.module.css";
 // =============================================================================
 
 const ICONS = {
+  // The three LAMIKAA promises. Drawn on the same 24x24 stroke grid as the rest
+  // of the set so a mixed row keeps one weight — no filled glyph among outlines.
+  sprout: (
+    <>
+      <path d="M12 21v-8" />
+      <path d="M12 13C12 9.7 9.3 7 6 7H3c0 3.3 2.7 6 6 6h3z" />
+      <path d="M12 13c0-3.9 3.1-7 7-7h2c0 3.9-3.1 7-7 7h-2z" />
+    </>
+  ),
+  leaf: (
+    <>
+      <path d="M4 20c0-8.3 5.7-14 16-14 0 10.3-5.7 16-14 16H4v-2z" />
+      <path d="M8.5 16.5C11 13 14.5 10.5 18 9" />
+    </>
+  ),
+  spark: (
+    <>
+      <path d="M12 2.5l2.3 5.7 5.7 2.3-5.7 2.3L12 18.5l-2.3-5.7L4 10.5l5.7-2.3z" />
+      <path d="M19 17.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" />
+    </>
+  ),
   shield: (
     <>
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -78,9 +99,12 @@ const TrustBadges = ({
   shipping,
   variant = "grid",
 }) => {
+  // Both halves have to resolve: an unknown id has no icon, and a catalogue
+  // entry whose label is read from `brand.trustBadges` has none if the owner
+  // has shortened that list. Either way the row is dropped, never drawn empty.
   const badges = (ids || [])
     .map((id) => ({ id, ...TRUST_BADGE_CATALOG[id] }))
-    .filter((b) => b.icon);
+    .filter((b) => b.icon && b.label);
 
   if (badges.length === 0) return null;
 

@@ -1,234 +1,151 @@
 /* =============================================================================
- * ProductCard — the editorial gallery object
+ * ProductCard — the LAMIKAA label card
  * =============================================================================
- * No frame, no fill, no shadow. The card is a 3:4 photograph on the sunken sand
- * panel followed by air and a quiet text stack; the page ground shows straight
- * through everywhere else. Everything that is not the garment is a hairline.
+ * The glass ground, the radius, the 4px lift, the firming hairline and the
+ * photograph's breath all come from `.sf-card` / `.sf-card--hover` through
+ * GlassCard; the plate, the chips, the discount badge, the flags and the button
+ * are the shared primitives. What is here is the COMPOSITION and the two things
+ * a shared class cannot know: where the add affordance lives, and how the card
+ * behaves when there is nothing to buy.
  *
- * LAYOUT — why this is a grid and not a flex column
+ * WHY THE INNER BOX IS A GRID
  *   Three rows: media / body / action. The action button is LAST in the DOM (so
  *   it is the last tab stop and keyboard order reads image, heart, name, add),
- *   but on a fine pointer the stylesheet moves it back into row 1, where it
- *   overlaps the foot of the photograph and is revealed on hover or focus.
- *   Explicit `grid-row` is what lets one button live in two places without a
- *   second DOM node, a wrapper, or absolute positioning against an unknown
- *   height. On touch it simply stays in row 3, always visible, always tappable.
+ *   but on a fine pointer the stylesheet moves it into row 1, where it overlaps
+ *   the foot of the plate and is revealed on hover or focus-within. Explicit
+ *   `grid-row` is what lets one button live in two places without a second DOM
+ *   node, a wrapper, or absolute positioning against an unknown height. On any
+ *   device with a coarse pointer it simply stays in row 3.
+ *   The grid is an inner element rather than the card itself because GlassCard
+ *   owns the card node — it sets `display: block` there and hangs its glow node
+ *   off it, and two modules fighting over one `display` is a bug waiting for a
+ *   bundler to reorder them.
  *
  * THE FIXED BOX
  *   The reveal changes opacity, never layout: the card is the same height at
- *   rest and on hover. Wishlist stacks its own Move-to-Cart button directly
- *   under this component and Home/Products stretch cards to a grid row — none
- *   of them can afford a card that resizes when the pointer crosses it.
+ *   rest and on hover. Wishlist stacks its own Move to Cart button directly
+ *   under this component and the grids stretch cards to a row — none of them
+ *   can afford a card that resizes when a pointer crosses it.
  *
- * PRIMITIVES
- *   The discount badge and PREMIUM ribbon are the global `.sf-badge-discount` /
- *   `.sf-ribbon-premium` primitives from prompt 03. The module classes beside
- *   them only place them and add the veil that keeps them legible over a
- *   photograph, and they double their own selector (`.x.x`) to win that veil
- *   against the primitive's own background whatever the stylesheet order is.
+ * THE GLOW IS A HOVER EVENT
+ *   GlassCard's tone glow is its own inert node. A wall of eight cards each
+ *   carrying a resting pink lamp is wallpaper, so it is held at zero and fades
+ *   in with the rest of the hover gesture — and on `:focus-within`, so a
+ *   keyboard visitor gets the same answer a pointer does.
  * ========================================================================== */
 
 .card {
+  --sf-glow-opacity: 0.2;
+  height: 100%;
+  font-family: var(--sf-font-family);
+}
+
+.card :global(.sf-glow) {
+  opacity: 0;
+  transition: opacity var(--sf-transition);
+}
+
+.card:hover :global(.sf-glow),
+.card:focus-within :global(.sf-glow) {
+  opacity: 1;
+}
+
+.inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   height: 100%;
-  background: transparent;
-  font-family: var(--sf-font-family);
 }
 
 /* Every child is pinned to the single column. Without this, an item carrying an
    explicit `grid-row` that is already occupied does not overlap — auto-placement
    walks it sideways into a brand-new implicit column, and the card silently
-   becomes two columns wide with a half-width photograph. */
-.card > * {
+   becomes two columns wide with a half-width plate. */
+.inner > * {
   grid-column: 1;
 }
 
 /* =============================================================================
- * 1. THE PHOTOGRAPH
+ * 1. THE PLATE
  * ========================================================================== */
 
-/* The plate is also a QUERY CONTAINER. The marks pinned to its corners collide
-   or clear each other according to how wide THIS CARD is, and the same card is
-   166px in the two-up phone listing and 284px on the desktop wall — a viewport
-   media query would be guessing at that from the outside. See §2. */
 .mediaWrap {
-  /* One mark's height, derived rather than measured: both the badge and the
-     ribbon primitives set line-height 1 at --sf-text-xs and pad by --sf-space-1
-     above and below. §2 uses it to step one mark down a row under another. */
-  --mark-row: calc(var(--sf-space-1) * 2 + var(--sf-text-xs));
-
   grid-row: 1;
-  container-type: inline-size;
   position: relative;
-  aspect-ratio: 3 / 4;
-  background: var(--sf-color-surface-2);
-  border-radius: var(--sf-radius-sm);
-  overflow: hidden;
 }
 
-.media {
-  display: block;
+/* `.sf-plate` brings the 1:1, the sunken ground, the hairline and
+   `object-fit: contain`. The link only has to fill it. */
+.plate {
+  display: grid;
   width: 100%;
-  height: 100%;
-  border-radius: inherit;
 }
 
-.media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform var(--sf-transition-slow);
-}
-
-/* The one piece of motion on the card: the image breathing, slowly. */
-.card:hover .media img {
-  transform: scale(1.03);
-}
-
-/* The ring has to sit INSIDE the crop, since the wrapper clips its overflow. */
-.media:focus-visible {
+.plate:focus-visible {
   outline: 2px solid transparent;
   outline-offset: -4px;
-  box-shadow: inset 0 0 0 2px var(--sf-color-surface-2),
-    inset 0 0 0 4px var(--sf-color-focus-ring);
+  box-shadow: inset 0 0 0 2px var(--sf-color-surface), inset 0 0 0 4px var(--sf-color-focus-ring);
 }
 
-/* Out of stock: the garment steps back, the card stays legible. */
-.isOutOfStock .media img {
+/* Nothing to buy: the pack steps back and the card stays legible. */
+.isUnavailable .plate img {
   opacity: 0.55;
-  filter: grayscale(0.5);
 }
 
-.isOutOfStock:hover .media img {
+.isUnavailable:hover .plate img {
   transform: none;
 }
 
 /* =============================================================================
- * 2. MARKS ON THE PHOTOGRAPH  —  badge, ribbon, heart, stock
+ * 2. MARKS ON THE PLATE  —  discount, stock, the heart
  * ========================================================================== */
 
-/* Top-left. The doubled selector wins the veil against the primitive's tint. */
+/* Top-left. The doubled selector wins the opaque veil against the primitive's
+   own tint, whatever order the two sheets ship in. */
 .discountBadge.discountBadge {
   position: absolute;
   top: var(--sf-space-3);
   left: var(--sf-space-3);
   z-index: 2;
   background: var(--sf-color-surface);
-  letter-spacing: 0.1em;
 }
 
-/* Top-right, opposite the badge. Opaque for the same reason. */
-.premiumRibbon.premiumRibbon {
-  position: absolute;
-  top: var(--sf-space-3);
-  right: var(--sf-space-3);
-  z-index: 2;
-  background: var(--sf-color-surface);
-}
-
-/* When both the heart and the ribbon sit top-right, drop the heart below it. */
-.premiumRibbon ~ .wishlist {
-  top: calc(var(--sf-space-3) + 34px);
-}
-
-/* ---- Narrow plates: the marks stop competing for the top line -------------
-   "NN% OFF" and "PREMIUM" want about 170px of type between them, plus their
-   two insets — so under roughly 210px of plate they cannot both sit on the top
-   line, and the badge ends up printed underneath the ribbon.
-   The fix is a step, not a disappearance: the ribbon drops into the LEFT column
-   directly beneath the badge, which leaves the right corner free and lets the
-   heart come back up to it. Both marks stay, both stay legible, and neither
-   loses a letter.
-   Scoped by `.discountBadge ~` on purpose: a card carrying only the ribbon has
-   nothing to collide with and keeps its composed top-right position at every
-   width. Ordering is guaranteed by the markup — badge, then ribbon, then the
-   heart. */
-@container (max-width: 210px) {
-  .discountBadge ~ .premiumRibbon.premiumRibbon {
-    top: calc(var(--sf-space-3) + var(--mark-row) + var(--sf-space-2));
-    right: auto;
-    left: var(--sf-space-3);
-  }
-
-  .discountBadge ~ .premiumRibbon ~ .wishlist {
-    top: var(--sf-space-3);
-  }
-}
-
-/* Out of stock — a tracked label on a warm scrim, across the foot of the crop. */
+/* A tracked label on a warm scrim, across the foot of the plate. */
 .stockTag {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 2;
-  padding: var(--sf-space-3);
+  padding: var(--sf-space-2) var(--sf-space-3);
   background: var(--sf-color-overlay);
   color: var(--sf-color-text);
   font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
   letter-spacing: var(--sf-tracking-wide);
   text-transform: uppercase;
   text-align: center;
+  border-bottom-left-radius: var(--sf-radius-lg);
+  border-bottom-right-radius: var(--sf-radius-lg);
 }
 
-/* ---- The heart ----------------------------------------------------------- */
+/* The heart — Button variant="icon" is already the 44px glass circle with the
+   focus ring and the press; this only places it and gives it the pink state. */
 .wishlist {
   position: absolute;
   top: var(--sf-space-3);
   right: var(--sf-space-3);
   z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-pill);
-  background: var(--sf-color-surface);
-  color: var(--sf-color-text-secondary);
-  cursor: pointer;
-  transition: color var(--sf-transition-fast),
-    border-color var(--sf-transition-fast),
-    transform var(--sf-transition-fast), opacity var(--sf-transition-fast);
-}
-
-/* The shared icon-button press: the heart settles a hair under the finger. */
-.wishlist:active {
-  transform: scale(0.98);
-  opacity: 0.85;
-}
-
-/* The visible button is 34px for the sake of the composition; the tap target
-   underneath it is the full 44px (WCAG 2.5.5) via a transparent pseudo. */
-.wishlist::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--sf-tap-target);
-  height: var(--sf-tap-target);
-  transform: translate(-50%, -50%);
 }
 
 .wishlist:hover {
-  color: var(--sf-cat-pink);
-  border-color: var(--sf-color-border-strong);
+  color: var(--sf-concern-pink);
 }
 
-.wishlist:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-.wishlisted {
-  color: var(--sf-cat-pink);
-  border-color: color-mix(in srgb, var(--sf-cat-pink) 40%, transparent);
+.wishlisted,
+.wishlisted:hover {
+  color: var(--sf-concern-pink);
+  border-color: color-mix(in srgb, var(--sf-concern-pink) 45%, transparent);
 }
 
 /* =============================================================================
@@ -242,15 +159,14 @@
   align-items: flex-start;
   gap: var(--sf-space-2);
   padding: var(--sf-space-4) 0 0;
+  min-width: 0;
 }
 
-/* The eyebrow ROW — brand, then the merchant's TRENDING / HOT marks.
-   It wraps rather than truncates: at the narrow end of the range (a 166px plate
-   in the two-up phone listing) "MEGHALI'S SILK" and one mark cannot share a
-   line, so the marks drop under the brand and the card simply grows one line
-   taller. `min-width: 0` keeps a long brand from pushing the row past the
-   column and giving the grid a horizontal scrollbar. */
-.meta {
+/* The eyebrow ROW — the ritual step, then up to two concerns, then whatever
+   marks the merchant has switched on. It wraps rather than truncates: at the
+   narrow end of the range the step and one chip cannot share a line, and the
+   card simply grows a line rather than clipping a word. */
+.eyebrowRow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -259,37 +175,49 @@
   max-width: 100%;
 }
 
-/* Tracked eyebrow — the smallest, quietest line on the card. */
-.brand {
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  color: var(--sf-color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  line-height: 1;
+.step {
+  gap: var(--sf-space-1);
+  white-space: nowrap;
 }
 
-/* The name — display serif, two lines, hairline underline on card hover. */
+/* The concern chips are labels, not controls: they keep the chip's resting
+   height rather than the 44px a real chip control claims, and they are trimmed
+   to the eyebrow's own scale so the step and both concerns share one line on a
+   card wider than about 260px. */
+.concernChip {
+  min-height: 22px;
+  padding: 2px var(--sf-space-2);
+  font-size: var(--sf-text-xs);
+  letter-spacing: 0;
+}
+
+.nameRow {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The name — Fraunces at 20px, two lines, a hairline underline on card hover. */
 .name {
+  display: -webkit-box;
   font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
+  font-size: 1.25rem;
   font-weight: var(--sf-font-medium);
-  color: var(--sf-color-text);
   line-height: var(--sf-leading-tight);
-  letter-spacing: var(--sf-tracking-normal);
+  color: var(--sf-color-text);
   text-decoration: underline;
   text-decoration-color: transparent;
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
-  display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  transition: text-decoration-color var(--sf-transition);
+  transition: text-decoration-color var(--sf-transition), color var(--sf-transition);
 }
 
 .card:hover .name {
+  color: var(--sf-color-gold-light);
   text-decoration-color: var(--sf-color-border-strong);
 }
 
@@ -300,11 +228,54 @@
   border-radius: var(--sf-radius-sm);
 }
 
+/* The product's own promise. Two lines, so a long one does not push the price
+   out of alignment across a row of cards. */
+.promise {
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: var(--sf-space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 11px, and the tracking is what keeps it legible at that size — the badges are
+   marks, not a sentence. The gold hairline is `Chip variant="trust"`.
+
+   The tracking is trimmed from `--sf-tracking-wide` (.14em) to .06em ONLY here:
+   at 11px the three owner-mandated badges measure about 155px each at the wider
+   setting, so all three stacked on their own line in a 254px card and the badge
+   block was taller than the promise above it. At .06em with the tighter
+   padding, two of the three share a line and the block is two rows. The chips
+   in the hero and the PDP, which have the width for it, keep the full tracking. */
+.badgeChip {
+  min-height: 22px;
+  padding: 2px var(--sf-space-2);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+}
+
+.price {
+  margin-top: auto;
+  padding-top: var(--sf-space-2);
+}
+
 .rating {
   display: inline-flex;
   align-items: center;
   gap: var(--sf-space-2);
-  min-height: 14px;
 }
 
 .ratingCount {
@@ -314,94 +285,44 @@
   line-height: 1;
 }
 
-.noRating {
-  font-size: var(--sf-text-xs);
-  color: var(--sf-color-text-muted);
-  letter-spacing: 0.02em;
-  min-height: 14px;
-  line-height: 1.2;
-}
-
 /* =============================================================================
  * 4. THE ADD AFFORDANCE
  * ========================================================================== */
 
 /* Touch / no-hover default: its own row under the price, always visible. */
-.addBtn {
+.action {
   grid-row: 3;
   align-self: stretch;
   margin-top: var(--sf-space-4);
-  min-height: var(--sf-tap-target);
-  padding: var(--sf-space-2) var(--sf-space-4);
-  border: 1px solid var(--sf-color-border-strong);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface);
-  color: var(--sf-color-text);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  cursor: pointer;
-  transition: background-color var(--sf-transition),
-    border-color var(--sf-transition), color var(--sf-transition),
-    opacity var(--sf-transition), transform var(--sf-transition);
 }
 
-.addBtn:hover:not(:disabled) {
-  background: var(--sf-color-emerald);
-  border-color: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
-}
-
-.addBtn:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-/* Confirmation — gold hairline, then it quietly returns to itself. */
-.addBtn.added,
-.addBtn.added:hover {
-  background: var(--sf-color-surface);
-  border-color: var(--sf-color-gold-deep);
-  color: var(--sf-color-gold-deep);
-}
-
-.addBtn:disabled {
-  cursor: not-allowed;
-  background: transparent;
-  border-color: var(--sf-color-border);
-  color: var(--sf-color-text-muted);
-}
-
-/* ---- Fine pointer: the button returns to the foot of the photograph ------- */
+/* ---- Fine pointer: the button returns to the foot of the plate ------------ */
 @media (hover: hover) and (pointer: fine) {
-  .addBtn {
+  .action {
     grid-row: 1;
     align-self: end;
     justify-self: stretch;
     z-index: 3;
     margin: var(--sf-space-3);
-    min-height: 40px;
     opacity: 0;
     transform: translateY(var(--sf-space-2));
     pointer-events: none;
+    transition: opacity var(--sf-transition), transform var(--sf-transition);
   }
 
   /* Revealed by the pointer OR by the keyboard — the button stays in the tab
      order while hidden, and focusing it is what brings it into view. */
-  .card:hover .addBtn,
-  .card:focus-within .addBtn {
+  .card:hover .action,
+  .card:focus-within .action {
     opacity: 1;
     transform: none;
     pointer-events: auto;
   }
 
-  /* Nothing to add: leave the photograph and its stock label alone. */
-  .isOutOfStock:hover .addBtn,
-  .isOutOfStock:focus-within .addBtn {
+  /* A disabled button over the plate says nothing a shopper can act on, and it
+     would sit on top of the "Out of stock" scrim. Leave the pack alone. */
+  .isUnavailable:hover .action,
+  .isUnavailable:focus-within .action {
     opacity: 0;
     pointer-events: none;
   }
@@ -415,15 +336,14 @@
  * button. Declared after the block above so it wins at equal specificity.
  * ------------------------------------------------------------------------- */
 @media (any-pointer: coarse) {
-  .addBtn,
-  .card:hover .addBtn,
-  .card:focus-within .addBtn,
-  .isOutOfStock:hover .addBtn,
-  .isOutOfStock:focus-within .addBtn {
+  .action,
+  .card:hover .action,
+  .card:focus-within .action,
+  .isUnavailable:hover .action,
+  .isUnavailable:focus-within .action {
     grid-row: 3;
     align-self: stretch;
     margin: var(--sf-space-4) 0 0;
-    min-height: var(--sf-tap-target);
     opacity: 1;
     transform: none;
     pointer-events: auto;
@@ -433,19 +353,18 @@
 /* =============================================================================
  * 5. REDUCED MOTION
  * The transition tokens are already zeroed globally; kill the transforms too so
- * nothing translates or scales — things simply appear.
+ * nothing translates — things simply appear.
  * ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
-  .card:hover .media img {
-    transform: none;
+  .card :global(.sf-glow),
+  .name {
+    transition: none;
   }
 
-  .addBtn {
-    transform: none;
-  }
-
-  /* The press dims but no longer moves. */
-  .wishlist:active {
-    transform: none;
+  @media (hover: hover) and (pointer: fine) {
+    .action {
+      transform: none;
+      transition: none;
+    }
   }
 }

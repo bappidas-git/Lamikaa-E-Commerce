@@ -575,60 +575,26 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   7. PROMISES  —  one hairline row, store-attested policy
-   No accent cards, no colour-coding: four quiet columns divided by hairlines.
+   THE HERO'S EDGE  —  where <TrustStrip/> hangs  (Prompt 15)
+   The strip is a full-bleed band, so it sits OUTSIDE .container and takes the
+   viewport's width like the hero above it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* The closing note. The footer opens on its own invitation band immediately
-   below, so this spread gives back some of its bottom air. Doubled selector so
-   it outranks `.section` inside every media query, whatever the source order. */
-.section.promises {
-  padding-bottom: var(--sf-space-16);
+/* On a phone the strip simply follows the hero: a 48px band pulled up 28px
+   would have more than half of it over the hero's own bottom padding, and the
+   promises would read as an overlay rather than as an edge. */
+.trustEdge {
+  position: relative;
+  /* Above the hero's ground glow, which bleeds past the section's own box. */
+  z-index: 2;
 }
 
-.promisesRow {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--sf-space-8);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.promise {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sf-space-2);
-  min-width: 0;
-  padding-left: var(--sf-space-6);
-  border-left: 1px solid var(--sf-color-border);
-}
-
-.promise:first-child {
-  padding-left: 0;
-  border-left: none;
-}
-
-.promiseIcon {
-  font-size: var(--sf-text-xl);
-  color: var(--sf-color-gold-deep);
-  margin-bottom: var(--sf-space-1);
-}
-
-.promiseTitle {
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  color: var(--sf-color-text);
-}
-
-.promiseText {
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-normal);
-  color: var(--sf-color-text-secondary);
+/* Desktop: 28px of overlap, so the band cuts the foot of the hero and the two
+   read as one spread closing on a rule. */
+@media (min-width: 769px) {
+  .trustEdge {
+    margin-top: -28px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -709,17 +675,6 @@
   .editGrid > .editCell:nth-child(even) {
     margin-top: 0;
   }
-
-  .promisesRow {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--sf-space-6);
-  }
-
-  /* Two-up: only the second column can carry a divider. */
-  .promise:nth-child(odd) {
-    padding-left: 0;
-    border-left: none;
-  }
 }
 
 @media (max-width: 768px) {
@@ -792,23 +747,6 @@
      Wishlist). One-up would make The Edit alone eight screens tall. */
   .editGrid {
     gap: var(--sf-space-8) var(--sf-space-3);
-  }
-
-  .promisesRow {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sf-space-6);
-  }
-
-  .promise {
-    padding-left: 0;
-    padding-top: var(--sf-space-6);
-    border-left: none;
-    border-top: 1px solid var(--sf-color-border);
-  }
-
-  .promise:first-child {
-    padding-top: 0;
-    border-top: none;
   }
 
   .sectionHeadAside {
