@@ -1,25 +1,112 @@
-.faq { padding: 48px 16px; color: var(--sf-color-text); }
-.container { max-width: 800px; margin: 0 auto; }
-.container h2 { font-family: var(--sf-font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 24px; text-align: center; }
-.list { display: flex; flex-direction: column; gap: 8px; }
-.item { border-radius: var(--sf-radius-md); border: 1px solid var(--sf-color-border); overflow: hidden; transition: border-color var(--sf-transition-fast); }
-.item.open { border-color: var(--sf-color-accent); }
-.question { width: 100%; padding: 16px 20px; min-height: var(--sf-tap-target); background: var(--sf-color-surface); border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 1rem; font-weight: 500; text-align: left; font-family: inherit; color: var(--sf-color-text); }
-.question:hover { background: var(--sf-color-surface-hover); }
-.question:focus-visible { outline: none; box-shadow: var(--sf-shadow-focus); }
+/* =============================================================================
+ * FAQ — the answers block's dress over the Accordion primitive
+ * =============================================================================
+ * The BEHAVIOUR is `ui/Accordion` and the LOOK is mostly its module too; this
+ * file changes only what an answers list wants that a chapter list does not:
+ * a glass hairline instead of the neutral one, the 17px question, a gold
+ * chevron, a 20px answer inset and — on the one open row — the signature
+ * gradient as a rule down its left edge.
+ *
+ * HOW IT REACHES THE PRIMITIVE. A CSS-Modules class cannot be named from
+ * outside the module that owns it, so the rules below address the accordion
+ * through its ARIA CONTRACT — `button[aria-expanded]` for a trigger,
+ * `[role="region"]` for a panel — which `Accordion` documents as its interface
+ * and cannot change without changing what it is. The single exception is
+ * `.faq > div`, the row: `Accordion` renders exactly one <div> per item as a
+ * direct child of its root, and there is no attribute on it to hold on to.
+ * Nothing here restyles a shared rule the primitive already states (the height
+ * animation, the focus ring, the collapsed panel's `visibility`) — those are
+ * inherited as they are.
+ * ========================================================================== */
 
-/* Plus icon drawn with pseudo-elements so it can rotate into a cross. */
-.toggle { position: relative; flex: 0 0 auto; width: 18px; height: 18px; }
-.toggle::before, .toggle::after { content: ""; position: absolute; top: 50%; left: 50%; width: 14px; height: 2px; border-radius: 2px; background: var(--sf-color-accent); transform: translate(-50%, -50%); transition: transform var(--sf-transition); }
-.toggle::after { transform: translate(-50%, -50%) rotate(90deg); }
-.item.open .toggle::after { transform: translate(-50%, -50%) rotate(180deg); }
+/* The gutter the open row's gradient rule lives in. It hangs OUTSIDE the row
+   rather than indenting it: `.sf-container` gives up 16px of inline padding on
+   a phone and 20px above it, so the rule sits in space that already exists and
+   opening an answer never moves a word sideways. */
+.faq {
+  --faq-rule-offset: var(--sf-space-3);
+  --faq-rule-width: 2px;
+}
 
-/* Smooth height animation via animatable grid-template-rows (0fr -> 1fr). */
-.answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--sf-transition); }
-.item.open .answer { grid-template-rows: 1fr; }
-.answerInner { overflow: hidden; min-height: 0; }
-.answerInner p { padding: 0 20px 16px; margin: 0; color: var(--sf-color-text-secondary); line-height: 1.6; }
+.faq > div {
+  position: relative;
+  /* Glass hairlines: the same 8% white the glass surfaces are edged with, so
+     the list reads as part of the section rather than as a table dropped in. */
+  border-color: var(--sf-glass-border);
+}
+
+/* The open row's rule. Decorative, so it is a pseudo-element with no content —
+   held back to the 60% `.sf-hairline--gradient` uses, which is what makes the
+   signature gradient read as a seam rather than as a stripe. */
+.faq > div::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(var(--faq-rule-offset) * -1);
+  width: var(--faq-rule-width);
+  border-radius: var(--sf-radius-pill);
+  background-image: var(--sf-gradient-signature);
+  opacity: 0;
+  transition: opacity var(--sf-transition);
+}
+
+/* `:has()` is the only way to reach the row from the state the primitive
+   publishes, and it is decorative: a browser without it simply draws no rule,
+   and nothing about the list moves. */
+.faq > div:has(button[aria-expanded="true"])::before {
+  opacity: 0.6;
+}
+
+/* ---- The question --------------------------------------------------------
+   Manrope 600 at 17px — one step up from the primitive's 16px, because in this
+   list the questions ARE the index a visitor scans. The 44px floor and the
+   focus ring come from the primitive and are not restated. */
+.faq button[aria-expanded] {
+  font-size: var(--sf-text-md);
+  font-weight: var(--sf-font-semibold);
+  gap: var(--sf-space-5);
+}
+
+/* The chevron: 20px, gold at rest as well as open, so the affordance is legible
+   before anything has been touched. The 180° rotation is the primitive's. */
+.faq button[aria-expanded] svg {
+  font-size: var(--sf-text-lg);
+  color: var(--sf-color-gold);
+}
+
+/* A hash lands on the question, and the masthead is sticky — so the anchor
+   carries its own clearance for the browser's native jump, on top of the
+   centred `scrollIntoView` the component runs. */
+.anchor {
+  scroll-margin-top: 112px;
+}
+
+/* ---- The answer ----------------------------------------------------------
+   20px of inset on the reading side, and the same 20px of air under it that the
+   primitive already reserves. */
+.answer {
+  padding-inline: var(--sf-space-5);
+  color: var(--sf-color-text-secondary);
+}
+
+/* One step under the 17px question, so the pair reads as a question and its
+   answer rather than as two equal lines. It stops at --sf-text-base and not at
+   the 15px the section was sketched at: 16px is the design system's body floor,
+   an answer is body copy rather than a UI label, and there is no token below it
+   that is allowed to carry running text. */
+.answer :is(p, li) {
+  font-size: var(--sf-text-base);
+}
+
+@media (max-width: 480px) {
+  /* On the narrowest phones the measure is worth more than the inset. */
+  .answer {
+    padding-inline: var(--sf-space-3);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .answer, .toggle::before, .toggle::after { transition: none; }
+  .faq > div::before {
+    transition: none;
+  }
 }

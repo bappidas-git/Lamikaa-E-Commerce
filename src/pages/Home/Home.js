@@ -16,6 +16,7 @@ import WhyBlackRice from "../../components/home/WhyBlackRice";
 import RitualsTeaser from "../../components/home/RitualsTeaser";
 import FullPageCta from "../../components/home/FullPageCta";
 import WhyLamikaaSection from "../../components/home/WhyLamikaaSection";
+import HomeFaqs from "../../components/home/HomeFaqs";
 import TrustStrip from "../../components/TrustStrip";
 import ProductCard from "../../components/storefront/ProductCard";
 import useSeo from "../../hooks/useSeo";
@@ -40,6 +41,8 @@ import styles from "./Home.module.css";
 //                       on, and the newsletter                          (19)
 //   0i WHY LAMIKAA      the philosophy line, the four pillars and the
 //                       financial/social/environmental triptych         (20)
+//   0j GOOD TO KNOW     up to eight admin-managed answers in the shared
+//                       FAQ accordion, and the way to the rest        (21)
 //   1. WHERE TO BEGIN   collection stories (categories.getAll)
 //   2. THE EDIT         featured, staggered editorial grid (products.getFeatured)
 //   3. ON OFFER         the deals rail + one tracked countdown line   [conditional]
@@ -461,6 +464,14 @@ const Home = () => {
           siteContent. Both halves are shared with the Why LAMIKAA page
           (Prompt 28), which mounts the same two components. */}
       <WhyLamikaaSection />
+
+      {/* ── GOOD TO KNOW — the answers, before they have to be looked for ───
+          The admin-managed `faqs` collection (placement "home", up to eight
+          rows) in the shared FAQ accordion — the same component the FAQ page
+          and the PDP panel mount. The section takes itself off the page when
+          the owner has left fewer than two answers on that placement, and it
+          publishes no FAQPage JSON-LD: /faq owns that (Prompt 28). */}
+      <HomeFaqs />
 
       {/* ── 1. WHERE TO BEGIN — the collections, told as stories ──────────── */}
       {showCollections && (

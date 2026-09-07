@@ -190,14 +190,36 @@ const dedupe = (faqs) => {
   });
 };
 
+// How many rows to keep, or null for "all of them". Written once because both
+// `faqsForPlacement` and the shared `FAQ` component take the same option and
+// must agree on what a nonsense value means: nothing is capped by a negative, a
+// fraction or a word.
+export const faqLimit = (rows, limit) => {
+  // `null`/`undefined`/"" are "no cap" and must be tested before Number(), which
+  // reads all three as 0 and would answer with an empty list.
+  if (limit == null || limit === "") return rows;
+  const cap = Number(limit);
+  if (!Number.isFinite(cap) || cap < 0) return rows;
+  return rows.slice(0, Math.floor(cap));
+};
+
 // The Help Centre and the shared block: live rows carrying that placement, and
 // never a row written for one product in particular.
-export const faqsForPlacement = (faqs, placement) =>
-  dedupe(
-    (Array.isArray(faqs) ? faqs : [])
-      .filter(isFaqLive)
-      .filter((faq) => faqHasPlacement(faq, placement))
-      .filter((faq) => !faqIsTargeted(faq))
+//
+// `{ limit }` caps the result AFTER the filtering and the de-dupe, which is the
+// only order that answers the question a caller is actually asking. The home
+// block wants "the first eight answers a visitor should see", not "eight rows
+// off the top of the collection, some of which will be dropped" — a cap applied
+// first would quietly hand back six.
+export const faqsForPlacement = (faqs, placement, { limit } = {}) =>
+  faqLimit(
+    dedupe(
+      (Array.isArray(faqs) ? faqs : [])
+        .filter(isFaqLive)
+        .filter((faq) => faqHasPlacement(faq, placement))
+        .filter((faq) => !faqIsTargeted(faq))
+    ),
+    limit
   );
 
 // The FAQ page's sections: the live, untargeted rows filed under one heading,

@@ -24,7 +24,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 18 | Why Black Rice spotlight and rituals teaser | complete | 2026-09-07 | (this commit) | Two sections and the card the rituals pages will reuse. **`home/WhyBlackRice`** is the ingredient spotlight: a 1:1 placeholder under `GlowWrap tone="gold" intensity={0.16}` on the left, and on the right the `SectionHeading` ("The hero ingredient" / "Why black rice?", the gradient on **black**, found in the headline rather than pinned to an index), the THREE seeded `siteContent.home.whyBlackRice` points at 17px behind 20px gold `mdi:check-circle-outline` glyphs, and a "Carried by" row of the eight `products.getHeroProducts()` as 56px `.sf-plate` links to their PDPs. **No fallback copy for the points** — an unpublished or unreachable block renders NOTHING, because a spotlight that invents a cosmetic claim is worse than no spotlight. **`catalogue/RitualCard`** is ONE `<Link>` per routine (verified: one tab stop, zero nested controls) carrying a 16:10 photograph, "Ritual · N steps", the name at 22px Fraunces, the tagline (or the story's first WHOLE sentence), a step strip of up to five 40px plates at −8px overlap with 24px gradient-ring numerals — the body ritual's `alternativeProductId` peeking out from behind step 01 — the duration and a ghost "See the ritual →". It resolves its own steps through the pure `resolveRitualSteps`, so Prompt 24's index needs only the same two inputs. **`home/RitualsTeaser`** is the triptych: `rituals.getAll()` + `products.getAll()` in one `Promise.all`, three cards at 769px+, one column 481–768, an 84vw snap scroller ≤480, and a primary "Build your ritual" → `/rituals` under the grid. Measured at 360/390/414/480/481/768/769/1024/1280/1440: **document overflow 0 at every width**; media 1:1 (533² at 1280) and 16:10 (355×222); the desktop body `532.8px 651.2px` (0.9fr/1.1fr) at 56px gutter from 1025px. 12 tab stops across both sections (8 PDP thumbs, 3 cards, 1 CTA). Under `prefers-reduced-motion: reduce` no reveal wrapper carries a non-1 opacity. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 12 suites / 118 passed (15 new in `RitualCard.test.js`, 1 suite / 50 tests skipped — the live-API suite). No `db.json` or `api.js` change: reads only. |
 | 19 | Full-page CTA section | complete | 2026-09-07 | (this commit) | The page now stops for one screen and asks. **`brand/NewsletterForm`** is the footer's capture, extracted: the `isEmailValid()` gate, `apiService.leads.createNewsletter`, the six-second success revert and the `role="status"` / `role="alert"` pair move out of `Footer.js` whole, and both surfaces mount the same component (`variant="footer" | "cta"`, own `id` base so the two forms' ids cannot collide). Both were subscribed for real in Chromium and both leads landed in `/leads` as `type: "newsletter"`, `status: "subscribed"` rows the admin table renders. **`home/FullPageCta`** is four layers — a lazy `alt=""` photograph, the 82%→94% `--sf-color-bg` wash, the signature gradient at 12% `screen`, and a `GlassCard strong scrim padding="lg"` (max 760px) under one `GlowWrap tone="duo" intensity={0.22} breathe` — with **no backdrop blur on the ground** (measured: section `backdrop-filter: none`, card `blur(20px)`). `min-height` **100svh from 769px, 80svh below**, `vh` fallback above each. **Two defects found in the primitives and fixed**: `prefers-reduced-motion` never stopped a DUO glow's second lamp (`.sf-glow--duo.sf-glow--breathe::after` out-specificities the one-class reset — the hero has had this since Prompt 14; `document.getAnimations()` 2 → 0), and `.sf-glass--scrim::before` painted **over** the content it exists to make legible (a warm-white headline capped at rgb(165,163,161); now `z-index: -1` inside an isolated context, headline back to rgb(247,245,240)). Contrast on the card, measured against a deliberately near-white photograph: headline **12.9:1**, eyebrow 9.9, lede 6.9, hint 6.9, ownership note 5.9, and the one gradient keyword's darkest stop **3.1:1** — inside the large-text floor at 72px/36px. One breathing glow visible at every one of the 176 scroll positions scanned. `CI=true npm run build` **exit 0, Compiled successfully, no warnings**; `npm test -- --watchAll=false` 13 suites / **127 passed** (9 new). No `db.json` and no `api.js` change. |
 | 20 | Why LAMIKAA section (pillars and impact) | complete | 2026-09-07 | (this commit) | The band that says what the brand stands on, built as two components the Why LAMIKAA page (Prompt 28) mounts unchanged. **`brand/Pillars`** is BRAND.md §3.2's four pillars as one `<ul role="list">` of four `GlassCard as={motion.li}` — a 44px glass circle carrying a 24px gold glyph (`mdi:leaf`, `mdi:flask-outline`, `mdi:account-group-outline`, `mdi:earth`, resolved by KEY with a positional fallback so a renamed key cannot silently swap two icons), a `Chip variant="step"` numeral 01–04, the title in Fraunces 22px and the sentence in Manrope 15px secondary — **every word of it from `brand.pillars`, none of it typed in the component**. 4 columns ≥1025px / 2 at 769–1024 / 1 stacked ≤768, 16px gaps, measured at all seven widths. **The cards are deliberately NOT `interactive`**: a card that lifts 4px and shows a focus ring promises a destination it does not have, so the alternating gold/violet tone glow is faded in by a hover rule of the module's own (`:global(.sf-glow)` held at 0 → 1) and the grid stays keyboard-transparent — **measured: one tab stop in the whole section, the CTA, and `transform: none` on every card at every hover**. **`brand/ImpactTriptych`** is `siteContent.impact.items` as three columns under a 60% signature-gradient hairline: the eyebrow DERIVED from the key (Financial / Social / Environmental), the title with that category prefix taken off — but only when a dash follows it, so "Financially Sustainable" keeps its first word — and the three points at 15px behind 18px gold bullets. **A bullet, not a tick**: these are aims, and a check mark in front of "Farmers can benefit from the profitability of their own enterprise" reads as a claim that it has already happened. Points render **verbatim** — no truncation, no summarising — which is what preserves the BRAND.md §3.9 qualifiers; asserted in the suite and re-checked against the seed (0 dividend mentions without "can reach the member farmers through dividends"). `showImages` false here, true on the page. **`home/WhyLamikaaSection`** fetches `siteContent.get("impact")` and composes the two: `brand.philosophy` as the h2 over the new `brand.philosophyLede` (BRAND.md §3.2's first sentence), the pillars, a second heading row, the triptych and `Button variant="secondary"` → `/why-lamikaa`. **The two halves fail separately** — the pillars come from a module the bundle always has and always render; a missing, unpublished or unreachable impact block takes its own heading with it rather than standing over an empty space (exercised for real: the first QA run reached the live host and the section rendered philosophy + 4 cards + CTA, nothing invented). **One defect the test found and reading did not:** `impactColumns` filtered rows before normalising them, so a row carrying three blank strings passed a `points.length` check and rendered as an empty column; the filter now runs after. Outline verified in the browser: 1 page `h1`, this section's `h2` at 52px, 4 pillar `h3` at 22px, the impact `h3` at 40px, 3 column `h4` at 20px, 4 `role="list"` lists, 0 nested landmarks. Contrast on the page ground 18.05 / 13.88 / 9.62:1 and on the card ground 15.95 / 12.27 / 8.5:1. Under `prefers-reduced-motion` framer-motion attaches **no style attribute at all** and 0 animations run. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 14 suites / **151 passed** (24 new). No `db.json` and no `api.js` change: reads only. See "Prompt 20 record" below. |
-| 21 | Home FAQs section and accordion | pending | | | |
+| 21 | Home FAQs section and accordion | complete | 2026-09-07 | (this commit) | `components/FAQ/*` rewritten onto the `ui/Accordion` primitive and turned into a **props-driven** block (`faqs, limit, defaultOpen, multiple, id, headingLevel`), so the home band, `/faq` (28) and the PDP panel (27) can all mount one accordion; `home/HomeFaqs.js` is the band around it. `utils/faqs.js` gained `faqLimit()` and a `{ limit }` option on `faqsForPlacement` (applied AFTER the filters and the de-dupe); `FaqContext.forPlacement` passes the options through. `db.json` `faqs` rows 6–8 gained the `"home"` placement — **3 JSON values** — so the block carries the 6–8 rows the prompt asks for (the Prompt 06 seed had put `home` on rows 1–5 only). Browser QA at 360/390/768/1024/1025/1280: **8 rows at every width**, 0 horizontal overflow, no `{{TOKEN}}` anywhere on the page, two columns + sticky aside from exactly 1025px, question Manrope 600 17px over a 44px floor, 20px gold chevron, answer Manrope 16px secondary at 20px inset, open row wearing a 2px signature-gradient rule at 0.6, separators `rgba(255,255,255,.08)`. Deep link `/#faq-3` opens **and focuses** row 3; ↑/↓/Home/End walk the headers and wrap; Enter opens, Space closes; panel `transition-duration: 0s` under reduced motion. Admin → FAQs still lists all eight with the Shared/Help/Product vocabulary, and a `PATCH /faqs/1` reached the open storefront on the next focus refetch. `CI=true npm run build` exit 0 **Compiled successfully, 0 warnings**; `npm test -- --watchAll=false` **173 passed** (17 suites, 1 skipped), 22 of them new. See "Prompt 21 record" below. |
 | 22 | Home assembly, performance and SEO | pending | | | |
 | 23 | Shop page — chaptered editorial listing | pending | | | |
 | 24 | Category pages and rituals pages | pending | | | |
@@ -272,6 +272,16 @@ Record every decision a prompt had to make that the reference files did not sett
 - `20 · 2026-09-07 · The stacked impact columns take a 32px gap where the three-column row takes the specified 24px · At ≥1025px the 24px gutter separates three columns that are already separated by their hairlines and their own width. Stacked, each column is full-width and 24px between two full-width blocks reads as one block that lost its rhythm; `--sf-space-8` is the distance the rest of the page uses between stacked editorial blocks.`
 - `20 · 2026-09-07 · `Pillars` and `ImpactTriptych` take `titleAs` beyond the prompt's two-prop contract · The home band's outline is h2 → h3 (pillars, impact heading) → h4 (columns); Prompt 28's page makes the same content the page's subject and shifts the whole run up one level. A hard-coded tag would force that page either to skip a level or to fork the component. `className` is the same shape `ValueChain` already exposes.`
 - `20 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are again left untouched · `Home.js` is touched only to import and mount `<WhyLamikaaSection/>` after `<FullPageCta/>` and to extend its own section map with `0i`. Same posture as Prompts 15–19; those sections are Prompt 22's to delete.`
+- `21 · 2026-09-07 · `db.json` `faqs` rows 6–8 gained the `"home"` placement, so all eight site FAQs are on the shared block · The prompt's objective calls for **6–8 rows** on placement `home` and its first acceptance criterion names the `{{RETURN_WINDOW_DAYS}}` row on the HOME page — but the Prompt 06 seed (and `06_data-model-and-seed.md` §5) put `home` on rows 1–5 only, which leaves five. The alternative was to fail the criterion or to fake it from the constants fallback. Three JSON values in `placements[]`, the one field the admin FAQ manager already edits and both api modes already read: no schema change, no `api.js` change, `/admin/faqs` unaffected, and the diff is 3 added lines.`
+- `21 · 2026-09-07 · The answer prints at `--sf-text-base` (16px), not the 15px the prompt's design spec sketches · There is no 15px token, and DESIGN_SYSTEM §6 fixes the scale at 14 / 16 / 17 / 20 with `--sf-text-base` as "the body floor (min 16px body on mobile)". An FAQ answer is body copy, not a UI label, so the 14px step is not available to it either, and a bare `0.9375rem` would be exactly the hard-coded value the guardrail ("the design system tokens are the only styling source") forbids. 16px is still one step under the 17px question, so the hierarchy the spec wanted survives. Measured: Manrope 16px `rgb(184,181,176)` at 20px inline padding.`
+- `21 · 2026-09-07 · `FAQ.module.css` dresses the primitive through its ARIA CONTRACT plus one structural selector, rather than by adding a `variant` prop to `ui/Accordion` · A CSS-Modules class cannot be named from outside the module that owns it. `button[aria-expanded]` and `[role="region"]` are what `Accordion` documents as its interface and cannot change without changing what it is; `.faq > div` is the row, which carries no attribute of its own, and `:has(button[aria-expanded="true"])` is the only route from the published open state to it. Both are DECORATIVE — a browser without `:has()` simply draws no gradient rule and nothing moves. A `variant` prop would have put one surface's dress inside a component four surfaces share.`
+- `21 · 2026-09-07 · The accordion is re-KEYED on the URL hash instead of `ui/Accordion` gaining a controlled-open API · The primitive owns its open set from mount, which is the right default for a click. A hash is a NAVIGATION: re-keying is what makes an in-page link to `#faq-3` open row 3 and not only a cold load on `/#faq-3`. The cost is that arriving at a new hash closes whatever the visitor had open, which is what they asked for; the alternative was a controlled API on a component Prompts 25, 27, 28 and 34 all mount.`
+- `21 · 2026-09-07 · The anchor id sits on a `<span>` INSIDE the trigger, not on the accordion row · Each row's item id is `faq-<id>`, but the primitive prefixes its DOM ids with its own `useId()`, so `#faq-3` would name nothing in the document. `title` accepts a node, so the question is wrapped in `<span id="faq-3">`: a legal target for the browser's native jump, findable by `getElementById`, scrolls the whole row into view, and costs the primitive no new prop. It carries `scroll-margin-top: 112px` for the sticky masthead.`
+- `21 · 2026-09-07 · A row whose answer empties out is dropped ENTIRELY, question included · `stripPlaceholderSentences` can take every sentence off an answer (seed FAQ 6 is exactly this while no shipping method sets a `freeAbove`). Rendering the question over an empty drawer advertises an answer the site does not have, which is worse than not asking. Asserted in both new suites.`
+- `21 · 2026-09-07 · `FaqContext.forPlacement` was widened to pass an options object through, rather than `HomeFaqs` slicing after the call · `context/FaqContext.js` is outside the prompt's expected-files list, but a slice counts rows the live/placement/targeting filters and the de-dupe were about to drop and can hand back six for a limit of eight. Two lines in the context; `forProduct` and every other consumer are untouched.`
+- `21 · 2026-09-07 · The FAQ page's and the PDP's hand-rolled accordions were NOT migrated here · "One accordion implementation only" is this prompt's guardrail and `pages/HelpCenter/HelpCenter.js` and `pages/ProductDetails/ProductDetails.js` each still hold one. Both files are owned by prompts that rewrite them wholesale — 27 (PDP supporting content) and 28 (`/faq` from `siteContent`) — and doing it here would re-do work those prompts specify differently (the help centre's list is searchable and filtered; the PDP's is a tab panel with tracked ordinals). The rewrite this prompt DID do is what makes both migrations a one-line mount. Carried into Open TODOs.`
+- `21 · 2026-09-07 · Sections 1–6 of `pages/Home/Home.js` are again left untouched · `Home.js` is touched only to import and mount `<HomeFaqs/>` after `<WhyLamikaaSection/>` and to extend its own section map with `0j`. Same posture as Prompts 15–20; those sections (and the four Meghali-era strings a word-boundary sweep still finds in them) are Prompt 22's to delete.`
+- `21 · 2026-09-07 · The section's lede is written in `HomeFaqs.js` rather than sourced from a reference file · The prompt fixes three strings ("Good to know", "Questions, answered", "All questions") and asks for a lede without supplying one. "The things worth knowing before you buy — the full set lives on the FAQ page." states no brand fact, no figure and no claim: it says what the list is and where the rest of it is, which is also what justifies the button beside it. Nothing is invented and nothing needs a source.`
 
 ## Open TODOs
 
@@ -280,6 +290,8 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `16 · The live Laravel database still holds the PRE-CORRECTION `media[0].crop` rectangles for five products (soap, body wash, face mask, face scrub, face serum). Mock mode reads the fixed values from db.json; live mode will still show a white stripe on the soap plate, white corners on the body wash, white rules on the face mask, a light-grey letterbox on the scrub and a clipped gold band on the serum until it is reseeded from PRODUCTS.md §2. No schema change — five JSON values. · backend/owner · 39`
 
 - `20 · `ImpactTriptych showImages` is shipped but only exercised as `false`: the three 4:3 placeholder photographs it turns on belong to the Why LAMIKAA page, and that layout wants one browser pass once the page exists. · Prompt 28 · 28`
+- `21 · `pages/HelpCenter/HelpCenter.js` and `pages/ProductDetails/ProductDetails.js` still hand-roll their own FAQ accordions (their own open state, their own `aria-expanded` wiring, their own answer markup). Both now have a shared block to mount instead — `<FAQ faqs={…} headingLevel={…}/>` — and both files are rewritten wholesale by the prompts that own them. Until then the guardrail "one accordion implementation only" holds for the home page, not for the site. · Prompts 27 / 28 · 27`
+- `21 · `{{RETURN_WINDOW_DAYS}}` resolves from `STOREFRONT_CONFIG.returnsWindowDays`, which still holds the boilerplate **7**, so "You can request a return … within 7 days of delivery" now prints on the HOME page as well as on `/faq`, the PDP panel and the refund policy. The token itself never prints either way (verified: no `{{` anywhere on the page). Owner to confirm the window, or set 0 for "no returns" — at 0 the sentence drops and the answer keeps its second half. · owner · 39`
 - `20 · No placeholder photograph could be seen rendered in the browser in this sandbox — `res.cloudinary.com` and `picsum.photos` reset Chromium's TLS tunnel through the agent proxy (curl gets 200), the same limitation Prompt 19 recorded. Nothing in this section depends on one, but the home page's images as a whole want one run on a developer machine. · developer · 37`
 
 - `01 · Baseline works: add to cart from a card (guest, 0 → 1) and from the PDP (5 → 6 items); quantity + in the drawer (6 → 7); remove line (7 → 2); coupon MUGA500 (−₹500.00 — savings −₹3,500 → −₹4,000, total ₹18,500 → ₹18,000); checkout through all four steps to an order confirmation on COD (ORD-MTPU49W5-8QEA); that order then listed in /orders (4 rows) and in Admin → Orders (12 rows); wishlist toggle as guest (0 → 1) and as a signed-in user (1 → 0 → 1, both directions); search "Muga" (26 product links); light/dark toggle (body "dark react-loaded" ↔ "react-loaded light" — to be removed by Prompt 03); review from a delivered order (created review id 13, product 22, rating 4, status "pending"); cancel a processing order (ORD-MTPU49W5-8QEA → fulfillmentStatus "cancelled", paymentStatus "voided" — the cascade ran); address book in /profile → Addresses: add, edit (city Guwahati → Jorhat, persisted) and delete all confirmed against the API. · developer · —`
@@ -394,6 +406,7 @@ Mirror of `_reference/PLACEHOLDERS.md` changes per prompt (format: `NN · token 
 - `06 · {{FREE_SHIPPING_THRESHOLD}} · carried into data · announcements[1].text and shipping_methods[0].freeAbove = null (the null is what makes {freeShipping} unresolvable in FAQ 6).`
 - `06 · {{LAUNCH_OFFER_TEXT}} · carried into data · announcements[2].text, seeded isActive: true — the bar hides a row whose text is unresolved rather than the owner having to remember to switch it on.`
 - `06 · {{RETURN_WINDOW_DAYS}} · carried into data · faqs[6].answer and siteContent.policies.shippingReturns §04. Still resolved by fillStoreCopy from STOREFRONT_CONFIG.returnsWindowDays (7).`
+- `21 · {{RETURN_WINDOW_DAYS}} / {freeShipping} · NEW SURFACE, no new token · Giving `faqs` rows 6–8 the `home` placement puts both answers on the home page. `{{RETURN_WINDOW_DAYS}}` still resolves to 7 and prints as "within 7 days"; `{freeShipping}` is still unresolvable (`shipping_methods[0].freeAbove` is null), so FAQ 6 loses that sentence and prints its first one only. Verified in the browser: `document.body.innerText` carries no `{{`, no `{freeShipping}`, no `{codSentence}` and no `{taxNote}` at 360 / 390 / 768 / 1280.`
 - `06 · {{PRICE_FACE_WASH}} / {{PRICE_GOAT_MILK_SOAP}} / {{PRICE_FACE_SCRUB}} · resolved · Seeded as 390 / 90 / 349 with priceSource: "packaging-mrp". Owner to confirm before launch.`
 - `06 · {{PRICE_BODY_WASH}} / {{PRICE_FACE_MASK}} / {{PRICE_FACE_MIST}} / {{PRICE_FACE_SERUM}} / {{PRICE_MOISTURIZER_GEL}} · introduced · price: null + priceTBA: true on products 3, 4, 5, 7, 8 — the MRP is masked on those packs. Renders "Price on launch" with Add to Cart disabled.`
 - `06 · {{SIZE_FACE_WASH}} … {{SIZE_MOISTURIZER_GEL}} (8) · resolved · products[*].size, all eight from the packs: 200 ml · 100 g · 250 ml · 100 g · 100 ml · 100 g · 30 ml · 100 ml.`
@@ -2437,3 +2450,133 @@ the page's (Prompt 28), and their composition wants one look at that layout. `re
 `picsum.photos` remain unreachable from the browser in this sandbox (the same tunnel resets Prompt 19
 recorded), so no placeholder photograph on the home page was seen rendered in this run; nothing in
 this section depends on one. Carried into Open TODOs.
+
+
+## Prompt 21 record (2026-09-07)
+
+### What was built
+
+One rewrite, one new section, one selector option, and three JSON values.
+
+- **`components/FAQ/FAQ.js` (159, was 55) + `.module.css` (112, was 25) + `.test.js` (196)** —
+  rebuilt on the `ui/Accordion` primitive and turned into a **props-driven** block. The old file read
+  `FaqContext` itself and hard-coded `forPlacement("home")`, which is why it could only ever be the
+  home block; rows are now a prop, so the same accordion serves the home band, `/faq` (Prompt 28) and
+  the PDP's FAQs panel (Prompt 27).
+  **Contract:** `faqs` · `limit` · `defaultOpen` · `multiple` (default `false`) · `id` ·
+  `headingLevel` (a NUMBER, 2–6, default 3) · `className` · rest.
+  **Rows → items:** `id: "faq-<id>"`, `title` the question, `content` a
+  `<ContentBlocks variant="prose">` over the resolved answer.
+  **Two exported pure functions:** `faqAnchorId(faq)`, `faqAnswerText(answer, fillCopy)`.
+  Everything the disclosure pattern owes a visitor — a real `<button>` in a heading,
+  `aria-expanded`/`aria-controls`, ↑/↓/Home/End between headers, the `0fr → 1fr` height animation, the
+  collapsed panel's `visibility: hidden` — is the primitive's and is not restated.
+- **`components/home/HomeFaqs.js` (89) + `.module.css` (79) + `.test.js` (101)** — **new**.
+  `SectionHeading` (eyebrow "Good to know", `rule`, "Questions, answered" with `gradientWord={1}`, one
+  lede) + `Button variant="secondary"` "All questions" → `ROUTES.FAQ`, then `<FAQ headingLevel={3}/>`
+  over `useFaqs().forPlacement("home", { limit: 8 })`. Two columns from 1025px with the left column
+  sticky, stacked below. Renders `null` under two answers. Exports `HOME_FAQ_LIMIT` (8) and
+  `HOME_FAQ_MINIMUM` (2).
+- **`utils/faqs.js`** — `faqLimit(rows, limit)` (new, exported) and
+  `faqsForPlacement(faqs, placement, { limit })`. **`context/FaqContext.js`** passes the options
+  object through. **`pages/Home/Home.js`** mounts `<HomeFaqs/>` after `<WhyLamikaaSection/>` and its
+  section map gains `0j`. **`db.json`** `faqs` rows 6–8 gained `"home"`.
+
+### The two defects the run found, and reading did not
+
+1. **`faqLimit(rows, null)` returned an empty list.** `Number(null)` is `0`, which is finite and not
+   negative, so an explicit `{ limit: null }` — "no cap" in every other option bag in this codebase —
+   sliced the list to nothing. The guard now tests `null`/`undefined`/`""` before the coercion. Caught
+   by `it("leaves the list alone when there is no sensible cap")` on the first run of the new suite.
+2. **The answer printed at 17px, the same size as the question.** `ContentBlocks`' prose paragraphs
+   are `--sf-text-md`, so the hierarchy the design spec asks for did not exist until
+   `.answer :is(p, li)` brought it to `--sf-text-base`. Found by measuring the composited page, not by
+   reading the module — the FAQ stylesheet said nothing about it either way.
+
+### Measurements (Chromium 1194, mock mode, dev server)
+
+| width | columns | aside | rows | row height | doc overflow |
+|---|---|---|---|---|---|
+| 360 | 1 (328px) | static | 8 | 44px floor | 0 |
+| 390 | 1 (358px) | static | 8 | 44px floor | 0 |
+| 768 | 1 (736px) | static | 8 | 44px floor | 0 |
+| 1024 | 1 (984px) | static | 8 | 44px floor | 0 |
+| 1025 | 2 (412.9 / 516.1) | **sticky, top 112px** | 8 | 44px floor | 0 |
+| 1280 | 2 (526.2 / 657.8) | **sticky, top 112px** | 8 | 66px rendered | 0 |
+
+Section ground `rgb(11,11,13)`, `--sf-section-y` 128px at 1280. Question **Manrope 600 17px**,
+`min-height: 44px`, resting colour `rgb(247,245,240)`. Chevron **20px `rgb(245,215,110)`**, rotating
+180°. Answer **Manrope 16px `rgb(184,181,176)`** at **20px** inline inset. Separators
+**`rgba(255,255,255,0.08)`** — the glass hairline, not the neutral one. The open row's rule:
+**2px wide, `linear-gradient(135deg, rgb(245,215,110), rgb(255,79,216)…)` at `opacity: .6`,
+`inset-inline-start: -12px`** — inside the container's own padding, so opening an answer moves no word
+sideways.
+
+### Accessibility
+
+`h1` count on the page: **1** (the hero's). Inside the section: `h2` 40px "Questions, answered" (the
+`aria-labelledby` target) → eight `h3`, one per question. **Eight `role="region"` panels**, each
+`aria-labelledby` its own trigger; **zero nested landmarks**. Tab walk: "All questions" → the eight
+triggers → out of the section (**9 stops, no trap**). ↑/↓ move between headers and **wrap** (last →
+first, first → last), Home/End jump to the ends, Enter opens and Space closes — all measured in the
+browser, not asserted.
+
+| text | on `#0B0B0D` |
+|---|---|
+| `h2`, question, CTA label (`#F7F5F0`) | 18.05:1 |
+| eyebrow, chevron (`#F5D76E`) | 13.88:1 |
+| lede, answer (`#B8B5B0`) | 9.62:1 |
+
+### Tokens, and the row the criterion names
+
+`document.body.innerText` carries **no `{{`, no `{freeShipping}`, no `{codSentence}`, no `{taxNote}`**
+at any of the four widths. FAQ 7 (`{{RETURN_WINDOW_DAYS}}`) prints as *"You can request a return from
+My Orders within **7** days of delivery for unopened products in their original packaging. Opened
+skincare cannot be returned for hygiene reasons unless it arrived damaged."* — the token resolves from
+`STOREFRONT_CONFIG.returnsWindowDays`, which still holds the boilerplate 7 (carried into Open TODOs
+for the owner; at 0 the sentence drops and the second one stands alone). FAQ 6 (`{freeShipping}`)
+prints its first sentence only, because no shipping method sets a `freeAbove` — the sentence, not the
+row, is what goes.
+
+### The admin, exercised rather than assumed
+
+Signed in at `/admin`, `/admin/faqs` lists all eight rows with the `Shared` / `Help` / `Product`
+placement vocabulary intact and **no console error**. `PATCH /faqs/1` through the same endpoint the
+screen saves on, then a `focus` event on an already-open storefront tab: the first question changed
+from "Who owns LAMIKAA Naturals?" to "Who owns LAMIKAA Naturals? (edited)" **without a reload**. The
+edit was reverted; `git diff db.json` is the three `"home"` lines and nothing else.
+
+### Reduced motion
+
+With `prefers-reduced-motion: reduce` the panel's `transition-duration` computes to **`0s`** (the token
+layer zeroes `--sf-duration`), the chevron and the open row's rule stop with it, and the deep-link
+scroll switches from `smooth` to `auto`.
+
+### Verification run
+
+- `CI=true npm run build` — exit 0, **Compiled successfully, 0 warnings**. The emitted CSS keeps the
+  `:has()` rule and `:is(p,li)` intact.
+- `npm test -- --watchAll=false` — **17 suites (1 skipped: the live API), 173 passed**, 22 of them new
+  across `FAQ.test.js` (14), `HomeFaqs.test.js` (3) and `utils/faqs.test.js` (5, the last of which is a
+  regression on the two selectors this prompt did NOT change).
+- `grep -n "HomeFaqs" src/pages/Home/Home.js` → 2 (the import and the mount).
+- No hard-coded colour, `rgb()` or `hsl()` in either new stylesheet (`grep -nE "#[0-9a-f]{3,8}|rgb\(|hsl\("`
+  → 0); every value is a `--sf-*` token or a local custom property built from one. No
+  `dangerouslySetInnerHTML` (the answers go through `ContentBlocks`, which cannot emit markup at all).
+  No new dependency.
+- Word-boundary Meghali-era sweep (`meghali|silk|muga|eri|mekhela|chador|sualkuchi|emerald|paat`) over
+  every file this prompt authored — `FAQ.{js,module.css,test.js}`, `HomeFaqs.{js,module.css,test.js}`,
+  `FaqContext.js`, `utils/faqs.{js,test.js}` — **0 hits**. `pages/Home/Home.js` still returns 4, all of
+  them in the pre-rebuild sections 1–6 (the collection stories' lede and the heritage interlude); this
+  prompt did not touch a line of them, and Prompt 22 deletes the sections whole. `db.json` changed by
+  exactly 3 lines.
+- `db.json` changed in one field (`faqs[5..7].placements`), which both api modes already read and the
+  admin already edits — no `api.js` change was needed in either mode.
+
+### Left for later
+
+The guardrail "one accordion implementation only" holds for the home page, not yet for the site:
+`pages/HelpCenter/HelpCenter.js` and `pages/ProductDetails/ProductDetails.js` still hand-roll theirs,
+and both files belong to prompts that rewrite them wholesale (28 and 27). The rewrite done here is
+what makes each migration a one-line mount. Carried into Open TODOs, together with the returns-window
+figure for the owner.

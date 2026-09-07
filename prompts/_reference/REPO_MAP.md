@@ -1075,6 +1075,78 @@ No `db.json` and no `api.js` change. The section READS `siteContent.impact` —
 `GET /siteContent` in mock, `GET /content/impact` live — which both modes already
 serve identically, and writes nothing.
 
+**Updated by Prompt 21.** The shared `FAQ` block is rebuilt on the `Accordion`
+primitive and becomes the one accordion answers are read in; `HomeFaqs` is the
+home page's band around it.
+
+- `FAQ/FAQ.js` (159, was 55) + `.module.css` (112, was 25) + `.test.js` (196) —
+  **rewritten onto `ui/Accordion`**. The disclosure pattern — a real `<button>`
+  inside a heading, `aria-expanded`/`aria-controls`, ArrowUp/ArrowDown/Home/End
+  between headers, the `grid-template-rows: 0fr → 1fr` height animation, the
+  collapsed panel's `visibility: hidden` — is entirely the primitive's and is not
+  restated. The component no longer reads `FaqContext` itself: **rows are a prop**,
+  so the same accordion serves the home band, the FAQ page (Prompt 28) and the
+  PDP's FAQs panel (Prompt 27).
+  **Contract:** `faqs` · `limit` · `defaultOpen` · `multiple` (default `false`) ·
+  `id` · `headingLevel` (a NUMBER, 2–6, default 3 — mapped to the primitive's tag)
+  · `className` · rest spread onto the accordion root.
+  **Rows → items:** `id: "faq-<id>"`, `title` the question, `content` a
+  `<ContentBlocks variant="prose">` over the resolved answer (answers are plain
+  text; `ContentBlocks` splits the paragraphs and cannot emit markup).
+  **The copy is data and the figures in it are live:** `useStoreSettings().fillCopy`
+  resolves `{freeShipping}` / `{codSentence}` / `{taxNote}` /
+  `{{RETURN_WINDOW_DAYS}}` at render time, and `stripPlaceholderSentences` runs
+  again on the result so a sentence still quoting an unsupplied token leaves the
+  page while its neighbours stay. **A row whose answer empties out is dropped
+  entirely** — question included.
+  **Deep links:** the question is wrapped in `<span id="faq-<id>">`, so `/#faq-3`
+  and `/faq#faq-7` are legal targets. The hash is read through
+  `useLocation()`; when it names one of this block's rows the accordion is
+  **re-keyed** on it, which opens that row from an in-page link as well as on a
+  cold load, then focuses its trigger (`preventScroll`) and centres it with
+  `scrollIntoView` (`behavior: "auto"` under `prefers-reduced-motion`).
+  **Dress:** glass hairline separators (`--sf-glass-border`), the question in
+  Manrope 600 `--sf-text-md` (17px) over the primitive's 44px floor, a 20px
+  `--sf-color-gold` chevron rotating 180°, the answer at `--sf-text-base` (16px,
+  the design system's body floor — see the decisions log) in
+  `--sf-color-text-secondary` at 20px inline inset, and a 2px signature-gradient
+  rule at 60% down the OPEN row, hung at −12px so it sits in the container's own
+  padding and opening an answer moves no word sideways. The module reaches the
+  primitive through its **ARIA contract** (`button[aria-expanded]`,
+  `[role="region"]`) plus one structural selector for the row
+  (`.faq > div`, and `:has(button[aria-expanded="true"])` for its open state) —
+  both decorative, both documented in the file.
+  **Exports:** default plus `faqAnchorId(faq)` and `faqAnswerText(answer, fillCopy)`.
+- `home/HomeFaqs.js` (89) + `.module.css` (79) + `.test.js` (101) — **new**. The
+  band: `SectionHeading` (eyebrow "Good to know", `rule`, title "Questions,
+  answered" with `gradientWord={1}`, a one-line lede) + `Button variant="secondary"`
+  "All questions" → `ROUTES.FAQ`, then `<FAQ headingLevel={3}/>` over
+  `useFaqs().forPlacement("home", { limit: 8 })`.
+  **Layout:** two columns from 1025px (`1fr 1.25fr`, 56px gutter) with the left
+  column `position: sticky; top: 112px` so the signpost holds still for the length
+  of the accordion; stacked ≤1024px in reading order.
+  **It renders `null` under two answers** — one lonely drawer under a headline
+  promising "questions" reads as broken rather than as brief.
+  **No `FAQPage` JSON-LD here**: /faq owns it (Prompt 28), and publishing it twice
+  would give a search engine two competing answers to one question.
+  **Exports:** default plus `HOME_FAQ_LIMIT` (8) and `HOME_FAQ_MINIMUM` (2).
+- `utils/faqs.js`: **`faqLimit(rows, limit)`** (new, exported) and
+  `faqsForPlacement(faqs, placement, { limit })`. The cap is applied AFTER the
+  live/placement/targeting filters and the de-dupe, because "the first eight
+  answers a visitor should see" and "eight rows off the top of the collection" are
+  different lists. `null`, `undefined`, `""`, a negative and a non-number all mean
+  "no cap" (`Number(null)` is 0, so the guard runs before the coercion).
+  `faqsForGroup` and `faqsForProduct` are unchanged.
+- `context/FaqContext.js`: `forPlacement(placement, options)` passes the options
+  object straight through to `faqsForPlacement`. Nothing else changed.
+- `pages/Home/Home.js`: `<HomeFaqs/>` mounts directly after
+  `<WhyLamikaaSection/>`, and the file's section map gains `0j`.
+- `db.json`: `faqs` rows 6–8 gained the **`"home"`** placement, so all eight site
+  FAQs are on the shared block (the prompt asks for 6–8 there; the Prompt 06 seed
+  had put `"home"` on rows 1–5 only). Three JSON values in the one field the admin
+  FAQ manager already edits and both api modes already read — no schema change, no
+  `api.js` change, and `/admin/faqs` keeps its `home`/`help`/`product` vocabulary.
+
 ## 6. Pages (`src/pages/*`) — see §11 for verdicts
 
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.
@@ -1138,7 +1210,7 @@ Provider order in `App.js`: `ErrorBoundary > ThemeContextProvider > StoreSetting
 | CartContext | `useCart()` (also `hooks/useCart`) | `cartItems`, `isCartOpen`, `isLoading`, `addToCart(product, qty, {openDrawer})`, **`addMany(items, {openDrawer}) -> {added, skipped}`**, `removeFromCart`, `updateQuantity`, `clearCart({silent})`, `getCartTotal`, `getCartItemCount`, `toggleCart`, `setIsCartOpen`; line id = `${productId}-${variantId ?? "default"}`; SweetAlert toasts, sentence case ("Added to cart" / "Cart updated" / "Removed from cart" / "Cart cleared") | `localStorage.cart` (format unchanged); debounced replace-sync to `/cart` for logged-in users |
 | OrderContext | `useOrder()` | `orders`, `currentOrder`, `isLoading`, `createOrder(orderData)` (generates `ORD-<ts>-<rand>`), `loadUserOrders`, `getOrderById` | — |
 | DealsConfigContext | `useDealsConfig()` | `config`, `enabled`, `loading`, `refresh` | refetch on focus |
-| FaqContext | `useFaqs()` | `faqs`, `loading`, `refresh`, `forPlacement(p)`, `forProduct(product)`; fallback `DEFAULT_FAQS` (= `FAQ_ITEMS` constants) | refetch on focus + `faqs:updated` event |
+| FaqContext | `useFaqs()` | `faqs`, `loading`, `refresh`, `forPlacement(p, { limit })` (Prompt 21), `forProduct(product)`; fallback `DEFAULT_FAQS` (= `FAQ_ITEMS` constants) | refetch on focus + `faqs:updated` event |
 
 **Updated by Prompt 12.** `addMany(items, { openDrawer = true } = {})` is the multi-add helper the rituals and the cart tray's cross-sell share. Both add paths now fold an item in through one private reducer (`mergeLine`), so `addToCart` and `addMany` cannot drift on the line-key merge or the stock clamp. `addMany` normalises each entry in the order given inside ONE functional update, SKIPS any entry whose price is not committed (`isPriceKnown`, so a `priceTBA` product can never become a ₹0 line), fires exactly one toast ("3 items added to your cart", or "2 added · 1 coming soon" when it skipped some), opens the drawer at most once — and not at all when nothing was added — and returns `{ added, skipped }`. Covered by `src/context/CartContext.test.js`.
 
@@ -1293,7 +1365,7 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/services/api.js`, `baseURL.js` | K + extend | New namespaces (Prompt 07); comments/URLs cleaned (36). |
 | `src/services/api.live.test.js` | K | Prompt 07 did the BASE_URL assertion (now a pattern, so a staging host passes), announcements/concerns/rituals/content coverage, `setHeroOrder`, the nullable-price + `media[]`/`categoryIds[]` product assertions and the new product reads. Remaining: whatever Prompts 36/39 add. |
 | `src/utils/constants.js` | K (gutted) | Brand values move to `src/config/brand.js`; keep enums/routes. |
-| `src/utils/{helpers,categories,faqs,heroConfig,dealsConfig,storeSettings,socialLinks,documentTitle,authStorage}.js` | K | Prompt 07: `faqs.js` gained `group` + `faqsForGroup()`; `heroConfig.js` gained `source` and lost its Meghali fallback slide. `heroConfig.js` loses the remaining slide helpers when the hero is rebuilt (Prompt 14/34); `productPath` → `/product/`. |
+| `src/utils/{helpers,categories,faqs,heroConfig,dealsConfig,storeSettings,socialLinks,documentTitle,authStorage}.js` | K | Prompt 07: `faqs.js` gained `group` + `faqsForGroup()`; Prompt 21: `faqLimit()` + a `{ limit }` option on `faqsForPlacement`; `heroConfig.js` gained `source` and lost its Meghali fallback slide. `heroConfig.js` loses the remaining slide helpers when the hero is rebuilt (Prompt 14/34); `productPath` → `/product/`. |
 | `src/hooks/useSound.js`, `src/assets/click-sound-1.wav` | X | Dead code, wrong path. |
 | `src/components/Header/*` | R (layout) / K (overflow + menus logic) | Glass header, mega panel (Prompt 09). |
 | `src/components/SidebarMenu/*` | R | Glass mobile drawer (Prompt 10). |
@@ -1304,7 +1376,7 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/components/Footer/*` | R | New four-column glass footer (Prompt 13). |
 | `src/components/AnnouncementBar/*`, `TrustStrip/*` | K | Data from brand config / announcements (Prompts 09, 15). |
 | `src/components/HeroSection/*` | R | Product-driven hero carousel (Prompt 14). |
-| `src/components/FAQ/*` | K | Glass accordion (Prompt 21). |
+| `src/components/FAQ/*` | K | **Done (Prompt 21)** — rewritten onto `ui/Accordion`; rows are a prop, so the home band, `/faq` and the PDP panel share one accordion. |
 | `src/components/AuthModal/*`, `ReviewModal/*`, `Breadcrumb/*`, `ScrollToTop/*`, `ErrorBoundary/*` | K | Restyle; ErrorBoundary literals re-synced (03). |
 | `src/components/BottomDrawer/*`, `CTASection/*`, `FeaturedProducts/*`, `Newsletter/*` | X | Unused duplicates (Prompt 35 deletes; `Newsletter/` was deleted by Prompt 13, and the capture now lives in `brand/NewsletterForm` — Prompt 19). |
 | `src/components/AdminLayout/*` | K | Rebrand, single theme (Prompts 03, 32). |
