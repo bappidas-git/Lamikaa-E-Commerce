@@ -5,7 +5,14 @@ import useSeo from "../../hooks/useSeo";
 import { breadcrumbJsonLd, itemListJsonLd } from "../../utils/seo";
 import { concernPath } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
-import { Button, Chip, GlassCard, SectionHeading, Skeleton } from "../../components/ui";
+import {
+  Button,
+  Chip,
+  EmptyState,
+  ErrorState,
+  SectionHeading,
+  Skeleton,
+} from "../../components/ui";
 import CategoryHead from "../../components/catalogue/CategoryHead";
 import ProductChapter from "../../components/catalogue/ProductChapter";
 import ChapterIndex, { chapterId } from "../../components/catalogue/ChapterIndex";
@@ -20,7 +27,7 @@ import styles from "./Shop.module.css";
 //
 // THE FILTERS ARE GONE, and their absence is the design. The old catalogue was
 // a facet sidebar over a grid: category tree, price range, rating, discount,
-// in-stock, brand, fabric, six sort orders and pagination — the machinery a
+// in-stock, brand, material, six sort orders and pagination — the machinery a
 // thousand-SKU store needs, over EIGHT products. The brief (§7.3) replaces it
 // outright: no filter, no sort, no pagination, no sidebar. What is left is the
 // range itself, one full editorial chapter at a time, in the order the owner
@@ -468,35 +475,29 @@ const ShopView = ({
           )}
 
           {failed && (
-            <GlassCard padding="lg" className={styles.panel} role="alert">
-              <p className={styles.panelTitle}>The range could not be loaded.</p>
-              <p className={styles.panelBody}>
-                Something went wrong on the way to the catalogue. Nothing is
-                missing from the range — only from this page.
-              </p>
-              <Button variant="primary" onClick={retry}>
-                Try again
-              </Button>
-            </GlassCard>
+            <ErrorState
+              className={styles.panel}
+              text="Nothing was changed — the range is intact, it just didn't reach this page. Check your connection and try again."
+              onRetry={retry}
+            />
           )}
 
           {!loading && !failed && total === 0 && (
             /* The concern chips the spec asks for here are the ones directly
                above, in the head — rendering a second set would give a screen
                reader twenty-four links to the same twelve places. */
-            <GlassCard padding="lg" className={styles.panel}>
-              <p className={styles.panelTitle}>Nothing here yet</p>
-              <p className={styles.panelBody}>
-                {concernSlug
+            <EmptyState
+              className={styles.panel}
+              title="Nothing here yet"
+              text={
+                concernSlug
                   ? "No product in the range answers to that concern yet. Try another one above, or read the whole range."
                   : isCategory
                   ? "There is nothing in this category yet. Read the whole range instead."
-                  : "There is nothing to show here yet. Read the whole range instead."}
-              </p>
-              <Button variant="primary" to={ROUTES.SHOP}>
-                All products
-              </Button>
-            </GlassCard>
+                  : "There is nothing to show here yet. Read the whole range instead."
+              }
+              actions={<Button to={ROUTES.SHOP}>All products</Button>}
+            />
           )}
 
           {showChapters &&

@@ -960,46 +960,13 @@ button.figure:focus-visible {
 
 /* =============================================================================
  * EMPTY STATES — one shape, used by five sections
+ * `ui/EmptyState compact` (Prompt 31) draws all five; each of them sits inside
+ * a section that has already paid for its own padding, which is what `compact`
+ * is for. Nothing about the card is restated here.
  * ========================================================================== */
 
 .state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sf-space-2);
-  text-align: center;
-}
-
-.stateMark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin-bottom: var(--sf-space-2);
-  border: 1px solid var(--sf-color-border);
-  border-radius: 50%;
-  color: var(--sf-color-text-muted);
-}
-
-.stateTitle {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  font-weight: var(--sf-font-medium);
-  color: var(--sf-color-text);
-}
-
-.stateText {
-  margin: 0;
-  max-width: 46ch;
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
-}
-
-.stateBtn {
-  margin-top: var(--sf-space-3);
+  width: 100%;
 }
 
 /* =============================================================================

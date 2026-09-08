@@ -1,0 +1,150 @@
+/* =============================================================================
+ * EmptyState — one centred card, at every width
+ * =============================================================================
+ * `.sf-card` (through GlassCard) carries the glass surface, the hairline and
+ * the radius; this module owns only the column measure, the ring artwork and
+ * the type scale the design spec fixes:
+ *
+ *   card    max-width 520px, 40px padding (24px in `compact`)
+ *   ring    56px, a 1px signature-gradient seam around a 24px hairline glyph
+ *   title   Fraunces 24px
+ *   text    15px, held to a readable measure
+ *   actions pills, wrapping, centred
+ *
+ * Tokens only. The two literal lengths that are not on the 4px scale — the
+ * ring's 56px and the title's 1.5rem — are the spec's own figures for this
+ * component and have no token; every colour, radius, duration and space does.
+ * ========================================================================== */
+
+.card {
+  /* Mobile first: the card is the column with the design system's 24px inset,
+     and the padding steps up to the spec's 40px once there is room for it. */
+  max-width: 520px;
+  margin-inline: auto;
+  padding: var(--sf-space-6);
+  text-align: center;
+}
+
+@media (min-width: 481px) {
+  .card {
+    padding: var(--sf-space-10);
+  }
+
+  /* The in-page variant stays at 24px at every width: it sits inside a section
+     that has already paid for its own padding. */
+  .compact {
+    padding: var(--sf-space-6);
+  }
+}
+
+/* ---- the ring ------------------------------------------------------------
+   A gradient ring cannot be a border, so it is a filled circle with its middle
+   masked out — one element, one pseudo, no second node in the DOM. Browsers
+   without `mask-composite` fall back to the hairline border underneath, which
+   is the same ring in a quieter colour. */
+/* Block-level, centred by its own margin. It must NOT be inline: `.sf-eyebrow`
+   below is an inline-flex pill, and two inline boxes in a `text-align: center`
+   column share a line — which put the eyebrow beside the ring instead of under
+   it. */
+.ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--sf-space-5);
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-primary-soft);
+}
+
+@supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
+  .ring {
+    border-color: transparent;
+  }
+
+  .ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background-image: var(--sf-gradient-signature);
+    opacity: 0.7;
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* The glyph is a signpost, not the subject: hairline weight, muted, 24px. */
+.glyph {
+  display: inline-flex;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+.glyph svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
+/* ---- type ---------------------------------------------------------------- */
+
+/* Same reason as the ring: `.sf-eyebrow` is inline-flex, so it is promoted to
+   a centred block here rather than left to share a line with whatever precedes
+   it. The selector is two classes deep so it outranks the primitive whichever
+   order the two sheets land in. */
+.card .eyebrow {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--sf-space-3);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: 1.5rem;
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.text {
+  max-width: 44ch;
+  margin: var(--sf-space-3) auto 0;
+  font-size: 0.9375rem;
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- actions -------------------------------------------------------------
+   Stacked and full-width on a phone (a pill that is 60% of a 360px screen is a
+   thumb-miss waiting to happen), in a wrapping centred row from 481px up. */
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sf-space-3);
+  margin-top: var(--sf-space-8);
+}
+
+.compact .actions {
+  margin-top: var(--sf-space-6);
+}
+
+@media (min-width: 481px) {
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+  }
+}

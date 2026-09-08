@@ -66,12 +66,10 @@
   width: 100%;
 }
 
+/* `ui/ErrorState` (Prompt 31) is the card; it only has to stop being centred in
+   a head column that is otherwise left-aligned. */
 .failed {
-  margin: 0;
-  max-width: 52ch;
-  font-size: var(--sf-text-base);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
+  margin-inline: 0;
 }
 
 /* ---- The head's photograph ----------------------------------------------- */

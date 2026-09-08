@@ -1,5 +1,8 @@
 /* =============================================================================
  * NotFound — one centred card, at any width
+ * =============================================================================
+ * `ui/EmptyState` is the card, the ring, the title and the actions. All this
+ * file does is give it a viewport to sit in the middle of.
  * ========================================================================== */
 
 .section {
@@ -9,32 +12,4 @@
   min-height: 70svh;
   display: flex;
   align-items: center;
-}
-
-.card {
-  /* Mobile first: the card is the column, with the 24px inset the design system
-     asks for at 480px and below. The max-width below widens it on anything larger. */
-  margin-inline: auto;
-  padding: var(--sf-space-6);
-  text-align: center;
-}
-
-.actions {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--sf-space-3);
-  margin-top: var(--sf-space-8);
-}
-
-@media (min-width: 481px) {
-  .card {
-    max-width: 560px;
-  }
-
-  .actions {
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-  }
 }

@@ -2,7 +2,7 @@
 // UI PRIMITIVES  —  the layer every LAMIKAA feature composes on
 // =============================================================================
 //
-// Thirteen components, one import:
+// Fifteen components, one import:
 //
 //   import { Button, SectionHeading, Price } from "../../components/ui";
 //
@@ -30,6 +30,8 @@ export { default as Chip } from "./Chip";
 export { default as CloudinaryImage } from "./CloudinaryImage";
 export { default as ContentBlocks } from "./ContentBlocks";
 export { default as Drawer } from "./Drawer";
+export { default as EmptyState } from "./EmptyState";
+export { default as ErrorState } from "./ErrorState";
 export { default as GlassCard } from "./GlassCard";
 export { default as GlowWrap } from "./GlowWrap";
 export { default as Modal } from "./Modal";

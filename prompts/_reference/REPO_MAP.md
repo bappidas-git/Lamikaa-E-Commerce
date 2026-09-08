@@ -221,6 +221,23 @@ Highlights that shape the prompts:
 - `storefront/*` (13 atoms exported from `index.js` — 12 from Prompt 26, which deleted `ProductGallery`): `ProductCard` (props `product, onAddToCart, onToggleWishlist, isWishlisted, showAddToCart`), `ProductGallery` (props `images, alt, discount, zoom, ribbon, inStock` — images only; **deleted by Prompt 26**, replaced by `pdp/MediaGallery`), `AddToCartBar` (mobile sticky), `PriceBlock`, `QuantityStepper`, `VariantSelector` (+ `variantUtils.js`), `TrustBadges` (config-driven from `tokens.js`), `DeliveryReturnsInfo`, `ReviewsSection`, `RelatedProducts`, `FrequentlyBoughtTogether`, `SocialProof`, `StarRating`.
 - Unused/duplicate: `FeaturedProducts` (private card copy), `CTASection`, `Newsletter`, `BottomDrawer` — none imported by Home/Products/PDP.
 
+**Updated by Prompt 31.** `components/ui/` gains the two state cards — 15 components, one import.
+
+- `ui/EmptyState.js` (87) + `.module.css` (150): props `{ eyebrow, title, titleAs, text, icon, actions, compact }` over a
+  `GlassCard`. A 520px centred column (40px padding; 24px in `compact` and below 481px), a 56px ring drawn as a
+  **signature-gradient seam** — a filled circle with its middle masked out, since a border cannot take a gradient, with
+  the `.sf-color-border-strong` hairline underneath as the `@supports` fallback — around a 24px hairline Iconify glyph,
+  then `.sf-eyebrow`, a Fraunces 24px title and 15px secondary text at 44ch, then pill actions that stack full-width on a
+  phone and wrap centred from 481px. **No live region**: an empty list is ordinary content. The title is a `<p>` unless
+  `titleAs` promotes it, because most of these sit inside a section that already has its heading. Note that the ring and
+  the eyebrow are forced BLOCK-level with a two-class selector — `.sf-eyebrow` is inline-flex, and two inline boxes in a
+  centred column share a line.
+- `ui/ErrorState.js` (64): composes `EmptyState` — one stylesheet, so a failure can never look like a different
+  application — and adds the three things a failure needs and an empty list must never have: `role="alert"`, a
+  **"Try again"** first in the action row calling `onRetry`, and honest copy ("We couldn't load this" / "Nothing was
+  changed. Check your connection and try again."). Callers append their own actions after the retry; a caller with
+  nothing to re-run passes only `actions` and gets no false promise. No `.module.css` of its own, by design.
+
 
 **Updated by Prompt 09.** The masthead is rebuilt; `CategoriesDrawer/` is
 deleted (nothing imports it) and `TrustStrip` no longer renders from the header
@@ -1161,11 +1178,11 @@ home page's band around it.
 - `Products.js` (1661): URL-backed catalogue — params `category` (slug or legacy id, parent-includes-children via `getCategoryScopeIds`), `search`, `sort` (`relevance|price-low|price-high|newest|rating|popularity` + 12 aliases), `page`, `per_page`, `min_price`, `max_price`, `highlight` (featured/trending/hot); session-only facets rating/discount/in-stock/brand/**fabric** (`FABRIC_FAMILIES` Muga/Pat/Eri/Toss/Cotton); filter drawer with focus trap; skeleton/error/empty states; heading default "All Silk".
 - `ProductDetails.js` (1146): slug + legacy numeric-id resolution with canonical redirect; `ProductGallery` from `product.images`; buy box (SocialProof, PriceBlock, key features, VariantSelector, QuantityStepper, Buy Now/Add to Cart/wishlist, TrustBadges, DeliveryReturnsInfo); promises band; tabs Description / Specifications (`SILK_SPEC_LABELS`) / Fabric & Craft (conditional) / Reviews / FAQs (`useFaqs().forProduct`); FBT + Related rails; `AddToCartBar`; writes `recentlyViewed`; owns the tab title via `setPageTitle` and hand-writes `meta[name=description]`.
 - `Checkout.js` (1656; **restyled by Prompt 29 — see the block below; every rule listed here still holds**): 4 steps Cart → Shipping → Payment → Review; address book + inline form (required: firstName, lastName, phone, addressLine1, city, state, postalCode; country fixed "India"); shipping methods from API (free above `freeAbove`); coupon; tax inclusive/exclusive; store credit (`wallet.getBalance`); COD rules from settings (`codEnabled/codMinOrder/codMaxOrder/codFee`); payment methods `card|upi|net_banking|wallet|cod` (mock forms, no gateway); `createOrder()` from OrderContext then `navigate('/order-confirmation/'+orderNumber)`.
-- `OrderConfirmation.js` (548): `/order-confirmation/:orderNumber`, payment-status-aware, confetti (reduced-motion aware), loading/error/not-found branches.
+- `OrderConfirmation.js` (557; **restyled by Prompt 31**): `/order-confirmation/:orderNumber`, payment-status-aware, confetti (reduced-motion aware), loading/error/not-found branches — every one of them kept. **Updated by Prompt 31**: a 96px seal (`GlowWrap tone="gold"` → a masked signature-gradient ring → an ink check → one halo), the gold eyebrow "Order confirmed", a Fraunces "Thank you, {firstName}", a glass record card that is `1fr 1fr` from 769px, hairline 15px ledger rows, `Chip variant="status"` for the payment state and three pill `Button`s (**Continue shopping → `/shop`**, was `/`). Loading is a `Skeleton` page silhouette (**the page's spinner is gone**); the failed and not-found branches are `ui/ErrorState` and `ui/EmptyState`, each taking the `h1`. `useSeo({ title: "Order confirmed", noindex: true })`.
 - `OrderHistory.js` (1159; **restyled by Prompt 30**): search/filter/paginate (5/page), 3-stage timeline, tracking drawer, details drawer, cancel (`orders.cancel`), return (→ `ROUTES.CONTACT` within the window), reorder, **review submission** via `ReviewModal` (`reviews.submit`), refund states — every one of them unchanged. **Updated by Prompt 30**: each order is a `GlassCard` (56px `CloudinaryImage` plate strip, `Chip variant="status"`, three `Chip variant="step"` numerals joined by a gradient hairline, pill `Button`s that wrap, two `grid-template-rows: 0fr→1fr` disclosures). `deriveOrderStatus`/`STATUS_CONFIG` moved to `utils/orderStatus` and are read through `orderStatusInfo(order)`; `RETURN_WINDOW_DAYS` is now `STOREFRONT_CONFIG.returnsWindowDays` (was a local `7`). The handler block was diffed against HEAD: the only changes are those four call sites.
 - `Profile.js` (1398; **restyled by Prompt 30**): dashboard + sections Profile (edit; email read-only), Addresses (CRUD via `updateUser({addresses})`), Payment (empty state), Wallet (`wallet.getBalance/getTransactions`), Notifications (coming soon), Settings (password change with strength meter and the live checklist — the Appearance switch went in Prompt 03). **Updated by Prompt 30**: the dashboard is a `320px 1fr` grid from 1025px (identity `GlassCard` with the initials in a signature-gradient ring + the three figures on the left, the 52px index and the recent orders on the right); sections are `GlassCard`s at 24px; addresses wear a gold `Chip variant="trust"` "Default"; the wallet ledger is hairline rows with credit/debit tones; forms are 48px fields on `--sf-color-surface-2`. It no longer duplicates `deriveOrderStatus` — it imports `orderStatusInfo` from `utils/orderStatus`, the same module Order History reads. Every effect and handler from `useEffect(populate)` to `handleLogout` is byte-identical to HEAD (diffed, 374 lines).
 - `Wishlist.js` (496; **restyled by Prompt 30**): guest-capable, 5 sorts, Move to cart (add + silent remove), heart-remove with its exit animation, Clear all (the context raises the confirm), recommendations (`getRelated` → `getFeatured`, deduped), stock gating. **Updated by Prompt 30**: title "Your wishlist" through `SectionHeading`, a glass guest band and a glass toolbar, `Button variant="secondary" block` under each `ProductCard`, and a 1/2/3/4-column grid at 360/640/1024/1280.
-- `SpecialOffers.js` (985): admin `dealsConfig`-driven deals page with vouchers, deal of the day, category tabs; local `ProductCard` copy.
+- `SpecialOffers.js` (872; **restyled by Prompt 31**): admin `dealsConfig`-driven deals page — the `enabled` gate, `hero` copy, `resolveCountdownTarget`, the coupon vouchers with their honest copy failure, Deal of the Day, the category tabs derived from present categories, the discount-derived fallbacks and the `buildCartItem` adds are all unchanged. **Updated by Prompt 31**: the **local `ProductCard` copy is deleted** — the markdown wall renders `storefront/ProductCard` in a `motion.div` cell that owns the reveal and the filter exit, so the page no longer carries a card, a heart, an add button or a card skeleton. Vouchers are `GlassCard glow="gold"` at a fixed 3/2/1-up with the code on a dashed chip in monospace gold; the disabled page (the seed's state) and "nothing is reduced" are `ui/EmptyState`, and a **new** failed branch is `ui/ErrorState` with a retry (the `catch` used to write `[]`, so a dropped read read as "no offers"). `useSeo({ title: "Offers" })`; the nav label was already "Offers".
 - `AboutUs.js` (552): static magazine story, 95 % silk copy (rebuild).
 - `HelpCenter.js` (354): searchable FAQs (`forPlacement("help")`) + topic tiles + contact band.
 - `Support.js` (592): contact channels + lead form (`leads.createContact`, 7-key payload) + showroom/social/why-us rail.
@@ -1869,6 +1886,44 @@ system without a single number moving.
   Asserted in `PurchasePanel.test.js`.
 
 
+**Updated by Prompt 31.** Three shared states, one vocabulary, across every page.
+
+- `components/ui/EmptyState.js` + `.module.css` and `components/ui/ErrorState.js`
+  (both exported from `ui/index.js`) are **the** empty and failed cards. See §5
+  for the anatomy. Every list page branches on **failed before `length === 0`**,
+  so a dropped read is never reported as an empty answer — `SpecialOffers`,
+  `Search`, `Rituals` and `RitualDetail` each gained the failed branch (or the
+  retry) they did not have.
+- The states now read, page by page: **Shop/Category** `EmptyState` + `ErrorState`
+  + `NotFound` for an unknown slug · **Rituals** both, with a retry ·
+  **RitualDetail** `ErrorState` taking the `h1` + `NotFound` · **Search** both,
+  the popular-term chips now living inside the empty card · **Cart** and
+  **Checkout** the same `EmptyState` (they are one screen apart and used to say
+  the same thing in two type scales) · **OrderConfirmation** `ErrorState` +
+  `EmptyState` · **OrderHistory** `EmptyState` ×3 (signed out, no orders, no
+  match) + `ErrorState` · **Profile** `EmptyState compact` ×5 (recent orders,
+  wallet, addresses, payment, notifications) · **Wishlist** `EmptyState`, the
+  guest band above it unchanged · **SpecialOffers** `EmptyState` ×2 +
+  `ErrorState` · **Faq** `EmptyState` (no error twin: `FaqContext` falls back to
+  the built-in answers) · **NotFound** `EmptyState` with the "404" eyebrow ·
+  **Contact** keeps its inline `role="alert"` errors, and **PolicyPage** its
+  one-sentence "not published yet" note — both are prose registers a card would
+  out-shout. The full checklist, with what each state cannot occur for and why,
+  is in `PROGRESS.md`'s Prompt 31 record.
+- **Loading is always a `Skeleton`.** `OrderConfirmation` was the last page-level
+  spinner; with it gone the unreferenced global `.loading-spinner` and
+  `@keyframes spin` came out of `App.css`. The four spinners left in the app
+  (`AuthModal`, `ReviewModal`, `OrderHistory` reorder + cancel) are all inside a
+  working button and keep their own keyframes beside the control.
+- `src/pages/_ComingSoon/` is **deleted** — the Phase 0 scaffolding stub had had
+  no route since Prompt 29. `grep -rn "ComingSoon" src` → 0.
+- `src/utils/dealsConfig.js`: `DEFAULT_DEALS_HERO` and `DEFAULT_DEALS_TIMER` —
+  what `/special-offers` prints before its config arrives and after a failed read
+  — were the previous brand's promo voice over a countdown nobody set. They now
+  match the seed ("Offers" / "Offers" / "Launch offers will appear here.") with
+  `timer.enabled: false`. `normalizeDealsConfig` is untouched, so a real admin
+  record behaves exactly as before.
+
 ## 7. Admin panel
 
 - Shell `src/components/AdminLayout/AdminLayout.js` (1015): guard `useAdmin().isAuthenticated` → `<Navigate to="/admin" />`; 260 px MUI Drawer (temporary < 900 px, permanent ≥ 900) with sections Dashboard · Catalogue (Products, Categories, Reviews) · Sales (Orders, Returns, Payments, Coupons, Special Offers) · Storefront (Hero Section, FAQs) · Operations (Shipping, Users, Leads, Settings) · "Back to Store"; AppBar with theme toggle (shared `useThemeContext`), notifications (polls orders+leads every 30 s), avatar menu; `useAdminBodyClass()` adds `body.admin-area`; MUI theme from `buildAdminTheme(mode)` (indigo/slate, `#4f46e5`, `#0b1220`…); logo constants `LOGO_LIGHT/LOGO_WHITE` (old wordmark).
@@ -2019,7 +2074,8 @@ Applied by Prompt 08 to: Home (site defaults), Products (`Shop`, or the category
 name under `/category/:slug`), Wishlist, Orders, Profile, Checkout,
 OrderConfirmation, HelpCenter (`FAQ`), Support (`Contact`), AboutUs,
 SpecialOffers, the four policy pages, NotFound and ComingSoon. Orders, Profile,
-Wishlist, Cart, Checkout, OrderConfirmation and NotFound carry `noindex` (`ComingSoon` no longer has a route — Prompt 29).
+Wishlist, Cart, Checkout, OrderConfirmation and NotFound carry `noindex`
+(**`ComingSoon` is deleted — Prompt 31**; it lost its last route in Prompt 29).
 The PDP still runs its own hand-rolled title/description effect — Prompt 25
 moves it onto this hook.
 
@@ -2077,7 +2133,9 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/pages/ProductDetails/*` | R | New PDP (Prompts 25–27). |
 | `src/pages/Checkout/*` | **DONE (29)** | Restyled onto the primitives; `Checkout.module.css` rewritten from scratch (2 107 → 1 492) and `Checkout.js` edited for markup, classes and copy only — the money block and the `orderData` payload are byte-identical. Two additive guards (the step-0 TBA drop, the order-failure alert). |
 | `src/pages/Cart/*` | **DONE (29)** — new | The full cart page `/cart` replaces the `ComingSoon` stub; `components/cart/CrossSell` is shared with the drawer. |
-| `src/pages/OrderConfirmation/*`, `OrderHistory/*`, `Profile/*`, `Wishlist/*`, `SpecialOffers/*` | K | **OrderHistory + Profile + Wishlist done (Prompt 30)** — restyled, logic preserved and diffed; OrderConfirmation and SpecialOffers remain for Prompt 31. |
+| `src/pages/OrderConfirmation/*`, `OrderHistory/*`, `Profile/*`, `Wishlist/*`, `SpecialOffers/*` | K | **DONE** — OrderHistory + Profile + Wishlist restyled by Prompt 30, OrderConfirmation + SpecialOffers by Prompt 31; logic preserved and diffed on all five. SpecialOffers' local `ProductCard` copy is gone (one shared card). |
+| `src/pages/_ComingSoon/` | **DELETED (31)** | The Phase 0 scaffolding stub. Routeless since Prompt 29; `grep -rn "ComingSoon" src` → 0. |
+| `src/components/ui/EmptyState.{js,module.css}`, `ui/ErrorState.js` (**new, Prompt 31**) | — | The storefront's two state cards — see §5. `ErrorState` composes `EmptyState`, so one stylesheet holds both and a failed read can never look like a different application. 20 + 7 call sites across 12 pages. |
 | `src/pages/AboutUs/*` | **DONE (28)** → `src/pages/About/*` | siteContent-driven story; the old folder and its 861-line stylesheet are deleted. |
 | `src/pages/HelpCenter/*` → `src/pages/Faq/*`, `Support/*` → `Contact/*`, the four policies → `src/pages/Policies/PolicyPage` | **DONE (28)** | siteContent-driven; the four policy routes collapse into one param route, `/policies/other` is a real 404, and `/help` `/support` `/privacy` `/terms` `/refund` `/cookies` still redirect. Six folders deleted. |
 | `src/pages/Admin/*` | K | Rebrand + new fields/screens (Prompts 32–34). |

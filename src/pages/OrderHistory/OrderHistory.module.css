@@ -21,46 +21,13 @@
 
 /* =============================================================================
  * STATES — signed out, error, empty, no matches
- * The shared shape: a centred card, a hairline mark, a title, a line, one way on.
+ * All four are `ui/EmptyState` / `ui/ErrorState` (Prompt 31): one card, one
+ * ring, one title scale, and a failed read that stays a DIFFERENT component
+ * from an empty ledger. This rule only says how far below the controls it sits.
  * ========================================================================== */
 
 .state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sf-space-3);
   margin-top: var(--sf-space-8);
-  text-align: center;
-}
-
-.stateMark {
-  display: inline-flex;
-  color: var(--sf-color-text-muted);
-}
-
-.stateTitle {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text);
-}
-
-.stateText {
-  margin: 0;
-  max-width: 46ch;
-  font-size: var(--sf-text-base);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
-}
-
-.stateActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--sf-space-3);
-  margin-top: var(--sf-space-3);
 }
 
 /* =============================================================================

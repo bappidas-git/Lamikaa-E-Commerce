@@ -215,31 +215,12 @@
   }
 }
 
-/* ---- The failed and the empty answers ------------------------------------ */
+/* ---- The failed and the empty answers ------------------------------------
+   Both are `ui/ErrorState` / `ui/EmptyState` (Prompt 31); this only centres the
+   card in the list column. */
 
 .panel {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sf-space-4);
-  border-radius: var(--sf-radius-xl);
-}
-
-.panelTitle {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-display);
-  color: var(--sf-color-text);
-}
-
-.panelBody {
-  margin: 0;
-  max-width: 52ch;
-  font-size: var(--sf-text-base);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
+  margin-inline: auto;
 }
 
 /* ---- The close ----------------------------------------------------------- */

@@ -409,26 +409,12 @@
 
 /* =============================================================================
  * EMPTY STATE
- * Prompt 31 formalises this as `ui/EmptyState`; the card below is what that
- * state will be built from.
+ * `ui/EmptyState` (Prompt 31) — the card, the ring, the title and the pill are
+ * all its. The page only says how far below the heading it sits.
  * ========================================================================== */
 
 .empty {
   margin-top: var(--sf-space-8);
-  text-align: center;
-}
-
-.emptyLine {
-  margin: 0 0 var(--sf-space-6);
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-normal);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text);
-}
-
-.emptyCta {
-  min-width: 220px;
 }
 
 /* =============================================================================

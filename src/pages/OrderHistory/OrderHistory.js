@@ -14,8 +14,11 @@ import {
   Button,
   Chip,
   CloudinaryImage,
+  EmptyState,
+  ErrorState,
   GlassCard,
   SectionHeading,
+  Skeleton,
 } from "../../components/ui";
 import { orderStatusInfo } from "../../utils/orderStatus";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
@@ -152,46 +155,6 @@ const IconStar = ({ size = 13 }) => (
     focusable="false"
   >
     <polygon points="12 2.6 14.9 9 21.6 9.6 16.5 14.1 18 20.8 12 17.3 6 20.8 7.5 14.1 2.4 9.6 9.1 9" />
-  </svg>
-);
-
-// The empty mark — a shopping bag in one hairline, with a gold handle.
-const BagMark = () => (
-  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true" focusable="false">
-    <path
-      d="M18 24h36l-3.4 34a4 4 0 01-4 3.6H25.4a4 4 0 01-4-3.6L18 24z"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M28 28v-6a8 8 0 0116 0v6"
-      stroke="var(--sf-color-gold)"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-    />
-  </svg>
-);
-
-// The signed-out mark — the same bag, closed, with a gold keyhole.
-const SealedMark = () => (
-  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true" focusable="false">
-    <rect x="16" y="10" width="40" height="52" rx="4" stroke="currentColor" strokeWidth="1.2" />
-    <path
-      d="M29 34v-5a7 7 0 0114 0v5"
-      stroke="var(--sf-color-gold)"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-    />
-    <rect x="26" y="34" width="20" height="15" rx="2" stroke="currentColor" strokeWidth="1.2" />
-  </svg>
-);
-
-const AlertMark = () => (
-  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false">
-    <circle cx="32" cy="32" r="23" stroke="currentColor" strokeWidth="1.2" />
-    <line x1="32" y1="21" x2="32" y2="35" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    <circle cx="32" cy="42" r="1.4" fill="currentColor" />
   </svg>
 );
 
@@ -521,20 +484,19 @@ const OrderHistory = () => {
           title="Your orders"
           lede="Sign in and every order you have placed — on its way or delivered — is waiting on this page, with its tracking and its papers."
         />
-        <GlassCard padding="lg" glow="gold" className={styles.state}>
-          <span className={styles.stateMark}>
-            <SealedMark />
-          </span>
-          <p className={styles.stateTitle}>Your orders live here</p>
-          <div className={styles.stateActions}>
-            <Button variant="primary" onClick={() => openAuthModal("login")}>
-              Sign in
-            </Button>
-            <Button variant="secondary" to={ROUTES.SHOP}>
-              Continue shopping
-            </Button>
-          </div>
-        </GlassCard>
+        <EmptyState
+          className={styles.state}
+          title="Your orders live here"
+          icon="mdi:lock-outline"
+          actions={
+            <>
+              <Button onClick={() => openAuthModal("login")}>Sign in</Button>
+              <Button variant="secondary" to={ROUTES.SHOP}>
+                Continue shopping
+              </Button>
+            </>
+          }
+        />
       </>
     );
   }
@@ -614,13 +576,13 @@ const OrderHistory = () => {
               {Array.from({ length: 3 }).map((_, i) => (
                 <GlassCard key={i} padding="lg" className={styles.skeletonCard}>
                   <div className={styles.skeletonRow}>
-                    <span className={`sf-skeleton ${styles.skeletonLine}`} style={{ width: "11rem" }} />
-                    <span className={`sf-skeleton ${styles.skeletonLine}`} style={{ width: "6rem", marginLeft: "auto" }} />
+                    <Skeleton variant="block" width="11rem" height="14px" className={styles.skeletonLine} />
+                    <Skeleton variant="block" width="6rem" height="14px" className={styles.skeletonLine} style={{ marginLeft: "auto" }} />
                   </div>
                   <div className={styles.skeletonRow}>
-                    <span className={`sf-skeleton ${styles.skeletonPlate}`} />
-                    <span className={`sf-skeleton ${styles.skeletonPlate}`} />
-                    <span className={`sf-skeleton ${styles.skeletonLine}`} style={{ width: "7rem", marginLeft: "auto" }} />
+                    <Skeleton variant="block" width="56px" height="56px" className={styles.skeletonPlate} />
+                    <Skeleton variant="block" width="56px" height="56px" className={styles.skeletonPlate} />
+                    <Skeleton variant="block" width="7rem" height="14px" className={styles.skeletonLine} style={{ marginLeft: "auto" }} />
                   </div>
                 </GlassCard>
               ))}
@@ -629,51 +591,34 @@ const OrderHistory = () => {
 
           {/* ── Error — a failed fetch never masquerades as an empty ledger ── */}
           {!loading && fetchError && (
-            <GlassCard padding="lg" className={styles.state}>
-              <span className={styles.stateMark}>
-                <AlertMark />
-              </span>
-              <h2 className={styles.stateTitle}>We couldn't reach your orders</h2>
-              <p className={styles.stateText}>
-                Something went wrong while fetching them. Check your connection and
-                try again — nothing has been lost.
-              </p>
-              <div className={styles.stateActions}>
-                <Button variant="primary" onClick={fetchOrders}>
-                  Try again
-                </Button>
-              </div>
-            </GlassCard>
+            <ErrorState
+              className={styles.state}
+              text="Your orders didn't come back to us. Nothing was changed — every order is still on record. Check your connection and try again."
+              onRetry={fetchOrders}
+            />
           )}
 
           {/* ── Empty ───────────────────────────────────────────────────── */}
           {!loading && !fetchError && filteredOrders.length === 0 && orders.length === 0 && (
-            <GlassCard padding="lg" glow="gold" className={styles.state}>
-              <span className={styles.stateMark}>
-                <BagMark />
-              </span>
-              <h2 className={styles.stateTitle}>No orders yet</h2>
-              <p className={styles.stateText}>
-                Your first ritual opens this page. Everything you order is
-                recorded here, with its tracking and its papers.
-              </p>
-              <div className={styles.stateActions}>
-                <Button variant="primary" to={ROUTES.SHOP}>
-                  Start shopping
-                </Button>
-              </div>
-            </GlassCard>
+            <EmptyState
+              className={styles.state}
+              title="No orders yet"
+              titleAs="h2"
+              text="Your first ritual opens this page. Everything you order is recorded here, with its tracking and its papers."
+              icon="mdi:shopping-outline"
+              actions={<Button to={ROUTES.SHOP}>Start shopping</Button>}
+            />
           )}
 
           {/* ── No matches ──────────────────────────────────────────────── */}
           {!loading && !fetchError && filteredOrders.length === 0 && orders.length > 0 && (
-            <GlassCard padding="lg" className={styles.state}>
-              <h2 className={styles.stateTitle}>No matching orders</h2>
-              <p className={styles.stateText}>
-                Nothing on record answers to that search or filter. Widen it and
-                your orders come back.
-              </p>
-              <div className={styles.stateActions}>
+            <EmptyState
+              className={styles.state}
+              title="No matching orders"
+              titleAs="h2"
+              text="Nothing on record answers to that search or filter. Widen it and your orders come back."
+              icon="mdi:filter-remove-outline"
+              actions={
                 <Button
                   variant="secondary"
                   onClick={() => {
@@ -683,8 +628,8 @@ const OrderHistory = () => {
                 >
                   Clear filters
                 </Button>
-              </div>
-            </GlassCard>
+              }
+            />
           )}
 
           {/* ── The records ─────────────────────────────────────────────── */}

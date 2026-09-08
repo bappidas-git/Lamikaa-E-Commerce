@@ -1456,26 +1456,12 @@
 
 /* =============================================================================
  * EMPTY STATE
- * Prompt 31 formalises this as `ui/EmptyState`; the card below is what that
- * state will be built from.
+ * `ui/EmptyState` (Prompt 31), the same card the cart page shows — the two are
+ * one screen apart and used to say the same thing in two type scales.
  * ========================================================================== */
 
 .state {
   margin-top: var(--sf-space-8);
-  text-align: center;
-}
-
-.stateLine {
-  margin: 0 0 var(--sf-space-6);
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-2xl);
-  font-weight: var(--sf-font-normal);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text);
-}
-
-.stateCta {
-  min-width: 220px;
 }
 
 @media (prefers-reduced-motion: reduce) {

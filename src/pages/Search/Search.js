@@ -4,7 +4,14 @@ import { Icon } from "@iconify/react";
 import { motion, useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
 import brand from "../../config/brand";
-import { Button, Chip, SectionHeading, Skeleton } from "../../components/ui";
+import {
+  Button,
+  Chip,
+  EmptyState,
+  ErrorState,
+  SectionHeading,
+  Skeleton,
+} from "../../components/ui";
 import ProductCard from "../../components/storefront/ProductCard";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
@@ -52,8 +59,15 @@ const Search = () => {
     setDraft(query);
   }, [query]);
 
+  // Bumped by "Try again", which is the whole of the retry: the effect below
+  // re-runs with the same guards rather than a second copy of the fetch.
+  const [reloadKey, setReloadKey] = useState(0);
+  const retry = useCallback(() => setReloadKey((n) => n + 1), []);
+
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setFailed(false);
     Promise.all([
       apiService.products.getAll(),
       apiService.categories.getAll(),
@@ -78,7 +92,7 @@ const Search = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const results = useMemo(
     () =>
@@ -120,7 +134,7 @@ const Search = () => {
 
   const lede = () => {
     if (loading) return "Searching the range…";
-    if (failed) return "The catalogue could not be loaded. Please try again.";
+    if (failed) return "The catalogue could not be loaded.";
     if (!query) return "Type what you are looking for — a product, an ingredient or a concern.";
     if (!count) return `Nothing matched “${query}”.`;
     return `${count} ${count === 1 ? "product" : "products"} matching “${query}”.`;
@@ -184,6 +198,20 @@ const Search = () => {
               </li>
             ))}
           </ul>
+        ) : failed ? (
+          /* A catalogue that never arrived is NOT "nothing matched" — that
+             would quietly tell a shopper the product they searched for does
+             not exist. It is its own state, with the retry. */
+          <ErrorState
+            className={styles.state}
+            text="We couldn't load the catalogue, so there is nothing to search yet. Nothing was changed."
+            onRetry={retry}
+            actions={
+              <Button variant="ghost" to={ROUTES.SHOP}>
+                Browse all products
+              </Button>
+            }
+          />
         ) : count ? (
           /* eslint-disable-next-line jsx-a11y/no-redundant-roles */
           <ul className={styles.grid} role="list">
@@ -199,15 +227,23 @@ const Search = () => {
             ))}
           </ul>
         ) : (
-          <div className={styles.empty}>
-            <p className={styles.emptyTitle}>
-              {failed
-                ? "Search is unavailable right now."
-                : query
-                ? `Nothing matched “${query}”.`
-                : "Nothing searched for yet."}
-            </p>
-            {!failed && popular.length ? (
+          <EmptyState
+            className={styles.state}
+            eyebrow="Search"
+            title={query ? "Nothing here yet" : "Nothing searched for yet"}
+            text={
+              query
+                ? `Nothing in the range matched “${query}”. Try a shorter word, an ingredient, or a concern.`
+                : "Type what you are looking for — a product, an ingredient or a concern."
+            }
+            icon="mdi:magnify-close"
+            actions={
+              <Button variant="secondary" to={ROUTES.SHOP}>
+                Browse all products
+              </Button>
+            }
+          >
+            {popular.length ? (
               <>
                 <p className={styles.emptyHint}>Try one of these:</p>
                 <ul className={styles.chips}>
@@ -229,10 +265,7 @@ const Search = () => {
                 </ul>
               </>
             ) : null}
-            <Button variant="secondary" to={ROUTES.SHOP}>
-              Browse all products
-            </Button>
-          </div>
+          </EmptyState>
         )}
       </div>
     </section>

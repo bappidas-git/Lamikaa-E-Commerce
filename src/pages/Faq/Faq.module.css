@@ -261,28 +261,13 @@
   min-width: 0;
 }
 
-/* ---- The empty state ----------------------------------------------------- */
+/* ---- The empty state -----------------------------------------------------
+   `ui/EmptyState` (Prompt 31). There is no error twin here on purpose: the FAQ
+   context falls back to the built-in answers when the read fails, so this page
+   is never blank because of the network — only because nothing matched. */
 
 .empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sf-space-4);
-}
-
-.emptyTitle {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  color: var(--sf-color-text);
-}
-
-.emptyBody {
-  margin: 0;
-  max-width: 52ch;
-  font-size: var(--sf-text-base);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
+  margin-inline: auto;
 }
 
 /* ---- 3. The closing band ------------------------------------------------- */

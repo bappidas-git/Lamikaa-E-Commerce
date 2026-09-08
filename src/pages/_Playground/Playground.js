@@ -6,6 +6,8 @@ import {
   CloudinaryImage,
   ContentBlocks,
   Drawer,
+  EmptyState,
+  ErrorState,
   GlassCard,
   GlowWrap,
   Modal,
@@ -525,6 +527,43 @@ const Playground = () => {
           <div>
             <p className={styles.rowLabel}>card</p>
             <Skeleton variant="card" />
+          </div>
+        </div>
+      </Section>
+
+      {/* ---- Empty and error states ---------------------------------------- */}
+      <Section
+        eyebrow="Nothing / broken"
+        title="Empty and error states"
+        lede="The same anatomy twice, because a failed read and an empty list must look like one system — and never like each other."
+      >
+        <div className={styles.twoUp}>
+          <div>
+            <p className={styles.rowLabel}>EmptyState</p>
+            <EmptyState
+              eyebrow="Wishlist"
+              title="Nothing here yet"
+              text="Tap the heart on anything and it waits for you here."
+              icon="mdi:heart-outline"
+              actions={<Button to="/shop">Explore the range</Button>}
+            />
+          </div>
+          <div>
+            <p className={styles.rowLabel}>ErrorState · role=&quot;alert&quot;, onRetry</p>
+            <ErrorState onRetry={() => {}} />
+          </div>
+          <div>
+            <p className={styles.rowLabel}>EmptyState · compact</p>
+            <EmptyState
+              compact
+              title="No store credit yet"
+              text="Refunds issued to store credit are written here."
+              icon="mdi:wallet-outline"
+            />
+          </div>
+          <div>
+            <p className={styles.rowLabel}>EmptyState · no icon, no actions</p>
+            <EmptyState compact icon={null} title="No matching orders" />
           </div>
         </div>
       </Section>

@@ -3,36 +3,39 @@
    ═══════════════════════════════════════════════════════════════════════════
    The old page was a marketplace: a gradient banner, digit tiles, ticket-shaped
    coupon stubs and a wall of framed tiles with a "Quick View" veil. This one is
-   a card posted by the door of the shop. Four movements on the ivory ground and
+   a card posted by the door of the shop. Four movements on the dark ground and
    nothing between them but air and hairlines.
 
      1. THE OPENING BAND — the admin's eyebrow, headline and line, closed by a
         single tracked countdown line over a hairline. No tiles, no pulsing.
-     2. THE VOUCHERS — hairline cards. The figure in the display serif, the
-        small print as a short ruled list, the code on a DASHED chip with Copy.
+     2. THE VOUCHERS — `GlassCard glow="gold"`, three up. The figure in the
+        display serif, the small print as a short ruled list, and the code on a
+        DASHED chip set in monospace gold with Copy beside it.
      3. THE CHOSEN — the admin's Deal of the Day picks as large 4:5 features.
-     4. THE MARKDOWNS — a hairline strip of category words over a wall of cards
-        drawn in the Prompt 09 language.
+     4. THE MARKDOWNS — a hairline strip of category words over a wall of the
+        shared `storefront/ProductCard`.
 
-   THE LOCAL CARD IS A COPY OF THE SHARED CARD'S LANGUAGE, NOT AN IMPORT
-   §7 deliberately re-draws the Prompt 09 card here: 3:4 plate on the sunken
-   sand panel, tracked eyebrow, serif name, the gold star line, the quiet price
-   row, and an add affordance that lives over the foot of the photograph on a
-   fine pointer and in a row of its own on touch. Keep the two in step by eye —
-   this page has always owned its own card, and importing the shared one would
-   change what the Deals grid can do later.
+   ONE CARD, NOT TWO  (Prompt 31)
+   §7 used to re-draw the shared card here, by hand, and the copy had drifted:
+   it cropped the packaging to a 3:4 plate and knew nothing about `priceTBA`.
+   The wall now renders `storefront/ProductCard`, so this file no longer carries
+   a card, a heart, an add button or a card skeleton — `.cardGrid` and
+   `.cardCell` are all that is left of it. What stays local is the furniture
+   nothing else has: the tab strip, the feature, and the marks on a photograph
+   that the feature shares with nothing.
 
    TOKENS ONLY
    Every colour, space, radius and type value resolves through `--sf-*`,
    declared once in `:root` — one theme, one stylesheet and no hex in this
-   file. The only local variables are the two aliases that colour
-   the inline tag artwork, and both are aliases onto tokens, never values.
+   file. The one local variable is the monospace stack the coupon codes are set
+   in: the token layer has no `--sf-font-mono`, and a font stack is not a colour.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .page {
-  /* Aliases, so the one inline SVG can be re-coloured from the token layer. */
-  --offer-line: var(--sf-color-border-strong);
-  --offer-gold: var(--sf-color-gold-deep);
+  /* The coupon codes are the only mono strings on this page, so their stack is
+     declared here rather than in the token layer. */
+  --offer-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
 
   min-height: 100vh;
   padding-bottom: var(--sf-space-24);
@@ -255,24 +258,21 @@
    allowed to survive, at the size of a stamp.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Three up, two up, one up — a fixed rhythm rather than `auto-fill`, so three
+   vouchers are three columns and two are two, instead of whatever a track size
+   happens to allow at 1440px. */
 .voucherGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sf-space-6);
 }
 
+/* GlassCard carries the surface, the hairline, the radius and the gold tone;
+   only the column behaviour is this page's. */
 .voucher {
   display: flex;
   flex-direction: column;
-  padding: var(--sf-space-6);
-  border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-sm);
-  background: transparent;
-  transition: border-color var(--sf-transition);
-}
-
-.voucher:hover {
-  border-color: var(--sf-color-border-strong);
+  min-width: 0;
 }
 
 .voucherFigure {
@@ -346,15 +346,19 @@
   padding-top: var(--sf-space-5);
 }
 
+/* The code is a string to be typed exactly, so it is set in the one monospace
+   on the storefront and coloured gold: it is the thing on the card you take
+   away with you. The stack is local — the token layer has no `--sf-font-mono`,
+   and a font stack is not a colour. */
 .voucherCode {
   padding: var(--sf-space-2) var(--sf-space-4);
   border: 1px dashed var(--sf-color-border-strong);
   border-radius: var(--sf-radius-sm);
-  font-family: var(--sf-font-family);
+  font-family: var(--offer-mono);
   font-size: var(--sf-text-sm);
   font-weight: var(--sf-font-semibold);
   letter-spacing: var(--sf-tracking-wide);
-  color: var(--sf-color-text);
+  color: var(--sf-color-gold);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -471,15 +475,6 @@
 /* The tracked brand/category line — smallest, quietest thing on either card. */
 /* Eyebrow ROW — category, then the merchant's flag marks. Wraps on a narrow
    card so the marks drop under the category rather than crowding it. */
-.cardMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sf-space-2);
-  min-width: 0;
-  max-width: 100%;
-}
-
 .cardEyebrow {
   font-size: var(--sf-text-xs);
   font-weight: var(--sf-font-medium);
@@ -508,7 +503,6 @@
   transition: transform var(--sf-transition-slow);
 }
 
-.card:hover .plate img,
 .feature:hover .plate img {
   transform: scale(1.03);
 }
@@ -822,275 +816,30 @@
 }
 
 /* ---- The wall -----------------------------------------------------------
-   Wide gutters, generous rows. The cards bring no frame, so the only thing
-   separating two garments is whitespace — hence the row gap being twice the
-   column gap, exactly as on the Products wall.
+   The shared `storefront/ProductCard`, four across, with wide gutters and
+   generous rows. The card brings its own glass, plate and add affordance —
+   nothing about it is restated here (Prompt 31 retired this page's copy of it).
    ------------------------------------------------------------------------- */
 
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   column-gap: var(--sf-space-8);
-  row-gap: var(--sf-space-16);
+  row-gap: var(--sf-space-12);
 }
 
-/* ---- The card — the Prompt 09 language, drawn locally -------------------
-   Three rows: media / body / action. The action is LAST in the DOM (so it is
-   the last tab stop and keyboard order reads plate, heart, name, add), but on
-   a fine pointer the stylesheet moves it back into row 1, where it overlaps
-   the foot of the photograph and is revealed on hover or focus. The reveal
-   changes opacity, never layout — the card is the same height at rest and on
-   hover, which is what keeps the grid rows from shuffling under the pointer.
-   ------------------------------------------------------------------------- */
-
-.card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto;
+/* The motion wrapper the reveal and the filter exit belong to. `height: 100%`
+   so a card in a short row still reaches the bottom of its cell and the wall
+   keeps a level baseline; `min-width: 0` so a long product name cannot push
+   the grid track wider than its share. */
+.cardCell {
+  min-width: 0;
   height: 100%;
-  background: transparent;
-}
-
-/* Every child pinned to the single column. Without this, a child carrying an
-   explicit `grid-row` that is already occupied does not overlap — auto-placement
-   walks it sideways into a brand-new implicit column and the card silently
-   becomes two columns wide with a half-width photograph. */
-.card > * {
-  grid-column: 1;
-}
-
-.cardMedia {
-  grid-row: 1;
-  position: relative;
-  aspect-ratio: 3 / 4;
-  background: var(--sf-color-surface-2);
-  border-radius: var(--sf-radius-sm);
-  overflow: hidden;
-}
-
-.cardBody {
-  grid-row: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sf-space-2);
-  padding: var(--sf-space-4) 0 0;
-}
-
-.cardName {
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  font-weight: var(--sf-font-medium);
-  color: var(--sf-color-text);
-  line-height: var(--sf-leading-tight);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  transition: text-decoration-color var(--sf-transition);
-}
-
-.card:hover .cardName {
-  text-decoration-color: var(--sf-color-border-strong);
-}
-
-.cardName:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 3px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
-}
-
-.rating {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sf-space-2);
-  min-height: 14px;
-}
-
-.ratingCount {
-  font-size: var(--sf-text-xs);
-  color: var(--sf-color-text-muted);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.noRating {
-  font-size: var(--sf-text-xs);
-  color: var(--sf-color-text-muted);
-  letter-spacing: 0.02em;
-  min-height: 14px;
-  line-height: 1.2;
-}
-
-/* ---- The heart ---------------------------------------------------------- */
-
-.wishlist {
-  position: absolute;
-  top: var(--sf-space-3);
-  right: var(--sf-space-3);
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-pill);
-  background: var(--sf-color-surface);
-  color: var(--sf-color-text-secondary);
-  cursor: pointer;
-  transition: color var(--sf-transition-fast),
-    border-color var(--sf-transition-fast);
-}
-
-/* The visible button is 34px for the sake of the composition; the tap target
-   underneath it is the full 44px (WCAG 2.5.5) via a transparent pseudo. */
-.wishlist::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--sf-tap-target);
-  height: var(--sf-tap-target);
-  transform: translate(-50%, -50%);
-}
-
-.wishlist:hover {
-  color: var(--sf-cat-pink);
-  border-color: var(--sf-color-border-strong);
-}
-
-.wishlist:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-.wishlisted {
-  color: var(--sf-cat-pink);
-  border-color: color-mix(in srgb, var(--sf-cat-pink) 40%, transparent);
-}
-
-/* ---- The add affordance -------------------------------------------------
-   Touch / no-hover default: its own row under the price, always visible.
-   ------------------------------------------------------------------------- */
-
-.addBtn {
-  grid-row: 3;
-  align-self: stretch;
-  margin-top: var(--sf-space-4);
-  min-height: var(--sf-tap-target);
-  padding: var(--sf-space-2) var(--sf-space-4);
-  border: 1px solid var(--sf-color-border-strong);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface);
-  color: var(--sf-color-text);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  cursor: pointer;
-  transition: background-color var(--sf-transition),
-    border-color var(--sf-transition), color var(--sf-transition),
-    opacity var(--sf-transition), transform var(--sf-transition);
-}
-
-.addBtn:hover:not(:disabled),
-.featureBtn:hover:not(:disabled) {
-  background: var(--sf-color-emerald);
-  border-color: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
-}
-
-.addBtn:focus-visible,
-.featureBtn:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-/* Confirmation — a gold hairline, then it quietly returns to itself. */
-.btnAdded,
-.btnAdded:hover {
-  background: var(--sf-color-surface);
-  border-color: var(--sf-color-gold-deep);
-  color: var(--sf-color-gold-deep);
-}
-
-.addBtn:disabled,
-.featureBtn:disabled {
-  cursor: not-allowed;
-  background: transparent;
-  border-color: var(--sf-color-border);
-  color: var(--sf-color-text-muted);
-}
-
-/* ---- Fine pointer: the card's button returns to the foot of the plate ---- */
-@media (hover: hover) and (pointer: fine) {
-  .addBtn {
-    grid-row: 1;
-    align-self: end;
-    justify-self: stretch;
-    z-index: 3;
-    margin: var(--sf-space-3);
-    min-height: 40px;
-    opacity: 0;
-    transform: translateY(var(--sf-space-2));
-    pointer-events: none;
-  }
-
-  /* Revealed by the pointer OR by the keyboard — the button stays in the tab
-     order while hidden, and focusing it is what brings it into view. */
-  .card:hover .addBtn,
-  .card:focus-within .addBtn {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-  }
-
-  /* Nothing to add: leave the photograph and its stock label alone. */
-  .isOut:hover .addBtn,
-  .isOut:focus-within .addBtn {
-    opacity: 0;
-    pointer-events: none;
-  }
-}
-
-/* ---- …unless the device can also be touched -----------------------------
-   A touchscreen laptop answers (hover: hover) and (pointer: fine) because that
-   describes its PRIMARY input — but a finger on that same screen would have to
-   tap once to raise the hover state and again to actually add. `any-pointer`
-   asks whether ANY input is coarse, so hybrids opt back into the always-visible
-   button. Declared after the block above so it wins at equal specificity.
-   ------------------------------------------------------------------------- */
-@media (any-pointer: coarse) {
-  .addBtn,
-  .card:hover .addBtn,
-  .card:focus-within .addBtn,
-  .isOut:hover .addBtn,
-  .isOut:focus-within .addBtn {
-    grid-row: 3;
-    align-self: stretch;
-    margin: var(--sf-space-4) 0 0;
-    min-height: var(--sf-tap-target);
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    8. SKELETONS  —  the silhouette of what is coming
-   Drawn on the shared `sf-skeleton` primitive (the warm sand sweep), so the
+   Drawn on the shared `sf-skeleton` primitive (the surface breathing), so the
    wait looks like the page rather than like a grey placeholder.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -1105,30 +854,6 @@
 .skelHeadEyebrow { width: 24%; height: 10px; }
 .skelHeadTitle   { width: 82%; height: 44px; }
 .skelHeadLine    { width: 62%; height: 12px; }
-
-.skelCard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sf-space-4);
-  min-width: 0;
-}
-
-.skelPlate {
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  border-radius: var(--sf-radius-sm);
-}
-
-.skelBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sf-space-2);
-}
-
-.skelEyebrow { width: 32%; height: 8px; }
-.skelName    { width: 78%; height: 13px; }
-.skelStars   { width: 46%; height: 9px; }
-.skelPrice   { width: 38%; height: 13px; margin-top: var(--sf-space-1); }
 
 .skelVoucher {
   display: flex;
@@ -1162,45 +887,21 @@
    artwork is the page's hanging price tag; the copy says exactly what is true.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. STATES  —  offers off, nothing reduced, and a failed read
+   All three are `ui/EmptyState` / `ui/ErrorState` (Prompt 31): the card, the
+   ring, the Fraunces title and the pill actions are theirs. This file only says
+   where they sit — the disabled page is a full page and needs the vertical
+   room, the two in-page ones take the section's own rhythm.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.stateFrame {
+  padding-top: var(--sf-space-20);
+  padding-bottom: var(--sf-space-24);
+}
+
 .state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--sf-space-20) var(--sf-space-5) var(--sf-space-24);
-}
-
-.stateArt {
-  display: block;
-  margin-bottom: var(--sf-space-8);
-}
-
-/* The eyebrow's opening rule is a left-hand device; centred, it needs to sit
-   on both sides or not at all — so in a state it is simply withdrawn. */
-.state .eyebrow::before {
-  display: none;
-}
-
-.stateTitle {
-  margin: 0 0 var(--sf-space-3);
-  font-family: var(--sf-font-display);
-  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  letter-spacing: var(--sf-tracking-tight);
-  color: var(--sf-color-text);
-}
-
-.stateText {
-  max-width: 48ch;
-  margin: 0 0 var(--sf-space-8);
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
-}
-
-.stateBtn {
-  min-width: 220px;
+  margin-block: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1260,6 +961,7 @@
   }
 
   .voucherGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sf-space-4);
   }
 
@@ -1275,8 +977,9 @@
     margin-top: var(--sf-space-8);
   }
 
-  .state {
-    padding: var(--sf-space-16) var(--sf-space-4) var(--sf-space-20);
+  .stateFrame {
+    padding-top: var(--sf-space-16);
+    padding-bottom: var(--sf-space-20);
   }
 }
 
@@ -1301,10 +1004,6 @@
     font-size: var(--sf-text-lg);
   }
 
-  .stateBtn {
-    min-width: 0;
-    width: 100%;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1314,12 +1013,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  .card:hover .plate img,
   .feature:hover .plate img {
-    transform: none;
-  }
-
-  .addBtn {
     transform: none;
   }
 

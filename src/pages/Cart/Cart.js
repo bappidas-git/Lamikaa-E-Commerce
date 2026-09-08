@@ -14,7 +14,7 @@ import {
 import { cld } from "../../utils/cloudinary";
 import { ROUTES } from "../../utils/constants";
 import { DURATION, INSTANT, tween } from "../../theme/motion";
-import { Button, GlassCard, SectionHeading } from "../../components/ui";
+import { Button, EmptyState, GlassCard, SectionHeading } from "../../components/ui";
 import LegalNote from "../../components/brand/LegalNote";
 import CrossSell from "../../components/cart/CrossSell";
 import QuantityStepper from "../../components/storefront/QuantityStepper";
@@ -217,16 +217,13 @@ const Cart = () => {
               title="Your cart"
               lede="Nothing chosen yet."
             />
-            {/* Prompt 31 formalises this as `ui/EmptyState`; until then it is
-                the card that state will be built from. */}
-            <GlassCard padding="lg" glow="gold" className={styles.empty}>
-              <p className={styles.emptyLine}>
-                Your cart is waiting for its first ritual.
-              </p>
-              <Button variant="primary" to={ROUTES.SHOP} className={styles.emptyCta}>
-                Continue shopping
-              </Button>
-            </GlassCard>
+            <EmptyState
+              className={styles.empty}
+              title="Nothing here yet"
+              text="Your cart is waiting for its first ritual."
+              icon="mdi:shopping-outline"
+              actions={<Button to={ROUTES.SHOP}>Continue shopping</Button>}
+            />
             <CrossSell
               products={catalogue}
               items={cart}

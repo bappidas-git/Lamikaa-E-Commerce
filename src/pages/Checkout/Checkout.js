@@ -18,7 +18,7 @@ import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import { collapse } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
 import useSeo from "../../hooks/useSeo";
-import { Button, Chip, GlassCard, SectionHeading } from "../../components/ui";
+import { Button, Chip, EmptyState, GlassCard, SectionHeading } from "../../components/ui";
 import QuantityStepper from "../../components/storefront/QuantityStepper";
 import styles from "./Checkout.module.css";
 
@@ -523,14 +523,13 @@ const Checkout = () => {
               title="Your cart is empty"
               lede="There is nothing to check out yet."
             />
-            <GlassCard padding="lg" glow="gold" className={styles.state}>
-              <p className={styles.stateLine}>
-                Add something to your cart and it will be waiting here.
-              </p>
-              <Button variant="primary" to={ROUTES.SHOP} className={styles.stateCta}>
-                Continue shopping
-              </Button>
-            </GlassCard>
+            <EmptyState
+              className={styles.state}
+              title="Nothing here yet"
+              text="Add something to your cart and it will be waiting here."
+              icon="mdi:shopping-outline"
+              actions={<Button to={ROUTES.SHOP}>Continue shopping</Button>}
+            />
           </div>
         </section>
       </div>
