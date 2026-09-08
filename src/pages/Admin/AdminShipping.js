@@ -6,9 +6,11 @@ import {
   FormControlLabel, Switch, Select, MenuItem, FormControl, InputLabel,
   Divider, Alert, Grid,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 
 const AdminShipping = () => {
@@ -20,8 +22,8 @@ const AdminShipping = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState(null);
   const [form, setForm] = useState({
-    name: "", carrier: "Shiprocket", description: "", rateType: "flat",
-    flatRate: 0, freeAbove: null, estimatedDays: "5-7", isActive: true,
+    name: "", carrier: "", description: "", rateType: "flat",
+    flatRate: 0, freeAbove: null, estimatedDays: "", isActive: true,
   });
   const [shiprocketEnabled, setShiprocketEnabled] = useState(false);
   const [shiprocketConfig, setShiprocketConfig] = useState({ email: "", password: "" });
@@ -79,7 +81,10 @@ const AdminShipping = () => {
 
   const openCreate = () => {
     setEditingMethod(null);
-    setForm({ name: "", carrier: "Shiprocket", description: "", rateType: "flat", flatRate: 0, freeAbove: null, estimatedDays: "5-7", isActive: true });
+    // Carrier and SLA start blank: neither is a LAMIKAA fact yet
+    // ({{DISPATCH_SLA}} is unresolved), and a pre-filled guess would ship to
+    // the storefront as a promise.
+    setForm({ name: "", carrier: "", description: "", rateType: "flat", flatRate: 0, freeAbove: null, estimatedDays: "", isActive: true });
     setDialogOpen(true);
   };
 
@@ -106,7 +111,7 @@ const AdminShipping = () => {
   };
 
   const handleDelete = async (method) => {
-    const result = await Swal.fire({ title: "Delete?", text: `"${method.name}" will be deleted.`, icon: "warning", showCancelButton: true, confirmButtonColor: "#d32f2f", confirmButtonText: "Delete" });
+    const result = await Swal.fire({ title: "Delete?", text: `"${method.name}" will be deleted.`, icon: "warning", showCancelButton: true, confirmButtonColor: ADMIN_PALETTE.error.main, confirmButtonText: "Delete" });
     if (!result.isConfirmed) return;
     try {
       await apiService.admin.deleteShippingMethod(method.id);
@@ -134,8 +139,8 @@ const AdminShipping = () => {
       {/* Shiprocket Integration Card */}
       <Paper elevation={0} sx={{ p: 3, border: "1px solid", borderColor: "divider", mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <Box sx={{ p: 1.5, bgcolor: "rgba(79, 70, 229, 0.08)", borderRadius: 1, display: "flex" }}>
-            <Icon icon="mdi:truck-fast" style={{ fontSize: 26, color: "#6366f1" }} />
+          <Box sx={(theme) => ({ p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.12), color: "primary.main", borderRadius: 1, display: "flex" })}>
+            <Icon icon="mdi:truck-fast" style={{ fontSize: 26 }} />
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography variant="subtitle1" fontWeight="bold">Shiprocket Integration</Typography>
@@ -174,7 +179,7 @@ const AdminShipping = () => {
           ].map((f) => (
             <Box key={f.title} sx={{ flex: 1 }}>
               <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                <Icon icon="mdi:check-circle" style={{ color: "#4caf50", marginTop: 2 }} />
+                <Box component={Icon} icon="mdi:check-circle" sx={{ color: "success.main", mt: "2px", flexShrink: 0 }} />
                 <Box>
                   <Typography variant="body2" fontWeight={600}>{f.title}</Typography>
                   <Typography variant="caption" color="text.secondary">{f.desc}</Typography>
@@ -215,7 +220,11 @@ const AdminShipping = () => {
                       <Typography variant="body2" fontWeight={500}>{method.name}</Typography>
                       {method.description && <Typography variant="caption" color="text.secondary">{method.description}</Typography>}
                     </TableCell>
-                    <TableCell><Chip label={method.carrier} size="small" variant="outlined" /></TableCell>
+                    <TableCell>
+                      {method.carrier
+                        ? <Chip label={method.carrier} size="small" variant="outlined" />
+                        : <Typography variant="body2" color="text.disabled">—</Typography>}
+                    </TableCell>
                     <TableCell>
                       {method.rateType === "free" ? (
                         <Chip label="Free" size="small" color="success" />
@@ -226,7 +235,7 @@ const AdminShipping = () => {
                       )}
                     </TableCell>
                     <TableCell><Typography variant="body2">{method.freeAbove ? formatCurrency(method.freeAbove) : "—"}</Typography></TableCell>
-                    <TableCell><Typography variant="body2">{method.estimatedDays} days</Typography></TableCell>
+                    <TableCell><Typography variant="body2" color={method.estimatedDays ? "text.primary" : "text.disabled"}>{method.estimatedDays ? `${method.estimatedDays} days` : "—"}</Typography></TableCell>
                     <TableCell><Chip label={method.isActive ? "Active" : "Inactive"} size="small" color={method.isActive ? "success" : "default"} /></TableCell>
                     <TableCell align="right">
                       <Tooltip title="Edit"><IconButton size="small" onClick={() => openEdit(method)}><Icon icon="mdi:pencil-outline" /></IconButton></Tooltip>
@@ -247,7 +256,7 @@ const AdminShipping = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
             <TextField label="Name *" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} fullWidth size="small" />
             <TextField label="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} fullWidth size="small" />
-            <TextField label="Carrier" value={form.carrier} onChange={(e) => setForm((f) => ({ ...f, carrier: e.target.value }))} fullWidth size="small" placeholder="e.g., Shiprocket, Delhivery, DTDC" />
+            <TextField label="Carrier" value={form.carrier} onChange={(e) => setForm((f) => ({ ...f, carrier: e.target.value }))} fullWidth size="small" placeholder="e.g. Delhivery, Blue Dart, India Post" />
             <FormControl size="small" fullWidth>
               <InputLabel>Rate Type</InputLabel>
               <Select value={form.rateType} label="Rate Type" onChange={(e) => setForm((f) => ({ ...f, rateType: e.target.value }))}>

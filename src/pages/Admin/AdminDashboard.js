@@ -4,6 +4,7 @@ import {
   TableContainer, TableHead, TableRow, Chip, Avatar, Skeleton,
   Button,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -27,18 +28,20 @@ const PAYMENT_STATUS = {
   voided: { label: "Voided", color: "default" },
 };
 
-const StatCard = ({ title, value, icon, color, subtitle, onClick }) => (
+// `tone` names a palette channel, never a colour: the admin has one palette and
+// the cards read it, so a change in adminTheme.js repaints the dashboard.
+const StatCard = ({ title, value, icon, tone = "primary", subtitle, onClick }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
     <Paper
       elevation={0}
       onClick={onClick}
-      sx={{
+      sx={(theme) => ({
         p: 2.5, border: "1px solid", borderColor: "divider",
         height: "100%",
         cursor: onClick ? "pointer" : "default",
-        "&:hover": onClick ? { borderColor: color } : {},
+        "&:hover": onClick ? { borderColor: theme.palette[tone].main } : {},
         transition: "border-color 0.2s",
-      }}
+      })}
     >
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <Box>
@@ -47,11 +50,12 @@ const StatCard = ({ title, value, icon, color, subtitle, onClick }) => (
           {subtitle && <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>{subtitle}</Typography>}
         </Box>
         <Box
-          sx={{
+          sx={(theme) => ({
             width: 42, height: 42, borderRadius: 1, display: "flex",
             alignItems: "center", justifyContent: "center",
-            bgcolor: `${color}1A`, color,
-          }}
+            bgcolor: alpha(theme.palette[tone].main, 0.12),
+            color: theme.palette[tone].main,
+          })}
         >
           <Icon icon={icon} style={{ fontSize: 22 }} />
         </Box>
@@ -69,6 +73,10 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalProducts: 0, totalOrders: 0, totalRevenue: 0, totalUsers: 0,
     pendingOrders: 0, pendingReturns: 0, lowStockProducts: 0, activeCoupons: 0,
+    // Prompt 34 — the content counts. Every one is read with `?? 0` below, so a
+    // live backend that has not added them to /admin/dashboard/stats yet leaves
+    // the four tiles at zero rather than printing "undefined".
+    heroProducts: 0, activeRituals: 0, liveAnnouncements: 0, priceOnLaunchProducts: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
@@ -116,6 +124,9 @@ const AdminDashboard = () => {
         {[1,2,3,4].map((i) => (<Grid item xs={6} sm={3} key={i}><Skeleton variant="rounded" height={72} sx={{}} /></Grid>))}
       </Grid>
       <Grid container spacing={3} sx={{ mt: 0 }}>
+        {[1,2,3,4].map((i) => (<Grid item xs={6} sm={3} key={`content-${i}`}><Skeleton variant="rounded" height={72} sx={{}} /></Grid>))}
+      </Grid>
+      <Grid container spacing={3} sx={{ mt: 0 }}>
         <Grid item xs={12} lg={7}><Skeleton variant="rounded" height={320} sx={{}} /></Grid>
         <Grid item xs={12} lg={5}><Skeleton variant="rounded" height={320} sx={{}} /></Grid>
       </Grid>
@@ -130,53 +141,107 @@ const AdminDashboard = () => {
       {/* Primary Stats */}
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} lg={3}>
-          <StatCard title="Total Revenue" value={fc(stats.totalRevenue)} icon="mdi:currency-inr" color="#6366f1" subtitle="All time" onClick={() => navigate("/admin/payments")} />
+          <StatCard title="Total Revenue" value={fc(stats.totalRevenue)} icon="mdi:currency-inr" tone="primary" subtitle="All time" onClick={() => navigate("/admin/payments")} />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
-          <StatCard title="Total Orders" value={stats.totalOrders} icon="mdi:shopping-outline" color="#10b981" subtitle={`${stats.pendingOrders} pending`} onClick={() => navigate("/admin/orders")} />
+          <StatCard title="Total Orders" value={stats.totalOrders} icon="mdi:shopping-outline" tone="success" subtitle={`${stats.pendingOrders} pending`} onClick={() => navigate("/admin/orders")} />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
-          <StatCard title="Total Products" value={stats.totalProducts} icon="mdi:package-variant" color="#3b82f6" subtitle={stats.lowStockProducts > 0 ? `${stats.lowStockProducts} low stock` : "All in stock"} onClick={() => navigate("/admin/products")} />
+          <StatCard title="Total Products" value={stats.totalProducts} icon="mdi:package-variant" tone="secondary" subtitle={stats.lowStockProducts > 0 ? `${stats.lowStockProducts} low stock` : "All in stock"} onClick={() => navigate("/admin/products")} />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
-          <StatCard title="Total Users" value={stats.totalUsers} icon="mdi:account-group-outline" color="#f43f5e" onClick={() => navigate("/admin/users")} />
+          <StatCard title="Total Users" value={stats.totalUsers} icon="mdi:account-group-outline" tone="info" onClick={() => navigate("/admin/users")} />
         </Grid>
       </Grid>
 
       {/* Secondary Stats */}
       <Grid container spacing={3} sx={{ mt: 0 }}>
         <Grid item xs={6} sm={3}>
-          <Paper elevation={0} sx={{ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: "#f59e0b" } }} onClick={() => navigate("/admin/orders")}>
+          <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.warning.main } })} onClick={() => navigate("/admin/orders")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box sx={{ p: 1, bgcolor: "rgba(245,158,11,0.12)", borderRadius: 1, display: "flex" }}><Icon icon="mdi:clock-outline" style={{ color: "#f59e0b", fontSize: 20 }} /></Box>
+              <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.warning.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.warning.main })}><Icon icon="mdi:clock-outline" style={{ fontSize: 20 }} /></Box>
               <Box><Typography variant="caption" color="text.secondary">Pending Orders</Typography><Typography variant="h6" fontWeight="bold">{stats.pendingOrders}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
         <Grid item xs={6} sm={3}>
-          <Paper elevation={0} sx={{ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: "#ef4444" } }} onClick={() => navigate("/admin/returns")}>
+          <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.error.main } })} onClick={() => navigate("/admin/returns")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box sx={{ p: 1, bgcolor: "rgba(239,68,68,0.12)", borderRadius: 1, display: "flex" }}><Icon icon="mdi:backup-restore" style={{ color: "#ef4444", fontSize: 20 }} /></Box>
+              <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.error.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.error.main })}><Icon icon="mdi:backup-restore" style={{ fontSize: 20 }} /></Box>
               <Box><Typography variant="caption" color="text.secondary">Pending Returns</Typography><Typography variant="h6" fontWeight="bold">{stats.pendingReturns}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
         <Grid item xs={6} sm={3}>
-          <Paper elevation={0} sx={{ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: "#f97316" } }} onClick={() => navigate("/admin/products")}>
+          <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.warning.main } })} onClick={() => navigate("/admin/products")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box sx={{ p: 1, bgcolor: "rgba(249,115,22,0.12)", borderRadius: 1, display: "flex" }}><Icon icon="mdi:alert-circle-outline" style={{ color: "#f97316", fontSize: 20 }} /></Box>
+              <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.warning.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.warning.main })}><Icon icon="mdi:alert-circle-outline" style={{ fontSize: 20 }} /></Box>
               <Box><Typography variant="caption" color="text.secondary">Low Stock</Typography><Typography variant="h6" fontWeight="bold">{stats.lowStockProducts}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
         <Grid item xs={6} sm={3}>
-          <Paper elevation={0} sx={{ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: "#8b5cf6" } }} onClick={() => navigate("/admin/coupons")}>
+          <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.secondary.main } })} onClick={() => navigate("/admin/coupons")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box sx={{ p: 1, bgcolor: "rgba(139,92,246,0.12)", borderRadius: 1, display: "flex" }}><Icon icon="mdi:tag-outline" style={{ color: "#8b5cf6", fontSize: 20 }} /></Box>
+              <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.secondary.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.secondary.main })}><Icon icon="mdi:tag-outline" style={{ fontSize: 20 }} /></Box>
               <Box><Typography variant="caption" color="text.secondary">Active Coupons</Typography><Typography variant="h6" fontWeight="bold">{stats.activeCoupons}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
+      </Grid>
+
+      {/* Storefront content — the collections Prompt 34 made editable. Each tile
+          opens the screen that owns the number, so a zero is one click from the
+          place it is fixed. */}
+      <Grid container spacing={3} sx={{ mt: 0 }}>
+        {[
+          {
+            label: "Hero products",
+            value: stats.heroProducts ?? 0,
+            icon: "mdi:view-carousel-outline",
+            tone: "primary",
+            path: "/admin/hero-section",
+          },
+          {
+            label: "Rituals",
+            value: stats.activeRituals ?? 0,
+            icon: "mdi:spa-outline",
+            tone: "success",
+            path: "/admin/rituals",
+          },
+          {
+            label: "Announcements live",
+            value: stats.liveAnnouncements ?? 0,
+            icon: "mdi:bullhorn-outline",
+            tone: "info",
+            path: "/admin/announcements",
+          },
+          {
+            label: "Price on launch",
+            value: stats.priceOnLaunchProducts ?? 0,
+            icon: "mdi:tag-off-outline",
+            tone: "warning",
+            path: "/admin/products",
+          },
+        ].map((tile) => (
+          <Grid item xs={6} sm={3} key={tile.label}>
+            <Paper
+              elevation={0}
+              sx={(theme) => ({ p: 2, height: "100%", border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette[tile.tone].main } })}
+              onClick={() => navigate(tile.path)}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette[tile.tone].main, 0.12), borderRadius: 1, display: "flex", color: theme.palette[tile.tone].main })}>
+                  <Icon icon={tile.icon} style={{ fontSize: 20 }} />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="caption" color="text.secondary">{tile.label}</Typography>
+                  <Typography variant="h6" fontWeight="bold">{tile.value}</Typography>
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Tables */}
@@ -239,7 +304,7 @@ const AdminDashboard = () => {
             <Box sx={{ p: 1 }}>
               {lowStockProducts.length === 0 ? (
                 <Box sx={{ textAlign: "center", py: 5 }}>
-                  <Icon icon="mdi:check-circle-outline" style={{ fontSize: 48, color: "#4caf50" }} />
+                  <Box component={Icon} icon="mdi:check-circle-outline" sx={{ fontSize: 48, color: "success.main" }} />
                   <Typography color="text.secondary" sx={{ mt: 1 }}>All products well stocked</Typography>
                 </Box>
               ) : (
@@ -277,6 +342,8 @@ const AdminDashboard = () => {
             { label: "Add Category", icon: "mdi:shape-plus", path: "/admin/categories" },
             { label: "Shipping Setup", icon: "mdi:truck-outline", path: "/admin/shipping" },
             { label: "View Returns", icon: "mdi:backup-restore", path: "/admin/returns" },
+            { label: "Edit Home Hero", icon: "mdi:view-carousel-outline", path: "/admin/hero-section" },
+            { label: "Manage Content", icon: "mdi:text-box-edit-outline", path: "/admin/content" },
           ].map((qa) => (
             <Button
               key={qa.label} variant="outlined" size="small"

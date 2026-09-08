@@ -50,10 +50,10 @@ import styles from "./ProductDetails.module.css";
 // slim glass bar that arrives after 320px of scroll, tracks the chapter being
 // read and jumps to any other.
 //
-// WHAT WENT WITH IT. Six derivation helpers built a textile spec table, a
-// craft narrative and a "PREMIUM" ribbon for the previous brand. None of that
+// WHAT WENT WITH IT. Six derivation helpers built a materials spec table, a
+// craft narrative and a corner ribbon for the previous catalogue. None of that
 // has a LAMIKAA meaning — a face wash carries an INCI list and a ritual step,
-// not a textile record — and the fields those helpers read do not exist on
+// not a materials record — and the fields those helpers read do not exist on
 // a seeded product. The promises band went the same way: it restated, two
 // screens lower, the trust badges the purchase panel already carries.
 //

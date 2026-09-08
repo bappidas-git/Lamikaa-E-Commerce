@@ -270,9 +270,9 @@
    `.sf-chip--active` uses, so an active pill and an active chip agree. */
 .pillActive,
 .pillActive:hover {
-  background: var(--sf-color-emerald);
-  border-color: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
+  background: var(--sf-color-cta);
+  border-color: var(--sf-color-cta);
+  color: var(--sf-color-cta-contrast);
   font-weight: var(--sf-font-semibold);
 }
 

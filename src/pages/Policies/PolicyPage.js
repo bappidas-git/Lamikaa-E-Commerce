@@ -24,8 +24,8 @@ import styles from "./PolicyPage.module.css";
 // its own clauses as hard-coded JSX. They are one component and one record now:
 // `siteContent.policies`, edited in the admin (Prompt 34), typeset here.
 //
-// That collapse is worth more than the four files it saves. The old Terms page
-// stated three rupee shipping rates, a Kolkata jurisdiction and a company name
+// That collapse is worth more than the four files it saves. The boilerplate Terms
+// page stated three rupee shipping rates, a jurisdiction and a company name
 // none of which this store runs on; because they were JSX, correcting them was
 // a deploy. The only clauses this page writes are the ones that CANNOT be
 // written in advance, and it builds them from the live records:

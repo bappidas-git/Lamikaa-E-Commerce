@@ -17,7 +17,7 @@
 //
 // Slugs make for readable, shareable URLs and never change when ids are
 // reseeded. The numeric id is only ever used as a defensive fallback for a
-// category that is somehow missing a slug. The Meghali-era
+// category that is somehow missing a slug. The pre-rebuild
 // `/products?category=<slug>` form is redirected to `/category/<slug>` by
 // components/routing/LegacyRedirects.js.
 //

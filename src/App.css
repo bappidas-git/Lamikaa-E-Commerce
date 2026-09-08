@@ -7,8 +7,8 @@
  * file. There is ONE theme, declared once in `:root`, so no rule below needs a
  * mode twin and nothing here is keyed off a class on <body>.
  *
- * ADMIN IS OUT OF SCOPE. The admin panel keeps its flat slate design language
- * (recoloured to the LAMIKAA palette in Prompt 32): the `body.admin-area`
+ * ADMIN IS OUT OF SCOPE. The admin panel keeps its own flat design language
+ * on the LAMIKAA palette (recoloured in Prompt 32): the `body.admin-area`
  * blocks below are its own, and the storefront's SweetAlert2 skin is scoped
  * away from `.admin-area` so the storefront palette cannot bleed into an admin
  * dialog.
@@ -132,28 +132,32 @@ body:not(.admin-area) {
   scrollbar-color: var(--sf-color-surface-hover) var(--sf-color-bg);
 }
 
-/* Pin the page background to the admin palette while an admin screen is
-   mounted, so the storefront ground cannot show wherever the slate peeks
+/* Pin the page background to the admin ground while an admin screen is
+   mounted, so the storefront surface cannot show wherever the charcoal peeks
    through (overscroll, drawer edges); !important is the intended override and
-   unwinds with .admin-area. The admin has one palette, so this is one rule. */
+   unwinds with .admin-area. The admin has one palette, so this is one rule.
+   The literals in this block are the admin's own — src/theme/adminTheme.js is
+   a JS module and cannot be read from CSS, and the admin never reads the
+   storefront's --sf-* tokens. Keep the two in step. */
 body.admin-area {
-  background-color: #0b1220 !important;
+  background-color: #0b0b0d !important;
 }
 
-/* Admin scrollbars: flat slate to match the admin design system */
+/* Admin scrollbars: charcoal, one step above the ground, no gold — a scrollbar
+   is chrome, not an accent. */
 body.admin-area::-webkit-scrollbar-track,
 body.admin-area *::-webkit-scrollbar-track {
-  background: rgba(148, 163, 184, 0.06);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 body.admin-area::-webkit-scrollbar-thumb,
 body.admin-area *::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #2a2a30;
 }
 
 body.admin-area::-webkit-scrollbar-thumb:hover,
 body.admin-area *::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #3a3a42;
 }
 
 /* =============================================================================
@@ -245,9 +249,9 @@ body.admin-area *::-webkit-scrollbar-thumb:hover {
    confirmButtonColor (the destructive reds on delete/logout confirms)
    still wins — Swal sets those as inline variables on the button itself.
 
-   The storefront block is scoped `:not(.admin-area)` so the storefront
-   gold cannot reach an admin dialog, and the admin block carries the flat
-   slate values verbatim.
+   The storefront block is scoped `:not(.admin-area)` so the storefront's
+   glass and pills cannot reach an admin dialog, and the admin block carries
+   the admin's own flat values verbatim.
    ===================================================================== */
 body:not(.admin-area) .swal2-popup {
   /* Glass, like every other floating surface on the storefront. The ground is
@@ -327,23 +331,29 @@ body:not(.admin-area) .swal2-popup.swal2-toast {
   border-left: 2px solid var(--sf-color-gold);
 }
 
-/* Admin area: flat surfaces, 6-8px radii, slate palette. Prompt 32 recolours
-   these alongside the rest of the admin. */
+/* Admin area: flat surfaces, 8px radii, the LAMIKAA palette in the admin's own
+   register — no glass, no blur, no pills. The values mirror
+   src/theme/adminTheme.js (a JS module CSS cannot read); keep them in step. */
 body.admin-area .swal2-popup {
-  --swal2-background: #111927;
-  --swal2-color: #f1f5f9;
-  --swal2-border: 1px solid rgba(148, 163, 184, 0.16);
+  --swal2-background: #141416;
+  --swal2-color: #f7f5f0;
+  --swal2-border: 1px solid rgba(255, 255, 255, 0.08);
   --swal2-border-radius: 8px;
-  /* The deeper indigo (primary pressed), not the main tone: white button
-     text needs it to stay readable on the dark admin surface */
-  --swal2-confirm-button-background-color: #6366f1;
-  --swal2-cancel-button-background-color: #475569;
-  --swal2-confirm-button-border-radius: 6px;
-  --swal2-cancel-button-border-radius: 6px;
-  --swal2-close-button-color: #a0aec0;
-  --swal2-action-button-focus-box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.4);
-  --swal2-timer-progress-bar-background: rgba(255, 255, 255, 0.3);
-  --swal2-toast-border: 1px solid rgba(148, 163, 184, 0.16);
+  /* Champagne gold under a near-black label — the same pair the contained
+     buttons wear, and 13.4:1 either way round. The label colour is set here
+     rather than per call, so a destructive confirm that overrides only
+     --swal2-confirm-button-background-color (error.main, #ff8a80) still gets
+     readable ink on it. */
+  --swal2-confirm-button-background-color: #f5d76e;
+  --swal2-confirm-button-color: #0b0b0d;
+  --swal2-cancel-button-background-color: rgba(255, 255, 255, 0.08);
+  --swal2-cancel-button-color: #f7f5f0;
+  --swal2-confirm-button-border-radius: 8px;
+  --swal2-cancel-button-border-radius: 8px;
+  --swal2-close-button-color: #b8b5b0;
+  --swal2-action-button-focus-box-shadow: 0 0 0 3px rgba(245, 215, 110, 0.55);
+  --swal2-timer-progress-bar-background: #f5d76e;
+  --swal2-toast-border: 1px solid rgba(255, 255, 255, 0.08);
   --swal2-toast-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
@@ -351,8 +361,21 @@ body.admin-area .swal2-popup:not(.swal2-toast) {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
+/* Manrope, like the rest of the admin — Swal renders outside the MUI tree, so
+   the theme's typography cannot reach it. */
+body.admin-area .swal2-popup,
+body.admin-area .swal2-styled {
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", sans-serif;
+}
+
+body.admin-area .swal2-styled {
+  text-transform: none;
+  font-weight: 600;
+}
+
 body.admin-area .swal2-html-container {
-  color: #94a3b8;
+  color: #b8b5b0;
 }
 
 /* -----------------------------------------------------------------------------

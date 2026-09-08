@@ -14,7 +14,7 @@ import styles from "./Button.module.css";
 // choice, the three add-to-cart states and the icon-only circle.
 //
 // VARIANTS map onto the primitives rather than restating them —
-//   primary    -> .sf-btn--emerald   the gold fill (legacy class name, Prompt 35)
+//   primary    -> .sf-btn--primary   the gold fill
 //   secondary  -> .sf-btn--outline-gold
 //   ghost      -> .sf-btn--ghost
 //   addToCart  -> .sf-btn--outline-gold + a signature-gradient hairline on hover
@@ -37,7 +37,7 @@ import styles from "./Button.module.css";
 // =============================================================================
 
 const VARIANT_CLASS = {
-  primary: "sf-btn--emerald",
+  primary: "sf-btn--primary",
   secondary: "sf-btn--outline-gold",
   ghost: "sf-btn--ghost",
   addToCart: "sf-btn--outline-gold",

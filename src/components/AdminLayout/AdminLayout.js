@@ -32,15 +32,25 @@ import { Icon } from "@iconify/react";
 import { useAdmin } from "../../context/AdminContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../brand/Logo";
-import buildAdminTheme from "../../theme/adminTheme";
+import brand from "../../config/brand";
+import buildAdminTheme, {
+  ADMIN_GOLD_GRADIENT,
+  ADMIN_PALETTE,
+} from "../../theme/adminTheme";
+import {
+  releasePageTitle,
+  setPageTitle,
+  storeDocumentTitle,
+} from "../../utils/documentTitle";
 import useAdminBodyClass from "../../hooks/useAdminBodyClass";
 import apiService from "../../services/api";
 import Swal from "sweetalert2";
 
-// The same <Logo> the storefront renders, so the drawer paints from cache. One
-// wordmark on a transparent ground: it reads on background.paper in either
-// mode, so there is no longer a variant to pick.
-const LOGO_WIDTH = 130;
+// The same <Logo> the storefront renders, so the drawer paints from cache. The
+// wordmark heads the permanent drawer; the temporary (mobile) drawer takes the
+// square mark, which reads at a glance in a panel a thumb is about to dismiss.
+const LOGO_WIDTH = 150;
+const MARK_WIDTH = 36;
 
 const drawerWidth = 260;
 
@@ -64,6 +74,19 @@ const menuItems = [
     title: "Categories",
     icon: "mdi:shape",
     path: "/admin/categories",
+  },
+  {
+    // Prompt 34. The "shop by concern" vocabulary — small, flat and ordered,
+    // and pointed at by slug from every product.
+    title: "Concerns",
+    icon: "mdi:leaf-circle-outline",
+    path: "/admin/concerns",
+  },
+  {
+    // Prompt 34. Routines built from the catalogue: /rituals and /rituals/:slug.
+    title: "Rituals",
+    icon: "mdi:spa-outline",
+    path: "/admin/rituals",
   },
   {
     title: "Reviews",
@@ -108,9 +131,27 @@ const menuItems = [
     isSection: true,
   },
   {
-    title: "Hero Section",
+    // Renamed in Prompt 32 and rebuilt in Prompt 34 (hero product ordering +
+    // section settings). The ROUTE keeps its historical `/admin/hero-section`
+    // path: it is the one admin screen with links pointing at it from Settings
+    // and from bookmarks, and renaming a path buys nothing an admin can see.
+    title: "Home & Hero",
     icon: "mdi:view-carousel-outline",
     path: "/admin/hero-section",
+  },
+  {
+    // Prompt 34. The line above the masthead — it used to be edited from a
+    // temporary tab on the hero screen.
+    title: "Announcements",
+    icon: "mdi:bullhorn-outline",
+    path: "/admin/announcements",
+  },
+  {
+    // Prompt 34. The editorial copy behind /about, /why-lamikaa, /contact, the
+    // policies and the home page's own sections.
+    title: "Content",
+    icon: "mdi:text-box-edit-outline",
+    path: "/admin/content",
   },
   {
     title: "FAQs",
@@ -153,12 +194,28 @@ const AdminLayout = () => {
   // here at the root of the admin tree, makes a currency change repaint every
   // figure on the page under it (the admin screens format with the plain
   // formatCurrency() helper, which cannot ask React for a re-render itself).
-  const { storeName } = useStoreSettings();
-  // Dedicated flat/professional admin theme. The admin is dark like the
-  // storefront but keeps its own design language; there is no mode to track,
-  // so the theme is built once. (Prompt 32 recolours it to the LAMIKAA palette.)
-  const adminTheme = useMemo(() => buildAdminTheme("dark"), []);
+  const { store, storeName } = useStoreSettings();
+  // Dedicated admin theme — the LAMIKAA palette in the admin's own flat design
+  // language. There is no mode to track, so the theme is built once.
+  const adminTheme = useMemo(() => buildAdminTheme(), []);
   useAdminBodyClass();
+
+  // The tab names the screen you are on, so a second admin window is
+  // identifiable from the taskbar: "Orders \u00b7 Admin \u00b7 LAMIKAA NATURALS".
+  // Written through the same claim/release protocol the storefront uses
+  // (utils/documentTitle.js), so the store default cannot overwrite it when the
+  // settings request lands, and it is handed back on the way out.
+  const screenTitle =
+    menuItems.find((item) => item.path === location.pathname)?.title || "Admin";
+  useEffect(() => {
+    setPageTitle(`${screenTitle} \u00b7 Admin \u00b7 ${brand.name}`);
+  }, [screenTitle]);
+  // The release runs once, on the way out of the admin — hence the ref: the
+  // store title is whatever it is at that moment, and a settings save must not
+  // hand the tab back while an admin is still standing on the screen.
+  const storeTitleRef = useRef(storeDocumentTitle(store));
+  storeTitleRef.current = storeDocumentTitle(store);
+  useEffect(() => () => releasePageTitle(storeTitleRef.current), []);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -336,7 +393,7 @@ const AdminLayout = () => {
       text: "You'll need to sign in again to access the admin panel.",
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#ef4444",
+      confirmButtonColor: ADMIN_PALETTE.error.main,
       confirmButtonText: "Log Out",
       cancelButtonText: "Stay Signed In",
     });
@@ -345,7 +402,9 @@ const AdminLayout = () => {
     navigate("/admin");
   };
 
-  const drawer = (
+  // `compact` heads the drawer with the square mark instead of the wordmark —
+  // the temporary (mobile) panel, where the lockup has least room to breathe.
+  const renderDrawer = ({ compact = false } = {}) => (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Logo Section */}
       <Box
@@ -366,11 +425,20 @@ const AdminLayout = () => {
             width: "100%",
           }}
         >
-          <Logo
-            width={LOGO_WIDTH}
-            alt={`${storeName} Admin`}
-            style={{ height: 36, width: "auto", maxWidth: "100%", display: "block" }}
-          />
+          {compact ? (
+            <Logo
+              variant="mark"
+              width={MARK_WIDTH}
+              alt={`${storeName} Admin`}
+              style={{ height: MARK_WIDTH, width: MARK_WIDTH, display: "block" }}
+            />
+          ) : (
+            <Logo
+              width={LOGO_WIDTH}
+              alt={`${storeName} Admin`}
+              style={{ height: 40, width: "auto", maxWidth: "100%", display: "block" }}
+            />
+          )}
         </Box>
       </Box>
 
@@ -413,9 +481,24 @@ const AdminLayout = () => {
                 sx={{
                   mx: 0.5,
                   py: 0.75,
+                  position: "relative",
+                  overflow: "hidden",
                   bgcolor: isActive ? "action.selected" : "transparent",
                   color: isActive ? "primary.main" : "text.primary",
                   "&:hover": { bgcolor: isActive ? "action.selected" : "action.hover" },
+                  // The active item wears the gold gradient as a 3px rule down
+                  // its leading edge — the admin's one gradient, and the only
+                  // thing on this screen that is not a flat fill or a hairline.
+                  "&::before": isActive
+                    ? {
+                        content: '""',
+                        position: "absolute",
+                        insetBlock: 0,
+                        insetInlineStart: 0,
+                        width: 3,
+                        backgroundImage: ADMIN_GOLD_GRADIENT,
+                      }
+                    : undefined,
                 }}
               >
                 <ListItemIcon
@@ -470,7 +553,8 @@ const AdminLayout = () => {
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          bgcolor: "background.paper",
+          // Ground and blur come from the theme's MuiAppBar override, so the
+          // "glass-like paper" is defined once for the whole admin.
           borderBottom: "1px solid",
           borderColor: "divider",
         }}
@@ -941,11 +1025,13 @@ const AdminLayout = () => {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
-              bgcolor: "background.paper",
+              bgcolor: "background.default",
+              borderRight: "1px solid",
+              borderColor: "divider",
             },
           }}
         >
-          {drawer}
+          {renderDrawer({ compact: true })}
         </Drawer>
 
         {/* Desktop Drawer */}
@@ -956,14 +1042,14 @@ const AdminLayout = () => {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
-              bgcolor: "background.paper",
+              bgcolor: "background.default",
               borderRight: "1px solid",
               borderColor: "divider",
             },
           }}
           open
         >
-          {drawer}
+          {renderDrawer()}
         </Drawer>
       </Box>
 

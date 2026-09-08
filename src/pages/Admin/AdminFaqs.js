@@ -25,6 +25,7 @@ import {
   Autocomplete,
   Alert,
   CircularProgress,
+  MenuItem,
   useMediaQuery,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
@@ -32,10 +33,12 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { notifyFaqsUpdated } from "../../context/FaqContext";
 import {
   DEFAULT_FAQ,
+  DEFAULT_FAQ_GROUP,
   FAQ_COPY_TOKENS,
   FAQ_PLACEMENTS,
   faqIsTargeted,
@@ -53,12 +56,20 @@ import {
 //
 //   PRODUCT PAGES  the "FAQs" tab on the product page — the accordion beside
 //                  Description / Specifications / Reviews
-//   HELP CENTRE    the searchable list at /faq
-//   SHARED BLOCK   the reusable Frequently Asked Questions section
+//   FAQ PAGE       the searchable list at /faq
+//   HOME FAQ BLOCK the Frequently Asked Questions section on the home page
 //
 // A row can also be aimed at particular products, in which case it is read only
 // on those product pages — above the general answers, so the specific reply to
-// "does this Mekhela arrive stitched?" sits ahead of the store-wide one.
+// "is the face wash safe for sensitive skin?" sits ahead of the store-wide one.
+//
+// PLACEMENT IS WHERE, GROUP IS WHICH HEADING (Prompt 34). A row's `group` files
+// it under one of the FAQ page's headings, and that vocabulary is DATA — it
+// lives in `siteContent.faqPage.groups[]`, editable in Admin → Content — so the
+// group Select is built from the record rather than from a constant here, with
+// "General" (DEFAULT_FAQ_GROUP) always present as the home for a row nobody has
+// filed. A row whose heading has since been renamed or deleted still renders,
+// under General, and the editor says so instead of hiding it.
 //
 // The order here is the order a shopper reads, top first. Answers may quote the
 // store's own figures with {freeShipping} / {codSentence} / {taxNote}; those
@@ -92,6 +103,7 @@ const FaqRow = ({
   busy,
   canReorder,
   productNames,
+  groupLabel,
   onEdit,
   onDuplicate,
   onDelete,
@@ -180,6 +192,14 @@ const FaqRow = ({
                   ) : null;
                 })
               )}
+              <Chip
+                size="small"
+                variant="outlined"
+                color={groupLabel.known ? "default" : "warning"}
+                icon={<Icon icon={groupLabel.known ? "mdi:folder-outline" : "mdi:folder-alert-outline"} />}
+                label={groupLabel.label}
+                sx={{ maxWidth: { xs: 210, sm: 300 } }}
+              />
               <Chip
                 size="small"
                 variant={targeted ? "filled" : "outlined"}
@@ -279,12 +299,17 @@ const AdminFaqs = () => {
 
   const [faqs, setFaqs] = useState([]);
   const [products, setProducts] = useState([]);
+  // The FAQ page's headings, straight from `siteContent.faqPage.groups[]` —
+  // owner-editable in Admin → Content, so this screen reads them rather than
+  // freezing today's four into a constant.
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+  const [groupFilter, setGroupFilter] = useState("all");
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -294,14 +319,23 @@ const AdminFaqs = () => {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const [rows, catalogue] = await Promise.all([
+      const [rows, catalogue, siteContent] = await Promise.all([
         apiService.admin.getFaqs().catch(() => []),
         // Targeting is a convenience, not a requirement — a catalogue that
         // fails to load leaves the rest of the screen working.
         apiService.admin.getProducts().catch(() => []),
+        // Same rule for the headings: an unreadable record leaves every row
+        // filed under General rather than taking the screen down.
+        apiService.admin.getSiteContent().catch(() => ({})),
       ]);
       setFaqs(normalizeFaqs(rows));
       setProducts(Array.isArray(catalogue) ? catalogue : []);
+      const raw = siteContent?.faqPage?.groups;
+      setGroups(
+        (Array.isArray(raw) ? raw : [])
+          .filter((row) => row && typeof row.key === "string" && row.key.trim())
+          .map((row) => ({ key: row.key.trim(), label: row.label || row.key }))
+      );
     } catch (error) {
       console.error("Error loading FAQs:", error);
       toast("error", "Could not load the FAQs", error.message);
@@ -328,6 +362,31 @@ const AdminFaqs = () => {
     [productById]
   );
 
+  // The Select's options: the owner's headings plus General, which is where an
+  // unfiled row lives and therefore must always be offered.
+  const groupOptions = useMemo(
+    () => [
+      ...groups,
+      { key: DEFAULT_FAQ_GROUP, label: "General (unfiled)" },
+    ].filter(
+      (row, index, all) => all.findIndex((other) => other.key === row.key) === index
+    ),
+    [groups]
+  );
+
+  // What a row's group is CALLED, and whether that heading still exists. A row
+  // filed under a heading the owner has since renamed is not lost — it reads
+  // under General on the FAQ page — but the admin has to be able to see that.
+  const groupLabelFor = useCallback(
+    (faq) => {
+      const key = faq.group || DEFAULT_FAQ_GROUP;
+      const known = groupOptions.find((row) => row.key === key);
+      if (known) return { label: known.label, known: true };
+      return { label: `${key} — no such heading`, known: false };
+    },
+    [groupOptions]
+  );
+
   const stats = useMemo(() => {
     const live = faqs.filter((f) => f.isActive);
     return {
@@ -344,6 +403,7 @@ const AdminFaqs = () => {
       if (filter === "live" && !faq.isActive) return false;
       if (filter === "hidden" && faq.isActive) return false;
       if (filter === "targeted" && !faqIsTargeted(faq)) return false;
+      if (groupFilter !== "all" && (faq.group || DEFAULT_FAQ_GROUP) !== groupFilter) return false;
       if (!term) return true;
       return (
         faq.question.toLowerCase().includes(term) ||
@@ -351,11 +411,11 @@ const AdminFaqs = () => {
         namesFor(faq).some((name) => name.toLowerCase().includes(term))
       );
     });
-  }, [faqs, filter, search, namesFor]);
+  }, [faqs, filter, groupFilter, search, namesFor]);
 
   // Moving a row rewrites the whole collection's order, so it is only offered
   // when the whole collection is on screen.
-  const canReorder = filter === "all" && !search.trim();
+  const canReorder = filter === "all" && groupFilter === "all" && !search.trim();
 
   // ── Editing ────────────────────────────────────────────────────────────────
   const setField = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -479,7 +539,7 @@ const AdminFaqs = () => {
       }`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d32f2f",
+      confirmButtonColor: ADMIN_PALETTE.error.main,
       confirmButtonText: "Delete",
     });
     if (!result.isConfirmed) return;
@@ -549,16 +609,17 @@ const AdminFaqs = () => {
   const targetingIgnored =
     (form.productIds || []).length > 0 && !form.placements.includes("product");
 
+  // `tone` names a palette channel; adminTheme.js owns the colour behind it.
   const statTiles = [
-    { label: "Answers", value: stats.total, icon: "mdi:comment-question-outline", color: "#6366f1" },
-    { label: "Live", value: stats.live, icon: "mdi:eye-outline", color: "#16a34a" },
+    { label: "Answers", value: stats.total, icon: "mdi:comment-question-outline", tone: "primary" },
+    { label: "Live", value: stats.live, icon: "mdi:eye-outline", tone: "success" },
     {
       label: "On product pages",
       value: stats.onProduct,
       icon: "mdi:package-variant-closed",
-      color: "#0891b2",
+      tone: "info",
     },
-    { label: "Product-specific", value: stats.targeted, icon: "mdi:tag-outline", color: "#d97706" },
+    { label: "Product-specific", value: stats.targeted, icon: "mdi:tag-outline", tone: "warning" },
   ];
 
   return (
@@ -583,8 +644,8 @@ const AdminFaqs = () => {
             FAQs
           </Typography>
           <Typography color="text.secondary">
-            The questions answered on the storefront — the FAQs tab of a product page, the Help
-            Centre and the shared FAQ block. Read in this order, top first.
+            The questions answered on the storefront — the FAQs tab of a product page, the FAQ
+            page at /faq and the home FAQ block. Read in this order, top first.
           </Typography>
         </Box>
         <Button
@@ -623,8 +684,8 @@ const AdminFaqs = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: alpha(tile.color, 0.12),
-                  color: tile.color,
+                  bgcolor: (t) => alpha(t.palette[tile.tone].main, 0.12),
+                  color: `${tile.tone}.main`,
                 }}
               >
                 <Icon icon={tile.icon} style={{ fontSize: 22 }} />
@@ -684,6 +745,21 @@ const AdminFaqs = () => {
             ) : null,
           }}
         />
+        <TextField
+          select
+          size="small"
+          label="Heading"
+          value={groupFilter}
+          onChange={(e) => setGroupFilter(e.target.value)}
+          sx={{ minWidth: { xs: "100%", md: 210 } }}
+        >
+          <MenuItem value="all">Every heading</MenuItem>
+          {groupOptions.map((row) => (
+            <MenuItem key={row.key} value={row.key}>
+              {row.label}
+            </MenuItem>
+          ))}
+        </TextField>
         {/* The filter row scrolls sideways on a narrow phone rather than
             wrapping into a second, half-empty line of buttons. */}
         <Box sx={{ overflowX: "auto", ml: { md: "auto" }, pb: { xs: 0.5, md: 0 } }}>
@@ -758,6 +834,7 @@ const AdminFaqs = () => {
             onClick={() => {
               setSearch("");
               setFilter("all");
+              setGroupFilter("all");
             }}
           >
             Clear the search
@@ -767,7 +844,8 @@ const AdminFaqs = () => {
         <>
           {!canReorder && (
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-              Showing {visible.length} of {faqs.length}. Clear the search and filter to reorder.
+              Showing {visible.length} of {faqs.length}. Clear the search, the filter and the
+              heading to reorder.
             </Typography>
           )}
           <Box sx={{ display: "grid", gap: 2 }}>
@@ -780,6 +858,7 @@ const AdminFaqs = () => {
                 busy={busy}
                 canReorder={canReorder}
                 productNames={namesFor(faq)}
+                groupLabel={groupLabelFor(faq)}
                 onEdit={openEdit}
                 onDuplicate={handleDuplicate}
                 onDelete={handleDelete}
@@ -811,7 +890,7 @@ const AdminFaqs = () => {
                 onChange={(e) => setField("question", e.target.value)}
                 fullWidth
                 size="small"
-                placeholder="e.g. Does a Mekhela Chador arrive stitched?"
+                placeholder="e.g. Does the face wash suit sensitive skin?"
               />
             </Grid>
 
@@ -897,6 +976,35 @@ const AdminFaqs = () => {
 
             <Grid item xs={12}>
               <Divider />
+            </Grid>
+
+            {/* Which heading it is filed under */}
+            <Grid item xs={12}>
+              <TextField
+                select
+                label="Heading on the FAQ page"
+                value={form.group || DEFAULT_FAQ_GROUP}
+                onChange={(e) => setField("group", e.target.value)}
+                fullWidth
+                size="small"
+                helperText={
+                  groupOptions.some((row) => row.key === (form.group || DEFAULT_FAQ_GROUP))
+                    ? "The section of /faq this answer sits under. Rename the headings in Admin → Content."
+                    : `“${form.group}” is not one of the FAQ page's headings — this answer reads under General.`
+                }
+              >
+                {/* A row filed under a heading that has since been renamed keeps
+                    its own value as an option, so opening the editor cannot
+                    silently re-file it by having nothing to select. */}
+                {!groupOptions.some((row) => row.key === (form.group || DEFAULT_FAQ_GROUP)) && (
+                  <MenuItem value={form.group}>{form.group} — no such heading</MenuItem>
+                )}
+                {groupOptions.map((row) => (
+                  <MenuItem key={row.key} value={row.key}>
+                    {row.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
 
             {/* Where it is read */}

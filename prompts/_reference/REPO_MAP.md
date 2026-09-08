@@ -57,6 +57,33 @@
 - Admin: `AdminLayout.js` and `AdminLogin.js` both call `useMemo(() => buildAdminTheme("dark"), [])`. `buildAdminTheme(mode)` keeps its signature and its light branch (dead code until Prompt 32 recolours the palette); `useAdminBodyClass.js` is unchanged.
 - Hard-coded colours now: `ErrorBoundary.js` (12, intentional fallback) and `Footer.js` (payment-network marks) — documented exceptions. **`AuthModal.js`'s five social brand hexes went with the disabled buttons in Prompt 30**; `SearchModal.js:55-56` data-URI (`#141416` / `#B8B5B0`), `helpers.js` `PLACEHOLDER_IMG` fill `#8E8B86`, `DANGER_HEX = "#FF8A80"` ×3, `OrderConfirmation.js` `CONFETTI_COLORS = ["#F5D76E", "#FFEFA6", "#FF4FD8", "#8B5CF6"]`, `index.js` crash-screen inline styles, admin JS files (indigo/slate literals — see §7).
 
+**Updated by Prompt 35 — the legacy token names are gone.** `storefront-tokens.css`
+(300 lines) now declares only role-named tokens; nothing is an alias of anything.
+
+- `--sf-color-emerald` / `-emerald-hover` / `-emerald-contrast` → **`--sf-color-cta`
+  / `-cta-hover` / `-cta-contrast`** (the primary call-to-action fill, its hover
+  fill and the near-black label that rides on both).
+- Deleted outright, all with zero `var()` consumers at the time of the sweep:
+  `--sf-gradient-heritage` (use `--sf-gradient-brand`), `--sf-gradient-announce-1/2/3`
+  (use `--sf-gradient-announce`), `--sf-cat-pink/purple/orange/blue/teal/red`
+  (use `--sf-concern-pink/violet/gold/cyan/mint/rose`), `--sf-color-brand-green-deep`
+  (use `--sf-color-bg`) and `--brand-logo-bg` (use `--sf-color-surface`).
+  `--sf-color-brand-green` was already gone (Prompt 03).
+- Primitives: `.sf-btn--emerald` and `.sf-btn--gold` collapse into the single
+  **`.sf-btn--primary`** (`Button.js`'s `primary` variant maps to it); the alias
+  is NOT kept. `.sf-ribbon-premium` is deleted — nothing has rendered it since
+  Prompt 15.
+- **The final token set is `storefront-tokens.css` alone.** Verification:
+  `grep -rhoE "var\(--sf-[a-z0-9-]+" src | sort -u` contains no `emerald`,
+  `heritage`, `brand-green`, `announce-[123]` or `cat-` name, and every remaining
+  name resolves — declared in `storefront-tokens.css`, declared component-scoped
+  in the module that uses it (`--sf-footer-gap`, `--sf-step-pad/-anchor/-numeral`,
+  `--sf-glow-x/-y`, `--sf-drawer-header-pad-y/-b`, `--sf-drawer-body-pad`,
+  `--sf-footer-grid`, `--sf-glow-opacity`, `--sf-hero-chrome`,
+  `--sf-hero-parallax-x/-y`, `--sf-rail-row`), or set from JS and always read with
+  a fallback (`--sf-chapter-progress`, `--sf-chip-tone`, `--sf-drawer-width`,
+  `--sf-glow-inset`, `--sf-glow-offset-x/-y`, `--sf-reserve`).
+
 ## 3. `src/services/api.js` — dual-mode contract
 
 > **Final contract — rewritten by Prompt 07.** This section is the whole of it: every namespace, every function, its mock path and its live endpoint. §3.4 is the hand-off list for the backend team — the routes Laravel must implement for the live branch to work.
@@ -107,9 +134,9 @@ Admin reads return **drafts too** (no visibility gate) but are normalised exactl
 
 | Area | Functions | Mock-mode path | Live path |
 |---|---|---|---|
-| Auth / dashboard | `login`, `logout`, `getDashboardStats` | `/admins`, derived counts | `/admin/auth/login`, `/admin/dashboard/stats` |
+| Auth / dashboard | `login`, `logout`, `getDashboardStats` — **extended by Prompt 34** with four content counts: `heroProducts` (products with `heroOrder != null`), `activeRituals`, `liveAnnouncements` (the BAR's whole gate — active AND in its `startsAt`/`endsAt` window AND printable, so a row still carrying a `{{TOKEN}}` is not counted) and `priceOnLaunchProducts` (`!isPriceKnown(row)`, applied to the raw rows because this branch does not normalise). Every consumer reads them with `?? 0`, so a live backend that has not added them yet leaves four zeroes rather than `undefined` | `/admins`, derived counts (+ `/rituals`, `/announcements`) | `/admin/auth/login`, `/admin/dashboard/stats` |
 | Products | `getProducts(params)` · `getProduct(id)` — **normalised** · `createProduct(data)` · `updateProduct(id, data)` (PUT) — both run `syncProductMedia(data)` first · `deleteProduct(id)` | `/products` | `/admin/products` |
-| Categories | `getCategories` · `createCategory` · `updateCategory` (PUT) · `deleteCategory` (refuses while children/products reference it, code `CATEGORY_IN_USE`). `data` passes through untouched, which is how the new `displayName`, `heroImage` and `kind` fields reach both backends. | `/categories` | `/admin/categories` |
+| Categories | `getCategories` · `createCategory` · `updateCategory` (PUT) · `deleteCategory` (refuses while children/products reference it, code `CATEGORY_IN_USE`; **Prompt 34** widened the mock guard from `GET /products?categoryId=<id>` to the whole catalogue tested on `categoryId` **OR** `categoryIds[]` membership — the same rule `products.getByCategorySlug` reads. It was not theoretical: "Serums" has 0 products by `categoryId` and 1 by `categoryIds`). `data` passes through untouched, which is how the new `displayName`, `heroImage` and `kind` fields reach both backends. | `/categories` | `/admin/categories` |
 | Concerns *(new — 07)* | `getConcerns` · `createConcern` · `updateConcern` (PUT) · `deleteConcern` | `/concerns` | `/admin/concerns` |
 | Rituals *(new — 07)* | `getRituals` (inactive included) · `createRitual` · `updateRitual` (PUT) · `deleteRitual` · `reorderRituals(orderedIds, current)` | `/rituals`; reorder PATCHes only the rows whose `sortOrder` changes | `/admin/rituals`, `PUT /admin/rituals/reorder` |
 | Site content *(new — 07)* | `getSiteContent()` · `updateSiteContent(key, data)` — `data` is **merged** into the stored section, so a partial editor cannot delete the rest of it | `GET /siteContent`, then `PUT /siteContent` with the merged object (json-server singleton, mirrors `updateSettings`) | `GET /admin/content`, `PATCH /admin/content/:key` |
@@ -153,6 +180,7 @@ Everything below is what the **live branch of `api.js` already calls**. Mock mod
 | 18 | `GET/POST /admin/announcements`, `PUT/DELETE /admin/announcements/{id}` | — | `Announcement` / `Announcement[]` | `GET` returns hidden rows too. |
 | 19 | `PUT /admin/announcements/reorder` | body `{ order: id[] }` | `true` | As #15. |
 | 20 | `PUT /admin/hero/order` | body `{ order: productId[] }` | `true` | Set `heroOrder` = index + 1 for the listed products and **`null` for every product not listed**. |
+| 21 | `GET /admin/dashboard/stats` *(extended — 34)* | — | `{ totalProducts, totalOrders, totalRevenue, totalUsers, pendingOrders, pendingReturns, lowStockProducts, activeCoupons, heroProducts, activeRituals, liveAnnouncements, priceOnLaunchProducts }` | The last four are Prompt 34's. `heroProducts` = products with `heroOrder != null`. `activeRituals` = rituals not `isActive: false`. `liveAnnouncements` = rows that would be **on the bar right now**: active AND inside `startsAt`/`endsAt` AND with text that carries no unresolved `{{TOKEN}}` — the storefront hides a placeholder row, so counting it would overstate the bar. `priceOnLaunchProducts` = products with no resolvable price (`price` null and no priced variant, or `priceTBA: true`). The eight existing keys are unchanged. The admin reads every key with `?? 0`, so a response that omits the four is not an error — the tiles read 0. |
 
 **Product payload (both directions).** A product carries its gallery in `media[]`:
 
@@ -1937,6 +1965,181 @@ system without a single number moving.
 - Orders/Returns/Payments/Users/Shipping/Coupons/SpecialOffers/Reviews/Leads: full CRUD/status flows as listed in the api table (refund lifecycle initiate/complete/fail, cancel with restock/refund/void/recall, returns approve/reject/pickup/in-transit/received/refund, payments issue refund, coupons with duplicate-code guard, reviews approve/reject/create with `MOCK_REVIEWERS` names, leads with `TablePagination`).
 - Admin brand text: only the logo URLs, the hero gradient presets, `mekhela-chador` helper text and the FAQ placeholder (see `BRAND_FOOTPRINT.md`).
 
+**Updated by Prompt 32 — the admin is rebranded to LAMIKAA and holds one dark palette of its own.** Everything above this
+line describes the pre-Prompt-32 admin and is kept as the historical record. What is true now:
+
+- `src/theme/adminTheme.js` builds ONE theme. `buildAdminTheme()` takes no argument (a commented no-op parameter survives
+  so an un-migrated `buildAdminTheme("dark")` caller cannot break); both call sites pass nothing. Palette per
+  DESIGN_SYSTEM §10: `background.default #0B0B0D` / `paper #141416`, `primary #F5D76E` (light `#FFEFA6`, dark `#B88924`,
+  contrast `#0B0B0D`), `secondary #8B5CF6`, `success #7ED9A6`, `warning #F5C76E`, `error #FF8A80`, `info #5DE7FF`,
+  `divider rgba(255,255,255,.08)`, text `#F7F5F0` / `#B8B5B0` / `rgba(247,245,240,.62)`, plus a non-MUI
+  `palette.surface = { sunken: "#1C1C20", hover: "#222228" }`. `shape.borderRadius` 6 → **8**; chips 6; no pills.
+  Named exports every admin screen may read: **`ADMIN_PALETTE`** (for colours outside a React tree — SweetAlert2),
+  `CHIP_TONES` (one dark map now, not `{light, dark}`), `ADMIN_FOCUS_RING`, `ADMIN_GOLD_GRADIENT`, `ADMIN_BRAND_WASH`.
+  `MuiButtonBase.Mui-focusVisible` carries the gold ring everywhere; `MuiAppBar` carries the glass-like paper
+  (`alpha(paper,.88)` + 12px blur + an opaque `@supports not` fallback); `MuiOutlinedInput` sits on `surface.sunken`.
+- **No colour literal lives in an admin screen.** `grep -rn "#[0-9a-fA-F]\{6\}" src/pages/Admin src/components/AdminLayout | grep -v AdminOrders.js`
+  → 0. The single exception is the invoice PRINT stylesheet in `AdminOrders.js` (ink on white paper). Screens that used to
+  take a hex `color` prop now take a `tone` naming a palette channel (`AdminDashboard`'s `StatCard`, `AdminPayments`'
+  summary cards, `AdminFaqs`' stat tiles, `AdminLeads`' `getTypeTone`); every destructive SweetAlert2 confirm uses
+  `ADMIN_PALETTE.error.main`. The admin still imports nothing from the storefront but `Logo`, `brand` and
+  `utils/cloudinary` (+ `utils/placeholders` on the invoice) — the two `var(--sf-*)` reads in `AdminHeroSection`'s preview
+  are gone; its four gradient PRESETS keep their `var(--sf-gradient-*)` values because those are data written into
+  `announcements[].gradient` and resolved by the storefront.
+- `AdminLayout.js` (1054): `<Logo width={150}>` heads the permanent drawer and `<Logo variant="mark" width={36}>` the
+  temporary one; drawer ground `background.default` with a hairline edge; the active item is gold on `action.selected`
+  with a 3px `ADMIN_GOLD_GRADIENT` rule on its leading edge. The nav item "Hero Section" is **"Home & Hero"** (the route
+  is still `/admin/hero-section` until Prompt 34). There is no theme toggle (Prompt 03). The shell owns the tab:
+  `document.title = "{screen} · Admin · LAMIKAA NATURALS"` from the `menuItems` entry matching `location.pathname`,
+  written through `utils/documentTitle`'s `setPageTitle` and released once on unmount. Sections, notification poll,
+  avatar menu and "Back to Store" are unchanged.
+- `AdminLogin.js`: the admin's ONE pane of glass (`alpha(paper,.72)` + 20px blur), wordmark at 210, "Admin Console",
+  "Sign in to manage LAMIKAA NATURALS", gold contained button, `Sign in · Admin · LAMIKAA NATURALS` in the tab, still no
+  demo hints.
+- `AdminProducts.js` (603): the table is **Product / SKU / Category / Price / Hero / Media / Flags / Status / Actions**
+  (`minWidth` 980 → 1160). **Hero** prints `#{heroOrder}` as a gold chip or "—"; **Media** counts the normalised `media[]`
+  as "3 img · 2 vid"; **Price** shows a "Price on launch" chip whenever `priceTBA`. Placeholders are now
+  `e.g. LK-BR-XX-000` (SKU), `e.g. 100 ml / 200 ml` (variant) and `e.g. black rice, face wash, cleanser` (tags), and
+  "Weight (kg)" is "Shipping weight (kg)". **The FORM is otherwise unchanged and is Prompt 33's** — `editable` still omits
+  `media` / `heroOrder` / `priceTBA`.
+- `AdminReviews.js` (350): `MOCK_REVIEWERS` and the one-click name chips are **deleted** (fabricated social proof,
+  BRAND.md 3.9 rule 6); the free-text "Reviewer name" field is the only way to name a reviewer. Rows with `isSample: true`
+  wear an outlined **Sample** chip.
+- `AdminOrders.js` (962): the invoice header is `cld(brand.logoUrl,{w:400})` → `brand.name` → `brand.legalName` → the
+  store address when it resolves → `GSTIN {n}` only when `brand.legal.gstin` is not a placeholder; the store-name fallback
+  is `brand.name` (was "My E-Commerce Store"). The print stylesheet keeps neutral ink-on-paper colours by design.
+- `AdminShipping.js`: the new-method form opens with a BLANK carrier and a blank SLA (both were invented defaults —
+  "Shiprocket" and "5-7"); the carrier placeholder is "e.g. Delhivery, Blue Dart, India Post" and the table prints "—"
+  for either when unset. The Shiprocket integration card is unchanged.
+- `AdminSettings.js`: the third tab, its pointer card and its button read **"Home & Hero"**.
+- `src/App.css`: `body.admin-area` ground is `#0b0b0d`, scrollbars `rgba(255,255,255,.04)` / `#2a2a30` / `#3a3a42`, and
+  the SweetAlert2 admin skin is the LAMIKAA palette (gold confirm on `#0b0b0d` ink — pinned as
+  `--swal2-confirm-button-color` so a per-call destructive background still reads — white-8 % cancel, gold focus ring and
+  timer, Manrope). CSS cannot read `adminTheme.js`, so the block re-states those values and names the file to keep in step.
+
+**Updated by Prompt 33 — the product form edits the whole schema and images are a media manager.** The Prompt 32 notes
+above describe the TABLE; the FORM they hand to Prompt 33 no longer exists. What is true now:
+
+- `AdminProducts.js` (603 → 683) keeps the table, the search, the category select, `slugify`, `clampNum`,
+  `makeUniqueSlug` and the variant helpers, and hands the whole dialog body to
+  **`src/pages/Admin/components/ProductFormSections.js`**. It also loads `admin.getConcerns()` alongside products and
+  categories, and adds three AND-ing filter chips — **Hero** (`Number.isFinite(heroOrder)`), **Price on launch**
+  (`priceTBA`), **Drafts** (`isActive === false`) — plus a **New** flag chip in the Flags column. The dialog is
+  `fullScreen` below `sm`.
+- `emptyProduct` now carries all 50 keys of `PRODUCTS.md` §6: `shortName`, `categoryIds[]`, `concerns[]`,
+  `ritualStep{order,label,frequency}`, `heroHeadline`, `heroSubtext`, `heroOrder`, `promise`, `benefits[]`,
+  `keyIngredients[{name,benefit}]`, `howToUse[]`, `ingredientsList`, `packClaims[]`, `fragranceNote`, `caution`,
+  `suitableFor[]`, `size`, `priceTBA`, `priceSource`, `currency`, `badges[]` (`brand.trustBadges`), `media[]`,
+  `faqs[{q,a}]`, `isNew` — on top of every key it already had. `openEdit` maps the record through **`normalizeProduct`
+  first**, so an images-only row still reaches the manager.
+- **New components under `src/pages/Admin/components/`** (the admin's first component folder):
+  - `MediaManager.js` — `{ value, onChange, productName, errors }`. Two ordered lists (image links, video links) over
+    ONE `media[]`; every commit re-emits `[...images, ...videos]`. 64px previews, `<video preload="metadata">` as the
+    only reachability check, a Cloudinary-gated "Advanced: stage crop" (`{x,y,w,h}`) disclosure, a "Placeholder" chip,
+    a `Radio` primary, native HTML5 drag by the 24px handle (list encoded as `application/x-lamikaa-media-<list>` so
+    `dragover` can refuse a cross-list drop; source index in `text/plain`), up/down buttons with focus restoration, and
+    a `N images · N videos · primary: #N` summary. No drag library, no upload, no colour of its own.
+  - `ListEditor.js` — an ordered list of one-line strings (`ordered` numbers the rows, `action` takes the badges'
+    "Reset to brand defaults").
+  - `KeyValueListEditor.js` — an ordered list of two-field rows; `keyField`/`valueField` name the record's keys and
+    have no defaults.
+  - `ProductFormSections.js` — ten MUI `Accordion`s (Basic · Story · Pricing · Inventory & shipping · Details · FAQs ·
+    Media · Variants · Visibility & flags · SEO), first open, counts in the headers, and `ERROR_SECTIONS` opens any
+    section holding a save error.
+- **`src/utils/product.js` gains `validateMedia(media)` → `{ ok, errors: {rowIndex: msg}, message }`** (≥1 image,
+  exactly one primary, http(s) URLs, no duplicate URLs, valid video posters). `message` carries the two LIST-level
+  rules. Exported named and on the default object; 8 cases in `product.test.js`.
+- `handleSave` validation is now: name · unique slug · `priceTBA || price > 0 || variants.length` ·
+  `validateMedia().ok` · `categoryIds ⊇ categoryId` · `heroOrder` unique across the loaded list ("Hero position N is
+  already used by {name}") · variant names. Video posters default to the primary image at save; a `ritualStep` with no
+  label and no frequency is stored as `null` (`CrossSell` sorts by `ritualStep.order`); `priceSource` is stored as
+  `null`, not `""`, when blank. The payload omits `images` — `syncProductMedia()` derives it here and again in the api
+  layer.
+- **`src/services/api.js` is UNCHANGED.** `admin.createProduct/updateProduct` already ran `syncProductMedia()` in both
+  modes (Prompt 07) and pass the rest of the payload through untouched, which is what lets all 25 new keys reach
+  json-server and the Laravel branch without this layer knowing about them. One consequence, verified: a seeded product
+  opened and saved unchanged gains the derived **`image`** mirror (db.json was seeded without it) alongside the new
+  `updatedAt`; every other field is byte-identical.
+- Both MUI `Select`s on the screen now pass `labelId` (the visible `<InputLabel>` alone left them unnamed).
+
+**Updated by Prompt 34 — every new collection is editable and the temporary scaffolding is gone.** The admin now has
+**19 screens** (15 before) and the nav has two new sections' worth of entries. What is true now:
+
+- **`AdminHeroSection.js` (1642 → 1165) is rewritten.** Two tabs, no dialog:
+  - **Hero products** — `admin.getProducts()` filtered to `heroOrder != null`, sorted by it. Each row: order controls,
+    a `stageSrc(product,{w:200,ar:"1:1"})` thumbnail, name + SKU, a **"no image — slide skipped"** warning chip
+    (`HeroCarousel` skips a slide with no primary image, so this list would otherwise over-report the carousel), a
+    **"draft"** chip, and an "Edit copy" disclosure holding inline `heroHeadline` / `heroSubtext` with per-row dirty
+    tracking, Save and Revert. Adding is an `Autocomplete` over the rest of the catalogue.
+    **Add, move and remove all write through ONE `admin.setHeroOrder(ids)` call** — its contract renumbers from 1 and
+    clears `heroOrder` on everything left out, so no path can strand a position. Copy saves per row with
+    `admin.updateProduct(id, {...product, heroHeadline, heroSubtext})` (the mock PUT replaces the record).
+  - **Section settings** — the ten `heroConfig` keys (`enabled`, `autoplay`, `intervalMs` as a 3–15 s input,
+    `transition`, `pauseOnHover`, `showControls`, `showCounter`, `showProgress`, `showArrows`, `showPause`).
+  - A sticky **live preview** renders the slide the way the home page composes it (label crop, eyebrow
+    `Black Rice Ritual · 01 / 08`, headline, price or a "Price on launch" chip, subtext, badges, both CTAs) and previews
+    the DRAFT, not the saved record. The two copy fallbacks (`heroHeadline || promise`, `heroSubtext || shortDescription`)
+    are restated locally rather than imported — `components/home/HeroCarousel` exports the originals and is the source of
+    truth, but importing a page component would pull its CSS module and six primitives into the admin chunk.
+  - The temporary announcements tab and its `rowToSlide`/`slideToRow` adapters are **deleted**.
+- **`AdminAnnouncements.js` (new, `/admin/announcements`)** — table + full-screen-on-mobile editor: `text`, `link`,
+  `isActive`, `startsAt`/`endsAt` as `datetime-local` (local wall clock in the input, ISO in the record), up/down
+  reorder through `reorderAnnouncements`. A **status** column distinguishes On the bar / Scheduled / Expired / Hidden /
+  Off, a placeholder chip names the token (`placeholderToken`), a second chip catches braces that are NOT a valid
+  `{{UPPER_SNAKE}}` token (those would print raw), and a **live strip** shows exactly the rows on the bar right now.
+- **`AdminRituals.js` (new, `/admin/rituals`)** — table (image, name, tagline, steps count, slug, active, order) +
+  editor: name, auto-slug on create only, tagline, `story` through the shared `MarkdownField`, image URL + preview,
+  duration, `isActive`, and a **steps editor** (product `Autocomplete`, optional `alternativeProductId`, note,
+  frequency, up/down/remove). `order` is written from the ROW POSITION on save, never from a field; a step with no
+  product is dropped after a confirmation; `alternativeProductId` is omitted rather than written as `null`. Reorder
+  through `reorderRituals`. A screen-level warning counts steps naming a product no longer in the catalogue.
+- **`AdminConcerns.js` (new, `/admin/concerns`)** — name / slug / order. Products point at a concern **by slug**, so:
+  renaming is safe, changing a slug warns with the count it would orphan, and **deleting is refused while any product
+  names it** (client check over `admin.getProducts()`, mirroring the category rule — concerns have no server guard).
+  A screen-level warning lists slugs products name that no row defines.
+- **`AdminContent.js` (new, `/admin/content`)** — a keyed editor over `admin.getSiteContent()`. A 12-entry rail
+  (Pages: about · whyLamikaa · impact · contact · faqPage; Home page: the three `home.*` bands; Policies: the four
+  `policies.*`), each marked when it has unsaved edits. **The form is generated from the block's shape**, not written
+  per section: `body`/`text`/`story`/`intro` → `MarkdownField` (textarea + a real `<ContentBlocks>` preview);
+  `*image*` keys → field + thumbnail; `lede`/`description`/`tagline`/`hoursNote` → multiline; other strings →
+  `TextField`; `string[]` → Prompt 33's `ListEditor`; `object[]` → repeatable sub-forms rendered by the same rules one
+  level down; anything else is shown read-only rather than dropped on save. A sub-block saves `{ [sub]: block }` into
+  its parent key and `updateSiteContent` merges, so siblings survive. **The dividend guardrail** (BRAND.md §3.9 rule 2)
+  raises a persistent `Alert` AND a confirmation on save whenever a block mentions a dividend with no qualifier left in
+  it — see the PROGRESS decision for which wordings count and why.
+- **`src/pages/Admin/components/MarkdownField.js` (new)** — the shared markdown-lite textarea + `<ContentBlocks>`
+  preview, plus `ContentHelp` (the whole block grammar and the twelve placeholder tokens, including PLACEHOLDERS.md's
+  rule about where a token may sit). Used by Content and Rituals; lives beside Prompt 33's `ListEditor` /
+  `KeyValueListEditor` so no page imports another page.
+- **`AdminCategories.js`** gains `displayName`, `heroImage` and `kind` (`products` | `rituals`) in the form (both images
+  with previews), a **Lists** and a **Products** column, "Shown as …" under a name that differs from its display name,
+  a full-screen-on-mobile dialog, and `aria-label`s on its two icon-only row actions. **Its delete rule counts
+  `categoryIds[]` membership, not only `categoryId`** — and names the blocking products before the destructive confirm.
+- **`AdminFaqs.js`** gains a **group** `Select` built from `siteContent.faqPage.groups` + `DEFAULT_FAQ_GROUP`
+  ("General (unfiled)"), a group chip per row, and a heading filter that gates reordering the way the search already
+  does. A row filed under a heading since renamed keeps its value as an option and is chipped "no such heading".
+  `utils/faqs.js` placement labels are renamed: `help` → **"FAQ page (/faq)"**, `home` → **"Home FAQ block"**
+  (the stored VALUES are unchanged).
+- **`AdminDashboard.js`** gains a content-stats row — **Hero products · Rituals · Announcements live · Price on
+  launch** — each tile linking to the screen that owns the number and each read with `?? 0`, and the **Edit Home Hero**
+  / **Manage Content** quick actions.
+- **`AdminSettings.js`**'s third tab is **"Storefront"**: three pointer cards (Home & Hero / Announcements / Content)
+  with live summaries, replacing the single hero card. It no longer imports `normalizeHeroSlides` (deleted).
+- **`AdminLayout.js` nav**: Catalogue → Products, Categories, **Concerns**, **Rituals**, Reviews;
+  Storefront → Home & Hero, **Announcements**, **Content**, FAQs. `App.js` mounts the four new routes as relative
+  children of `/admin`; **Home & Hero keeps its historical `/admin/hero-section` path** (Settings and bookmarks point
+  at it).
+- **`src/utils/heroConfig.js` (415 → 140)**: **18 slide-store exports are deleted** (17 carried the `@deprecated` marker; `DEFAULT_HERO_EYEBROW` did not but had no consumer left either)
+  (`grep -n "@deprecated" → 0`), together with `overlayOpacity` / `heights` / `secondaryCta` / `openers` from
+  `normalizeHeroConfig` and the `slide` transition. What remains is what `HeroCarousel` reads: `HERO_TRANSITIONS`
+  (fade | none), `HERO_SOURCE_PRODUCTS`, `DEFAULT_HERO_CONFIG`, `HERO_INTERVAL_MIN/MAX_MS`, `clampInt` and
+  `normalizeHeroConfig`.
+- **`src/hooks/useSiteContent.js`** refetches on window focus and on a new `site-content:updated` event
+  (`notifySiteContentUpdated`, fired by Admin → Content) — the contract `FaqContext` and `StoreSettingsContext` already
+  had. A failed **refetch** keeps the words already on the page; only the first read may fall back to the empty state.
+- **`db.json` is unchanged by this prompt.** The only `api.js` changes are `getDashboardStats` (§3.4 #21) and the
+  `deleteCategory` guard (§3.3).
+
 ## 8. Contexts (`src/context/*`) — state, persistence, order
 
 Provider order in `App.js`: `ErrorBoundary > ThemeContextProvider > StoreSettingsProvider > AuthProvider > AdminProvider > WishlistProvider > CartProvider > OrderProvider > Router > (admin routes | StorefrontShell > DealsConfigProvider > FaqProvider)`.
@@ -1956,6 +2159,31 @@ Provider order in `App.js`: `ErrorBoundary > ThemeContextProvider > StoreSetting
 **Updated by Prompt 12.** `addMany(items, { openDrawer = true } = {})` is the multi-add helper the rituals and the cart tray's cross-sell share. Both add paths now fold an item in through one private reducer (`mergeLine`), so `addToCart` and `addMany` cannot drift on the line-key merge or the stock clamp. `addMany` normalises each entry in the order given inside ONE functional update, SKIPS any entry whose price is not committed (`isPriceKnown`, so a `priceTBA` product can never become a ₹0 line), fires exactly one toast ("3 items added to your cart", or "2 added · 1 coming soon" when it skipped some), opens the drawer at most once — and not at all when nothing was added — and returns `{ added, skipped }`. Covered by `src/context/CartContext.test.js`.
 
 Other storage keys: `localStorage.recentlyViewed` (PDP writes, Home reads, cap 20). `useSound` hook (unused) references `/assets/click-sound-1.wav` (file lives at `src/assets/`, so the path is wrong — dead code).
+
+**Updated by Prompt 35 — the complete storage inventory.** These are ALL the
+keys the app reads or writes. None is brand-named, so none needed migrating; the
+only key Prompt 35 checked for removal is `theme`, and it is write-only.
+
+| Key | Store | Written by | Read by | Holds |
+|---|---|---|---|---|
+| `user` | session, or **local** with "Remember me" | `utils/authStorage.js` (AuthContext) | AuthContext, `api.js` | the signed-in customer |
+| `token` | session, or **local** with "Remember me" | `utils/authStorage.js` | `api.js` request interceptor | the customer bearer token |
+| `admin` | **session only** | AdminContext | AdminContext | the signed-in admin |
+| `adminToken` | **session only** | AdminContext | `api.js` (admin calls) | the admin bearer token |
+| `cart` | local | CartContext | CartContext | guest + pre-sync cart lines |
+| `wishlist` | local | WishlistContext | WishlistContext | guest + pre-sync wishlist |
+| `recentlyViewed` | local | `ProductDetails.js` | `components/home/RecentlyViewed.js` | up to 20 product snapshots |
+| `lk-recent-searches` | **session** | `SearchModal.js` | `SearchModal.js` | up to 6 recent search terms |
+| `lk-announcement-dismissed` | **session** | `AnnouncementBar.js` | `AnnouncementBar.js` | `"1"` once the bar is dismissed |
+| ~~`theme`~~ | local | — | — | **removed on mount only.** `ThemeContext` calls `localStorage.removeItem("theme")` once as a migration for a returning visitor; nothing reads or writes it. There is one theme. |
+
+The seven user-data keys carry real state and were NOT renamed. The two `lk-`
+keys are sessionStorage on purpose: a search trail and a dismissal are the tab's
+business, not the device's — closing the tab is the clear.
+
+`src/hooks/useSound.js`, `src/assets/click-sound-1.wav` and the now-empty
+`src/assets/` are **deleted** (Prompt 35); the row above them is kept as the
+historical record.
 
 ## 9. Routing (`src/App.js`)
 
@@ -1999,10 +2227,15 @@ Storefront routes live inside `StorefrontShell` (`DealsConfigProvider` →
 | `/_playground` | `pages/_Playground/Playground` — TEMPORARY | 35 deletes |
 | `*` | `pages/NotFound/NotFound` — a real 404, `noindex` | — |
 
-Admin routes are **unchanged**: `/admin` (`AdminLogin`, index) and `/admin/*`
-under `AdminLayout` — `dashboard, products, categories, orders, returns,
-payments, users, shipping, coupons, special-offers, hero-section, faqs, reviews,
-leads, settings`.
+Admin routes: `/admin` (`AdminLogin`, index) and `/admin/*` under
+`AdminLayout` — `dashboard, products, categories, `**`concerns`**`, `**`rituals`**`,
+orders, returns, payments, users, shipping, coupons, special-offers,
+hero-section, `**`announcements`**`, `**`content`**`, faqs, reviews, leads,
+settings`. The four bold ones are **added by Prompt 34** (relative children of
+`/admin`, so they mount at `/admin/concerns`, `/admin/rituals`,
+`/admin/announcements` and `/admin/content`); everything else is unchanged, and
+Home & Hero keeps its historical `hero-section` path even though the screen was
+rebuilt — Settings and any bookmark point at it.
 
 ### 9.2 Legacy redirects (`src/components/routing/LegacyRedirects.js`)
 
@@ -2015,13 +2248,21 @@ rejects a wrapper component there). All redirects `replace`.
 | `/products` | `/shop` |
 | `/products?search=<q>` | `/search?q=<q>` (wins over `?category=`) |
 | `/products?category=<slug>` | `/category/<slug>` |
-| `/products?category=muga-silk\|pat-silk\|eri-silk` | `/shop` (retired catalogue) |
 | `/products?sort=` `?highlight=` `?page=` … | dropped → `/shop` |
 | `/products/:slug` | `/product/:slug` |
 | `/help` | `/faq` |
 | `/support` | `/contact` |
 | `/privacy` `/terms` `/refund` `/cookies` | `/policies/privacy` `/policies/terms` `/policies/shipping-returns` `/policies/cookies` |
-| `/sarees`, `/collections`, `/collections/*` | `/shop` |
+| `/collections`, `/collections/*` | `/shop` |
+
+**Updated by Prompt 35.** `RETIRED_CATEGORY_SLUGS` (`muga-silk`, `pat-silk`,
+`eri-silk`) and the `/sarees` path are deleted: they named the previous
+catalogue, which is exactly what Prompt 35 sweeps out of the code. A slug from
+that catalogue is now simply a slug nobody has, and `/category/<slug>` already
+answers those with a real 404 (Prompt 24) — the same answer a typo gets. Keeping
+the list would have been a second, drifting copy of a catalogue this build does
+not carry. `/collections` and `/collections/*` stay: those paths name no brand
+and are still plausible inbound links.
 
 ### 9.3 Link builders
 

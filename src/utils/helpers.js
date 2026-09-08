@@ -173,7 +173,7 @@ export const buildCartItem = (product) => {
 };
 
 // Canonical storefront URL for a product — /product/<slug> (Prompt 08; the
-// Meghali-era /products/<slug> is redirected by components/routing/
+// pre-rebuild /products/<slug> is redirected by components/routing/
 // LegacyRedirects.js). Prefers the human-readable slug and falls back to the
 // numeric product id, which the product detail route still resolves (and then
 // redirects to the slug). Accepts a full product object or a cart/wishlist
@@ -186,8 +186,9 @@ export const productPath = (product) => {
 };
 
 // The merchandising flags a merchant sets by hand in
-// Admin → Products → Visibility & Flags. `featured` still owns the gold PREMIUM
-// ribbon, so the two that need a mark of their own are `trending` and `hot`.
+// Admin → Products → Visibility & Flags. `featured` orders the hero rail rather
+// than printing a mark, so the two that need a mark of their own are `trending`
+// and `hot`.
 // (It used to own a home-page grid as well; Prompt 22 removed that band — the
 // home page now shows the whole range in the owner's own hero order, so a
 // "featured" subset had nothing left to say there.)

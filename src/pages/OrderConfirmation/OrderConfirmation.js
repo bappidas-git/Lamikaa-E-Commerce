@@ -39,7 +39,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import confetti from "canvas-confetti";
 import apiService from "../../services/api";
-import { formatCurrency, formatDate, normalizeOrderAddress } from "../../utils/helpers";
+import {
+  formatCurrency,
+  formatDate,
+  normalizeOrderAddress,
+  onImageError,
+  PLACEHOLDER_IMG,
+} from "../../utils/helpers";
 import {
   Button,
   Chip,
@@ -420,9 +426,10 @@ const OrderConfirmation = () => {
                 <li key={index} className={styles.line}>
                   <span className={`sf-plate ${styles.thumb}`}>
                     <img
-                      src={item.image || "https://placehold.co/168x224?text=Item"}
+                      src={item.image || PLACEHOLDER_IMG}
                       alt={item.name || "Product"}
                       loading="lazy"
+                      onError={onImageError}
                     />
                   </span>
                   <div className={styles.lineBody}>

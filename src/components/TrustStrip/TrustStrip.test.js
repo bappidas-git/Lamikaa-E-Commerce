@@ -22,8 +22,10 @@ describe("trustPromises", () => {
     ]);
   });
 
-  it("carries no Meghali-era wording", () => {
-    const text = trustPromises().map((p) => p.label).join(" ");
-    expect(text).not.toMatch(/silk|handwoven|handloom/i);
+  it("invents no promise of its own", () => {
+    // Every label must be a string the owner wrote in brand.js. The component
+    // may reorder or decorate; it may not author a claim.
+    const owned = new Set([...brand.trustBadges, brand.originBadge]);
+    trustPromises().forEach((p) => expect(owned.has(p.label)).toBe(true));
   });
 });

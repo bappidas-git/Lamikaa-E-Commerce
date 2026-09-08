@@ -25,8 +25,10 @@ import {
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import apiService from "../../services/api";
-import { normalizeHeroConfig, normalizeHeroSlides } from "../../utils/heroConfig";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
+import { normalizeHeroConfig } from "../../utils/heroConfig";
 import { normalizeFaqs } from "../../utils/faqs";
+import { isPlaceholder } from "../../utils/placeholders";
 import { SUPPORTED_CURRENCIES } from "../../utils/storeSettings";
 import {
   SOCIAL_PLATFORMS,
@@ -87,9 +89,11 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categoryCount, setCategoryCount] = useState(null);
-  // Surfaced on the Hero Section tab so the pointer card can say what is
+  // Surfaced on the Storefront tab so each pointer card can say what is
   // currently live without an admin having to open the manager to find out.
   const [heroSummary, setHeroSummary] = useState(null);
+  const [announcementSummary, setAnnouncementSummary] = useState(null);
+  const [contentSummary, setContentSummary] = useState(null);
   // Same idea for the FAQs manager: how many answers are written, and how many
   // of them a shopper can currently read.
   const [faqSummary, setFaqSummary] = useState(null);
@@ -131,13 +135,18 @@ const AdminSettings = () => {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const [settings, cats, heroConfig, announcementRows, faqRows] = await Promise.all([
-        apiService.admin.getSettings(),
-        apiService.admin.getCategories().catch(() => []),
-        apiService.admin.getHeroConfig().catch(() => null),
-        apiService.admin.getAnnouncements().catch(() => []),
-        apiService.admin.getFaqs().catch(() => []),
-      ]);
+      const [settings, cats, heroConfig, heroProducts, announcementRows, faqRows, siteContent] =
+        await Promise.all([
+          apiService.admin.getSettings(),
+          apiService.admin.getCategories().catch(() => []),
+          apiService.admin.getHeroConfig().catch(() => null),
+          // The hero's slides ARE the products carrying a `heroOrder`, so the
+          // card counts those rather than any record of its own.
+          apiService.products.getHeroProducts().catch(() => []),
+          apiService.admin.getAnnouncements().catch(() => []),
+          apiService.admin.getFaqs().catch(() => []),
+          apiService.admin.getSiteContent().catch(() => ({})),
+        ]);
       const store = settings?.store || {};
       const payment = settings?.payment || {};
       setStoreForm({
@@ -167,14 +176,28 @@ const AdminSettings = () => {
         )
       );
       setCategoryCount(Array.isArray(cats) ? cats.length : 0);
-      // Temporary (Prompt 07 → Prompt 34): the Hero screen manages announcements
-      // until the hero product-ordering editor exists, so the summary counts
-      // those rows. normalizeHeroSlides only needs isActive/sortOrder here.
-      const slides = normalizeHeroSlides(announcementRows);
       setHeroSummary({
         enabled: normalizeHeroConfig(heroConfig).enabled,
-        total: slides.length,
-        live: slides.filter((s) => s.isActive).length,
+        products: Array.isArray(heroProducts) ? heroProducts.length : 0,
+      });
+      // The bar's own gate: switched on, inside its window, and printable — a
+      // row still carrying a `{{TOKEN}}` is hidden on the storefront.
+      const announcements = Array.isArray(announcementRows) ? announcementRows : [];
+      const now = Date.now();
+      setAnnouncementSummary({
+        total: announcements.length,
+        live: announcements.filter((row) => {
+          if (row.isActive === false) return false;
+          const starts = row.startsAt ? Date.parse(row.startsAt) : NaN;
+          const ends = row.endsAt ? Date.parse(row.endsAt) : NaN;
+          if (Number.isFinite(starts) && now < starts) return false;
+          if (Number.isFinite(ends) && now > ends) return false;
+          return typeof row.text === "string" && !isPlaceholder(row.text) && row.text.trim() !== "";
+        }).length,
+      });
+      setContentSummary({
+        sections:
+          siteContent && typeof siteContent === "object" ? Object.keys(siteContent).length : 0,
       });
       const answers = normalizeFaqs(faqRows);
       setFaqSummary({
@@ -363,7 +386,7 @@ const AdminSettings = () => {
         >
           <Tab icon={<Icon icon="mdi:cog" style={{ fontSize: 20 }} />} iconPosition="start" label="General" />
           <Tab icon={<Icon icon="mdi:folder-multiple" style={{ fontSize: 20 }} />} iconPosition="start" label="Categories" />
-          <Tab icon={<Icon icon="mdi:view-carousel-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="Hero Section" />
+          <Tab icon={<Icon icon="mdi:storefront-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="Storefront" />
           <Tab icon={<Icon icon="mdi:comment-question-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="FAQs" />
           <Tab icon={<Icon icon="mdi:share-variant" style={{ fontSize: 20 }} />} iconPosition="start" label="Social Links" />
         </Tabs>
@@ -548,7 +571,7 @@ const AdminSettings = () => {
                 bgcolor: "primary.main",
               }}
             >
-              <Icon icon="mdi:folder-multiple" style={{ fontSize: 32, color: "#fff" }} />
+              <Icon icon="mdi:folder-multiple" style={{ fontSize: 32, color: ADMIN_PALETTE.primary.contrastText }} />
             </Box>
             <Typography variant="h6" gutterBottom>
               Manage categories in one place
@@ -579,63 +602,148 @@ const AdminSettings = () => {
         </Paper>
       </TabPanel>
 
-      {/* Hero Section Tab — same reconciliation as Categories: one canonical
-          manager lives at /admin/hero-section, and Settings points at it. */}
+      {/* Storefront Tab — the same reconciliation as Categories, three times
+          over: each of these has ONE canonical manager, and Settings only points
+          at it. Prompt 34 split the old single "Home & Hero" card in three, once
+          the announcements and the site content grew screens of their own. */}
       <TabPanel value={activeTab} index={2}>
-        <Paper sx={{ p: { xs: 3, sm: 5 }, border: "1px solid", borderColor: "divider" }} elevation={0}>
-          <Box sx={{ maxWidth: 560, mx: "auto", textAlign: "center" }}>
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                mx: "auto",
-                mb: 2,
-                borderRadius: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: "primary.main",
-              }}
-            >
-              <Icon icon="mdi:view-carousel-outline" style={{ fontSize: 32, color: "#fff" }} />
-            </Box>
-            <Typography variant="h6" gutterBottom>
-              Manage the home page hero
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 2 }}>
-              Every behaviour of the opening band lives in the dedicated{" "}
-              <strong>Hero Section</strong> manager — autoplay and its timer, the transition, the
-              visible controls and the stage height for desktop, tablet and mobile. The slides
-              themselves are the products carrying a hero position. The same screen currently
-              manages the announcement bar above the masthead.
-            </Typography>
-            {heroSummary && (
-              <Box sx={{ display: "flex", gap: 1, justifyContent: "center", flexWrap: "wrap", mb: 3 }}>
-                <Chip
-                  icon={<Icon icon={heroSummary.enabled ? "mdi:eye-outline" : "mdi:eye-off-outline"} />}
-                  color={heroSummary.enabled ? "success" : "warning"}
-                  label={heroSummary.enabled ? "Hero is showing" : "Hero is switched off"}
-                />
-                <Chip
-                  icon={<Icon icon="mdi:bullhorn-outline" />}
-                  label={`${heroSummary.live} live of ${heroSummary.total} ${
-                    heroSummary.total === 1 ? "announcement" : "announcements"
-                  }`}
-                />
-              </Box>
-            )}
-            <Box>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<Icon icon="mdi:image-edit-outline" />}
-                onClick={() => navigate("/admin/hero-section")}
+        <Grid container spacing={3}>
+          {[
+            {
+              icon: "mdi:view-carousel-outline",
+              title: "Home & Hero",
+              blurb:
+                "The opening band of the home page — which products open it, in what order, the two lines each of them prints, and how the carousel behaves.",
+              buttonIcon: "mdi:image-edit-outline",
+              buttonLabel: "Open Home & Hero",
+              path: "/admin/hero-section",
+              chips: heroSummary
+                ? [
+                    {
+                      icon: heroSummary.enabled ? "mdi:eye-outline" : "mdi:eye-off-outline",
+                      color: heroSummary.enabled ? "success" : "warning",
+                      label: heroSummary.enabled ? "Hero is showing" : "Hero is switched off",
+                    },
+                    {
+                      icon: "mdi:package-variant",
+                      color: heroSummary.products > 0 ? "default" : "warning",
+                      label: `${heroSummary.products} hero ${
+                        heroSummary.products === 1 ? "product" : "products"
+                      }`,
+                    },
+                  ]
+                : [],
+            },
+            {
+              icon: "mdi:bullhorn-outline",
+              title: "Announcements",
+              blurb:
+                "The rotating line above the masthead — its wording, its link, its schedule and the order the lines are read in.",
+              buttonIcon: "mdi:bullhorn-outline",
+              buttonLabel: "Open Announcements",
+              path: "/admin/announcements",
+              chips: announcementSummary
+                ? [
+                    {
+                      icon: announcementSummary.live > 0 ? "mdi:broadcast" : "mdi:eye-off-outline",
+                      color: announcementSummary.live > 0 ? "success" : "warning",
+                      label: `${announcementSummary.live} on the bar of ${announcementSummary.total}`,
+                    },
+                  ]
+                : [],
+            },
+            {
+              icon: "mdi:text-box-edit-outline",
+              title: "Content",
+              blurb:
+                "The editorial copy behind About, Why LAMIKAA, Contact, the four policies, the FAQ page's headings and the home page's own sections.",
+              buttonIcon: "mdi:text-box-edit-outline",
+              buttonLabel: "Open Content",
+              path: "/admin/content",
+              chips: contentSummary
+                ? [
+                    {
+                      icon: "mdi:file-document-multiple-outline",
+                      color: "default",
+                      label: `${contentSummary.sections} content ${
+                        contentSummary.sections === 1 ? "section" : "sections"
+                      }`,
+                    },
+                  ]
+                : [],
+            },
+          ].map((card) => (
+            <Grid item xs={12} md={4} key={card.title}>
+              <Paper
+                sx={{
+                  p: { xs: 3, sm: 4 },
+                  height: "100%",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+                elevation={0}
               >
-                Open Hero Section Manager
-              </Button>
-            </Box>
-          </Box>
-        </Paper>
+                <Box sx={{ textAlign: "center", flex: 1 }}>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      mx: "auto",
+                      mb: 2,
+                      borderRadius: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: "primary.main",
+                    }}
+                  >
+                    <Icon
+                      icon={card.icon}
+                      style={{ fontSize: 28, color: ADMIN_PALETTE.primary.contrastText }}
+                    />
+                  </Box>
+                  <Typography variant="h6" gutterBottom>
+                    {card.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {card.blurb}
+                  </Typography>
+                  {card.chips.length > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                        mb: 3,
+                      }}
+                    >
+                      {card.chips.map((chip) => (
+                        <Chip
+                          key={chip.label}
+                          size="small"
+                          icon={<Icon icon={chip.icon} />}
+                          color={chip.color}
+                          label={chip.label}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+                <Button
+                  variant="contained"
+                  startIcon={<Icon icon={card.buttonIcon} />}
+                  onClick={() => navigate(card.path)}
+                  fullWidth
+                >
+                  {card.buttonLabel}
+                </Button>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
       </TabPanel>
 
       {/* FAQs Tab — the same reconciliation again: the answers live in one
@@ -656,7 +764,7 @@ const AdminSettings = () => {
                 bgcolor: "primary.main",
               }}
             >
-              <Icon icon="mdi:comment-question-outline" style={{ fontSize: 32, color: "#fff" }} />
+              <Icon icon="mdi:comment-question-outline" style={{ fontSize: 32, color: ADMIN_PALETTE.primary.contrastText }} />
             </Box>
             <Typography variant="h6" gutterBottom>
               Manage the answered questions
@@ -664,7 +772,7 @@ const AdminSettings = () => {
             <Typography color="text.secondary" sx={{ mb: 2 }}>
               Every FAQ on the storefront lives in the dedicated <strong>FAQs</strong> manager — the
               question and its answer, the order they are read in, whether each one appears in the
-              FAQs tab of a product page, in the Help Centre or in the shared FAQ block, and which
+              FAQs tab of a product page, on the FAQ page at /faq or in the home FAQ block, and which
               products it is written for.
             </Typography>
             {faqSummary && (
@@ -697,7 +805,7 @@ const AdminSettings = () => {
       </TabPanel>
 
 
-      {/* Social Links Tab — unlike Categories / Hero / FAQs this one is edited
+      {/* Social Links Tab — unlike Categories / Storefront / FAQs this one is edited
           in place: it is five URLs on the same settings record the General tab
           writes, not a collection that needs a manager of its own. Its own Save
           button writes only the `social` section, so moving an Instagram handle
@@ -849,9 +957,9 @@ const AdminSettings = () => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 borderRadius: 1,
-                                color: "grey.400",
+                                color: "text.secondary",
                                 transition: "color .2s",
-                                "&:hover": { color: "common.white" },
+                                "&:hover": { color: "text.primary" },
                               }}
                             >
                               <svg

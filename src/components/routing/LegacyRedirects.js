@@ -3,16 +3,16 @@ import { Navigate, Route, useParams, useSearchParams } from "react-router-dom";
 import { ROUTES } from "../../utils/constants";
 
 // =============================================================================
-// LegacyRedirects — every Meghali-era URL, pointed at its LAMIKAA home
+// LegacyRedirects — every pre-rebuild URL, pointed at its LAMIKAA home
 // =============================================================================
 //
 // The rebuild moves the whole information architecture (Prompt 08): /products
 // becomes /shop, a category stops being a query param and becomes a path, the
-// four policy pages move under /policies/*, and the Meghali collection URLs
-// (/sarees, /collections/*) stop existing. Links to the old URLs live in the
-// wild — bookmarks, order emails, whatever a search engine has already indexed
-// — so none of them may 404, and none may land on the homepage either: a
-// redirect that loses the visitor's intent is a 404 with better manners.
+// four policy pages move under /policies/*, and /collections stops existing.
+// Links to the old URLs live in the wild — bookmarks, order emails, whatever a
+// search engine has already indexed — so none of them may 404, and none may
+// land on the homepage either: a redirect that loses the visitor's intent is a
+// 404 with better manners.
 //
 // This module is the ONLY place an old path is written down. That is what makes
 // the sweep verifiable: `grep -rn '"/(products|help|support|privacy|terms|
@@ -41,19 +41,11 @@ export const LEGACY_PATH_REDIRECTS = [
   { from: "/terms", to: ROUTES.POLICY_TERMS },
   { from: "/refund", to: ROUTES.POLICY_SHIPPING_RETURNS },
   { from: "/cookies", to: ROUTES.POLICY_COOKIES },
-  // Meghali's Silk collection URLs. The catalogue they described does not
-  // exist any more, so the honest destination is the shop, not a category.
-  { from: "/sarees", to: ROUTES.SHOP },
+  // The old merchandising URLs. The catalogue they described does not exist
+  // any more, so the honest destination is the shop, not a category.
   { from: "/collections", to: ROUTES.SHOP },
   { from: "/collections/*", to: ROUTES.SHOP },
 ];
-
-/**
- * Legacy `?category=` slugs from the Meghali catalogue. They resolve to nothing
- * in the LAMIKAA seed, so they go to the shop rather than to /category/<slug>,
- * which would render an empty listing for a category that no longer exists.
- */
-export const RETIRED_CATEGORY_SLUGS = ["muga-silk", "pat-silk", "eri-silk"];
 
 /**
  * Where a legacy `/products?…` URL should land.
@@ -63,13 +55,17 @@ export const RETIRED_CATEGORY_SLUGS = ["muga-silk", "pat-silk", "eri-silk"];
  *
  *   ?search=<q>          → /search?q=<q>        (the search results page)
  *   ?category=<slug>     → /category/<slug>     (a category page)
- *   ?category=<retired>  → /shop                (Meghali's collections)
  *   ?highlight= ?sort=   → dropped              (the new shop has no sort or
  *                                                merchandising facets — §7.3)
  *   anything else        → /shop
  *
  * `?search=` wins over `?category=`: someone who typed a query was looking for
  * the query, and the search page can show the category among its results.
+ *
+ * A slug from the retired catalogue is not special-cased here. It is simply a
+ * slug nobody has, and /category/<slug> already answers those with a real 404
+ * (Prompt 24) — the same answer a typo gets. Enumerating the dead slugs would
+ * be a second, drifting copy of a catalogue this build does not carry.
  */
 export const useLegacyQueryRedirect = () => {
   const [searchParams] = useSearchParams();
@@ -80,7 +76,7 @@ export const useLegacyQueryRedirect = () => {
   // The old param accepted a comma-separated list; only a single category can
   // become a path, so a multi-select deep link falls back to the shop.
   const category = (searchParams.get("category") || "").trim();
-  if (category && !category.includes(",") && !RETIRED_CATEGORY_SLUGS.includes(category)) {
+  if (category && !category.includes(",")) {
     return `/category/${encodeURIComponent(category)}`;
   }
 

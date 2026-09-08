@@ -48,7 +48,7 @@ export const PALETTE = {
   },
   // Gradients. `primary` fills contained buttons and stays gold (a near-black
   // label needs a light ground); `hero` mirrors --sf-gradient-brand, the deep
-  // wash behind the hero and the heritage bands.
+  // wash behind the hero and the full-bleed bands.
   gradient: {
     primary: "linear-gradient(135deg, #FFEFA6 0%, #F5D76E 50%, #B88924 100%)",
     primaryReverse:
