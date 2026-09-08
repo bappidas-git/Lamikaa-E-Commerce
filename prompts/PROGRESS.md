@@ -26,7 +26,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 20 | Why LAMIKAA section (pillars and impact) | complete | 2026-09-07 | (this commit) | The band that says what the brand stands on, built as two components the Why LAMIKAA page (Prompt 28) mounts unchanged. **`brand/Pillars`** is BRAND.md §3.2's four pillars as one `<ul role="list">` of four `GlassCard as={motion.li}` — a 44px glass circle carrying a 24px gold glyph (`mdi:leaf`, `mdi:flask-outline`, `mdi:account-group-outline`, `mdi:earth`, resolved by KEY with a positional fallback so a renamed key cannot silently swap two icons), a `Chip variant="step"` numeral 01–04, the title in Fraunces 22px and the sentence in Manrope 15px secondary — **every word of it from `brand.pillars`, none of it typed in the component**. 4 columns ≥1025px / 2 at 769–1024 / 1 stacked ≤768, 16px gaps, measured at all seven widths. **The cards are deliberately NOT `interactive`**: a card that lifts 4px and shows a focus ring promises a destination it does not have, so the alternating gold/violet tone glow is faded in by a hover rule of the module's own (`:global(.sf-glow)` held at 0 → 1) and the grid stays keyboard-transparent — **measured: one tab stop in the whole section, the CTA, and `transform: none` on every card at every hover**. **`brand/ImpactTriptych`** is `siteContent.impact.items` as three columns under a 60% signature-gradient hairline: the eyebrow DERIVED from the key (Financial / Social / Environmental), the title with that category prefix taken off — but only when a dash follows it, so "Financially Sustainable" keeps its first word — and the three points at 15px behind 18px gold bullets. **A bullet, not a tick**: these are aims, and a check mark in front of "Farmers can benefit from the profitability of their own enterprise" reads as a claim that it has already happened. Points render **verbatim** — no truncation, no summarising — which is what preserves the BRAND.md §3.9 qualifiers; asserted in the suite and re-checked against the seed (0 dividend mentions without "can reach the member farmers through dividends"). `showImages` false here, true on the page. **`home/WhyLamikaaSection`** fetches `siteContent.get("impact")` and composes the two: `brand.philosophy` as the h2 over the new `brand.philosophyLede` (BRAND.md §3.2's first sentence), the pillars, a second heading row, the triptych and `Button variant="secondary"` → `/why-lamikaa`. **The two halves fail separately** — the pillars come from a module the bundle always has and always render; a missing, unpublished or unreachable impact block takes its own heading with it rather than standing over an empty space (exercised for real: the first QA run reached the live host and the section rendered philosophy + 4 cards + CTA, nothing invented). **One defect the test found and reading did not:** `impactColumns` filtered rows before normalising them, so a row carrying three blank strings passed a `points.length` check and rendered as an empty column; the filter now runs after. Outline verified in the browser: 1 page `h1`, this section's `h2` at 52px, 4 pillar `h3` at 22px, the impact `h3` at 40px, 3 column `h4` at 20px, 4 `role="list"` lists, 0 nested landmarks. Contrast on the page ground 18.05 / 13.88 / 9.62:1 and on the card ground 15.95 / 12.27 / 8.5:1. Under `prefers-reduced-motion` framer-motion attaches **no style attribute at all** and 0 animations run. `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` 14 suites / **151 passed** (24 new). No `db.json` and no `api.js` change: reads only. See "Prompt 20 record" below. |
 | 21 | Home FAQs section and accordion | complete | 2026-09-07 | (this commit) | `components/FAQ/*` rewritten onto the `ui/Accordion` primitive and turned into a **props-driven** block (`faqs, limit, defaultOpen, multiple, id, headingLevel`), so the home band, `/faq` (28) and the PDP panel (27) can all mount one accordion; `home/HomeFaqs.js` is the band around it. `utils/faqs.js` gained `faqLimit()` and a `{ limit }` option on `faqsForPlacement` (applied AFTER the filters and the de-dupe); `FaqContext.forPlacement` passes the options through. `db.json` `faqs` rows 6–8 gained the `"home"` placement — **3 JSON values** — so the block carries the 6–8 rows the prompt asks for (the Prompt 06 seed had put `home` on rows 1–5 only). Browser QA at 360/390/768/1024/1025/1280: **8 rows at every width**, 0 horizontal overflow, no `{{TOKEN}}` anywhere on the page, two columns + sticky aside from exactly 1025px, question Manrope 600 17px over a 44px floor, 20px gold chevron, answer Manrope 16px secondary at 20px inset, open row wearing a 2px signature-gradient rule at 0.6, separators `rgba(255,255,255,.08)`. Deep link `/#faq-3` opens **and focuses** row 3; ↑/↓/Home/End walk the headers and wrap; Enter opens, Space closes; panel `transition-duration: 0s` under reduced motion. Admin → FAQs still lists all eight with the Shared/Help/Product vocabulary, and a `PATCH /faqs/1` reached the open storefront on the next focus refetch. `CI=true npm run build` exit 0 **Compiled successfully, 0 warnings**; `npm test -- --watchAll=false` **173 passed** (17 suites, 1 skipped), 22 of them new. See "Prompt 21 record" below. |
 | 22 | Home assembly, performance and SEO | complete | 2026-09-07 | (this commit) | The home page is assembled: **eleven sections in the brief's order**, `ShopByCategory` moved from under the trust strip to **after** the eight product chapters (brief §7.2 item 4), and every pre-rebuild section deleted — collection stories, featured grid, offers rail + countdown, craft interlude, trending rail, promises row — along with `components/FeaturedProducts/*` and `components/CTASection/*` (0 consumers) and the now-unused `TRUST_BADGES` alias in `constants.js` (`WHY_CHOOSE_US` **kept** — `pages/Support/Support.js:594` still maps over it). `Home.js` 742 → 279 lines, `Home.module.css` 779 → 105 (page rhythm only: ground, hero, trust edge, deferral). **One data load:** new `components/home/useHomeData.js` reads `products.getAll` · `getHeroProducts` · `categories` · `concerns` · `rituals` · `siteContent` **once each, in parallel**, and the nine sections take their slices as props — the naively assembled page issued **15 requests for 6 collections**, it now issues **6**. Tri-state slices (`undefined` = in flight, `null` = failed, value = loaded). **Nine lazy chunks** behind a `DeferredSection` (`useInView` + `rootMargin: 600px`, measured reserve heights, `content-visibility: auto` on the six sections that draw no glow). New `components/home/RecentlyViewed.{js,module.css,test.js}` ports the localStorage reconciliation and the `useRail`/ResizeObserver logic verbatim; threshold raised 1 → 2 (8 new tests). `organizationJsonLd()` + `websiteJsonLd()` added to `hooks/useSeo.js` — **schema.org validator: 0 errors, 0 warnings**. **Lighthouse mobile (production build, median of 3): Performance 68, Accessibility 100, Best Practices 100, SEO 100** — three of four targets met; Performance is **below the ≥85 target** and the cause is measured and recorded below. CLS 0.174 → **0.042**; Speed Index 20.7s → **3.2s**; total JS on `/` **253 kB gzipped** (≤350 budget ✓). `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (18 suites / 181 passed, 1 suite / 50 skipped). See the Prompt 22 record below.
-| 23 | Shop page — chaptered editorial listing | pending | | | |
+| 23 | Shop page — chaptered editorial listing | complete | 2026-09-08 | (this commit) | `/shop` is the chaptered listing: **eight full editorial chapters in hero order, no filter, no sort, no pagination, no sidebar** (brief §7.3 — the removal is an owner decision, recorded below). `pages/Products/*` (1 687 + 1 335 lines) is **deleted**; `pages/Shop/Shop.js` is 380. New: `catalogue/ChapterIndex.{js,module.css}` (a 220px sticky rail at ≥1025px, a sticky pill strip at ≤1024px) and `catalogue/BuildRitualPanel.{js,module.css}` (the closing `GlassCard strong glow="duo"`), plus `utils/seo.js` with `itemListJsonLd`. `ProductChapter` gained `variant="shop"` proper — 88svh floor on the split screen, no floor on a phone, `scroll-margin-top: 96px`, `data-slug`, a focusable `h2` and an `onVisible(index)` IntersectionObserver at threshold 0.5. **`/category/:slug` now routes to `<Shop mode="category" />`**, which is what kept the category listing alive when `Products` went (Prompt 24 adds its head, breadcrumb and 404). `utils/categories.js` lost `getCategoryScopeIds` and `orderCategoriesHierarchically`; `utils/helpers.js` lost `getDeviceType`; `getDescendantIds` stays for the admin. **Scroll-snap was KEPT** after measurement (see the decisions log). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (19 suites / 197 passed, 1 suite / 50 skipped — 16 of the passing tests are new, `ChapterIndex.test.js`). Browser QA in Chromium 1194 at 360/390/414/768/1024/1280/1440 + reduced motion: **no horizontal scroll at any width, zero page errors**. See the Prompt 23 record below. |
 | 24 | Category pages and rituals pages | pending | | | |
 | 25 | PDP — layout, chapters, purchase panel, mobile bar | pending | | | |
 | 26 | PDP — media gallery with images and videos | pending | | | |
@@ -296,6 +296,19 @@ Record every decision a prompt had to make that the reference files did not sett
 - `22 · 2026-09-07 · A `preconnect` to res.cloudinary.com was added to `public/index.html` · The LCP element on `/` is the hero's first product image, and because the hero is product-driven its URL is not known until the catalogue read returns — so it cannot be preloaded and a cold DNS+TCP+TLS handshake lands on the critical path at the worst moment. Measured FCP 3.2 s → 2.6 s. No `crossorigin`: these are no-CORS `<img>` loads and a crossorigin preconnect opens a connection they cannot reuse.
 - `22 · 2026-09-07 · `components/AdminLayout/AdminLayout` was made lazy in `App.js` — outside this prompt's expected-files list · Source-map analysis of the main bundle showed **~630 kB (uncompressed) of `@mui/*` plus the admin shell in the chunk every STOREFRONT visitor downloads**, for a layout only a signed-in administrator ever sees. It was the last eager import on the admin side; every admin PAGE was already lazy, and it is a layout route inside the same `<Suspense fallback={<RouteFallback/>}>` as the pages it wraps. Main bundle 285 → 249 kB gzipped. Verified afterwards by signing in and walking `/admin/dashboard`, `/admin/products`, `/admin/orders`, `/admin/settings`: drawer, app bar and navigation all present, **zero console errors**.
 
+- `23 · 2026-09-08 · THE FILTERS, SORT AND PAGINATION ARE REMOVED — an explicit owner decision (brief §7.3), not a simplification made here · The deleted `pages/Products/Products.js` carried a category tree with parent-includes-children, a price range, rating/discount/in-stock/brand facets, six sort orders with twelve aliases, and `page`/`per_page` — over EIGHT products. `/shop` narrows by ROUTE only (`?concern=` and `/category/<slug>`), and search stays where it was: the overlay and `/search` (Prompt 11). Every one of those URL params still resolves: `components/routing/LegacyRedirects.js` sends `/products?category=x` to `/category/x` and `/products?search=x` to `/search?q=x`, verified in the browser.`
+- `23 · 2026-09-08 · SCROLL-SNAP WAS KEPT, not dropped · The prompt makes it optional and asks for it to be dropped if it fights the sticky rail. Measured in Chromium 1194 at 1280 and 1440: with `scroll-snap-type: y proximity` on `<html>`, the rail still pins at exactly `top: 112px` through the whole listing, a rail click still lands the chapter at 96px (its `scroll-margin-top`) and still moves focus to the chapter `h2`, and "Back to top" still reaches `y: 0`. The decisive probe is mid-chapter: stopping half way down chapter 4 settles at **delta 0** — the visitor is never moved away from where they stopped. Near a boundary the settle is ≤ ~165px and always ONTO a chapter start, which is the chaptered feel the page is for. It is scoped to a `data-chapter-snap` attribute the page sets on `<html>` while mounted (a document-scrolled page snaps on the document; there is no div to put it on), and it is off below 1025px and off under `prefers-reduced-motion` — both verified as computed `scroll-snap-type: none`.`
+- `23 · 2026-09-08 · `/category/:slug` was moved onto `<Shop mode="category" />` HERE, one prompt earlier than the file list expects · Prompt 08's `CategoryRoute` bridge rendered `<Products categorySlug={slug} />`, and this prompt deletes `Products`. Leaving the route on a `ComingSoon` stub would have removed working storefront functionality for a whole prompt (and would have broken Prompt 24's own pre-flight, which expects exactly four `ComingSoon` routes: `/rituals`, `/rituals/:slug`, `/why-lamikaa`, `/cart`). `Shop` therefore reads `useParams().slug` and calls `products.getByCategorySlug`, giving the category its chapters, its index and its closing panel now. Verified: `/category/face-care` 6 chapters, `/category/body-care` 2, `/category/rituals` → `/rituals`. Prompt 24 adds `CategoryHead`, the breadcrumb, the JSON-LD and the unknown-slug 404 (today an unknown slug renders the empty panel).`
+- `23 · 2026-09-08 · `itemListJsonLd` opens a real `src/utils/seo.js`, rather than joining the two graphs in `hooks/useSeo.js` · Prompt 22 left `utils/seo.js` free "for Prompt 27's product graph" and `useSeo.js` says in its own header that page-level graphs belong there. `ItemList` is a page-level graph and Prompt 24 needs it too (plus `breadcrumbJsonLd`), so the file exists from today with one export and the site-level pair stays where Prompt 22 put it.`
+- `23 · 2026-09-08 · The index rail is written FIRST in the DOM and painted SECOND (`grid-column: 2`) · The first keyboard walk in Chromium put the rail after all sixteen chapter CTAs and the closing panel — an index a visitor reaches only at the end of the page it indexes is a footnote, not a shortcut. Mirroring the grid rather than the DOM is the rule `ProductChapter`'s `flip` already follows. After the change: chips → rail buttons → chapters, and Enter on a rail button lands focus on the chapter `h2` with the next Tab reaching that chapter's "Explore more".`
+- `23 · 2026-09-08 · `align-items: start` was REMOVED from the shop grid, and that is what makes the rail sticky at all · With `start`, the rail's grid item shrink-wraps to the rail's own 408px, and a `position: sticky` element whose containing block is its own height has nowhere to travel: measured, the rail scrolled away with the second chapter. Stretched, the item is as tall as the chapters column and the `<nav>` inside pins at 112px for the whole listing (measured at 1280 and 1440 across four scroll positions).`
+- `23 · 2026-09-08 · Both index forms are rendered and one is `display: none`, rather than one node moved by a media query · The rail belongs in the page's second grid column and the strip is a full-bleed band above the chapters — two places in the document, so they cannot be one element. `display: none` takes the hidden one out of the accessibility tree as well as off the screen, so the eight products are never offered twice. Verified in the browser: at 1440 the strip computes `display: none` and the rail `flex`; at 1024 and below, the reverse.`
+- `23 · 2026-09-08 · The mobile pill is 36px tall with a 44px hit area, not a 44px pill · The spec fixes both the pill (36px) and the band (48px at ≤768), which cannot both hold a 44px control. The pill keeps its 36px of ink and grows an inert `::after { inset: -4px 0 }` overlay to the full tap target — so the house 44px rule and the spec's band height are both satisfied, and WCAG 2.2 AA target size (24×24 minimum) has margin. Measured band height: 48px at ≤768, 52px at 769–1024.`
+- `23 · 2026-09-08 · The strip sits at `top: 56px` only at ≤768px; between 769 and 1024 it sits at 64px · The spec names 56px, which is the masthead's height at ≤768px. The masthead is 64px above that, so a fixed 56px would have tucked the band under it for the whole tablet band. Both offsets verified against the rendered header.`
+- `23 · 2026-09-08 · The empty state does NOT repeat the concern chips · The spec asks for "Nothing here yet + concern chips + All products". The chips are already the page's head, directly above the panel, so rendering them again would give a screen reader twenty-four links to twelve places. The panel carries the statement, one sentence and the "All products" button; the chips stay where they are.`
+- `23 · 2026-09-08 · `BuildRitualPanel` fetches the WHOLE catalogue itself instead of taking the listing's rows · `RitualCard` resolves each step against the products it is handed, so on `/shop?concern=hydration` the panel's own three products would have drawn a four-step routine with one thumbnail and three empty plates. Two parallel reads (`rituals.getAll`, `products.getAll`) inside the panel; any rejection or an empty ritual list and it renders nothing at all, the same rule `RitualsTeaser` follows.`
+- `23 · 2026-09-08 · `onVisible` fires only on the crossing INTO half-visibility, and the page's `activeIndex` is simply the last chapter to cross · Reporting the exit as well would make the rail flicker between two answers wherever two chapters are both ≥50% visible. Scrolling down, the arriving chapter crosses and becomes active; scrolling up, the one above does. Measured across four scroll positions at 1280 and 1440 and three at 390: the rail named the right chapter every time.`
+- `23 · 2026-09-08 · `resolveCategory` and `categoryParam` were KEPT although the listing was their last storefront caller · The prompt names two helpers to remove and these are not among them; `categoryParam` is still called by `categoryPath` (and covered by `utils/routes.test.js`), and `resolveCategory` is a generic slug-or-id resolver Prompt 24's category work may want. `getMainMenuCategories` is likewise left alone — it was already unread before this prompt and belongs to the Prompt 35 sweep.`
 
 ## Open TODOs
 
@@ -397,6 +410,9 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `22 · `@iconify/react` fetches its icon data from a THIRD-PARTY API at runtime, on the storefront's critical path. The Lighthouse trace shows six such requests on `/` (`api.simplesvg.com`, `api.unisvg.com`, `api.iconify.design` — the library's fallback chain), issued by components that are above the fold (`Header`, `BottomNav`, `AnnouncementBar`, `TrustStrip`). Bundling the icons offline (`addCollection`, or the `@iconify-icons/*` packages) would remove the dependency entirely; it touches 18+ files built by Prompts 09–21, so it is not this prompt's to do · owner of 38 · 38
 - `22 · Footer link targets are 18–21 px tall (`Footer_footerLink`, `Footer_microLink`) and the header logo link is 40 px, below the 44 px the QA sweep checks for. WCAG 2.2 AA (2.5.8 Target Size Minimum) is 24 px WITH a spacing exception these rows may well satisfy, and axe/Lighthouse a11y scores 100, so this is a review item rather than a known failure. Outside this prompt's files (`Footer/*` is Prompt 13, `Header/*` is Prompt 09) · owner of 37 · 37
 - `22 · The Lighthouse Performance figure was measured through a local caching mirror for the external hosts (Cloudinary, Google Fonts, Iconify), because this sandbox's agent proxy adds **~12.5 s of latency to every request that leaves the container** — which put Speed Index at ~20 s and made the score a measurement of the sandbox rather than of the page. The mirror scaffolding lives in the scratchpad and is NOT committed. Accessibility / Best Practices / SEO are unaffected by network latency and were the same (100/100/100) with and without it. The numbers should be re-taken on a normal network in Prompt 38 · owner of 38 · 38
+- `23 · `/category/nope` renders the shop's "Nothing here yet" panel instead of a 404. Prompt 24 owns the unknown-slug branch (`NotFound`) together with `CategoryHead`, the breadcrumb and the category JSON-LD; the route, the data read and the chapters are already in place. · developer · 24`
+- `23 · The category head is the shop's `SectionHeading` with eyebrow "Category", the category name as the `h1` and its `description` as the lede — no image band, no breadcrumb, no `BreadcrumbList` graph. Prompt 24 replaces that block with `CategoryHead`. · developer · 24`
+- `23 · No product photograph could be seen rendered in this sandbox: `res.cloudinary.com` resets Chromium's TLS tunnel through the agent proxy, so every chapter plate and every ritual thumbnail painted as an empty `.sf-plate`. Layout, sticky travel and the 4:5 reservation were verified against the reserved boxes; the CROPS themselves still want one pass on a machine that can reach Cloudinary. Same limitation recorded by Prompts 20 and 22. · developer · 37`
 
 ## Placeholders introduced / resolved
 
@@ -2764,3 +2780,132 @@ remaining files are pre-existing and owned by later prompts:
 Every occurrence this prompt was responsible for is gone, including a stale
 comment in `utils/helpers.js` that still described the featured grid this prompt
 deleted.
+
+
+## Prompt 23 record (2026-09-08)
+
+### What `/shop` is now
+
+`pages/Products/Products.js` (1 687 lines) + `Products.module.css` (1 335) are
+**deleted**. In their place, `pages/Shop/Shop.js` (380) + `Shop.module.css`
+(220): eight full editorial chapters in hero order, a page-level index, a
+closing "Build your ritual" panel, and **no filter, no sort, no pagination and
+no sidebar** (brief §7.3 — see the decisions log).
+
+The two ways the listing narrows are both routes, and neither is a control:
+
+- `/shop?concern=<slug>` → `products.getByConcern` → `{ concern, products }`
+- `/category/<slug>` → `products.getByCategorySlug` → `{ category, products }`
+
+Plain `/shop` reads `products.getAll()` and sorts it here (`shopOrder`, exported
+and unit-tested) by `heroOrder ?? 99` then name — the other two reads already
+answer sorted, and the order of a listing must not depend on which of the three
+produced it. `concerns.getAll()` is a second, deliberately tolerant read: the
+chips are a way to narrow the range, not the range itself, so a `/concerns`
+failure costs the chips and nothing else.
+
+### The three components
+
+- **`catalogue/ChapterIndex.{js,module.css}`** (new) — one component, two
+  shapes. `variant="rail"` from 1025px: a 220px column, `position: sticky;
+  top: 112px`, holding a 2px `--sf-color-surface-2` track with a
+  `--sf-gradient-signature` fill, the eight `shortName`s at 14px with
+  `aria-current="true"` and a gradient dot on the active one, and a "Back to
+  top" ghost button. `variant="strip"` to 1024px: a full-bleed `.sf-glass` band
+  under the masthead (48px at ≤768 / 52px above, `top: 56px` / `64px`) of 36px
+  numeral + name pills with `scroll-snap-type: x proximity`, whose active pill
+  is centred by writing the strip's own `scrollLeft` (never `scrollIntoView`,
+  which would walk up and drag the page). Both are rendered; the wrong one is
+  `display: none`, which is off the screen AND out of the accessibility tree.
+  The band hides under `body[data-drawer-open]` (`visibility`, so nothing
+  moves). Four pure functions are exported and unit-tested: `chapterId`,
+  `chapterHeadingId`, `intraChapterProgress`, `trackProgress`.
+- **`catalogue/BuildRitualPanel.{js,module.css}`** (new) — the closing
+  `GlassCard strong glow="duo"`: eyebrow "Finish the ritual", `h2` "Build your
+  **ritual**" (the one gradient keyword), lede "Three routines that put the
+  range in order.", three `RitualCard compact`, and `Button variant="primary"`
+  "See all rituals" → `/rituals`. It reads the whole catalogue itself so a
+  concern-narrowed page still draws complete routines.
+- **`catalogue/ProductChapter`** — `variant="shop"` is now a real variant
+  rather than a floor removal: `min-height: 88svh` on the split screen and
+  **none at all on a phone**, `scroll-margin-top: 96px` (the 64px masthead plus
+  air, which is what makes every jump land clear of it), `data-slug`, a
+  `tabIndex={-1}` `h2` so the rail can move focus to it, and an
+  `IntersectionObserver` at `threshold: 0.5` behind an `onVisible(index)` prop.
+  The home page passes no `onVisible`, so it builds no observer.
+
+### Where the active chapter is decided
+
+In the CHAPTERS, not in the index. Each one reports its own crossing of the
+half-visible line; `Shop` holds `activeIndex` and hands it to both index forms.
+The index measures exactly one thing for itself — how far into the active
+chapter the viewport has travelled, from that chapter's `getBoundingClientRect()`
+on a rAF-throttled passive scroll listener — and writes it as one custom
+property (`--sf-chapter-progress`), so a scroll frame costs a style write and
+**no React render**.
+
+### Removals
+
+| Removed | Where it was | Why nothing broke |
+|---|---|---|
+| `pages/Products/*` | the old listing | `/shop` and `/category/:slug` both render `Shop`; every legacy URL still redirects |
+| `getCategoryScopeIds` | `utils/categories.js` | its only caller was the listing's category facet |
+| `orderCategoriesHierarchically` | `utils/categories.js` | same |
+| `getDeviceType` | `utils/helpers.js` | its only caller was the listing's scroll offset |
+| `CategoryRoute` | `App.js` | replaced by `<Shop mode="category" />` |
+
+`getDescendantIds` **stays** — `pages/Admin/AdminCategories.js` still walks the
+tree with it.
+
+### Verification
+
+- `CI=true npm run build` → exit 0, **"Compiled successfully"**, no warnings.
+- `npm test -- --watchAll=false` → exit 0. 19 suites / 197 tests passed, 1 suite
+  / 50 skipped (the live-API suite). 16 of the passing tests are new
+  (`components/catalogue/ChapterIndex.test.js`).
+- `test ! -d src/pages/Products` ✓ · `grep -n "pages/Shop/Shop" src/App.js` ✓ ·
+  `grep -rn "FABRIC_FAMILIES\|All Silk\|Nothing woven" src` → **0** ✓ ·
+  `grep -n "ComingSoon" src/App.js` → the four Prompt 24 expects ✓.
+
+### Browser QA (Chromium 1194, mock mode, `npm run dev`)
+
+`/shop` renders eight chapters, ids `chapter-<slug>`, `data-chapter` 0–7, `h1`
+"Shop", lede "8 products · one ritual", CTAs "Explore more" / "Add to Cart" (and
+"Coming soon" on the five `priceTBA` products).
+
+- **Rail follows the scroll**: Face Wash → Goat Milk Soap → Body Wash → Face
+  Mask → … → Moisturizer Gel across five scroll positions, with the track at
+  0 → 0.125 → 0.26 → 0.58 → 0.95. It pins at exactly `top: 112px` at 1280 and
+  1440 for the whole listing.
+- **Rail jump**: click chapter 5 → the section's top rests at **96px** (its
+  `scroll-margin-top`) and `document.activeElement` is
+  `H2#chapter-black-rice-face-mist-title`. "Back to top" → `y: 0`, focus on
+  `H1#shop-title`.
+- **Keyboard**: Tab reaches the rail buttons (with the champagne ring) directly
+  after the concern chips and BEFORE the chapters; Enter jumps and moves focus;
+  the next Tab is that chapter's own "Explore more". Escape changes nothing.
+- **Mobile strip** at 390: follows the scroll (01 Face Wash → 02 Goat Milk Soap
+  → 05 Face Mist) and scrolls its active pill into view (`scrollLeft` 0 → 22 →
+  360), pinned at 56px.
+- **Scroll snap**: `y proximity` at 1280/1440, `none` at ≤1024 and `none` under
+  reduced motion. Mid-chapter settle **delta 0**; boundary settles ≤ ~165px onto
+  chapter starts.
+- **`/shop?concern=hydration`**: `h1` "For **Hydration**", lede "3 products for
+  Hydration", chapters body-wash / face-mist / moisturizer-gel, the Hydration
+  chip `aria-current="page"`, tab title "Shop · Hydration · LAMIKAA NATURALS",
+  and an `ItemList` graph of the three product URLs.
+- **`/shop?concern=nope`**: "Nothing here yet" + "All products", zero chapters,
+  and the chips still offered — the failed branch says something else
+  ("The range could not be loaded." + "Try again"), so a dropped network never
+  reads as an empty range.
+- **Routes preserved**: `/products` → `/shop` (8) · `/products?category=face-care`
+  → `/category/face-care` (6) · `/category/body-care` (2) · `/category/rituals`
+  → `/rituals`.
+- **360 / 390 / 414 / 768 / 1024 / 1280 / 1440**: `scrollWidth === clientWidth`
+  at every width — **no horizontal scroll** — and the chapter floor measures
+  `0px` at ≤768, `704px` at 1024 (88% of 800) and `792px` at 1280/1440 (88% of
+  900). **Zero page errors and zero console errors.**
+
+The only thing that could not be seen is photography: `res.cloudinary.com`
+resets Chromium's TLS tunnel through this sandbox's proxy, so every plate
+painted empty. Logged as an Open TODO.

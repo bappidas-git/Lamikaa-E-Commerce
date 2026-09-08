@@ -5,7 +5,6 @@ import {
   Route,
   Navigate,
   useLocation,
-  useParams,
 } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -51,7 +50,7 @@ import "./App.css";
 import Home from "./pages/Home/Home";
 
 // Storefront Pages
-const Products = React.lazy(() => import("./pages/Products/Products"));
+const Shop = React.lazy(() => import("./pages/Shop/Shop"));
 const ProductDetails = React.lazy(() => import("./pages/ProductDetails/ProductDetails"));
 const Checkout = React.lazy(() => import("./pages/Checkout/Checkout"));
 const OrderConfirmation = React.lazy(() => import("./pages/OrderConfirmation/OrderConfirmation"));
@@ -103,21 +102,6 @@ const AdminFaqs = React.lazy(() => import("./pages/Admin/AdminFaqs"));
 const AdminReviews = React.lazy(() => import("./pages/Admin/AdminReviews"));
 const AdminLeads = React.lazy(() => import("./pages/Admin/AdminLeads"));
 const AdminSettings = React.lazy(() => import("./pages/Admin/AdminSettings"));
-
-// =============================================================================
-// /category/:slug — the listing, constrained by the path
-//
-// TEMPORARY BRIDGE (Prompt 08 → 24). The category lives in the PATH now, but the
-// page that renders it is still the Meghali-era listing, which reads its
-// category from `?category=`. Rather than redirect (which would undo the very
-// URL the sweep just introduced) the slug is handed to the listing as a prop and
-// the listing locks itself to it. Prompt 24 replaces the element with
-// <Shop mode="category" /> and this wrapper goes with it.
-// =============================================================================
-function CategoryRoute() {
-  const { slug } = useParams();
-  return <Products categorySlug={slug} />;
-}
 
 // =============================================================================
 // The storefront shell.
@@ -173,16 +157,20 @@ function StorefrontShell() {
                   <Route path={ROUTES.HOME} element={<Home />} />
 
                   {/* ---- Catalogue ---------------------------------------- */}
-                  {/* Prompt 23 replaces the element with <Shop />; the listing
-                      reads ?concern= there. */}
-                  <Route path={ROUTES.SHOP} element={<Products />} />
+                  {/* The chaptered listing (Prompt 23). No filters, no sort, no
+                      pagination — `?concern=` and the category path below are
+                      the only two ways it narrows, and both are routes. */}
+                  <Route path={ROUTES.SHOP} element={<Shop />} />
                   {/* The rituals "category" is an editorial index of its own,
                       not a listing — categoryPath() sends it here too. */}
                   <Route
                     path="/category/rituals"
                     element={<Navigate to={ROUTES.RITUALS} replace />}
                   />
-                  <Route path={ROUTES.CATEGORY} element={<CategoryRoute />} />
+                  {/* The same page, constrained by the path instead of the
+                      query. Prompt 24 adds its head, its breadcrumb and its
+                      not-found branch; the chapters are already these. */}
+                  <Route path={ROUTES.CATEGORY} element={<Shop mode="category" />} />
                   {/* Product detail resolves by human-readable slug; a legacy
                       numeric /product/:id still resolves and redirects to the
                       canonical slug URL. */}

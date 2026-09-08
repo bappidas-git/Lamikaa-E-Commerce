@@ -1,0 +1,234 @@
+/* =============================================================================
+ * /shop — the chaptered listing
+ * =============================================================================
+ * The chapters bring their own layout (catalogue/ProductChapter.module.css) and
+ * the index brings its own (catalogue/ChapterIndex.module.css); this file owns
+ * the PAGE: the measure, the two-column relationship between the chapters and
+ * the rail, the seams between chapters, and the three non-chapter states.
+ *
+ * ONE MEASURE, DECLARED ONCE. `.layout` IS the container on this page — which
+ * is why the chapters' own `.sf-container` is neutralised inside it rather than
+ * nested. Two containers, one inside the other, is two lots of gutter: 40px of
+ * padding on a 390px screen, and a chapter that no longer lines up with the
+ * heading above it.
+ *
+ * MOBILE FIRST. One column, the strip at the top, no rail, no snap. The
+ * two-column grid, the sticky rail and the scroll snapping are all enhancements
+ * that begin at 1025px.
+ * ========================================================================== */
+
+.page {
+  position: relative;
+}
+
+/* ---- The head ------------------------------------------------------------ */
+
+/* A full rhythm unit above, a quarter below: the first chapter brings half a
+   unit of its own, and a full gap here would read as two sections rather than
+   as one opening. (The same relationship ProductShowcase's `.intro` has.) */
+.head {
+  padding-bottom: calc(var(--sf-section-y) * 0.25);
+}
+
+/* The eleven concerns and "All". A wrapped row rather than a scroller: this is
+   the whole set of ways to narrow the range, and a scroller would hide half of
+   them behind a gesture the page gives no other reason to make. */
+.concerns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: var(--sf-space-6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- The page grid ------------------------------------------------------- */
+
+.layout {
+  width: 100%;
+  max-width: var(--sf-container-max);
+  margin-inline: auto;
+  padding-inline: var(--sf-space-5);
+}
+
+.chapters {
+  min-width: 0;
+}
+
+/* The chapters' own container becomes a pass-through: `.layout` above holds the
+   measure and the gutter for the whole page. Without this the chapter text
+   would sit 20px inside the heading that introduces it. */
+.chapters :global(.sf-container) {
+  max-width: none;
+  padding-inline: 0;
+}
+
+/* The seam between two chapters — in the middle of the rhythm the two share, so
+   it reads as a page turn rather than as a border on either one. */
+.rule {
+  margin: 0;
+}
+
+/* The rail's column. Rendered at every width (the component decides what it
+   draws); it takes a column only from 1025px. */
+.rail {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    padding-inline: var(--sf-space-4);
+  }
+}
+
+/* ---- 1025+ : the chapters and the rail ----------------------------------- */
+
+@media (min-width: 1025px) {
+  .layout {
+    /* The wide track, so the 220px rail is space the page GAINS rather than
+       measure the chapters lose: at 1440 the reading column is still ~1130px,
+       within a hair of the 1240 the home page's chapters get. */
+    max-width: var(--sf-container-wide);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: var(--sf-space-12);
+    /* NOT `align-items: start`. A sticky element can only travel inside its own
+       containing block, and `start` shrinks the rail's grid item to the height
+       of the rail itself — which is a sticky element with nowhere to stick, and
+       a rail that scrolls away with the first chapter. Stretched, the item is
+       as tall as the chapters beside it and the <nav> inside it pins for the
+       whole listing. (Measured: the rail left the viewport at the second
+       chapter with `start`, and holds at 112px without it.) */
+    align-items: stretch;
+  }
+
+  /* The rail is written FIRST in the document (so a keyboard visitor meets the
+     index before the eight chapters it indexes) and painted SECOND — the same
+     "mirror the grid, never the DOM" rule a flipped chapter follows. */
+  .rail {
+    display: block;
+    min-width: 0;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .chapters {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+/* ---- Scroll snap: desktop only, `proximity`, never mandatory --------------
+   A page that scrolls with the document snaps on the document, so the property
+   goes on <html> — under an attribute `pages/Shop/Shop.js` sets while it is
+   mounted and removes when it leaves, which is what keeps the behaviour on this
+   one route.
+
+   `proximity` is the whole safety argument: the browser only settles onto a
+   snap point when a scroll ENDS near one, so a chapter taller than the viewport
+   is read at whatever offset the visitor stopped at, and a long flick still
+   crosses as many chapters as it was thrown. `mandatory` would do the opposite
+   and is never used here.
+
+   Off below 1025px (a phone chapter is taller than its screen, so every snap
+   point would be somewhere the visitor cannot see) and off under
+   `prefers-reduced-motion`, where an unrequested scroll adjustment is exactly
+   the kind of movement the setting asks for less of. */
+@media (min-width: 1025px) {
+  :global(html[data-chapter-snap]) {
+    scroll-snap-type: y proximity;
+  }
+
+  .chapters > :global(section[data-chapter]) {
+    /* `scroll-margin-top` on the chapter (96px, set by ProductChapter's shop
+       variant) is what keeps the snapped edge clear of the sticky masthead. */
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(html[data-chapter-snap]) {
+    scroll-snap-type: none;
+  }
+}
+
+/* ---- Loading -------------------------------------------------------------
+   Three skeleton chapters in the chapters' own shape, so nothing below moves
+   when the range lands. (The same shape ProductShowcase reserves on the home
+   page — the chapters are the same chapters.) */
+
+.skeleton {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-8);
+  padding-block: calc(var(--sf-section-y) * 0.5);
+}
+
+.skeletonPlate {
+  width: 100%;
+}
+
+.skeletonPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-6);
+  padding: var(--sf-space-6);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-xl);
+  background: var(--sf-color-surface);
+}
+
+@media (min-width: 769px) {
+  .skeleton {
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    gap: var(--sf-space-10);
+    align-items: start;
+  }
+
+  .skeletonPanel {
+    padding: var(--sf-space-10);
+  }
+}
+
+@media (min-width: 1280px) {
+  .skeleton {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sf-space-16);
+  }
+}
+
+/* ---- The failed and the empty answers ------------------------------------
+   One panel, two messages. Both are a statement, a sentence of explanation and
+   exactly one way forward — never a wall of suggestions in place of the range. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+  margin-block: var(--sf-section-y);
+  border-radius: var(--sf-radius-xl);
+}
+
+.panelTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  color: var(--sf-color-text);
+}
+
+.panelBody {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+@media (max-width: 560px) {
+  .panel > :global(.sf-btn) {
+    width: 100%;
+  }
+}
