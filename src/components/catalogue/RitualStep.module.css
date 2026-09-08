@@ -1,0 +1,280 @@
+/* =============================================================================
+ * RitualStep — one row of a routine
+ * =============================================================================
+ * MOBILE FIRST. Two columns on a phone (the numeral thread, then everything
+ * else stacked); four from 769px (numeral · plate · words · buy), which is when
+ * a 240px plate and a price column can sit side by side without either one
+ * losing its measure.
+ *
+ * THE CONNECTOR is a single absolutely positioned hairline per row, running the
+ * full height of the row at the numerals' centre line, with the opaque 36px
+ * numeral punched over it. Drawing it that way — rather than as a segment
+ * hanging below each numeral — is what makes the thread continuous across rows
+ * of different heights: every row's line meets the next row's at the shared
+ * edge, whatever either one contains. The first row starts its line AT its
+ * numeral and the last row stops at its own, so the thread never promises a
+ * step that is not there.
+ * ========================================================================== */
+
+/* Half the numeral, plus the row's top padding: where the thread meets the
+   first numeral's centre and leaves the last one's. */
+.step {
+  --sf-step-numeral: 36px;
+  --sf-step-pad: var(--sf-space-6);
+  --sf-step-anchor: calc(var(--sf-step-pad) + var(--sf-step-numeral) / 2);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-areas:
+    "numeral plate"
+    "numeral body"
+    "numeral buy";
+  column-gap: var(--sf-space-2);
+  row-gap: var(--sf-space-4);
+  padding-block: var(--sf-step-pad);
+}
+
+/* The thread. Decorative — the <ol> around these rows already carries the
+   order, so it is a pseudo-element with no content and nothing to announce. */
+.step::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--sf-step-numeral) / 2);
+  width: 1px;
+  background-image: var(--sf-gradient-signature);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.step[data-first]::before {
+  top: var(--sf-step-anchor);
+}
+
+.step[data-last]::before {
+  bottom: calc(100% - var(--sf-step-anchor));
+}
+
+/* A single-step routine has a numeral and no thread at all. */
+.step[data-first][data-last]::before {
+  display: none;
+}
+
+/* The seam between two rows, INSET PAST THE NUMERAL COLUMN so the thread
+   crosses it unbroken — a hairline drawn straight through the numerals' centre
+   line cuts the one thing on the row that is meant to be continuous. It lives
+   here rather than on the list, because this is the file that knows how wide
+   the numeral column is. */
+.step:not([data-first])::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 72px;
+  right: 0;
+  height: 1px;
+  background: var(--sf-color-border);
+  pointer-events: none;
+}
+
+/* ---- The numeral --------------------------------------------------------- */
+
+.numeralCol {
+  grid-area: numeral;
+  justify-self: start;
+  /* Above the thread it interrupts. */
+  position: relative;
+  z-index: 1;
+}
+
+/* `.step .numeral` rather than `.numeral`: the Chip module's own `.step` rule
+   sizes the variant at 28px, and one class cannot reliably outrank another
+   across two stylesheets — two can. */
+.step .numeral {
+  width: var(--sf-step-numeral);
+  height: var(--sf-step-numeral);
+  min-height: var(--sf-step-numeral);
+}
+
+/* ---- The plate ----------------------------------------------------------- */
+
+.plateCol {
+  grid-area: plate;
+  min-width: 0;
+}
+
+.plate {
+  display: grid;
+  width: clamp(96px, 42%, 160px);
+  transition: border-color var(--sf-transition-fast);
+}
+
+a.plate:hover,
+a.plate:focus-visible {
+  border-color: var(--sf-color-border-strong);
+}
+
+a.plate:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- The words ----------------------------------------------------------- */
+
+.body {
+  grid-area: body;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-3);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: 1.375rem; /* 22px — the ritual step's own display size */
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+}
+
+.nameLink {
+  color: var(--sf-color-text);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+a.nameLink:hover,
+a.nameLink:focus-visible {
+  color: var(--sf-color-gold);
+}
+
+a.nameLink:focus-visible {
+  outline: none;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.promise {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* The step's own instruction, in the routine's voice — set in italics so it
+   reads as an aside to the product's promise rather than more of it. */
+.note {
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--sf-font-display);
+  font-style: italic;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text);
+}
+
+.frequency {
+  cursor: default;
+}
+
+/* ---- The bar / wash choice ----------------------------------------------- */
+
+.choice {
+  display: inline-flex;
+  padding: 3px;
+  gap: 3px;
+  background: var(--sf-color-surface-2);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.choiceOption {
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-2) var(--sf-space-5);
+  border: 0;
+  border-radius: var(--sf-radius-pill);
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-semibold);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--sf-transition-fast),
+    color var(--sf-transition-fast);
+}
+
+.choiceOption:hover {
+  color: var(--sf-color-text);
+  background: var(--sf-color-surface-hover);
+}
+
+.choiceOption:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* The chosen half: the gold fill / near-black label pair the chips use, so
+   "selected" means the same thing here as everywhere else in the storefront. */
+.choiceOn,
+.choiceOn:hover {
+  background: var(--sf-color-gold);
+  color: var(--sf-color-primary-contrast);
+}
+
+/* ---- The price and the action -------------------------------------------- */
+
+.buy {
+  grid-area: buy;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-4);
+}
+
+.price {
+  margin: 0;
+}
+
+/* ---- 769+ : four columns ------------------------------------------------- */
+
+@media (min-width: 769px) {
+  .step {
+    --sf-step-pad: var(--sf-space-8);
+
+    grid-template-columns: 96px 240px minmax(0, 1fr) auto;
+    grid-template-areas: "numeral plate body buy";
+    column-gap: var(--sf-space-6);
+    align-items: start;
+  }
+
+  .plate {
+    width: 240px;
+  }
+
+  .step:not([data-first])::after {
+    left: 96px;
+  }
+
+  .buy {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--sf-space-3);
+    /* The price and its button read as one block against the top of the row,
+       level with the product's name rather than with the end of its promise. */
+    padding-top: var(--sf-space-1);
+  }
+}
+
+/* Below 769px the button takes the row rather than sitting in a corner of it. */
+@media (max-width: 480px) {
+  .buy > .add {
+    width: 100%;
+  }
+}

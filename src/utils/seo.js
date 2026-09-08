@@ -8,8 +8,9 @@ import { productPath } from "./helpers";
 // `hooks/useSeo.js` owns the two SITE-level graphs (`Organization`, `WebSite`)
 // because the home page publishes them once for the whole storefront. This file
 // owns the graphs that belong to a PAGE — the ones whose content changes with
-// the route. Prompt 23 opens it with `ItemList`, which is what a listing is;
-// Prompt 24 adds `BreadcrumbList` and Prompt 27 the `Product` graph.
+// the route. Prompt 23 opened it with `ItemList`, which is what a listing is;
+// Prompt 24 adds `BreadcrumbList` — the category pages and the ritual pages both
+// sit at the end of a trail — and Prompt 27 adds the `Product` graph.
 //
 // EVERY URL IS ABSOLUTE, and built from `seoOrigin()` — the same origin the
 // canonical link uses, so a crawler is never told about two spellings of one
@@ -51,6 +52,42 @@ export const itemListJsonLd = (products) => {
       position: index + 1,
       url: `${origin}${productPath(product)}`,
       ...(product.name ? { name: product.name } : {}),
+    })),
+  };
+};
+
+/**
+ * A `BreadcrumbList` of the trail a page sits at the end of.
+ *
+ * SAME ARRAY AS THE VISIBLE TRAIL. `components/Breadcrumb` renders one list of
+ * `{ label, to }` and this publishes the same one, so the crumb a visitor reads
+ * and the crumb a crawler is told about cannot drift apart — the failure mode
+ * of every hand-written BreadcrumbList.
+ *
+ * The last item is the page itself and normally carries no `to`; it still takes
+ * a position (a BreadcrumbList that stops one short of the page it describes is
+ * a trail to somewhere else) and its `item` URL is simply omitted, which is what
+ * schema.org asks for on the final crumb.
+ *
+ * @param {Array<{label: string, to?: string}>} items  the trail, Home first
+ * @returns {object|null} schema.org BreadcrumbList, or null for a trail with
+ *          nothing on it — `useSeo` publishes no <script> for a null graph.
+ */
+export const breadcrumbJsonLd = (items) => {
+  const origin = seoOrigin();
+  const trail = (Array.isArray(items) ? items : []).filter(
+    (item) => item && typeof item.label === "string" && item.label.trim() !== ""
+  );
+  if (trail.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: trail.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.label,
+      ...(item.to ? { item: `${origin}${item.to}` } : {}),
     })),
   };
 };

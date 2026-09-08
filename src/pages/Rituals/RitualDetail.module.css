@@ -1,0 +1,197 @@
+/* =============================================================================
+ * /rituals/:slug — one routine
+ * =============================================================================
+ * Three bands: the head (the story), the steps (the rows), the panel (the ask).
+ * MOBILE FIRST — one column throughout; from 1025px the head splits so the
+ * routine's photograph sits beside its story rather than above it, which is
+ * where a 4:5 stage stops pushing the first step below two screens.
+ * ========================================================================== */
+
+.page {
+  position: relative;
+}
+
+/* ---- The head ------------------------------------------------------------ */
+
+.head {
+  padding-bottom: calc(var(--sf-section-y) * 0.4);
+}
+
+.headGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-8);
+  align-items: start;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-5);
+  min-width: 0;
+}
+
+.crumbs {
+  margin-bottom: calc(var(--sf-space-2) * -1);
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.tagline {
+  margin: 0;
+  max-width: 46ch;
+  font-family: var(--sf-font-display);
+  font-style: italic;
+  font-size: var(--sf-text-lg);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-gold);
+}
+
+/* ContentBlocks brings its own measure, rhythm and drop cap; this only places
+   the block in the column. */
+.story {
+  width: 100%;
+}
+
+.failed {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- The head's photograph ----------------------------------------------- */
+
+.headMedia {
+  min-width: 0;
+}
+
+.mediaFrame {
+  border-radius: var(--sf-radius-xl);
+  border: 1px solid var(--sf-color-border);
+  background: var(--sf-color-surface);
+  aspect-ratio: 4 / 5;
+  max-height: 70vh;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (min-width: 1025px) {
+  .headGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 38%);
+    gap: var(--sf-space-16);
+  }
+
+  .title {
+    font-size: var(--sf-text-4xl);
+  }
+
+  /* The photograph rides down past the eyebrow so its top edge lines up with
+     the headline rather than with the breadcrumb above it. */
+  .headMedia {
+    margin-top: var(--sf-space-10);
+  }
+}
+
+/* ---- The steps ----------------------------------------------------------- */
+
+.stepsSection {
+  padding-block: calc(var(--sf-section-y) * 0.5);
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The rows bring their own vertical rhythm AND their own seam
+   (RitualStep.module.css), and they must TOUCH: the thread that joins the
+   numerals is drawn per row, so a gap here would break it into segments. */
+
+/* ---- Loading ------------------------------------------------------------- */
+
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-8);
+}
+
+.skeletonStep {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: var(--sf-space-6);
+  align-items: center;
+}
+
+@media (min-width: 769px) {
+  .skeletonStep {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+}
+
+/* ---- The panel ----------------------------------------------------------- */
+
+.ctaSection {
+  padding-top: calc(var(--sf-section-y) * 0.5);
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-6);
+  border-radius: var(--sf-radius-xl);
+}
+
+.total {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  color: var(--sf-color-price);
+}
+
+.ctaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-4);
+}
+
+.legal {
+  margin-top: var(--sf-space-6);
+}
+
+@media (max-width: 560px) {
+  .ctaActions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ctaActions :global(.sf-btn) {
+    width: 100%;
+  }
+}

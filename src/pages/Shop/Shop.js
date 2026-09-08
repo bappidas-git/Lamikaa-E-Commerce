@@ -1,18 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import apiService from "../../services/api";
 import useSeo from "../../hooks/useSeo";
-import { itemListJsonLd } from "../../utils/seo";
+import { breadcrumbJsonLd, itemListJsonLd } from "../../utils/seo";
 import { concernPath } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
 import { Button, Chip, GlassCard, SectionHeading, Skeleton } from "../../components/ui";
+import CategoryHead from "../../components/catalogue/CategoryHead";
 import ProductChapter from "../../components/catalogue/ProductChapter";
 import ChapterIndex, { chapterId } from "../../components/catalogue/ChapterIndex";
 import BuildRitualPanel from "../../components/catalogue/BuildRitualPanel";
+import { concernLabel } from "../../components/storefront/ProductCard";
+import NotFound from "../NotFound/NotFound";
 import styles from "./Shop.module.css";
 
 // =============================================================================
-// /shop — the range, as chapters
+// /shop and /category/:slug — the range, as chapters
 // =============================================================================
 //
 // THE FILTERS ARE GONE, and their absence is the design. The old catalogue was
@@ -26,11 +29,19 @@ import styles from "./Shop.module.css";
 // The two ways to narrow it are both ROUTES, not controls:
 //
 //   /shop?concern=hydration   the three products that answer one concern
-//   /category/<slug>          the products in one category  (Prompt 24 gives
-//                             this its own head; the chapters are these)
+//   /category/<slug>          the products in one category
 //
 // and the way to search is still the overlay and `/search` (Prompt 11), which
 // is where a shopper who knows what they want was always going to go.
+//
+// A CATEGORY IS THE SAME PAGE WEARING A HEAD (Prompt 24). `/category/face-care`
+// is this listing constrained by its URL: the same chapters, the same index,
+// the same closing panel, under `CategoryHead` — the full-bleed band with the
+// category's own photograph and a glass panel carrying the trail, the name, the
+// description, the count and the concerns those products answer to. Making it a
+// second page would have meant two listings to keep in step; making the
+// constraint a FILTER would have meant a control that does what a URL already
+// does. Prompt 23 built the constraint, this is its head.
 //
 // WHAT REPLACES THE CHROME is an INDEX rather than a toolbar: the eight short
 // names, always in view, with the one being read marked and every other one a
@@ -40,15 +51,16 @@ import styles from "./Shop.module.css";
 // reports its own crossing of the half-visible line — so the index never has to
 // re-derive from scroll offsets what the sections already know.
 //
-// ONE HEADING, EIGHT CHAPTERS, ONE <h1>. The page's heading is the only h1;
-// every chapter owns its own h2, and those eight names are the outline a screen
-// reader visitor actually wants.
+// ONE HEADING, EIGHT CHAPTERS, ONE <h1>. The page's heading is the only h1 —
+// the section heading on `/shop`, `CategoryHead`'s on a category — and every
+// chapter owns its own h2, which is the outline a screen reader visitor wants.
 //
 // THREE STATES, ALL DISTINCT. Loading is three skeleton chapters. A FAILED READ
 // says so and offers "Try again" — it never renders as "nothing here", because
 // telling a shopper the range is empty when the network dropped is the one
 // mistake a listing must not make. An empty answer (a concern nobody is on yet)
 // says "Nothing here yet" and offers the other concerns and the whole range.
+// A category slug nobody has is neither: it is a 404, and it says so.
 // =============================================================================
 
 // Three, not eight: eight full-height skeletons is a page of shimmer, and the
@@ -58,6 +70,15 @@ const SKELETON_COUNT = 3;
 // A product with no hero position sorts after every product that has one — the
 // same rule `api.js`'s `byHeroOrderThenName` and the home showcase both apply.
 const HERO_LAST = 99;
+
+// The one category that is not a listing. Its `kind` is the real test (the
+// owner can rename the slug in the admin); the literal is the cheap one, and
+// it saves the redirect a round trip it would only throw away.
+const RITUALS_SLUG = "rituals";
+
+// The page's <h1> id, shared with the chapter index's "Back to top" target and
+// written by whichever head this route is wearing.
+const TITLE_ID = "shop-title";
 
 /**
  * The catalogue in reading order: hero order first, then name.
@@ -82,21 +103,57 @@ export const productCountLabel = (count) => {
   return `${n} ${n === 1 ? "product" : "products"}`;
 };
 
+/**
+ * The concerns the products on this page actually answer to, named.
+ *
+ * READ OFF THE PRODUCTS, not off the category. A category record has no
+ * concerns of its own, and printing the whole eleven-chip collection under a
+ * two-product category would offer nine links to lists this category is not in.
+ * The `concerns` collection is consulted only for the display NAME and the
+ * editorial ORDER; a slug with no record still gets a chip, because the
+ * products are the truth here and the collection is only the dictionary.
+ *
+ * Exported for the unit test.
+ */
+export const concernsOf = (products, concerns = []) => {
+  const present = new Set();
+  (Array.isArray(products) ? products : []).forEach((product) =>
+    (product?.concerns || []).forEach((slug) => present.add(String(slug)))
+  );
+  if (present.size === 0) return [];
+
+  const named = (Array.isArray(concerns) ? concerns : [])
+    .filter((row) => present.has(String(row?.slug)))
+    .map((row) => ({ slug: String(row.slug), name: row.name || concernLabel(row.slug) }));
+
+  const known = new Set(named.map((row) => row.slug));
+  const orphans = [...present]
+    .filter((slug) => !known.has(slug))
+    .sort()
+    .map((slug) => ({ slug, name: concernLabel(slug) }));
+
+  return [...named, ...orphans];
+};
+
 // ── The page's one read ──────────────────────────────────────────────────────
 
 /**
- * Everything `/shop` needs, in two parallel requests.
+ * Everything the listing needs, in two parallel requests.
  *
  * The concern list is deliberately TOLERANT: the chips are a way to narrow the
  * range, not the range itself, so a `/concerns` collection that fails costs the
  * shopper the chips and nothing else. The product read is the page — its
  * failure is the page's failure.
  *
+ * `skip` is for the one route that is going to redirect before it renders
+ * anything (`/category/rituals`): asking the API for a listing nobody will see
+ * is a round trip spent on a page that is already leaving.
+ *
  * @returns {{status: "loading"|"ready"|"failed", products: object[],
  *            concern: object|null, category: object|null, concerns: object[],
  *            retry: function}}
  */
-const useShopData = ({ concernSlug, categorySlug }) => {
+const useShopData = ({ concernSlug, categorySlug, skip = false }) => {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({
     status: "loading",
@@ -107,6 +164,7 @@ const useShopData = ({ concernSlug, categorySlug }) => {
   const [concerns, setConcerns] = useState([]);
 
   useEffect(() => {
+    if (skip) return undefined;
     let alive = true;
     setState((prev) => ({ ...prev, status: "loading" }));
 
@@ -141,9 +199,10 @@ const useShopData = ({ concernSlug, categorySlug }) => {
     return () => {
       alive = false;
     };
-  }, [concernSlug, categorySlug, attempt]);
+  }, [concernSlug, categorySlug, attempt, skip]);
 
   useEffect(() => {
+    if (skip) return undefined;
     let alive = true;
     apiService.concerns
       .getAll()
@@ -156,7 +215,7 @@ const useShopData = ({ concernSlug, categorySlug }) => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [skip]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
@@ -164,29 +223,27 @@ const useShopData = ({ concernSlug, categorySlug }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SHOP
+// THE LISTING
 // ══════════════════════════════════════════════════════════════════════════════
 
 /**
+ * The page, once the route has decided that there IS one.
+ *
  * @param {object} props
- * @param {"shop"|"category"} [props.mode]  `"category"` reads `:slug` from the
- *        path instead of `?concern=` and lists that category. Prompt 24 gives
- *        the category form its full head (the image band, the breadcrumb and
- *        the not-found branch); the chapters, the index and the closing panel
- *        are these, which is why the two are one page rather than two.
+ * @param {"shop"|"category"} props.mode
  */
-const Shop = ({ mode = "shop" }) => {
-  const [params] = useSearchParams();
-  const { slug } = useParams();
-
-  const concernSlug = mode === "category" ? "" : (params.get("concern") || "").trim();
-  const categorySlug = mode === "category" ? slug || "" : "";
-
-  const { status, products, concern, category, concerns, retry } = useShopData({
-    concernSlug,
-    categorySlug,
-  });
-
+const ShopView = ({
+  mode,
+  concernSlug,
+  categorySlug,
+  status,
+  products,
+  concern,
+  category,
+  concerns,
+  retry,
+}) => {
+  const isCategory = mode === "category";
   const loading = status === "loading";
   const failed = status === "failed";
   const total = products.length;
@@ -224,14 +281,6 @@ const Shop = ({ mode = "shop" }) => {
   const categoryName = category?.displayName || category?.name || "";
 
   const heading = useMemo(() => {
-    if (categorySlug) {
-      return {
-        eyebrow: "Category",
-        title: categoryName || "Shop",
-        gradientWord: undefined,
-        lede: category?.description || `${productCountLabel(total)} · one ritual`,
-      };
-    }
     if (concernName) {
       return {
         eyebrow: "Shop by concern",
@@ -247,7 +296,7 @@ const Shop = ({ mode = "shop" }) => {
       gradientWord: undefined,
       lede: `${productCountLabel(total)} · one ritual`,
     };
-  }, [categorySlug, categoryName, category, concernName, total]);
+  }, [concernName, total]);
 
   // While the range is loading or unreachable the lede must not claim a count.
   const lede = loading
@@ -256,15 +305,46 @@ const Shop = ({ mode = "shop" }) => {
     ? "The range could not be loaded."
     : heading.lede;
 
-  const seoTitle = concernName
+  // The category head's own count line follows the same rule.
+  const countLabel = loading || failed ? "" : productCountLabel(total);
+
+  // The concerns THESE products answer to — the category head's chip row. On
+  // `/shop` the chips are the whole collection instead: there, they are the way
+  // to narrow the range rather than a description of what is in it.
+  const headConcerns = useMemo(
+    () => (isCategory && !loading && !failed ? concernsOf(products, concerns) : []),
+    [isCategory, loading, failed, products, concerns]
+  );
+
+  // ONE ARRAY, TWO RENDERINGS: the visible trail and the BreadcrumbList.
+  const trail = useMemo(
+    () =>
+      isCategory
+        ? [
+            { label: "Home", to: ROUTES.HOME },
+            { label: "Shop", to: ROUTES.SHOP },
+            ...(categoryName ? [{ label: categoryName }] : []),
+          ]
+        : [],
+    [isCategory, categoryName]
+  );
+
+  const seoTitle = isCategory
+    ? categoryName || "Shop"
+    : concernName
     ? `Shop · ${concernName}`
-    : categoryName || "Shop";
+    : "Shop";
+
+  const seoDescription =
+    (isCategory && category?.description) ||
+    "Eight Black Rice skincare products from a farmer-owned brand. Cleanse, refresh, treat and moisturise.";
 
   useSeo({
     title: seoTitle,
-    description:
-      "Eight Black Rice skincare products from a farmer-owned brand. Cleanse, refresh, treat and moisturise.",
-    jsonLd: itemListJsonLd(products),
+    description: seoDescription,
+    jsonLd: isCategory
+      ? [breadcrumbJsonLd(trail), itemListJsonLd(products)].filter(Boolean)
+      : itemListJsonLd(products),
   });
 
   const showChapters = !loading && !failed && total > 0;
@@ -272,55 +352,68 @@ const Shop = ({ mode = "shop" }) => {
   return (
     <div className={styles.page}>
       {/* ── The head ────────────────────────────────────────────────────────
-          One <h1>, and the eleven concerns as the page's only "narrow this"
-          control — chips that are LINKS, because each one is a URL. */}
-      <section className={`sf-section ${styles.head}`} aria-labelledby="shop-title">
-        <div className="sf-container">
-          <SectionHeading
-            as="h1"
-            id="shop-title"
-            eyebrow={heading.eyebrow}
-            title={heading.title}
-            gradientWord={heading.gradientWord}
-            lede={lede}
-            rule
-          />
+          Two shapes, one <h1>. A category wears the band and the glass panel;
+          `/shop` and `/shop?concern=` wear the section heading and the eleven
+          concerns as the page's only "narrow this" control — chips that are
+          LINKS, because each one is a URL. */}
+      {isCategory ? (
+        <CategoryHead
+          category={category}
+          trail={trail}
+          countLabel={countLabel}
+          concerns={headConcerns}
+          titleId={TITLE_ID}
+          className={styles.categoryHead}
+        />
+      ) : (
+        <section className={`sf-section ${styles.head}`} aria-labelledby={TITLE_ID}>
+          <div className="sf-container">
+            <SectionHeading
+              as="h1"
+              id={TITLE_ID}
+              eyebrow={heading.eyebrow}
+              title={heading.title}
+              gradientWord={heading.gradientWord}
+              lede={lede}
+              rule
+            />
 
-          {concerns.length > 0 && (
-            /* eslint-disable-next-line jsx-a11y/no-redundant-roles */
-            <ul className={styles.concerns} role="list">
-              <li>
-                <Chip
-                  variant="glass"
-                  as={Link}
-                  to={ROUTES.SHOP}
-                  active={!concernSlug && !categorySlug}
-                  aria-current={!concernSlug && !categorySlug ? "page" : undefined}
-                >
-                  All
-                </Chip>
-              </li>
-              {concerns.map((row) => {
-                const active = row.slug === concernSlug;
-                return (
-                  <li key={row.id ?? row.slug}>
-                    <Chip
-                      variant="concern"
-                      as={Link}
-                      to={concernPath(row.slug)}
-                      tone={row.slug}
-                      active={active}
-                      aria-current={active ? "page" : undefined}
-                    >
-                      {row.name}
-                    </Chip>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      </section>
+            {concerns.length > 0 && (
+              /* eslint-disable-next-line jsx-a11y/no-redundant-roles */
+              <ul className={styles.concerns} role="list">
+                <li>
+                  <Chip
+                    variant="glass"
+                    as={Link}
+                    to={ROUTES.SHOP}
+                    active={!concernSlug}
+                    aria-current={!concernSlug ? "page" : undefined}
+                  >
+                    All
+                  </Chip>
+                </li>
+                {concerns.map((row) => {
+                  const active = row.slug === concernSlug;
+                  return (
+                    <li key={row.id ?? row.slug}>
+                      <Chip
+                        variant="concern"
+                        as={Link}
+                        to={concernPath(row.slug)}
+                        tone={row.slug}
+                        active={active}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        {row.name}
+                      </Chip>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── The index, mobile form ──────────────────────────────────────────
           Full-bleed and sticky under the masthead; hidden from 1025px, where
@@ -331,7 +424,7 @@ const Shop = ({ mode = "shop" }) => {
           variant="strip"
           products={products}
           activeIndex={activeIndex}
-          topId="shop-title"
+          topId={TITLE_ID}
         />
       )}
 
@@ -350,7 +443,7 @@ const Shop = ({ mode = "shop" }) => {
               variant="rail"
               products={products}
               activeIndex={activeIndex}
-              topId="shop-title"
+              topId={TITLE_ID}
             />
           </div>
         )}
@@ -396,6 +489,8 @@ const Shop = ({ mode = "shop" }) => {
               <p className={styles.panelBody}>
                 {concernSlug
                   ? "No product in the range answers to that concern yet. Try another one above, or read the whole range."
+                  : isCategory
+                  ? "There is nothing in this category yet. Read the whole range instead."
                   : "There is nothing to show here yet. Read the whole range instead."}
               </p>
               <Button variant="primary" to={ROUTES.SHOP}>
@@ -426,6 +521,60 @@ const Shop = ({ mode = "shop" }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SHOP
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * The route's two decisions, and nothing else.
+ *
+ * THE SPLIT IS NOT COSMETIC. `useSeo` claims the tab, the description, the
+ * Open Graph set and the canonical, and remembers what it displaced so it can
+ * put it back. Two of them mounted at once — this page's, and the one inside
+ * <NotFound/> — restore in the wrong order and leave a stale description
+ * behind. So both exits are taken BEFORE the view that owns the head, and
+ * exactly one useSeo is ever mounted on this route.
+ *
+ * @param {object} props
+ * @param {"shop"|"category"} [props.mode]  `"category"` reads `:slug` from the
+ *        path instead of `?concern=` and lists that category. The chapters, the
+ *        index and the closing panel are identical to `/shop`, which is why the
+ *        two are one page rather than two.
+ */
+const Shop = ({ mode = "shop" }) => {
+  const [params] = useSearchParams();
+  const { slug } = useParams();
+
+  const isCategory = mode === "category";
+  const concernSlug = isCategory ? "" : (params.get("concern") || "").trim();
+  const categorySlug = isCategory ? slug || "" : "";
+
+  // The rituals "category" is an editorial index of its own, not a listing —
+  // `categoryPath()` already sends every link in the app to /rituals, so this
+  // is for the typed URL and the old bookmark.
+  const toRituals = isCategory && categorySlug === RITUALS_SLUG;
+
+  const data = useShopData({ concernSlug, categorySlug, skip: toRituals });
+
+  if (toRituals || (isCategory && data.category?.kind === "rituals")) {
+    return <Navigate to={ROUTES.RITUALS} replace />;
+  }
+
+  // A slug nobody has is a 404, not an empty listing: `getByCategorySlug`
+  // answers `{category: null, products: []}` for one rather than rejecting, so
+  // the page can tell "no such category" from "the catalogue is unreachable".
+  if (isCategory && data.status === "ready" && !data.category) return <NotFound />;
+
+  return (
+    <ShopView
+      mode={mode}
+      concernSlug={concernSlug}
+      categorySlug={categorySlug}
+      {...data}
+    />
   );
 };
 

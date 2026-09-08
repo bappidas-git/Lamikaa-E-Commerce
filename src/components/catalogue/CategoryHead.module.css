@@ -1,0 +1,136 @@
+/* =============================================================================
+ * CategoryHead — the band and the panel
+ * =============================================================================
+ * MOBILE FIRST, and the two layouts are genuinely different rather than one
+ * layout squeezed: on a phone the band is a 4:3 photograph with the panel
+ * stacked underneath it; from 769px the band is a 21:9 letterbox and the panel
+ * rises into its lower-left corner on a negative margin.
+ *
+ * WHY A NEGATIVE MARGIN AND NOT `position: absolute`. An absolutely positioned
+ * panel is measured against the band, so a long description either overflows it
+ * or is clipped by it. On a negative margin the panel is still in flow: it
+ * takes exactly the height its copy needs, pushes the page down when it grows,
+ * and the overlap is the only thing the number controls.
+ * ========================================================================== */
+
+.head {
+  position: relative;
+}
+
+/* ---- The band ------------------------------------------------------------
+   Full-bleed: the photograph spans the viewport while the panel below keeps the
+   container's gutter. `100%` of the page — not `100vw`, which is wider than the
+   viewport whenever a scrollbar is present and would introduce the horizontal
+   scroll every breakpoint in the QA matrix checks for. */
+
+.band {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 62vh;
+  background: var(--sf-color-surface);
+  /* `.sf-placeholder-media` supplies the desaturation and the wash. */
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* ---- The panel ----------------------------------------------------------- */
+
+.panelWrap {
+  position: relative;
+  z-index: 1;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+  margin-top: var(--sf-space-6);
+  border-radius: var(--sf-radius-xl);
+}
+
+.crumbs {
+  margin-bottom: calc(var(--sf-space-2) * -1);
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.description {
+  margin: 0;
+  max-width: 56ch;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.count {
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sf-color-text-muted);
+}
+
+.concerns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- 769+ : the letterbox and the overlap -------------------------------- */
+
+@media (min-width: 769px) {
+  .band {
+    aspect-ratio: 21 / 9;
+    /* The brief's band height, as a floor under the ratio: at 1440px the 21:9
+       box is 617px and the clamp never bites; at 769px it is 330px, inside the
+       clamp's range. The `max-height` above keeps a very wide viewport from
+       turning the head into a full screen of stock photography. */
+    min-height: clamp(260px, 32vw, 420px);
+    max-height: 520px;
+  }
+
+  .panel {
+    /* Into the band's lower-left corner. 640px is the brief's maximum measure
+       for the panel; the description's own 56ch keeps the text shorter still. */
+    max-width: 640px;
+    margin-top: clamp(-140px, -9vw, -72px);
+  }
+}
+
+@media (min-width: 1025px) {
+  .title {
+    font-size: var(--sf-text-4xl);
+  }
+}
+
+/* A very short viewport in landscape (a phone turned sideways) gets the phone's
+   stacked layout back: an overlapping panel there covers the whole band. */
+@media (min-width: 769px) and (max-height: 520px) {
+  .panel {
+    max-width: none;
+    margin-top: var(--sf-space-6);
+  }
+}

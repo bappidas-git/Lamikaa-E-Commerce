@@ -27,7 +27,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 21 | Home FAQs section and accordion | complete | 2026-09-07 | (this commit) | `components/FAQ/*` rewritten onto the `ui/Accordion` primitive and turned into a **props-driven** block (`faqs, limit, defaultOpen, multiple, id, headingLevel`), so the home band, `/faq` (28) and the PDP panel (27) can all mount one accordion; `home/HomeFaqs.js` is the band around it. `utils/faqs.js` gained `faqLimit()` and a `{ limit }` option on `faqsForPlacement` (applied AFTER the filters and the de-dupe); `FaqContext.forPlacement` passes the options through. `db.json` `faqs` rows 6–8 gained the `"home"` placement — **3 JSON values** — so the block carries the 6–8 rows the prompt asks for (the Prompt 06 seed had put `home` on rows 1–5 only). Browser QA at 360/390/768/1024/1025/1280: **8 rows at every width**, 0 horizontal overflow, no `{{TOKEN}}` anywhere on the page, two columns + sticky aside from exactly 1025px, question Manrope 600 17px over a 44px floor, 20px gold chevron, answer Manrope 16px secondary at 20px inset, open row wearing a 2px signature-gradient rule at 0.6, separators `rgba(255,255,255,.08)`. Deep link `/#faq-3` opens **and focuses** row 3; ↑/↓/Home/End walk the headers and wrap; Enter opens, Space closes; panel `transition-duration: 0s` under reduced motion. Admin → FAQs still lists all eight with the Shared/Help/Product vocabulary, and a `PATCH /faqs/1` reached the open storefront on the next focus refetch. `CI=true npm run build` exit 0 **Compiled successfully, 0 warnings**; `npm test -- --watchAll=false` **173 passed** (17 suites, 1 skipped), 22 of them new. See "Prompt 21 record" below. |
 | 22 | Home assembly, performance and SEO | complete | 2026-09-07 | (this commit) | The home page is assembled: **eleven sections in the brief's order**, `ShopByCategory` moved from under the trust strip to **after** the eight product chapters (brief §7.2 item 4), and every pre-rebuild section deleted — collection stories, featured grid, offers rail + countdown, craft interlude, trending rail, promises row — along with `components/FeaturedProducts/*` and `components/CTASection/*` (0 consumers) and the now-unused `TRUST_BADGES` alias in `constants.js` (`WHY_CHOOSE_US` **kept** — `pages/Support/Support.js:594` still maps over it). `Home.js` 742 → 279 lines, `Home.module.css` 779 → 105 (page rhythm only: ground, hero, trust edge, deferral). **One data load:** new `components/home/useHomeData.js` reads `products.getAll` · `getHeroProducts` · `categories` · `concerns` · `rituals` · `siteContent` **once each, in parallel**, and the nine sections take their slices as props — the naively assembled page issued **15 requests for 6 collections**, it now issues **6**. Tri-state slices (`undefined` = in flight, `null` = failed, value = loaded). **Nine lazy chunks** behind a `DeferredSection` (`useInView` + `rootMargin: 600px`, measured reserve heights, `content-visibility: auto` on the six sections that draw no glow). New `components/home/RecentlyViewed.{js,module.css,test.js}` ports the localStorage reconciliation and the `useRail`/ResizeObserver logic verbatim; threshold raised 1 → 2 (8 new tests). `organizationJsonLd()` + `websiteJsonLd()` added to `hooks/useSeo.js` — **schema.org validator: 0 errors, 0 warnings**. **Lighthouse mobile (production build, median of 3): Performance 68, Accessibility 100, Best Practices 100, SEO 100** — three of four targets met; Performance is **below the ≥85 target** and the cause is measured and recorded below. CLS 0.174 → **0.042**; Speed Index 20.7s → **3.2s**; total JS on `/` **253 kB gzipped** (≤350 budget ✓). `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (18 suites / 181 passed, 1 suite / 50 skipped). See the Prompt 22 record below.
 | 23 | Shop page — chaptered editorial listing | complete | 2026-09-08 | (this commit) | `/shop` is the chaptered listing: **eight full editorial chapters in hero order, no filter, no sort, no pagination, no sidebar** (brief §7.3 — the removal is an owner decision, recorded below). `pages/Products/*` (1 687 + 1 335 lines) is **deleted**; `pages/Shop/Shop.js` is 380. New: `catalogue/ChapterIndex.{js,module.css}` (a 220px sticky rail at ≥1025px, a sticky pill strip at ≤1024px) and `catalogue/BuildRitualPanel.{js,module.css}` (the closing `GlassCard strong glow="duo"`), plus `utils/seo.js` with `itemListJsonLd`. `ProductChapter` gained `variant="shop"` proper — 88svh floor on the split screen, no floor on a phone, `scroll-margin-top: 96px`, `data-slug`, a focusable `h2` and an `onVisible(index)` IntersectionObserver at threshold 0.5. **`/category/:slug` now routes to `<Shop mode="category" />`**, which is what kept the category listing alive when `Products` went (Prompt 24 adds its head, breadcrumb and 404). `utils/categories.js` lost `getCategoryScopeIds` and `orderCategoriesHierarchically`; `utils/helpers.js` lost `getDeviceType`; `getDescendantIds` stays for the admin. **Scroll-snap was KEPT** after measurement (see the decisions log). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (19 suites / 197 passed, 1 suite / 50 skipped — 16 of the passing tests are new, `ChapterIndex.test.js`). Browser QA in Chromium 1194 at 360/390/414/768/1024/1280/1440 + reduced motion: **no horizontal scroll at any width, zero page errors**. See the Prompt 23 record below. |
-| 24 | Category pages and rituals pages | pending | | | |
+| 24 | Category pages and rituals pages | complete | 2026-09-08 | (this commit) | The seven categories have their heads and the rituals have their two pages. **`pages/Shop/Shop.js` is split in two**: `Shop` holds the route's two exits — a `kind: "rituals"` category (or the literal slug) → `<Navigate to="/rituals" replace/>`, an unknown slug → `<NotFound/>` — and `ShopView` holds every other hook and the JSX. The split is load-bearing, not tidy: `useSeo` BORROWS the head's existing tags and restores what it displaced, so two of them mounted at once (the page's and `NotFound`'s) restore child-then-parent and strand the child's description in the head. `RitualDetail` is split the same way for the same reason. New: **`catalogue/CategoryHead`** (full-bleed `.sf-placeholder-media` band — 4:3 phone / 21:9 + `clamp(260px,32vw,420px)` from 769px — under a `GlassCard strong scrim` panel on a NEGATIVE MARGIN, never `position:absolute`, so a long description grows the panel instead of being clipped), **`pages/Rituals/Rituals`** (three full-width rows, image left from 900px), **`pages/Rituals/RitualDetail`** (head → `RitualStep` rows → CTA panel → `LegalNote compact`) and **`catalogue/RitualStep`** (`72px 1fr` phone / `96px 240px 1fr auto` desktop, a 36px numeral, a 240px label plate, the promise, the note in display italics, a frequency chip, `Price` and one add-to-cart). `Breadcrumb` was **rewritten** — it had zero consumers — onto the FULL `{label, to}` trail, and `utils/seo.js` gained `breadcrumbJsonLd(items)` over **the same array**, so the crumb a visitor reads and the crumb a crawler is told cannot drift. Verified in Chromium 1194 at 360/390/414/768/1024/1280/1440: `/category/face-care` **6** chapters · `body-care` **2** · `cleansers` **3** · `serums` **1 PRODUCT** (singular) · `moisturizers` **2** · `masks` **2** · `rituals` → `/rituals`; `/category/nope` and `/rituals/nope` → a real 404 with the URL kept. `/rituals` lists three; `morning-glow` shows its four products in order; `black-rice-body` offers the soap/wash `radiogroup` (**one** tab stop, arrows both ways, the gold focus ring) which swaps the name, promise, plate, PDP link, price, add button AND the panel's total together. **With `enableRitualBundles: true` locally**: one press, ONE toast ("2 items added to your cart"), a cart holding exactly the two priced steps of five — the three TBA products never entered it; **reverted to `false` before the commit** (`git diff src/config/brand.js` empty). Both JSON-LD graphs valid on every page. **0 horizontal overflow at all seven widths**; reduced motion computes `opacity: 1 / transform: none` on the step rows and `scroll-snap-type: none`. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` **20 suites / 218 passed** (21 new in `RitualStep.test.js`; 1 suite / 50 skipped — the live-API suite). `grep -n "ComingSoon" src/App.js` → **only `/why-lamikaa` and `/cart`**. Reads only: no `db.json` and no `api.js` change. |
 | 25 | PDP — layout, chapters, purchase panel, mobile bar | pending | | | |
 | 26 | PDP — media gallery with images and videos | pending | | | |
 | 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | pending | | | |
@@ -309,6 +309,19 @@ Record every decision a prompt had to make that the reference files did not sett
 - `23 · 2026-09-08 · `BuildRitualPanel` fetches the WHOLE catalogue itself instead of taking the listing's rows · `RitualCard` resolves each step against the products it is handed, so on `/shop?concern=hydration` the panel's own three products would have drawn a four-step routine with one thumbnail and three empty plates. Two parallel reads (`rituals.getAll`, `products.getAll`) inside the panel; any rejection or an empty ritual list and it renders nothing at all, the same rule `RitualsTeaser` follows.`
 - `23 · 2026-09-08 · `onVisible` fires only on the crossing INTO half-visibility, and the page's `activeIndex` is simply the last chapter to cross · Reporting the exit as well would make the rail flicker between two answers wherever two chapters are both ≥50% visible. Scrolling down, the arriving chapter crosses and becomes active; scrolling up, the one above does. Measured across four scroll positions at 1280 and 1440 and three at 390: the rail named the right chapter every time.`
 - `23 · 2026-09-08 · `resolveCategory` and `categoryParam` were KEPT although the listing was their last storefront caller · The prompt names two helpers to remove and these are not among them; `categoryParam` is still called by `categoryPath` (and covered by `utils/routes.test.js`), and `resolveCategory` is a generic slug-or-id resolver Prompt 24's category work may want. `getMainMenuCategories` is likewise left alone — it was already unread before this prompt and belongs to the Prompt 35 sweep.`
+- `24 · 2026-09-08 · `Shop` and `RitualDetail` were each SPLIT INTO TWO COMPONENTS so the 404 branch can return before `useSeo` · Both pages have to answer "this does not exist" for an unknown slug, and the obvious shape — render `<NotFound/>` inside the page — mounts TWO `useSeo` calls at once. That is not harmless here: `useSeo` BORROWS a tag it did not create, remembers what it displaced and puts it back on unmount. The child (`NotFound`) claims first and remembers the original; the parent claims second and remembers the CHILD's value; React unmounts child-first, so the child restores the original and the parent then overwrites it with the child's — a stale description left in the head of whatever page came next. The outer component therefore holds only `useParams`/the read hook and both exits (`<Navigate>` for the rituals category, `<NotFound/>` for an unknown slug), and the inner one owns the head. Exactly one `useSeo` is mounted on either route.`
+- `24 · 2026-09-08 · The static `/category/rituals` route was REMOVED from `App.js` and the rule moved into the page · Prompt 23 added it as a literal route beside `/category/:slug`. But the real test is `category.kind === "rituals"`, not the slug — the owner can rename that slug in Admin → Categories, and `categoryPath()` already routes by `kind` — so the page has to check `kind` regardless. Two places to keep one rule in step is one too many: the page now owns both (`slug === "rituals"` short-circuits before the fetch, `kind` catches a renamed one), and `useShopData` gained a `skip` flag so the short-circuit costs no round trip.`
+- `24 · 2026-09-08 · `Breadcrumb` was rewritten to take the FULL trail including Home, rather than keeping its Home-implicit `items` tail · It had **zero importers** (every page that shows a trail rolls its own `<nav>`), so there was no contract to preserve — and the reason to change it is that `breadcrumbJsonLd` must publish the same crumbs the page draws. With Home hard-coded in the component, the structured-data half had to retype it, which is precisely the drift a BreadcrumbList is famous for. One array now feeds both. The last crumb is never a link, carries `aria-current="page"`, and drops any `to` a caller passes by mistake.`
+- `24 · 2026-09-08 · The choice labels are the CATALOGUE's `shortName`, not the brief's "Bar / Wash" · The brief illustrates the segmented control with the two words the seeded pair happens to suggest. `alternativeProductId` is admin-editable data — any two products can be paired behind one step — so a component that typed "Bar"/"Wash" would be describing today's seed rather than reading the record. `choiceLabel()` takes `shortName` (then `name`), and the seeded body ritual therefore reads **"Goat Milk Soap / Body Wash"** with the full product name as each radio's accessible name (WCAG 2.5.3 holds: the visible label is contained in it).`
+- `24 · 2026-09-08 · The bundle button is gated on `priced > 0` as well as on the flag · With the flag on and the body ritual's WASH chosen, both steps are "Price on launch": the first build offered "Add the whole ritual to cart" and pressing it did nothing at all. A button whose only possible answer is "none of these are on sale yet" is a dead control, and the panel already prints no total in that state — so the CTA falls back to "Shop each step", live, the moment the choice makes the bundle empty. Verified in both directions: choose the wash → the bundle button is gone and "Shop each step" is there; choose the soap → the bundle returns and adds exactly the one priced step.`
+- `24 · 2026-09-08 · The category panel takes `scrim` as well as `strong` · `GlassCard strong` is 8% white at 20px blur — a FILTER on whatever is behind it, and nobody has chosen what that is: `heroImage` is an unrelated Picsum seed (face-care currently serves a bright sky). Warm-white Fraunces on 8% white over a bright frame is a contrast failure waiting for a reseed. `scrim` is exactly the primitive for this — an inner `--sf-color-bg` wash under the content — and it costs nothing where the panel sits on the page ground (below 769px). Two blurred layers in view at most is still satisfied: the band is a filtered image, not a backdrop-filter.`
+- `24 · 2026-09-08 · The head's overlap is a NEGATIVE MARGIN, not `position: absolute` · An absolutely positioned panel is measured against the band, so a category whose description runs three lines either overflows it or is clipped by it. On `margin-top: clamp(-140px, -9vw, -72px)` the panel stays in flow: it takes exactly the height its copy needs and pushes the page down when it grows, and the only thing the number controls is how far it rises. Below 769px (and in a short landscape viewport, `max-height: 520px`) the margin goes positive and the panel sits under the band with no overlap at all, which is what the spec asks for on a phone.`
+- `24 · 2026-09-08 · The step connector is ONE hairline per row at full row height with the numeral punched over it, not a stub hanging below each numeral · Rows differ in height (a step with a choice control is 90px taller than one without), so a fixed-length stub either falls short or overshoots. Drawn edge to edge, every row's line meets the next row's at the shared boundary whatever either contains; `data-first` starts it at the first numeral's centre and `data-last` stops it at the last one's, so the thread never promises a step that is not there. The row's own seam is inset past the numeral column for the same reason — a hairline through the numerals' centre line cuts the one thing on the row that is meant to be continuous.`
+- `24 · 2026-09-08 · The rituals index image is ABSOLUTELY POSITIONED inside its stage · The seeded ritual photographs are 1200×1500. Left in flow at 42% of a desktop card, the picture made itself 670px tall and left 200px of empty card beside a 470px story. Out of flow it contributes no intrinsic height, so the ROW decides the picture (`height: 100%`, `min-height: 280px`) rather than the other way round — which is the right way round for an editorial band, and is why every card is now exactly as tall as it has something to say.`
+- `24 · 2026-09-08 · The concern chips on a category head are read off the PRODUCTS, not printed from the collection · A category record has no concerns of its own. Printing the whole eleven-chip set under a two-product category would offer nine links to lists that category is not in. `concernsOf(products, concerns)` collects the slugs the listed products actually name and consults the collection only for the display NAME and the editorial ORDER; a slug with no record still gets a chip through `concernLabel()`, because the products are the truth here and the collection is only the dictionary. `/shop` keeps the full set — there the chips are the way to NARROW the range, not a description of what is in it.`
+- `24 · 2026-09-08 · The rituals index rows are built in the page, not on `RitualCard` · `RitualCard` is the grid form and already has two consumers (the home teaser and the shop's closing panel), both of which link TO this index. Reusing it here would make the index of the rituals look exactly like the two places that point at it, and a full-width row is the only place on the site where the photograph, two paragraphs of story and a whole line of step plates all fit at once. The page reuses `stepCountLabel` and `stepNumeral` rather than retyping either.`
+- `24 · 2026-09-08 · The row's heading is plain text and "See the ritual" is the single control, named for its routine · A row holds a button, and a button inside an anchor is invalid markup that swallows the tap — so the whole-card link `RitualCard` uses is not available here. Rather than give each row two stops to one place, the name stays text and the button carries `aria-label="See the ritual: {name}"`: three identical link names in a screen reader's link list are three links to nowhere in particular, and the visible label is contained in the accessible one.`
+- `24 · 2026-09-08 · `stepNumeral` requires a POSITIVE order, and the unit test is what found it · The obvious `Number.isFinite(Number(order)) ? … : index + 1` prints "00" for a step whose order is `null`, because `Number(null)` is 0 and 0 is finite. `resolveRitualSteps` fills the field in for every seeded step so nothing on screen showed it, but the fallback exists for the case where it has not — and a step numbered 00 is worse than one numbered by its position. `RitualCard`'s own copy of the expression has the same shape and the same practical immunity; it belongs to Prompt 18's file and is left for the Prompt 35 sweep.`
 
 ## Open TODOs
 
@@ -361,11 +374,11 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `07 · products.search() is still json-server's `?q=` in mock mode, which matches ANY field of a record (a query can hit an ingredient list or a meta description and rank as highly as a name). Ranking is deliberately left to the caller — **`src/utils/search.js` exists as of Prompt 11**, and BOTH search surfaces (overlay and `/search`) rank client-side from `products.getAll()` rather than calling `products.search()` at all. The function is now unused by the storefront; a server-side `GET /products?search=` is still the answer if the range ever outgrows a linear pass, and its field list is documented at the function. · Prompt 39 / backend team · 39`
 - `07 · admin.setHeroOrder clears `heroOrder` on every product not in the list it is given. That is the documented contract (dropping a product out of the carousel is the same gesture as reordering it), but it means a caller that passes a PARTIAL list silently empties the rest of the hero. The Prompt 34 editor must always send the full order. · Prompt 34 · 34`
 
-- `08 · ComingSoon stubs are live at /rituals, /rituals/:slug, /why-lamikaa and /cart. **/search left the list in Prompt 11** (`pages/Search/Search`). Each of the four renders "This page is being built (Prompt NN)" and is noindex; Prompt 35 verifies no route still points at pages/_ComingSoon and deletes the folder (Prompt 31 in the index's plan). · Prompts 24, 28, 29 · 24`
+- `08 · ComingSoon stubs are live at **/why-lamikaa and /cart** — two, not four. **/search left the list in Prompt 11** (`pages/Search/Search`) and **/rituals + /rituals/:slug left it in Prompt 24** (`pages/Rituals/{Rituals,RitualDetail}`). Each of the two renders "This page is being built (Prompt NN)" and is noindex; Prompt 35 verifies no route still points at pages/_ComingSoon and deletes the folder (Prompt 31 in the index's plan). · Prompts 28, 29 · 28`
 - ~~`08 · /search is a stub, so the search OVERLAY is the only search surface until Prompt 11 …` · **RESOLVED by Prompt 11**~~ — `/search?q=` is a real results page and Enter (or "See all N results") lands on it. The one temporarily reduced storefront capability is restored.
 - `08 · pages/AboutUs/AboutUs.js still carries the Meghali silk story end to end (72 matches for silk/saree/weave/Sualkuchi/Mekhela/loom — headline "Three silks, one river, and the families who weave them", the SILKS table, META ["Est. 2010", "Kolkata", …], the placehold.co loom imagery). Prompt 08 touched it for links + useSeo only. Prompt 28 deletes the folder and writes pages/About/About from siteContent. · Prompt 28 · 28`
 - `08 · pages/Products/Products.js still carries FABRIC_FAMILIES (Muga/Pat/Eri/Toss Silk) and its "Fabric" facet. It renders NOTHING with the LAMIKAA seed (availableFabrics is empty, so the chip group and the drawer section are both hidden) — it is dead code that Prompt 23 deletes with the page. · Prompt 23 · 23`
-- `08 · The temporary `categorySlug` prop on pages/Products/Products (and the CategoryRoute wrapper in App.js) exists only to make /category/:slug real before the Shop page lands. Both go when the element becomes `<Shop mode="category" />`. · Prompt 24 · 24`
+- ~~`08 · The temporary `categorySlug` prop on pages/Products/Products (and the CategoryRoute wrapper in App.js) …`~~ · **RESOLVED by Prompt 23** — `pages/Products/` is deleted and the route is `<Shop mode="category" />`; Prompt 24 gave it its head, its breadcrumb, its JSON-LD and its 404.
 - `08 · RouteFallback is a STOREFRONT-token skeleton and it is also what the admin's <Suspense> shows while an admin chunk loads. It reads correctly (the tokens are global) but it is not the admin's own idiom. Give the admin its own fallback when the shell is rebuilt. · Prompt 32 · 32`
 - `08 · The PDP still runs its own hand-rolled title + meta[name=description] effect (ProductDetails.js), which is NOT `data-seo`-tagged and so is the one writer outside useSeo. The prompt says to leave it; Prompt 25 replaces it (and Prompt 27 adds the product JSON-LD). Until then the PDP has no canonical, no og:* and no JSON-LD. · Prompt 25 · 25`
 - `08 · /_playground has no useSeo call, so it shows the store title from settings and the static index.html og:* set. Deliberate — it is scaffolding, and Prompt 35 deletes it. · Prompt 35 · 35`
@@ -398,8 +411,8 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `17 · At 769–1024px the About band's photograph is the full measure (984×615 at 1024) because the two-column grid only starts at 1025px, which is what the prompt specifies. It reads as an editorial opener and the placeholder is standing in for real Assam landscape photography, so it was left — but it is the largest single image on the home page at that width and is worth a look with the real photograph before the responsive pass signs it off. · developer · 37`
 - `17 · External images (picsum.photos, res.cloudinary.com) are blocked from the BROWSER in this sandbox even though `curl` reaches them (200) — no request is issued and no error fires, so the About band's landscape could not be seen with the real asset. Every geometry check was run against a locally-served stand-in of the same 16:10 shape, and the broken-image path was exercised separately by aborting the request (`onImageError` swapped in the shared placeholder). Re-check the wash and the gold lamp against the real Picsum frame on a developer machine. · developer · 37`
 - `18 · The eight "Carried by" plates and the ritual step thumbs render EMPTY in this sandbox: `res.cloudinary.com` answers `net::ERR_CONNECTION_RESET` to the browser (curl reaches it), so `onImageError` swaps in `PLACEHOLDER_IMG`. Same for the gold check glyphs — `@iconify/react` fetches `mdi:check-circle-outline` at runtime and its API is unreachable here, so the reserved 20px boxes stay empty. Both are environment limits, not defects: the geometry, the colour and the box reservation were all measured in Chromium and are correct. Re-look at both on a machine with outbound HTTPS · developer · 37
-- `18 · A ritual card links to `/rituals/<slug>`, which is a stub until Prompt 24 builds the page · owner of 24 · 24
-- `18 · `RitualCard`'s `compact` variant (no photograph) has no consumer yet — it is built to the prompt's contract for the rituals index and the PDP cross-links · owner of 24 · 24
+- ~~`18 · A ritual card links to `/rituals/<slug>`, which is a stub until Prompt 24 builds the page`~~ · **RESOLVED by Prompt 24** — `/rituals/:slug` is `pages/Rituals/RitualDetail`, and every `RitualCard` on the home teaser and in the shop's closing panel now lands on a real page.
+- ~~`18 · `RitualCard`'s `compact` variant (no photograph) has no consumer yet`~~ · **RESOLVED by Prompt 23** — `catalogue/BuildRitualPanel` renders three of them as the shop's closing panel. (Prompt 24's rituals INDEX deliberately does not use the card at all: see the decision above.)
 
 - `19 · The full-page CTA's background photograph could not be seen with the real asset: `picsum.photos` answers `net::ERR_CONNECTION_RESET` to the browser in this sandbox (curl reaches it with a 200). Every measurement — the wash, the 12% gradient, the card ground, all six contrast figures — was taken against a locally-served stand-in chosen to be the WORST case (near-white with dark bands), so the real frame can only improve them. Look at the composition once against `picsum.photos/seed/lamikaa-cta/1920/1080` on a machine with outbound HTTPS · developer · 37`
 - `19 · At desktop the card measures 1060px and the section 1188px, so a 900px laptop scrolls ~290px through a section whose floor is 100svh. It is inherent to `--sf-text-4xl` inside a 760px card (each signature line wraps to two), not to the implementation — see the decision above. If the owner wants the whole card on one screen, the levers are the card's max-width or the headline token, and Prompt 22's assembly pass is where the home page's vertical budget is decided as a whole · Prompt 22 · 22`
@@ -413,6 +426,12 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `23 · `/category/nope` renders the shop's "Nothing here yet" panel instead of a 404. Prompt 24 owns the unknown-slug branch (`NotFound`) together with `CategoryHead`, the breadcrumb and the category JSON-LD; the route, the data read and the chapters are already in place. · developer · 24`
 - `23 · The category head is the shop's `SectionHeading` with eyebrow "Category", the category name as the `h1` and its `description` as the lede — no image band, no breadcrumb, no `BreadcrumbList` graph. Prompt 24 replaces that block with `CategoryHead`. · developer · 24`
 - `23 · No product photograph could be seen rendered in this sandbox: `res.cloudinary.com` resets Chromium's TLS tunnel through the agent proxy, so every chapter plate and every ritual thumbnail painted as an empty `.sf-plate`. Layout, sticky travel and the 4:5 reservation were verified against the reserved boxes; the CROPS themselves still want one pass on a machine that can reach Cloudinary. Same limitation recorded by Prompts 20 and 22. · developer · 37`
+
+- `24 · Every remaining sub-24px link target on these pages is in the FOOTER, not in Prompt 24's files: the four policy links measure 18px at 360/390/414 and the eight category/rituals links 21px from 768px up (measured at all seven widths on `/category/face-care`, `/rituals` and `/rituals/black-rice-body`). WCAG 2.2 AA 2.5.8 asks for 24×24. Prompt 13 owns `components/Footer`; the a11y audit should either grow the rows or record the "inline" exception deliberately. Everything Prompt 24 added clears it — breadcrumb crumbs 44px ≤768 and 24px above, step name links 25px, `.sf-btn--sm` 36px with the primitives' own `@media (pointer: coarse)` bump to 44px. · Prompt 38 · 38`
+- `24 · `brand.flags.enableRitualBundles` is committed as `false`, which is the brief §8.1 default: bundles wait until the range has prices. Both halves of the panel are built and were exercised with the flag flipped locally (see the table row). The owner flips it in `src/config/brand.js` once more than one or two of the eight products carry an MRP — nothing else has to change. · owner · 39`
+- `24 · `RitualStep` supports an UNCONTROLLED choice (omit `selectedProductId`/`onSelect` and the row keeps its own) but no caller uses it — `RitualDetail` always lifts the selection, because the CTA panel has to spend it. The path is covered by the component's own default state rather than by a test; the PDP's "part of this ritual" cross-link (Prompt 27) is the surface most likely to want it. · owner of 27 · 27`
+- `24 · The category `heroImage` seeds are unrelated stock frames (`/category/face-care` currently serves the Statue of Liberty). That is expected — they are inventoried in PLACEHOLDER_ASSETS.md and wear `.sf-placeholder-media` — but it is the first prompt where a placeholder photograph is the largest thing on the page, and the glass panel's legibility over it now depends on `scrim` rather than on luck. Re-check the band once real category photography exists. · owner · 39`
+- `24 · Chromium in this sandbox has no outbound HTTPS, so the placeholder photography was rendered by fetching each remote URL in NODE (which does reach picsum/cloudinary through the agent proxy) and fulfilling the browser's request with the bytes. Every screenshot in this prompt's QA is therefore of the REAL seeded frames — the first time in the programme that has been possible — but it is a harness trick, not the app's own path. The `onImageError` fallback was exercised separately by aborting the same requests. · developer · 37`
 
 ## Placeholders introduced / resolved
 
@@ -2909,3 +2928,142 @@ tree with it.
 The only thing that could not be seen is photography: `res.cloudinary.com`
 resets Chromium's TLS tunnel through this sandbox's proxy, so every plate
 painted empty. Logged as an Open TODO.
+
+
+## Prompt 24 record (2026-09-08)
+
+### What was built
+
+| File | Lines | What it is |
+|---|---|---|
+| `src/components/catalogue/CategoryHead.js` | 130 | The band + glass panel a category page opens on. |
+| `src/components/catalogue/CategoryHead.module.css` | 136 | 4:3 phone / 21:9 desktop; the panel rises on a negative margin. |
+| `src/components/catalogue/RitualStep.js` | 260 | One `<li>` of a routine: numeral, plate, words, price, one action. |
+| `src/components/catalogue/RitualStep.module.css` | 280 | `72px 1fr` → `96px 240px 1fr auto`; the thread and the seam. |
+| `src/pages/Rituals/Rituals.js` | 290 | `/rituals` — three full-width routine rows. |
+| `src/pages/Rituals/Rituals.module.css` | 265 | Stacked, then split at 900px. |
+| `src/pages/Rituals/RitualDetail.js` | 390 | `/rituals/:slug` — head, steps, CTA panel, legal note. |
+| `src/pages/Rituals/RitualDetail.module.css` | 197 | Three bands; the head splits at 1025px. |
+| `src/components/catalogue/RitualStep.test.js` | 182 | 21 tests over this prompt's pure decisions. |
+| `src/components/Breadcrumb/Breadcrumb.js` | 67 | **Rewritten** — the full trail, `aria-current`, an `<ol>`. |
+| `src/components/Breadcrumb/Breadcrumb.module.css` | 90 | **Rewritten** — tokens only; 44px targets ≤768px. |
+
+Changed: `src/pages/Shop/Shop.js` (380 → 581, split in two), `Shop.module.css`
+(220 → 228), `src/utils/seo.js` (+35, `breadcrumbJsonLd`), `src/App.js` (two lazy
+pages in, one static redirect and two stubs out), `catalogue/index.js` (+2).
+**No `db.json` and no `api.js` change — this prompt reads only.**
+
+### The routes, measured (Chromium 1194, mock mode)
+
+| URL | h1 | Chapters / steps | Head count | Lands on |
+|---|---|---|---|---|
+| `/category/face-care` | Face Care | 6 | 6 PRODUCTS | itself |
+| `/category/body-care` | Body Care | 2 | 2 PRODUCTS | itself |
+| `/category/cleansers` | Cleansers | 3 | 3 PRODUCTS | itself |
+| `/category/serums` | Serums | 1 | **1 PRODUCT** (singular) | itself |
+| `/category/moisturizers` | Moisturizers & Mists | 2 | 2 PRODUCTS | itself |
+| `/category/masks` | Masks & Scrubs | 2 | 2 PRODUCTS | itself |
+| `/category/rituals` | Curated routines | — | — | **`/rituals`** |
+| `/category/nope` | This page has wandered off | — | — | 404, URL kept |
+| `/rituals` | Curated **routines** | 3 rows | — | itself |
+| `/rituals/morning-glow` | The Morning Glow Ritual | 4 | — | itself |
+| `/rituals/evening-renewal` | The Evening Renewal Ritual | 5 | — | itself |
+| `/rituals/black-rice-body` | The Black Rice Body Ritual | 2 (+ choice) | — | itself |
+| `/rituals/nope` | This page has wandered off | — | — | 404, URL kept |
+
+Step products resolve in the seeded order: morning-glow = face wash · mist ·
+serum · gel; evening-renewal = face wash · scrub · mask · serum · gel;
+black-rice-body = goat milk soap (or body wash) · mist.
+
+### Head and structured data
+
+- `/category/face-care` — title `Face Care · LAMIKAA NATURALS`, description the
+  category's own, canonical the current path, and **two** graphs in one
+  `ld+json` block: a `BreadcrumbList` (Home → Shop → Face Care, the last
+  positioned but URL-less) and an `ItemList` of the six product URLs in hero
+  order. The visible trail is the same array.
+- `/rituals/morning-glow` — title `The Morning Glow Ritual · LAMIKAA NATURALS`,
+  description the ritual's tagline, `BreadcrumbList` Home → Rituals → the name,
+  `ItemList` of the four **chosen** step products.
+- `/rituals` — `useSeo({ title: "Rituals" })`, no page-level graph (an index of
+  three editorial rows is not an `ItemList` of products).
+- Breadcrumb `aria-current="page"` sits on the last crumb and nowhere else.
+
+### The bar / wash choice
+
+A real `role="radiogroup"` labelled "Choose the product for step 1", two
+`role="radio"` buttons with roving tabindex (`0` on the checked one, `-1` on the
+other) — **one tab stop for the pair**, verified by tabbing out of it straight
+into "Add to Cart". ArrowRight/Down and ArrowLeft/Up move and select in both
+directions and carry focus; Home/End jump to the ends. Focus shows
+`rgba(245,215,110,.55) 0 0 0 3px` — the champagne ring. Labels come from the
+catalogue (`shortName`): **"Goat Milk Soap" / "Body Wash"**, each radio's
+accessible name the full product name.
+
+Choosing the wash swaps, in one gesture: the name (`Black Rice Goat Milk Soap` →
+`Black Rice Body Wash`), the promise, the plate image and its `alt`, the plate's
+`href` (`/product/black-rice-goat-milk-soap` → `/product/black-rice-body-wash`),
+the price (`₹90.00` → `Price on launch`), the button (`Add to Cart` →
+`Coming soon`, disabled) **and** the panel — "From ₹90 for the priced steps"
+disappears and the CTA becomes "Shop each step". Choosing the soap again
+restores all of it.
+
+### The bundle, with the flag flipped locally
+
+`enableRitualBundles: true` in `src/config/brand.js`, dev server reloaded:
+
+- `/rituals/evening-renewal` (2 priced of 5): "Shop each step" is gone, "Add the
+  whole ritual to cart" is there. One press → **one** `.swal2-toast`
+  ("Added to cart · 2 items added to your cart"), **one** drawer opening, and a
+  cart holding exactly `Black Rice Face Wash ₹390` and
+  `Black Rice Exfoliating Face Scrub ₹349`. The three `priceTBA` products never
+  entered it.
+- `/rituals/black-rice-body` with the WASH chosen (nothing priced): no bundle
+  button at all, "Shop each step" in its place, no total. Switch back to the
+  soap → the bundle returns and adds the single priced step ("1 item added").
+- **Reverted to `false` before the commit**; `git diff src/config/brand.js` is
+  empty.
+
+`Shop each step` (the committed path) scrolls the first row to the top
+(`window.scrollY` 0 → 989 at 1280) and moves focus into it — onto step 1's plate
+link, accessible name "Black Rice Face Wash by LAMIKAA Naturals — label".
+
+### Responsive and a11y
+
+- **360 / 390 / 414 / 768 / 1024 / 1280 / 1440** on `/category/face-care`,
+  `/rituals` and `/rituals/black-rice-body`: `scrollWidth === clientWidth` at
+  every width — **no horizontal scroll anywhere**. The only elements crossing
+  the viewport edge are `ChapterIndex`'s pills, inside their own scroller
+  (Prompt 23, by design).
+- Targets: breadcrumb crumbs **44px** at ≤768px and **24px** above; step name
+  links 25px (with the 240px plate link to the same PDP beside them); the
+  segmented options 44px; `.sf-btn--sm` 36px, which the primitives already grow
+  to 44px under `@media (pointer: coarse)`. Every sub-24px target left on these
+  pages belongs to the **footer** — logged for Prompt 38.
+- Reduced motion: the step rows compute `opacity: 1` / `transform: none` (no
+  reveal waiting below the fold), and `scroll-snap-type` is `none` on a category
+  page. Without the preference the rows sit at `opacity 0` / `translateY(16px)`
+  until they scroll in, and the category page snaps `y proximity` at 1280.
+- One `<h1>` per page, `id="shop-title"` still on the category head's so
+  `ChapterIndex`'s "Back to top" reaches it.
+
+### Regressions checked
+
+`/shop` unchanged (8 chapters, `ItemList` of 8, the concern chip row);
+`/shop?concern=hydration` still `h1` "For **Hydration**", 3 chapters, the
+Hydration chip `aria-current="page"`, title "Shop · Hydration · LAMIKAA
+NATURALS". `CI=true npm run build` exit 0 **with no warnings**;
+`npm test -- --watchAll=false` 20 suites / 218 passed (1 suite / 50 skipped).
+`grep -n "ComingSoon" src/App.js` → `/why-lamikaa` and `/cart` only.
+
+### Photography, for the first time
+
+Chromium has no outbound HTTPS in this sandbox, so every prompt since 17 has
+measured geometry against empty plates. This run fetched each remote URL in
+**Node** (which does reach `picsum.photos` and `res.cloudinary.com` through the
+agent proxy) and fulfilled the browser's request with the bytes — so the QA
+screenshots are of the real seeded frames, product labels included. Two things
+were found that way and fixed: the ritual stage was 200px taller than its story
+(the 1200×1500 image was driving the row), and the category panel needed `scrim`
+to stay legible over a bright Picsum seed. It is a harness trick, not the app's
+own path; `onImageError` was exercised separately by aborting the same requests.
