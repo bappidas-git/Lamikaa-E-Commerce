@@ -117,11 +117,19 @@ const RitualCard = ({ ritual, products = [], compact = false, className = "" }) 
         .filter(Boolean)
         .join(" ")}
     >
-      <Link
-        to={ritualPath(ritual)}
-        className={styles.link}
-        aria-label={`${name}, ${steps.length} ${steps.length === 1 ? "step" : "steps"}`}
-      >
+      {/* THE NAME IS WHAT THE CARD SAYS (Prompt 38). The link carried an
+          `aria-label` of its own — "The Morning Glow Ritual, 4 steps" — while
+          the card visibly reads "Ritual · 4 steps", the name, the blurb, the
+          duration and "See the ritual". A label that does not contain the
+          visible text breaks WCAG 2.5.3 (Label in Name): a speech-input user
+          saying what they can see does not activate the card, and it is what
+          Lighthouse reports as `label-content-name-mismatch`. So the label is
+          gone and the content names the link. What was cut from the name was
+          only ever furniture — the "See the ritual" pill is the card's own
+          look, not a second control — so it is hidden the same way the step
+          plates already are, and the name reads: the step count, the ritual,
+          the line about it, the duration. */}
+      <Link to={ritualPath(ritual)} className={styles.link}>
         {!compact && ritual.image ? (
           <span className={`sf-placeholder-media ${styles.media}`}>
             <img
@@ -166,8 +174,8 @@ const RitualCard = ({ ritual, products = [], compact = false, className = "" }) 
 
           {/* A ghost button's look without its role: the card is the control,
               and a second one inside it would be a second tab stop. */}
-          <span className={styles.cta}>
-            See the ritual <span aria-hidden="true">→</span>
+          <span className={styles.cta} aria-hidden="true">
+            See the ritual →
           </span>
         </span>
       </Link>

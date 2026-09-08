@@ -117,9 +117,19 @@ const Modal = ({
             aria-labelledby={labelledBy || (title ? titleId : undefined)}
             aria-describedby={describedBy}
             tabIndex={-1}
+            /* THE SCRIM IS NOT OPTIONAL ON A MODAL EITHER (Prompt 38, the same
+               finding as Drawer.js). The backdrop above darkens the page to
+               72%, but the panel is glass on top of that, so 28% of whatever
+               the modal opened over still reads through it. Measured with the
+               auth modal over the checkout page, the field labels
+               (--sf-color-text-secondary, 14px) fell to a serious
+               `color-contrast` failure. The design system's own remedy for text
+               on glass over live content is the scrim, and putting it on the
+               shared panel fixes every dialog over every page at once. */
             className={[
               "sf-glass",
               "sf-glass--strong",
+              "sf-glass--scrim",
               styles.panel,
               styles[size] || styles.md,
               className,

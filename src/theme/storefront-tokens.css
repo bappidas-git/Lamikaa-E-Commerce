@@ -67,6 +67,59 @@
  *   token is free, renaming one is a repo-wide edit.
  * ========================================================================== */
 
+/* =============================================================================
+ * THE TWO FALLBACK FACES — metric-matched, so the font swap moves nothing
+ * =============================================================================
+ *
+ * These declare NO font file and cost NO request. Each is a local face the
+ * visitor already has, scaled so that its glyphs occupy the same width as the
+ * webfont's. They are named second in `--sf-font-display` and `--sf-font-family`
+ * below, between the webfont and the generic fallbacks, and they exist for
+ * exactly the window between first paint and the woff2 arriving.
+ *
+ * WHY (Prompt 38). Prompt 38 took the Google Fonts stylesheet off the critical
+ * path (public/index.html), which cut FCP from 2.8 s to 1.6 s — and moved the
+ * `display=swap` re-render to AFTER the first paint rather than before it. Text
+ * that is laid out in a fallback and then re-laid-out in Fraunces or Manrope
+ * REFLOWS, and where that text wraps, the reflow is a layout shift: the shop's
+ * row of twelve concern pills re-wrapped from three lines to four when Manrope
+ * landed, measured at 0.16 CLS on its own. Reserving the row's slot cannot help
+ * — the row itself changes size.
+ *
+ * The remedy is to stop the swap changing any metrics. `size-adjust` scales the
+ * fallback so a string is the same width in both, and the ratios below were
+ * MEASURED in Chromium against the loaded webfaces (canvas `measureText` over a
+ * mixed-case, digit-bearing sample at 16px):
+ *
+ *     Manrope  / Arial            = 1.011   -> size-adjust: 101.1%
+ *     Fraunces / Times New Roman  = 1.1328  -> size-adjust: 113.3%
+ *
+ * ARIAL AND TIMES ARE THE RIGHT ANCHORS because they are the two faces whose
+ * metrics are stable across platforms: Liberation Sans and Liberation Serif are
+ * metric-compatible with them by design (that is what this container measured),
+ * Helvetica is metric-compatible with Arial on Apple platforms, and both names
+ * resolve on Windows. A `local()` face that is not installed simply drops out of
+ * the stack, so the worst case is the behaviour this project had before.
+ *
+ * No vertical overrides: every surface that could be moved by a line-box change
+ * sets its own `line-height` from the type tokens, and the pills that started
+ * this carry `line-height: 1` inside a `min-height` of 44px.
+ * ========================================================================== */
+
+@font-face {
+  font-family: "Manrope Fallback";
+  src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  size-adjust: 101.1%;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces Fallback";
+  src: local("Times New Roman"), local("Times"), local("Liberation Serif");
+  size-adjust: 113.3%;
+  font-display: swap;
+}
+
 :root {
   /* Dark form controls, scrollbars and canvas, with no class on <body> and no
      media query — this is the only theme there is. */
@@ -213,10 +266,10 @@
      value. (The SOFT axis DESIGN_SYSTEM.md §6 asks for is not in the subset the
      font link requests — see the note in src/index.css.)
      Source of truth for every value below: DESIGN_SYSTEM.md §6. */
-  --sf-font-display: "Fraunces", "Playfair Display", Georgia, "Times New Roman",
-    serif;
-  --sf-font-family: "Manrope", "Inter", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
+  --sf-font-display: "Fraunces", "Fraunces Fallback", "Playfair Display",
+    Georgia, "Times New Roman", serif;
+  --sf-font-family: "Manrope", "Manrope Fallback", "Inter", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* TEXT TIER — fixed rem on purpose. Body copy must not shrink on a phone, so
      --sf-text-base is a hard 16px floor and nothing below --sf-text-sm (14px)

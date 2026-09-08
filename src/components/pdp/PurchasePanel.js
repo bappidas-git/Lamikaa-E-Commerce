@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import Swal from "sweetalert2";
+import { fireAlert } from "../../utils/alerts";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import LegalNote from "../brand/LegalNote";
 import { Button, GlassCard, Price } from "../ui";
@@ -150,7 +150,7 @@ const PurchasePanel = ({
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      Swal.fire({
+      fireAlert({
         toast: true,
         position: "bottom-end",
         showConfirmButton: false,

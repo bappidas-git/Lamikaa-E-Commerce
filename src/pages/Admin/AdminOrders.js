@@ -486,7 +486,7 @@ const AdminOrders = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, gap: 2, flexWrap: "wrap" }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Orders</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Orders</Typography>
           <Typography variant="body2" color="text.secondary">Manage customer orders and fulfillment</Typography>
         </Box>
         <Chip label={isFiltering ? `${filtered.length} of ${orders.length}` : `${orders.length} total`} sx={{ bgcolor: "primary.main", color: "primary.contrastText" }} />
@@ -508,15 +508,15 @@ const AdminOrders = () => {
             InputProps={{ startAdornment: <InputAdornment position="start"><Icon icon="mdi:magnify" /></InputAdornment> }}
           />
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Fulfillment</InputLabel>
-            <Select value={fulfillmentFilter} label="Fulfillment" onChange={(e) => setFulfillmentFilter(e.target.value)}>
+            <InputLabel id="admin-orders-fulfillment-label">Fulfillment</InputLabel>
+            <Select labelId="admin-orders-fulfillment-label" value={fulfillmentFilter} label="Fulfillment" onChange={(e) => setFulfillmentFilter(e.target.value)}>
               <MenuItem value="all">All</MenuItem>
               {Object.entries(FULFILLMENT_STATUS).map(([k, v]) => (<MenuItem key={k} value={k}>{v.label}</MenuItem>))}
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel>Payment</InputLabel>
-            <Select value={paymentFilter} label="Payment" onChange={(e) => setPaymentFilter(e.target.value)}>
+            <InputLabel id="admin-orders-payment-label">Payment</InputLabel>
+            <Select labelId="admin-orders-payment-label" value={paymentFilter} label="Payment" onChange={(e) => setPaymentFilter(e.target.value)}>
               <MenuItem value="all">All</MenuItem>
               {Object.entries(PAYMENT_STATUS).map(([k, v]) => (<MenuItem key={k} value={k}>{v.label}</MenuItem>))}
             </Select>
@@ -524,8 +524,8 @@ const AdminOrders = () => {
           <TextField label="From" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} size="small" InputLabelProps={{ shrink: true }} sx={{ width: 150 }} />
           <TextField label="To" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} size="small" InputLabelProps={{ shrink: true }} sx={{ width: 150 }} />
           <FormControl size="small" sx={{ minWidth: 170 }}>
-            <InputLabel>Sort</InputLabel>
-            <Select value={sortBy} label="Sort" onChange={(e) => setSortBy(e.target.value)}>
+            <InputLabel id="admin-orders-sort-label">Sort</InputLabel>
+            <Select labelId="admin-orders-sort-label" value={sortBy} label="Sort" onChange={(e) => setSortBy(e.target.value)}>
               {Object.entries(SORT_OPTIONS).map(([k, v]) => (<MenuItem key={k} value={k}>{v.label}</MenuItem>))}
             </Select>
           </FormControl>
@@ -881,8 +881,8 @@ const AdminOrders = () => {
                 )}
                 {impl.kind === "refund" && (
                   <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-                    <InputLabel>Refund method</InputLabel>
-                    <Select value={methodKeys.includes(cancelRefundMethod) ? cancelRefundMethod : methodKeys[0]} label="Refund method" onChange={(e) => setCancelRefundMethod(e.target.value)}>
+                    <InputLabel id="admin-orders-refund-method-label">Refund method</InputLabel>
+                    <Select labelId="admin-orders-refund-method-label" value={methodKeys.includes(cancelRefundMethod) ? cancelRefundMethod : methodKeys[0]} label="Refund method" onChange={(e) => setCancelRefundMethod(e.target.value)}>
                       {methodKeys.map((m) => (<MenuItem key={m} value={m}>{REFUND_METHODS[m]}</MenuItem>))}
                     </Select>
                   </FormControl>
@@ -928,8 +928,8 @@ const AdminOrders = () => {
                 sx={{ mb: 2 }} inputProps={{ min: 0, max: refundRemaining }}
               />
               <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                <InputLabel>Refund method</InputLabel>
-                <Select value={refundMethod} label="Refund method" onChange={(e) => setRefundMethod(e.target.value)}>
+                <InputLabel id="admin-orders-refund-method-2-label">Refund method</InputLabel>
+                <Select labelId="admin-orders-refund-method-2-label" value={refundMethod} label="Refund method" onChange={(e) => setRefundMethod(e.target.value)}>
                   {(isOnlinePayment(selectedOrder) ? Object.keys(REFUND_METHODS) : COD_REFUND_METHODS).map((m) => (
                     <MenuItem key={m} value={m}>{REFUND_METHODS[m]}</MenuItem>
                   ))}

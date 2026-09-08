@@ -95,9 +95,22 @@ const Drawer = ({
             aria-modal="true"
             aria-labelledby={labelledBy || (title ? titleId : undefined)}
             tabIndex={-1}
+            /* THE SCRIM IS NOT OPTIONAL ON A DRAWER (Prompt 38). A drawer is
+               glass over whatever page it opened from, so its ground is
+               whatever that page happens to be showing — and on a product page
+               that is a lit pack shot. Measured over the PDP, the cart tray's
+               12px muted note ("Shipping and taxes calculated at checkout")
+               composited to 3.82:1 against a gold-lit rgb(91, 83, 57): a
+               serious `color-contrast` failure that no colour on the text side
+               could fix, because the background is the photograph. The scrim
+               (`--sf-color-bg` at 35%, the design system's own answer for text
+               on glass over imagery) takes the same pair to 5.7:1 and holds for
+               every drawer over every page, which is why it lives here and not
+               on one tray's stylesheet. */
             className={[
               "sf-glass",
               "sf-glass--strong",
+              "sf-glass--scrim",
               styles.panel,
               className,
             ]

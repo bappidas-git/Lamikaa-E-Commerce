@@ -57,8 +57,27 @@ const toRow = (row, index) => ({
   link: typeof row.link === "string" && row.link.trim() ? row.link.trim() : "",
 });
 
+/**
+ * The rows the bundle already has, printable ones only.
+ *
+ * THE BAND'S FIRST FRAME (Prompt 38). Starting at `[]` meant the bar rendered
+ * NOTHING until `announcements.getAll()` came back and then appeared — a 36px
+ * band inserted at the very top of the document, pushing <main> and everything
+ * in it down. Measured on the production build that was a 0.041 layout shift on
+ * EVERY route, the largest single contributor to CLS on the home page.
+ *
+ * `brand.announcements` is a module the bundle always has and is already this
+ * component's answer when the API is empty or unreachable, so it is also the
+ * right first frame: the band paints at its final height immediately and the
+ * API's rows (which open on the same line) replace the text in place. When
+ * every fallback row is a placeholder this is `[]` and the bar renders nothing
+ * — as it did before, and with no shift either way, because it never appeared.
+ */
+const fallbackRows = () =>
+  (brand.announcements || []).filter(isPrintable).map(toRow);
+
 const AnnouncementBar = ({ className = "" }) => {
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState(fallbackRows);
   const [dismissed, setDismissed] = useState(false);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);

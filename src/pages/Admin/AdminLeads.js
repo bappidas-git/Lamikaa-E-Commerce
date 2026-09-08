@@ -229,7 +229,7 @@ const AdminLeads = () => {
   return (
     <Box>
       {/* Page Header */}
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
+      <Typography variant="h5" component="h1" fontWeight="bold" gutterBottom>
         Lead Management
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -352,8 +352,8 @@ const AdminLeads = () => {
           </Grid>
           <Grid item xs={6} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Type</InputLabel>
-              <Select
+              <InputLabel id="admin-leads-type-label">Type</InputLabel>
+              <Select labelId="admin-leads-type-label"
                 value={typeFilter}
                 label="Type"
                 onChange={(e) => setTypeFilter(e.target.value)}
@@ -367,8 +367,8 @@ const AdminLeads = () => {
           </Grid>
           <Grid item xs={6} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
+              <InputLabel id="admin-leads-status-label">Status</InputLabel>
+              <Select labelId="admin-leads-status-label"
                 value={statusFilter}
                 label="Status"
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -705,8 +705,8 @@ const AdminLeads = () => {
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={4}>
                       <FormControl fullWidth>
-                        <InputLabel>Status</InputLabel>
-                        <Select
+                        <InputLabel id="admin-leads-status-2-label">Status</InputLabel>
+                        <Select labelId="admin-leads-status-2-label"
                           value={editStatus}
                           label="Status"
                           onChange={(e) => setEditStatus(e.target.value)}

@@ -167,8 +167,18 @@ const WhyLamikaa = () => {
       </header>
 
       {/* ── 2. THE PHILOSOPHY AND THE PILLARS ───────────────────────────── */}
-      <section className={`sf-section ${styles.intro}`} aria-label="Our philosophy">
+      {/* The band is designed without a headline — the lede IS the opening — but
+          the pillars under it are h3s, so with nothing between them and the
+          page's h1 the outline jumped a level (axe `heading-order`, and a
+          screen-reader outline that reads the pillars as children of the page
+          rather than of this section). The heading it was missing is the name
+          the section already gave itself, published as a real h2 the same way
+          the ritual steps do it: visually hidden, so nothing on screen moves. */}
+      <section className={`sf-section ${styles.intro}`} aria-labelledby="why-philosophy">
         <div className="sf-container">
+          <h2 id="why-philosophy" className="sf-visually-hidden">
+            Our philosophy
+          </h2>
           <div className={styles.column}>
             {loading ? (
               <Skeleton variant="text" lines={5} />

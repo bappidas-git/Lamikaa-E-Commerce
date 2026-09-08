@@ -506,7 +506,7 @@ const AdminProducts = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, gap: 2, flexWrap: "wrap" }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Products</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Products</Typography>
           <Typography variant="body2" color="text.secondary">Manage your product catalogue</Typography>
         </Box>
         <Button variant="contained" startIcon={<Icon icon="mdi:plus" />} onClick={openCreate}>
@@ -580,7 +580,7 @@ const AdminProducts = () => {
                     <TableRow key={p.id} hover>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                          <Avatar src={p.images?.[0]} variant="rounded" sx={{ width: 48, height: 48, bgcolor: "action.hover" }}>
+                          <Avatar src={p.images?.[0]} alt="" variant="rounded" sx={{ width: 48, height: 48, bgcolor: "action.hover" }}>
                             <Icon icon="mdi:package-variant" style={{ fontSize: 22 }} />
                           </Avatar>
                           <Box>

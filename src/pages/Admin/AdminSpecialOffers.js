@@ -108,7 +108,7 @@ const SelectionManager = ({
     return (
       <>
         {data.image ? (
-          <Avatar src={data.image} variant="rounded" sx={{ width: 40, height: 40 }} />
+          <Avatar src={data.image} alt="" variant="rounded" sx={{ width: 40, height: 40 }} />
         ) : (
           <Avatar variant="rounded" sx={{ width: 40, height: 40, bgcolor: "action.selected", color: "primary.main" }}>
             <Icon icon={data.icon || "mdi:tag"} />
@@ -131,7 +131,7 @@ const SelectionManager = ({
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
           <Icon icon={icon} style={{ fontSize: 22 }} />
-          <Typography variant="h6">{title}</Typography>
+          <Typography variant="h6" component="h2">{title}</Typography>
           <Chip
             size="small"
             label={selectedIds.length > 0 ? `${selectedIds.length} selected` : "Automatic"}
@@ -391,7 +391,7 @@ const AdminSpecialOffers = () => {
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 2, mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Special Offers Page</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Special Offers Page</Typography>
           <Typography variant="body2" color="text.secondary">
             Control the storefront "Today's Deals" page — visibility, timer, coupons and featured products.
           </Typography>
@@ -431,7 +431,7 @@ const AdminSpecialOffers = () => {
                 <Icon icon={form.enabled ? "mdi:eye" : "mdi:eye-off"} style={{ fontSize: 22 }} />
               </Avatar>
               <Box>
-                <Typography variant="h6">
+                <Typography variant="h6" component="h2">
                   {form.enabled ? "Deals page is visible" : "Deals page is hidden"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -456,7 +456,7 @@ const AdminSpecialOffers = () => {
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
                 <Icon icon="mdi:format-title" style={{ fontSize: 22 }} />
-                <Typography variant="h6">Hero copy</Typography>
+                <Typography variant="h6" component="h2">Hero copy</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 The headline copy shown at the top of the deals page.
@@ -478,7 +478,7 @@ const AdminSpecialOffers = () => {
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 0.5 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Icon icon="mdi:timer-outline" style={{ fontSize: 22 }} />
-                  <Typography variant="h6">Countdown Timer</Typography>
+                  <Typography variant="h6" component="h2">Countdown Timer</Typography>
                 </Box>
                 <FormControlLabel
                   control={<Switch checked={form.timer.enabled} onChange={(e) => setField(["timer", "enabled"], e.target.checked)} />}

@@ -8,7 +8,10 @@ import React, {
 } from "react";
 import { useAuth } from "./AuthContext";
 import apiService from "../services/api";
-import Swal from "sweetalert2";
+// Loaded on first use, not at mount: these providers wrap every route and
+// sweetalert2 is 79 kB that nothing needs until a visitor acts (Prompt 38 —
+// see src/utils/alerts.js).
+import { fireAlert } from "../utils/alerts";
 
 // SweetAlert2 takes a colour VALUE, not a token — it renders outside the React
 // tree, and a per-call confirmButtonColor is set as an inline variable on the
@@ -29,7 +32,7 @@ export const useWishlist = () => {
 // Shared SweetAlert toast config so every wishlist toast is positioned alike
 // (and alike to the cart's toasts).
 const wishlistToast = (options) =>
-  Swal.fire({
+  fireAlert({
     toast: true,
     position: "bottom-end",
     showConfirmButton: false,
@@ -333,7 +336,7 @@ export const WishlistProvider = ({ children }) => {
     const items = wishlistItemsRef.current;
     if (items.length === 0) return;
 
-    const result = await Swal.fire({
+    const result = await fireAlert({
       title: "Clear wishlist?",
       text: `All ${items.length} saved item${items.length === 1 ? "" : "s"} will be removed.`,
       icon: "warning",

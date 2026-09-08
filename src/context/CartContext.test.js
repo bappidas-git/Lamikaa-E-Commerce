@@ -4,9 +4,16 @@ import { act, render } from "@testing-library/react";
 // The provider is exercised in isolation: no HTTP (the API mirror is only
 // reached for a logged-in user, which `useAuth` below never is), and no real
 // SweetAlert, whose toasts are the thing being counted.
-jest.mock("sweetalert2", () => ({
+//
+// The mock moved from `sweetalert2` to `utils/alerts` in Prompt 38: the context
+// no longer imports the library at all, it calls `fireAlert`, which loads it on
+// first use. Mocking the seam the context actually uses is also what keeps this
+// suite from pulling 79 kB of SweetAlert into a unit test.
+jest.mock("../utils/alerts", () => ({
   __esModule: true,
-  default: { fire: jest.fn(() => Promise.resolve()) },
+  fireAlert: jest.fn(() => Promise.resolve({})),
+  closeAlert: jest.fn(),
+  default: jest.fn(() => Promise.resolve({})),
 }));
 
 jest.mock("../services/api", () => ({
@@ -23,7 +30,7 @@ jest.mock("../services/api", () => ({
 jest.mock("./AuthContext", () => ({ useAuth: () => ({ user: null }) }));
 
 // eslint-disable-next-line import/first
-import Swal from "sweetalert2";
+import { fireAlert } from "../utils/alerts";
 // eslint-disable-next-line import/first
 import { CartProvider, useCart } from "./CartContext";
 
@@ -45,11 +52,11 @@ const mount = () => render(
   </CartProvider>
 );
 
-const lastToast = () => Swal.fire.mock.calls[Swal.fire.mock.calls.length - 1][0];
+const lastToast = () => fireAlert.mock.calls[fireAlert.mock.calls.length - 1][0];
 
 beforeEach(() => {
   localStorage.clear();
-  Swal.fire.mockClear();
+  fireAlert.mockClear();
   cart = undefined;
 });
 
@@ -67,7 +74,7 @@ describe("CartContext.addMany", () => {
     expect(cart.cartItems[0].quantity).toBe(2);
     expect(cart.getCartItemCount()).toBe(3);
 
-    expect(Swal.fire).toHaveBeenCalledTimes(1);
+    expect(fireAlert).toHaveBeenCalledTimes(1);
     expect(lastToast().title).toBe("Added to cart");
     expect(lastToast().text).toBe("3 items added to your cart");
     expect(cart.isCartOpen).toBe(true);
@@ -95,7 +102,7 @@ describe("CartContext.addMany", () => {
     });
 
     expect(cart.cartItems.map((line) => line.productId)).toEqual([1, 2]);
-    expect(Swal.fire).toHaveBeenCalledTimes(1);
+    expect(fireAlert).toHaveBeenCalledTimes(1);
     expect(lastToast().text).toBe("2 added · 1 coming soon");
   });
 

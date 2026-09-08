@@ -720,7 +720,7 @@ const AdminHeroSection = () => {
     <>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
         <Icon icon={icon} style={{ fontSize: 22 }} />
-        <Typography variant="h6">{title}</Typography>
+        <Typography variant="h6" component="h2">{title}</Typography>
       </Box>
       {description && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -742,7 +742,7 @@ const AdminHeroSection = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
+        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
           Home &amp; Hero
         </Typography>
         <Typography color="text.secondary">

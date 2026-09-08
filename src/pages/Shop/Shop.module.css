@@ -50,6 +50,25 @@
   list-style: none;
 }
 
+/* A pill's box with none of its type: `.sf-chip` supplies the height, the
+   radius and the padding, so the reserved row is exactly as tall as the real
+   one will be. The ground is the skeleton's, so the slot reads as "loading"
+   rather than as twelve empty buttons. */
+.concernReserve {
+  /* The real chips are links, and `a.sf-chip` grows to the 44px tap target —
+     8px taller than the chip's own resting height. The reservation has to be
+     the SAME 44px or the row it holds open is the wrong one.
+     `block`, not the `inline-flex` it inherits from `.sf-chip`: an EMPTY
+     inline-level box still sits on a text baseline, and the leading under it
+     added ~6px to every wrapped row — 24px over the four rows this reserves,
+     which is a quarter of the shift the reservation exists to prevent. */
+  display: block;
+  min-height: var(--sf-tap-target);
+  background: var(--sf-color-surface-2);
+  border-color: transparent;
+  pointer-events: none;
+}
+
 /* ---- The page grid ------------------------------------------------------- */
 
 .layout {

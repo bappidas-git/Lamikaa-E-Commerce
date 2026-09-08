@@ -72,7 +72,14 @@ const Section = ({ id, title, count, expanded, onToggle, children }) => (
       id={`${id}-header`}
       sx={{ minHeight: 56, "& .MuiAccordionSummary-content": { alignItems: "center", gap: 1 } }}
     >
-      <Typography variant="subtitle2" fontWeight={700}>
+      {/* NOT A HEADING (Prompt 38). MUI maps `subtitle2` to an <h6> element by
+          default, so this label — which lives INSIDE the summary's
+          role="button" — was published as a level-6 heading directly under the
+          page's h1: axe `heading-order`, and a heading nested in a button that
+          no screen-reader outline should ever have listed. `component="span"`
+          keeps the type and drops the false heading; the accordion still names
+          itself through the button's own text. */}
+      <Typography variant="subtitle2" component="span" fontWeight={700}>
         {title}
       </Typography>
       {count != null && (

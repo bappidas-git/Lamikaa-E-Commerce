@@ -202,6 +202,30 @@
   }
 }
 
+/* The strip's BOX and none of its chrome, held open while the range loads
+   (Prompt 38). The band only renders once there are chapters to index, so on a
+   phone it used to appear after the fetch and push the whole listing down —
+   measured as the second-largest layout shift on /shop. Its height is a
+   constant, so the slot can simply be reserved. Every figure below mirrors
+   `.strip` above and in the <=768px block; change them together. */
+.stripReserve {
+  min-height: 52px;
+  padding-block: var(--sf-space-1);
+}
+
+@media (max-width: 768px) {
+  .stripReserve {
+    min-height: 48px;
+    padding-block: calc(var(--sf-space-1) / 2);
+  }
+}
+
+@media (min-width: 1025px) {
+  .stripReserve {
+    display: none;
+  }
+}
+
 .pills {
   display: flex;
   align-items: center;

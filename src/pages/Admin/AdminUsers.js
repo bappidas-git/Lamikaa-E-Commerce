@@ -92,7 +92,7 @@ const AdminUsers = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Users</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Users</Typography>
           <Typography variant="body2" color="text.secondary">Manage customer accounts</Typography>
         </Box>
         <Chip label={`${users.length} total`} sx={{ bgcolor: "primary.main", color: "primary.contrastText" }} />
@@ -130,7 +130,7 @@ const AdminUsers = () => {
                   <TableRow key={user.id} hover>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Avatar src={user.avatar || undefined} sx={{ width: 40, height: 40, bgcolor: "primary.main", fontSize: "0.9rem", fontWeight: 600 }}>
+                        <Avatar src={user.avatar || undefined} alt="" sx={{ width: 40, height: 40, bgcolor: "primary.main", fontSize: "0.9rem", fontWeight: 600 }}>
                           {user.firstName?.[0]}{user.lastName?.[0]}
                         </Avatar>
                         <Box>
@@ -168,7 +168,7 @@ const AdminUsers = () => {
           <>
             <DialogTitle sx={{ fontWeight: "bold" }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar src={selectedUser.avatar || undefined} sx={{ width: 48, height: 48, bgcolor: "primary.main", fontWeight: 600 }}>
+                <Avatar src={selectedUser.avatar || undefined} alt="" sx={{ width: 48, height: 48, bgcolor: "primary.main", fontWeight: 600 }}>
                   {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
                 </Avatar>
                 <Box>

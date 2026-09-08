@@ -363,7 +363,7 @@ const AdminSettings = () => {
       transition={{ duration: 0.5 }}
     >
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
+        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
           Settings
         </Typography>
         <Typography color="text.secondary">
@@ -428,7 +428,7 @@ const AdminSettings = () => {
                   <CardContent>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                       <Icon icon="mdi:store" style={{ fontSize: 24, marginRight: 8 }} />
-                      <Typography variant="h6">Store Information</Typography>
+                      <Typography variant="h6" component="h2">Store Information</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Grid container spacing={2}>
@@ -458,7 +458,7 @@ const AdminSettings = () => {
                   <CardContent>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                       <Icon icon="mdi:cash-multiple" style={{ fontSize: 24, marginRight: 8 }} />
-                      <Typography variant="h6">Currency &amp; Tax</Typography>
+                      <Typography variant="h6" component="h2">Currency &amp; Tax</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Grid container spacing={2}>
@@ -504,7 +504,7 @@ const AdminSettings = () => {
                     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 2 }}>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Icon icon="mdi:cash-fast" style={{ fontSize: 24, marginRight: 8 }} />
-                        <Typography variant="h6">Cash on Delivery (COD)</Typography>
+                        <Typography variant="h6" component="h2">Cash on Delivery (COD)</Typography>
                       </Box>
                       <FormControlLabel
                         control={<Switch checked={paymentForm.codEnabled} onChange={(e) => handlePaymentChange("codEnabled", e.target.checked)} />}
@@ -573,7 +573,7 @@ const AdminSettings = () => {
             >
               <Icon icon="mdi:folder-multiple" style={{ fontSize: 32, color: ADMIN_PALETTE.primary.contrastText }} />
             </Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" component="h2" gutterBottom>
               Manage categories in one place
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 2 }}>
@@ -704,7 +704,7 @@ const AdminSettings = () => {
                       style={{ fontSize: 28, color: ADMIN_PALETTE.primary.contrastText }}
                     />
                   </Box>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" component="h2" gutterBottom>
                     {card.title}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -766,7 +766,7 @@ const AdminSettings = () => {
             >
               <Icon icon="mdi:comment-question-outline" style={{ fontSize: 32, color: ADMIN_PALETTE.primary.contrastText }} />
             </Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" component="h2" gutterBottom>
               Manage the answered questions
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 2 }}>
@@ -858,7 +858,7 @@ const AdminSettings = () => {
                   <CardContent>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                       <Icon icon="mdi:link-variant" style={{ fontSize: 24, marginRight: 8 }} />
-                      <Typography variant="h6">Profile Links</Typography>
+                      <Typography variant="h6" component="h2">Profile Links</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Grid container spacing={2}>
@@ -921,7 +921,7 @@ const AdminSettings = () => {
                   <CardContent>
                     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                       <Icon icon="mdi:eye-outline" style={{ fontSize: 24, marginRight: 8 }} />
-                      <Typography variant="h6">On the storefront</Typography>
+                      <Typography variant="h6" component="h2">On the storefront</Typography>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
 

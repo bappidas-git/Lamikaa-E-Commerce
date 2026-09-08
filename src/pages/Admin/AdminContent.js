@@ -9,6 +9,7 @@ import {
   Grid,
   IconButton,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   ListSubheader,
@@ -670,7 +671,7 @@ const AdminContent = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
+        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
           Content
         </Typography>
         <Typography color="text.secondary">
@@ -698,9 +699,15 @@ const AdminContent = () => {
                   >
                     {group}
                   </ListSubheader>
+                  {/* THE <li> IS NOT OPTIONAL (Prompt 38). ListItemButton
+                      renders a <div role="button">, so on its own it made the
+                      rail's <ul> a list of divs — axe `list`, serious, and a
+                      list a screen reader will not count. MUI's own navigation
+                      pattern is the ListItem/ListItemButton pair: the <li> is
+                      the row, the button is what you press. */}
                   {SECTIONS.filter((s) => s.group === group).map((s) => (
+                    <ListItem key={s.id} disablePadding>
                     <ListItemButton
-                      key={s.id}
                       selected={s.id === sectionId}
                       onClick={() => setSectionId(s.id)}
                       sx={{ pl: 2 }}
@@ -726,6 +733,7 @@ const AdminContent = () => {
                         </Tooltip>
                       )}
                     </ListItemButton>
+                    </ListItem>
                   ))}
                 </React.Fragment>
               ))}
@@ -747,7 +755,7 @@ const AdminContent = () => {
               }}
             >
               <Box>
-                <Typography variant="h6" fontWeight={700}>
+                <Typography variant="h6" component="h2" fontWeight={700}>
                   {section.label}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
