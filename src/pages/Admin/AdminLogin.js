@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import {
   Box,
@@ -11,16 +11,18 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import { useAdmin } from "../../context/AdminContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../../components/brand/Logo";
+import brand from "../../config/brand";
 import buildAdminTheme from "../../theme/adminTheme";
 import useAdminBodyClass from "../../hooks/useAdminBodyClass";
+import { setPageTitle } from "../../utils/documentTitle";
 
 // The same <Logo> the storefront renders. One wordmark on a transparent ground:
-// it reads on background.paper in either mode, so there is no variant to pick.
+// it reads on the login card's glass without a variant to pick.
 const LOGO_WIDTH = 210;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,6 +31,12 @@ const AdminLogin = () => {
   const { login, isAuthenticated, isLoading: adminLoading } = useAdmin();
   const { storeName } = useStoreSettings();
   useAdminBodyClass();
+
+  // Name the tab like every other admin screen. No release: signing in unmounts
+  // this route into AdminLayout, which claims the tab for the screen it lands on.
+  useEffect(() => {
+    setPageTitle(`Sign in \u00b7 Admin \u00b7 ${brand.name}`);
+  }, []);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -77,7 +85,7 @@ const AdminLogin = () => {
 
   // One admin theme — dark, like the rest of the app. Built once so the
   // login card is not re-themed on every keystroke.
-  const adminTheme = useMemo(() => buildAdminTheme("dark"), []);
+  const adminTheme = useMemo(() => buildAdminTheme(), []);
 
   // Wait for the sessionStorage restore before deciding what to render, so an
   // already-authenticated admin never sees a flash of the login form.
@@ -116,16 +124,24 @@ const AdminLogin = () => {
         p: 2,
       }}
     >
+      {/* The admin's ONE pane of glass. Everything else in the panel is a flat
+          surface; the door gets the storefront's treatment because it is the
+          first LAMIKAA surface an administrator sees. */}
       <Paper
         elevation={0}
-        sx={{
+        sx={(theme) => ({
           p: { xs: 3, sm: 4 },
           width: "100%",
           maxWidth: 420,
           border: "1px solid",
           borderColor: "divider",
-          boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
-        }}
+          backgroundColor: alpha(theme.palette.background.paper, 0.72),
+          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: "blur(20px)",
+          "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))":
+            { backgroundColor: theme.palette.background.paper },
+          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.55)",
+        })}
       >
           {/* Logo/Header */}
           <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -159,7 +175,7 @@ const AdminLogin = () => {
               Admin Console
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Sign in to manage your store
+              Sign in to manage {brand.name}
             </Typography>
           </Box>
 

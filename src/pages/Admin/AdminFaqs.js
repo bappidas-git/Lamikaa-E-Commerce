@@ -32,6 +32,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { notifyFaqsUpdated } from "../../context/FaqContext";
 import {
@@ -58,7 +59,7 @@ import {
 //
 // A row can also be aimed at particular products, in which case it is read only
 // on those product pages — above the general answers, so the specific reply to
-// "does this Mekhela arrive stitched?" sits ahead of the store-wide one.
+// "is the face wash safe for sensitive skin?" sits ahead of the store-wide one.
 //
 // The order here is the order a shopper reads, top first. Answers may quote the
 // store's own figures with {freeShipping} / {codSentence} / {taxNote}; those
@@ -479,7 +480,7 @@ const AdminFaqs = () => {
       }`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d32f2f",
+      confirmButtonColor: ADMIN_PALETTE.error.main,
       confirmButtonText: "Delete",
     });
     if (!result.isConfirmed) return;
@@ -549,16 +550,17 @@ const AdminFaqs = () => {
   const targetingIgnored =
     (form.productIds || []).length > 0 && !form.placements.includes("product");
 
+  // `tone` names a palette channel; adminTheme.js owns the colour behind it.
   const statTiles = [
-    { label: "Answers", value: stats.total, icon: "mdi:comment-question-outline", color: "#6366f1" },
-    { label: "Live", value: stats.live, icon: "mdi:eye-outline", color: "#16a34a" },
+    { label: "Answers", value: stats.total, icon: "mdi:comment-question-outline", tone: "primary" },
+    { label: "Live", value: stats.live, icon: "mdi:eye-outline", tone: "success" },
     {
       label: "On product pages",
       value: stats.onProduct,
       icon: "mdi:package-variant-closed",
-      color: "#0891b2",
+      tone: "info",
     },
-    { label: "Product-specific", value: stats.targeted, icon: "mdi:tag-outline", color: "#d97706" },
+    { label: "Product-specific", value: stats.targeted, icon: "mdi:tag-outline", tone: "warning" },
   ];
 
   return (
@@ -623,8 +625,8 @@ const AdminFaqs = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: alpha(tile.color, 0.12),
-                  color: tile.color,
+                  bgcolor: (t) => alpha(t.palette[tile.tone].main, 0.12),
+                  color: `${tile.tone}.main`,
                 }}
               >
                 <Icon icon={tile.icon} style={{ fontSize: 22 }} />
@@ -811,7 +813,7 @@ const AdminFaqs = () => {
                 onChange={(e) => setField("question", e.target.value)}
                 fullWidth
                 size="small"
-                placeholder="e.g. Does a Mekhela Chador arrive stitched?"
+                placeholder="e.g. Does the face wash suit sensitive skin?"
               />
             </Grid>
 

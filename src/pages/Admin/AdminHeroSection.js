@@ -37,6 +37,11 @@ import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
 import {
+  ADMIN_BRAND_WASH,
+  ADMIN_GOLD_GRADIENT,
+  ADMIN_PALETTE,
+} from "../../theme/adminTheme";
+import {
   DEFAULT_HERO_CONFIG,
   DEFAULT_HERO_SLIDE,
   HERO_BACKGROUND_TYPES,
@@ -58,7 +63,7 @@ import {
 import { ROUTES } from "../../utils/constants";
 
 // =============================================================================
-// Admin → Storefront → Hero Section
+// Admin → Storefront → Home & Hero
 // =============================================================================
 // SECTION SETTINGS — the `heroConfig` singleton: the master toggle, autoplay
 // and the default timer, the transition and which chrome shows. This half is
@@ -135,7 +140,7 @@ const secondsToMs = (s) => Math.round((Number(s) || 0) * 1000);
 
 // ─── Live slide preview ──────────────────────────────────────────────────────
 // A miniature of the real stage: same layer order (ground → media → scrim →
-// copy), same alignment rules, same --sf-* tokens. Used both as the row
+// copy), same alignment rules, painted from the admin palette. Used both as the row
 // thumbnail (compact) and as the editor preview (full).
 const SlidePreview = ({ slide, config, compact = false }) => {
   const align = slide.textAlign || "left";
@@ -143,13 +148,16 @@ const SlidePreview = ({ slide, config, compact = false }) => {
   const items =
     align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
 
-  // The scrim leans towards the copy, exactly as the stylesheet does.
+  // The scrim leans towards the copy, exactly as the stylesheet does. Mixed
+  // here from the admin palette's own ground so the preview needs no colour of
+  // its own (the admin never reads storefront tokens).
+  const ink = ADMIN_PALETTE.background.default;
   const scrimImage =
     align === "center"
-      ? "linear-gradient(0deg, rgba(15,13,10,0.88) 0%, rgba(15,13,10,0.55) 55%, rgba(15,13,10,0.30) 100%)"
+      ? `linear-gradient(0deg, ${alpha(ink, 0.88)} 0%, ${alpha(ink, 0.55)} 55%, ${alpha(ink, 0.3)} 100%)`
       : align === "right"
-      ? "linear-gradient(270deg, rgba(15,13,10,0.88) 0%, rgba(15,13,10,0.62) 42%, transparent 80%)"
-      : "linear-gradient(90deg, rgba(15,13,10,0.88) 0%, rgba(15,13,10,0.62) 42%, transparent 80%)";
+      ? `linear-gradient(270deg, ${alpha(ink, 0.88)} 0%, ${alpha(ink, 0.62)} 42%, transparent 80%)`
+      : `linear-gradient(90deg, ${alpha(ink, 0.88)} 0%, ${alpha(ink, 0.62)} 42%, transparent 80%)`;
 
   return (
     <Box
@@ -162,13 +170,13 @@ const SlidePreview = ({ slide, config, compact = false }) => {
         overflow: "hidden",
         border: "1px solid",
         borderColor: "divider",
-        bgcolor: "#1D1A16",
+        bgcolor: "background.default",
       }}
     >
       {/* Ground — always painted, so it backs a loading image or a letterboxed video. */}
       <Box
         sx={{ position: "absolute", inset: 0 }}
-        style={{ background: slide.gradient || "var(--sf-gradient-brand)" }}
+        style={{ background: slide.gradient || ADMIN_BRAND_WASH }}
       />
 
       {slide.backgroundType === "image" && slide.image && (
@@ -219,7 +227,7 @@ const SlidePreview = ({ slide, config, compact = false }) => {
           textAlign: align === "center" ? "center" : align === "right" ? "right" : "left",
           p: compact ? 1 : { xs: 2, sm: 3 },
           gap: compact ? 0.25 : 0.75,
-          color: "#F7F3EC",
+          color: "text.primary",
         }}
       >
         {!compact && (slide.eyebrow || "") !== "" && (
@@ -228,7 +236,7 @@ const SlidePreview = ({ slide, config, compact = false }) => {
               fontSize: 11,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "#D9A441",
+              color: "primary.main",
               fontWeight: 600,
             }}
           >
@@ -237,7 +245,6 @@ const SlidePreview = ({ slide, config, compact = false }) => {
         )}
         <Typography
           sx={{
-            fontFamily: "var(--sf-font-display, Georgia, serif)",
             fontWeight: 500,
             lineHeight: 1.1,
             fontSize: compact ? 13 : { xs: 20, sm: 28 },
@@ -263,8 +270,8 @@ const SlidePreview = ({ slide, config, compact = false }) => {
                   fontSize: 11,
                   fontWeight: 600,
                   borderRadius: 0.5,
-                  color: "#1D1A16",
-                  background: "linear-gradient(135deg,#D9A441,#C8912A)",
+                  color: "primary.contrastText",
+                  backgroundImage: ADMIN_GOLD_GRADIENT,
                 }}
               >
                 {slide.cta}
@@ -279,7 +286,8 @@ const SlidePreview = ({ slide, config, compact = false }) => {
                     fontSize: 11,
                     fontWeight: 600,
                     borderRadius: 0.5,
-                    border: "1px solid rgba(247,243,236,0.28)",
+                    border: "1px solid",
+                    borderColor: "divider",
                   }}
                 >
                   {slide.secondaryCtaLabel || config.secondaryCta.label}
@@ -605,7 +613,7 @@ const AdminHeroSection = () => {
       }`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d32f2f",
+      confirmButtonColor: ADMIN_PALETTE.error.main,
       confirmButtonText: "Delete",
     });
     if (!result.isConfirmed) return;
@@ -691,7 +699,7 @@ const AdminHeroSection = () => {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Hero Section
+          Home &amp; Hero
         </Typography>
         <Typography color="text.secondary">
           The opening band of the storefront home page — how the carousel behaves on every device.

@@ -8,6 +8,7 @@ import {
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 
 // Ids that sit *below* a category in the tree (children, grandchildren…). A
 // category may never be parented to itself or any of these, or the hierarchy
@@ -171,7 +172,7 @@ const AdminCategories = () => {
       return;
     }
 
-    const result = await Swal.fire({ title: "Delete category?", text: `"${cat.name}" will be permanently deleted.`, icon: "warning", showCancelButton: true, confirmButtonColor: "#d32f2f", confirmButtonText: "Delete" });
+    const result = await Swal.fire({ title: "Delete category?", text: `"${cat.name}" will be permanently deleted.`, icon: "warning", showCancelButton: true, confirmButtonColor: ADMIN_PALETTE.error.main, confirmButtonText: "Delete" });
     if (!result.isConfirmed) return;
     try {
       await apiService.admin.deleteCategory(cat.id);

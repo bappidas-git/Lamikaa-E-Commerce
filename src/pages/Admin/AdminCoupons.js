@@ -9,6 +9,7 @@ import {
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 
 const AdminCoupons = () => {
@@ -90,7 +91,7 @@ const AdminCoupons = () => {
   };
 
   const handleDelete = async (coupon) => {
-    const result = await Swal.fire({ title: "Delete coupon?", text: `Code "${coupon.code}" will be permanently deleted.`, icon: "warning", showCancelButton: true, confirmButtonColor: "#d32f2f", confirmButtonText: "Delete" });
+    const result = await Swal.fire({ title: "Delete coupon?", text: `Code "${coupon.code}" will be permanently deleted.`, icon: "warning", showCancelButton: true, confirmButtonColor: ADMIN_PALETTE.error.main, confirmButtonText: "Delete" });
     if (!result.isConfirmed) return;
     try {
       await apiService.admin.deleteCoupon(coupon.id);

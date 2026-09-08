@@ -25,6 +25,7 @@ import {
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { normalizeHeroConfig, normalizeHeroSlides } from "../../utils/heroConfig";
 import { normalizeFaqs } from "../../utils/faqs";
 import { SUPPORTED_CURRENCIES } from "../../utils/storeSettings";
@@ -363,7 +364,7 @@ const AdminSettings = () => {
         >
           <Tab icon={<Icon icon="mdi:cog" style={{ fontSize: 20 }} />} iconPosition="start" label="General" />
           <Tab icon={<Icon icon="mdi:folder-multiple" style={{ fontSize: 20 }} />} iconPosition="start" label="Categories" />
-          <Tab icon={<Icon icon="mdi:view-carousel-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="Hero Section" />
+          <Tab icon={<Icon icon="mdi:view-carousel-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="Home & Hero" />
           <Tab icon={<Icon icon="mdi:comment-question-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="FAQs" />
           <Tab icon={<Icon icon="mdi:share-variant" style={{ fontSize: 20 }} />} iconPosition="start" label="Social Links" />
         </Tabs>
@@ -548,7 +549,7 @@ const AdminSettings = () => {
                 bgcolor: "primary.main",
               }}
             >
-              <Icon icon="mdi:folder-multiple" style={{ fontSize: 32, color: "#fff" }} />
+              <Icon icon="mdi:folder-multiple" style={{ fontSize: 32, color: ADMIN_PALETTE.primary.contrastText }} />
             </Box>
             <Typography variant="h6" gutterBottom>
               Manage categories in one place
@@ -579,8 +580,9 @@ const AdminSettings = () => {
         </Paper>
       </TabPanel>
 
-      {/* Hero Section Tab — same reconciliation as Categories: one canonical
-          manager lives at /admin/hero-section, and Settings points at it. */}
+      {/* Home & Hero Tab — same reconciliation as Categories: one canonical
+          manager lives at /admin/hero-section, and Settings points at it. The
+          route keeps its old path until Prompt 34 rebuilds the screen. */}
       <TabPanel value={activeTab} index={2}>
         <Paper sx={{ p: { xs: 3, sm: 5 }, border: "1px solid", borderColor: "divider" }} elevation={0}>
           <Box sx={{ maxWidth: 560, mx: "auto", textAlign: "center" }}>
@@ -597,14 +599,14 @@ const AdminSettings = () => {
                 bgcolor: "primary.main",
               }}
             >
-              <Icon icon="mdi:view-carousel-outline" style={{ fontSize: 32, color: "#fff" }} />
+              <Icon icon="mdi:view-carousel-outline" style={{ fontSize: 32, color: ADMIN_PALETTE.primary.contrastText }} />
             </Box>
             <Typography variant="h6" gutterBottom>
               Manage the home page hero
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 2 }}>
               Every behaviour of the opening band lives in the dedicated{" "}
-              <strong>Hero Section</strong> manager — autoplay and its timer, the transition, the
+              <strong>Home &amp; Hero</strong> manager — autoplay and its timer, the transition, the
               visible controls and the stage height for desktop, tablet and mobile. The slides
               themselves are the products carrying a hero position. The same screen currently
               manages the announcement bar above the masthead.
@@ -631,7 +633,7 @@ const AdminSettings = () => {
                 startIcon={<Icon icon="mdi:image-edit-outline" />}
                 onClick={() => navigate("/admin/hero-section")}
               >
-                Open Hero Section Manager
+                Open Home &amp; Hero Manager
               </Button>
             </Box>
           </Box>
@@ -656,7 +658,7 @@ const AdminSettings = () => {
                 bgcolor: "primary.main",
               }}
             >
-              <Icon icon="mdi:comment-question-outline" style={{ fontSize: 32, color: "#fff" }} />
+              <Icon icon="mdi:comment-question-outline" style={{ fontSize: 32, color: ADMIN_PALETTE.primary.contrastText }} />
             </Box>
             <Typography variant="h6" gutterBottom>
               Manage the answered questions
@@ -849,9 +851,9 @@ const AdminSettings = () => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 borderRadius: 1,
-                                color: "grey.400",
+                                color: "text.secondary",
                                 transition: "color .2s",
-                                "&:hover": { color: "common.white" },
+                                "&:hover": { color: "text.primary" },
                               }}
                             >
                               <svg

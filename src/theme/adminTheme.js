@@ -1,76 +1,109 @@
 import { createTheme, alpha } from "@mui/material/styles";
 
 // =============================================================================
-// Admin design system — professional, flat, minimal.
+// Admin design system — LAMIKAA, the quieter sibling
+// =============================================================================
+// The storefront is the showroom: glass, ambient glow, gradient hairlines, pill
+// buttons, Fraunces display type. The admin is the back office. It shares the
+// palette — the same charcoal grounds, the same champagne gold — and nothing
+// else: no glass (except the login card), no glow, 8px controls, hairline
+// borders, soft tinted status badges and uppercase table heads.
 //
-// The storefront theme (ThemeContext) is intentionally playful: 12-16px radii,
-// gradient buttons, hover lifts, glassmorphism. The admin panel uses this
-// dedicated theme instead: a restrained indigo/slate palette, 6px controls /
-// 8px surfaces, hairline borders, soft tinted status badges, and uppercase
-// table headers. AdminLayout and AdminLogin mount it via <ThemeProvider>, so
-// nothing here leaks into the storefront.
+// ONE THEME, ONE MODE. The light/dark toggle went with Prompt 03; this file
+// stopped having a light half in Prompt 32. `buildAdminTheme()` still takes a
+// parameter so a caller that has not been updated (`buildAdminTheme("dark")`)
+// keeps working — the argument is ignored.
+//
+// FULLY ISOLATED. Every value below is spelled out rather than read from a
+// `--sf-*` custom property: the admin never reads storefront tokens, so its
+// theme has to name its own palette. `ADMIN_PALETTE` is exported for the few
+// places that need a colour outside a React tree (a SweetAlert2
+// `confirmButtonColor`); everything inside one reads `theme.palette.*`.
 // =============================================================================
 
-// Status hues shared by the soft chip variants (light text on dark, deep text
-// on light, with a translucent tint behind — the "badge" look used by modern
-// dashboards instead of solid pill chips).
-const CHIP_TONES = {
-  light: {
-    default: { fg: "#475569", bg: "rgba(100, 116, 139, 0.12)" },
-    primary: { fg: "#4338ca", bg: "rgba(79, 70, 229, 0.10)" },
-    secondary: { fg: "#475569", bg: "rgba(100, 116, 139, 0.12)" },
-    success: { fg: "#047857", bg: "rgba(5, 150, 105, 0.12)" },
-    warning: { fg: "#b45309", bg: "rgba(217, 119, 6, 0.12)" },
-    error: { fg: "#b91c1c", bg: "rgba(220, 38, 38, 0.10)" },
-    info: { fg: "#1d4ed8", bg: "rgba(37, 99, 235, 0.10)" },
+/** Champagne gold ramp — the one accent the admin spends. */
+const GOLD = "#F5D76E";
+const GOLD_LIGHT = "#FFEFA6";
+const GOLD_DEEP = "#B88924";
+/** Near-black: the label colour on a gold fill (13.4:1). */
+const INK = "#0B0B0D";
+
+/** The gold focus ring, `--sf-shadow-focus`'s admin twin. */
+export const ADMIN_FOCUS_RING = `0 0 0 3px ${alpha(GOLD, 0.55)}`;
+
+/** The gradient the active nav item and the CTA preview paint with. */
+export const ADMIN_GOLD_GRADIENT = `linear-gradient(135deg, ${GOLD_LIGHT}, ${GOLD} 50%, ${GOLD_DEEP})`;
+
+/**
+ * The ground a hero-slide preview falls back to when the slide carries no
+ * gradient of its own. The admin's own copy of the brand wash — deliberately
+ * not `var(--sf-gradient-brand)`: the admin never reads storefront tokens.
+ */
+export const ADMIN_BRAND_WASH =
+  "linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330)";
+
+// Status hues for the soft chip variants — a translucent tint behind a light
+// label, the "badge" look modern dashboards use instead of solid pill chips.
+// Re-derived for the dark LAMIKAA palette: each foreground clears 4.5:1 on the
+// #0B0B0D ground, so violet and cyan are stepped up from their palette tone.
+export const CHIP_TONES = {
+  default: { fg: "#B8B5B0", bg: "rgba(255, 255, 255, 0.08)" },
+  primary: { fg: GOLD, bg: "rgba(245, 215, 110, 0.14)" },
+  secondary: { fg: "#C4B5FD", bg: "rgba(139, 92, 246, 0.18)" },
+  success: { fg: "#7ED9A6", bg: "rgba(126, 217, 166, 0.14)" },
+  warning: { fg: "#F5C76E", bg: "rgba(245, 199, 110, 0.14)" },
+  error: { fg: "#FF8A80", bg: "rgba(255, 138, 128, 0.14)" },
+  info: { fg: "#5DE7FF", bg: "rgba(93, 231, 255, 0.12)" },
+};
+
+/**
+ * The admin palette, per DESIGN_SYSTEM §10. Exported so a screen can reach a
+ * colour where `useTheme()` cannot follow — SweetAlert2 renders under <body>,
+ * outside the ThemeProvider, so its per-call `confirmButtonColor` has to be a
+ * literal from somewhere, and this is that somewhere.
+ */
+export const ADMIN_PALETTE = {
+  mode: "dark",
+  primary: {
+    main: GOLD,
+    dark: GOLD_DEEP,
+    light: GOLD_LIGHT,
+    contrastText: INK,
   },
-  dark: {
-    default: { fg: "#cbd5e1", bg: "rgba(148, 163, 184, 0.16)" },
-    primary: { fg: "#a5b4fc", bg: "rgba(129, 140, 248, 0.16)" },
-    secondary: { fg: "#cbd5e1", bg: "rgba(148, 163, 184, 0.16)" },
-    success: { fg: "#6ee7b7", bg: "rgba(52, 211, 153, 0.14)" },
-    warning: { fg: "#fcd34d", bg: "rgba(251, 191, 36, 0.14)" },
-    error: { fg: "#fca5a5", bg: "rgba(248, 113, 113, 0.14)" },
-    info: { fg: "#93c5fd", bg: "rgba(96, 165, 250, 0.14)" },
+  secondary: { main: "#8B5CF6", light: "#C4B5FD", contrastText: "#FFFFFF" },
+  success: { main: "#7ED9A6", contrastText: INK },
+  warning: { main: "#F5C76E", contrastText: INK },
+  error: { main: "#FF8A80", contrastText: INK },
+  info: { main: "#5DE7FF", contrastText: INK },
+  background: {
+    default: "#0B0B0D",
+    paper: "#141416",
+  },
+  // Sunken surfaces the MUI palette has no name for: inputs and thumbnails sit
+  // on `sunken`, a row lifts to `hover`. Extra keys ride along on the palette
+  // untouched by augmentColor, which is exactly what we want from them.
+  surface: {
+    sunken: "#1C1C20",
+    hover: "#222228",
+  },
+  divider: "rgba(255, 255, 255, 0.08)",
+  text: {
+    primary: "#F7F5F0",
+    secondary: "#B8B5B0",
+    disabled: "rgba(247, 245, 240, 0.62)",
+  },
+  action: {
+    hover: "rgba(255, 255, 255, 0.05)",
+    selected: "rgba(245, 215, 110, 0.12)",
   },
 };
 
-const buildAdminTheme = (mode) => {
-  const dark = mode === "dark";
-  const tones = CHIP_TONES[dark ? "dark" : "light"];
-
-  const palette = {
-    mode,
-    primary: {
-      main: dark ? "#818cf8" : "#4f46e5",
-      dark: dark ? "#6366f1" : "#4338ca",
-      light: dark ? "#a5b4fc" : "#6366f1",
-      contrastText: "#ffffff",
-    },
-    secondary: { main: dark ? "#94a3b8" : "#64748b" },
-    success: { main: dark ? "#34d399" : "#059669" },
-    warning: { main: dark ? "#fbbf24" : "#d97706" },
-    error: { main: dark ? "#f87171" : "#dc2626" },
-    info: { main: dark ? "#60a5fa" : "#2563eb" },
-    background: {
-      default: dark ? "#0b1220" : "#f8fafc",
-      paper: dark ? "#111927" : "#ffffff",
-    },
-    divider: dark ? "rgba(148, 163, 184, 0.16)" : "#e2e8f0",
-    text: {
-      primary: dark ? "#f1f5f9" : "#0f172a",
-      secondary: dark ? "#94a3b8" : "#64748b",
-      disabled: dark ? "#64748b" : "#94a3b8",
-    },
-    action: {
-      hover: dark ? "rgba(148, 163, 184, 0.08)" : "rgba(15, 23, 42, 0.04)",
-      selected: dark ? "rgba(129, 140, 248, 0.16)" : "rgba(79, 70, 229, 0.08)",
-    },
-  };
+const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */) => {
+  const palette = ADMIN_PALETTE;
 
   // One soft-badge override per chip color, for both filled and outlined.
   const chipColorOverrides = Object.fromEntries(
-    Object.entries(tones).flatMap(([key, tone]) => {
+    Object.entries(CHIP_TONES).flatMap(([key, tone]) => {
       const cap = key.charAt(0).toUpperCase() + key.slice(1);
       return [
         [`filled${cap}`, { backgroundColor: tone.bg, color: tone.fg }],
@@ -81,39 +114,54 @@ const buildAdminTheme = (mode) => {
 
   return createTheme({
     palette,
-    shape: { borderRadius: 6 },
+    // 8px surfaces and 8px controls — square enough to read as a tool, soft
+    // enough to belong to the same brand. Nothing in the admin is a pill.
+    shape: { borderRadius: 8 },
     typography: {
       // Manrope, the same UI family as the storefront — the admin is a quieter
-      // sibling, not a different product. The PALETTE stays slate until Prompt
-      // 32; this is the font family and nothing else. Spelled out rather than
-      // read from --sf-font-family on purpose: the admin never reads storefront
-      // tokens, so its theme has to name its own stack.
+      // sibling, not a different product. Spelled out rather than read from
+      // --sf-font-family on purpose: the admin never reads storefront tokens.
       fontFamily:
-        '"Manrope", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+        '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
       button: { textTransform: "none", fontWeight: 600 },
-      // Match the compact heading scale the admin pages were laid out against
-      // (the storefront theme used the same sizes).
+      // Match the compact heading scale the admin pages were laid out against.
       h4: { fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.01em" },
       h5: { fontSize: "1.25rem", fontWeight: 700, letterSpacing: "-0.01em" },
       h6: { fontSize: "1rem", fontWeight: 600 },
       subtitle2: { fontWeight: 600 },
     },
     components: {
+      // Every focusable control in the admin — button, icon button, nav item,
+      // tab, switch — wears the same gold ring. One rule, so no screen can
+      // forget it.
+      MuiButtonBase: {
+        styleOverrides: {
+          root: {
+            "&.Mui-focusVisible": {
+              outline: "none",
+              boxShadow: ADMIN_FOCUS_RING,
+            },
+          },
+        },
+      },
       MuiButton: {
         defaultProps: { disableElevation: true },
         styleOverrides: {
           root: {
-            borderRadius: 6,
+            borderRadius: 8,
             boxShadow: "none",
             "&:hover": { boxShadow: "none", transform: "none" },
+            // Repeated here so the ring still wins on a focused control that is
+            // also hovered (MuiButton's own rule is later in the cascade).
+            "&.Mui-focusVisible": { boxShadow: ADMIN_FOCUS_RING },
           },
           containedPrimary: {
-            "&:hover": { backgroundColor: palette.primary.dark },
+            "&:hover": { backgroundColor: palette.primary.light },
           },
           outlined: {
             borderColor: palette.divider,
             "&:hover": {
-              borderColor: dark ? "rgba(148, 163, 184, 0.4)" : "#cbd5e1",
+              borderColor: alpha(palette.primary.main, 0.35),
               backgroundColor: palette.action.hover,
             },
           },
@@ -135,7 +183,7 @@ const buildAdminTheme = (mode) => {
           root: {
             borderRadius: 8,
             border: `1px solid ${palette.divider}`,
-            boxShadow: "0 1px 2px rgba(15, 23, 42, 0.05)",
+            boxShadow: "none",
             "&:hover": { transform: "none" },
           },
         },
@@ -144,7 +192,7 @@ const buildAdminTheme = (mode) => {
         styleOverrides: {
           paper: {
             borderRadius: 8,
-            border: dark ? `1px solid ${palette.divider}` : "none",
+            border: `1px solid ${palette.divider}`,
             backgroundImage: "none",
           },
         },
@@ -154,9 +202,7 @@ const buildAdminTheme = (mode) => {
           paper: {
             borderRadius: 8,
             border: `1px solid ${palette.divider}`,
-            boxShadow: dark
-              ? "0 8px 24px rgba(0, 0, 0, 0.4)"
-              : "0 8px 24px rgba(15, 23, 42, 0.08)",
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
           },
         },
       },
@@ -165,24 +211,23 @@ const buildAdminTheme = (mode) => {
           paper: {
             borderRadius: 8,
             border: `1px solid ${palette.divider}`,
-            boxShadow: dark
-              ? "0 8px 24px rgba(0, 0, 0, 0.4)"
-              : "0 8px 24px rgba(15, 23, 42, 0.08)",
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
           },
         },
       },
       MuiChip: {
         styleOverrides: {
-          root: { borderRadius: 4, fontWeight: 600 },
+          root: { borderRadius: 6, fontWeight: 600 },
           ...chipColorOverrides,
         },
       },
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            borderRadius: 6,
+            borderRadius: 8,
+            backgroundColor: palette.surface.sunken,
             "&:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: dark ? "rgba(148, 163, 184, 0.4)" : "#cbd5e1",
+              borderColor: alpha(palette.primary.main, 0.35),
             },
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
               borderColor: palette.primary.main,
@@ -202,21 +247,35 @@ const buildAdminTheme = (mode) => {
             letterSpacing: "0.05em",
             color: palette.text.secondary,
             whiteSpace: "nowrap",
-            backgroundColor: dark ? "rgba(148, 163, 184, 0.04)" : "#f8fafc",
+            backgroundColor: "rgba(255, 255, 255, 0.03)",
           },
         },
       },
       MuiListItemButton: {
-        styleOverrides: { root: { borderRadius: 6 } },
+        styleOverrides: { root: { borderRadius: 8 } },
       },
       MuiDrawer: {
         styleOverrides: {
           paper: { backgroundImage: "none" },
         },
       },
+      // The one borrowed storefront device: the bar over the content reads as
+      // a pane of the ground rather than a slab on top of it. Subtle — 88% and
+      // a 12px blur, nothing like the storefront masthead — and it falls back
+      // to the opaque paper where backdrop-filter is unsupported.
       MuiAppBar: {
         styleOverrides: {
-          root: { boxShadow: "none", backgroundImage: "none" },
+          root: {
+            boxShadow: "none",
+            backgroundImage: "none",
+            backgroundColor: alpha(palette.background.paper, 0.88),
+            WebkitBackdropFilter: "blur(12px)",
+            backdropFilter: "blur(12px)",
+            "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))":
+              {
+                backgroundColor: palette.background.paper,
+              },
+          },
         },
       },
       // Small icon buttons (table row actions) keep their compact desktop

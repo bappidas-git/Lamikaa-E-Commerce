@@ -1937,6 +1937,58 @@ system without a single number moving.
 - Orders/Returns/Payments/Users/Shipping/Coupons/SpecialOffers/Reviews/Leads: full CRUD/status flows as listed in the api table (refund lifecycle initiate/complete/fail, cancel with restock/refund/void/recall, returns approve/reject/pickup/in-transit/received/refund, payments issue refund, coupons with duplicate-code guard, reviews approve/reject/create with `MOCK_REVIEWERS` names, leads with `TablePagination`).
 - Admin brand text: only the logo URLs, the hero gradient presets, `mekhela-chador` helper text and the FAQ placeholder (see `BRAND_FOOTPRINT.md`).
 
+**Updated by Prompt 32 — the admin is rebranded to LAMIKAA and holds one dark palette of its own.** Everything above this
+line describes the pre-Prompt-32 admin and is kept as the historical record. What is true now:
+
+- `src/theme/adminTheme.js` builds ONE theme. `buildAdminTheme()` takes no argument (a commented no-op parameter survives
+  so an un-migrated `buildAdminTheme("dark")` caller cannot break); both call sites pass nothing. Palette per
+  DESIGN_SYSTEM §10: `background.default #0B0B0D` / `paper #141416`, `primary #F5D76E` (light `#FFEFA6`, dark `#B88924`,
+  contrast `#0B0B0D`), `secondary #8B5CF6`, `success #7ED9A6`, `warning #F5C76E`, `error #FF8A80`, `info #5DE7FF`,
+  `divider rgba(255,255,255,.08)`, text `#F7F5F0` / `#B8B5B0` / `rgba(247,245,240,.62)`, plus a non-MUI
+  `palette.surface = { sunken: "#1C1C20", hover: "#222228" }`. `shape.borderRadius` 6 → **8**; chips 6; no pills.
+  Named exports every admin screen may read: **`ADMIN_PALETTE`** (for colours outside a React tree — SweetAlert2),
+  `CHIP_TONES` (one dark map now, not `{light, dark}`), `ADMIN_FOCUS_RING`, `ADMIN_GOLD_GRADIENT`, `ADMIN_BRAND_WASH`.
+  `MuiButtonBase.Mui-focusVisible` carries the gold ring everywhere; `MuiAppBar` carries the glass-like paper
+  (`alpha(paper,.88)` + 12px blur + an opaque `@supports not` fallback); `MuiOutlinedInput` sits on `surface.sunken`.
+- **No colour literal lives in an admin screen.** `grep -rn "#[0-9a-fA-F]\{6\}" src/pages/Admin src/components/AdminLayout | grep -v AdminOrders.js`
+  → 0. The single exception is the invoice PRINT stylesheet in `AdminOrders.js` (ink on white paper). Screens that used to
+  take a hex `color` prop now take a `tone` naming a palette channel (`AdminDashboard`'s `StatCard`, `AdminPayments`'
+  summary cards, `AdminFaqs`' stat tiles, `AdminLeads`' `getTypeTone`); every destructive SweetAlert2 confirm uses
+  `ADMIN_PALETTE.error.main`. The admin still imports nothing from the storefront but `Logo`, `brand` and
+  `utils/cloudinary` (+ `utils/placeholders` on the invoice) — the two `var(--sf-*)` reads in `AdminHeroSection`'s preview
+  are gone; its four gradient PRESETS keep their `var(--sf-gradient-*)` values because those are data written into
+  `announcements[].gradient` and resolved by the storefront.
+- `AdminLayout.js` (1054): `<Logo width={150}>` heads the permanent drawer and `<Logo variant="mark" width={36}>` the
+  temporary one; drawer ground `background.default` with a hairline edge; the active item is gold on `action.selected`
+  with a 3px `ADMIN_GOLD_GRADIENT` rule on its leading edge. The nav item "Hero Section" is **"Home & Hero"** (the route
+  is still `/admin/hero-section` until Prompt 34). There is no theme toggle (Prompt 03). The shell owns the tab:
+  `document.title = "{screen} · Admin · LAMIKAA NATURALS"` from the `menuItems` entry matching `location.pathname`,
+  written through `utils/documentTitle`'s `setPageTitle` and released once on unmount. Sections, notification poll,
+  avatar menu and "Back to Store" are unchanged.
+- `AdminLogin.js`: the admin's ONE pane of glass (`alpha(paper,.72)` + 20px blur), wordmark at 210, "Admin Console",
+  "Sign in to manage LAMIKAA NATURALS", gold contained button, `Sign in · Admin · LAMIKAA NATURALS` in the tab, still no
+  demo hints.
+- `AdminProducts.js` (603): the table is **Product / SKU / Category / Price / Hero / Media / Flags / Status / Actions**
+  (`minWidth` 980 → 1160). **Hero** prints `#{heroOrder}` as a gold chip or "—"; **Media** counts the normalised `media[]`
+  as "3 img · 2 vid"; **Price** shows a "Price on launch" chip whenever `priceTBA`. Placeholders are now
+  `e.g. LK-BR-XX-000` (SKU), `e.g. 100 ml / 200 ml` (variant) and `e.g. black rice, face wash, cleanser` (tags), and
+  "Weight (kg)" is "Shipping weight (kg)". **The FORM is otherwise unchanged and is Prompt 33's** — `editable` still omits
+  `media` / `heroOrder` / `priceTBA`.
+- `AdminReviews.js` (350): `MOCK_REVIEWERS` and the one-click name chips are **deleted** (fabricated social proof,
+  BRAND.md 3.9 rule 6); the free-text "Reviewer name" field is the only way to name a reviewer. Rows with `isSample: true`
+  wear an outlined **Sample** chip.
+- `AdminOrders.js` (962): the invoice header is `cld(brand.logoUrl,{w:400})` → `brand.name` → `brand.legalName` → the
+  store address when it resolves → `GSTIN {n}` only when `brand.legal.gstin` is not a placeholder; the store-name fallback
+  is `brand.name` (was "My E-Commerce Store"). The print stylesheet keeps neutral ink-on-paper colours by design.
+- `AdminShipping.js`: the new-method form opens with a BLANK carrier and a blank SLA (both were invented defaults —
+  "Shiprocket" and "5-7"); the carrier placeholder is "e.g. Delhivery, Blue Dart, India Post" and the table prints "—"
+  for either when unset. The Shiprocket integration card is unchanged.
+- `AdminSettings.js`: the third tab, its pointer card and its button read **"Home & Hero"**.
+- `src/App.css`: `body.admin-area` ground is `#0b0b0d`, scrollbars `rgba(255,255,255,.04)` / `#2a2a30` / `#3a3a42`, and
+  the SweetAlert2 admin skin is the LAMIKAA palette (gold confirm on `#0b0b0d` ink — pinned as
+  `--swal2-confirm-button-color` so a per-call destructive background still reads — white-8 % cancel, gold focus ring and
+  timer, Manrope). CSS cannot read `adminTheme.js`, so the block re-states those values and names the file to keep in step.
+
 ## 8. Contexts (`src/context/*`) — state, persistence, order
 
 Provider order in `App.js`: `ErrorBoundary > ThemeContextProvider > StoreSettingsProvider > AuthProvider > AdminProvider > WishlistProvider > CartProvider > OrderProvider > Router > (admin routes | StorefrontShell > DealsConfigProvider > FaqProvider)`.

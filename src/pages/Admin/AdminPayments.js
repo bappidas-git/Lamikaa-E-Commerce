@@ -6,6 +6,7 @@ import {
   DialogTitle, DialogContent, DialogActions, Button, Grid, Divider, Alert,
   ToggleButtonGroup, ToggleButton,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
@@ -163,17 +164,18 @@ const AdminPayments = () => {
       {/* Summary Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {[
-          { label: "Total Captured", value: formatCurrency(totalRevenue), icon: "mdi:cash-check", color: "#4caf50" },
-          { label: "Total Refunded", value: formatCurrency(totalRefunded), icon: "mdi:cash-refund", color: "#ff9800" },
-          { label: "Refund Pending", value: formatCurrency(refundPendingAmount), icon: "mdi:progress-clock", color: "#f59e0b", sub: `${refundPendingCount} in flight` },
-          { label: "Transactions", value: payments.length, icon: "mdi:swap-horizontal", color: "#6366f1" },
-          { label: "Failed", value: payments.filter((p) => p.status === "failed").length, icon: "mdi:close-circle-outline", color: "#f44336" },
+          // `tone` names a palette channel; the colour itself lives in adminTheme.js.
+          { label: "Total Captured", value: formatCurrency(totalRevenue), icon: "mdi:cash-check", tone: "success" },
+          { label: "Total Refunded", value: formatCurrency(totalRefunded), icon: "mdi:cash-refund", tone: "info" },
+          { label: "Refund Pending", value: formatCurrency(refundPendingAmount), icon: "mdi:progress-clock", tone: "warning", sub: `${refundPendingCount} in flight` },
+          { label: "Transactions", value: payments.length, icon: "mdi:swap-horizontal", tone: "primary" },
+          { label: "Failed", value: payments.filter((p) => p.status === "failed").length, icon: "mdi:close-circle-outline", tone: "error" },
         ].map((card) => (
           <Grid item xs={6} md key={card.label}>
             <Paper elevation={0} sx={{ p: 2.5, border: "1px solid", borderColor: "divider", height: "100%" }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Box sx={{ p: 1, borderRadius: 1, bgcolor: `${card.color}1A`, display: "flex" }}>
-                  <Icon icon={card.icon} style={{ fontSize: 24, color: card.color }} />
+                <Box sx={(theme) => ({ p: 1, borderRadius: 1, bgcolor: alpha(theme.palette[card.tone].main, 0.12), color: theme.palette[card.tone].main, display: "flex" })}>
+                  <Icon icon={card.icon} style={{ fontSize: 24 }} />
                 </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="caption" color="text.secondary" noWrap>{card.label}</Typography>
