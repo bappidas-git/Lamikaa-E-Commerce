@@ -53,6 +53,7 @@ const Shop = React.lazy(() => import("./pages/Shop/Shop"));
 const Rituals = React.lazy(() => import("./pages/Rituals/Rituals"));
 const RitualDetail = React.lazy(() => import("./pages/Rituals/RitualDetail"));
 const ProductDetails = React.lazy(() => import("./pages/ProductDetails/ProductDetails"));
+const Cart = React.lazy(() => import("./pages/Cart/Cart"));
 const Checkout = React.lazy(() => import("./pages/Checkout/Checkout"));
 const OrderConfirmation = React.lazy(() => import("./pages/OrderConfirmation/OrderConfirmation"));
 const OrderHistory = React.lazy(() => import("./pages/OrderHistory/OrderHistory"));
@@ -69,12 +70,6 @@ const SpecialOffers = React.lazy(() => import("./pages/SpecialOffers/SpecialOffe
 const Wishlist = React.lazy(() => import("./pages/Wishlist/Wishlist"));
 const Search = React.lazy(() => import("./pages/Search/Search"));
 const NotFound = React.lazy(() => import("./pages/NotFound/NotFound"));
-// TEMPORARY (Prompt 08, removed by Prompt 29 when the last page lands): the
-// route map is complete from today, so the page that has not been built yet
-// says so instead of 404ing or hiding behind a redirect to the homepage.
-// /search stopped needing it in Prompt 11; /rituals and /rituals/:slug in
-// Prompt 24; /why-lamikaa in Prompt 28. ONE remains: /cart (29).
-const ComingSoon = React.lazy(() => import("./pages/_ComingSoon/ComingSoon"));
 // TEMPORARY (Prompt 05, removed by Prompt 35): the visual QA surface for the
 // shared UI primitives. Unlinked from the navigation and from the sitemap.
 const Playground = React.lazy(() => import("./pages/_Playground/Playground"));
@@ -201,11 +196,10 @@ function StorefrontShell() {
                   <Route path={ROUTES.POLICY} element={<PolicyPage />} />
 
                   {/* ---- Commerce ---------------------------------------- */}
-                  {/* The cart is a drawer until Prompt 29 builds the page. */}
-                  <Route
-                    path={ROUTES.CART}
-                    element={<ComingSoon prompt="29" title="Cart" />}
-                  />
+                  {/* The tray answers "what did I just add?"; this is the page
+                      its "View cart" points at (Prompt 29). Both render the
+                      same lines and the same "Complete your ritual". */}
+                  <Route path={ROUTES.CART} element={<Cart />} />
                   <Route path={ROUTES.CHECKOUT} element={<Checkout />} />
                   <Route
                     path={`${ROUTES.ORDER_CONFIRMATION}/:orderNumber`}

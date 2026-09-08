@@ -236,69 +236,15 @@
 
 /* =============================================================================
  * 4. CROSS-SELL — "Complete your ritual" / "Start with"
- * A 56px plate, the name, the price, and one compact Add. Deliberately lighter
- * than a product card: this is a footnote to the cart, not a second shop.
+ * The rows themselves are `components/cart/CrossSell` (Prompt 29), shared with
+ * the /cart page. What is left here is the SLOT they sit in: the tray's own
+ * padding and the seam under it, which the page renders differently and which
+ * therefore never belonged to the list.
  * ========================================================================== */
 
-.cross {
+.crossSlot {
   padding: var(--sf-space-5);
   border-bottom: 1px solid var(--sf-color-border);
-}
-
-.crossList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sf-space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.crossRow {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
-  gap: var(--sf-space-3);
-  align-items: center;
-}
-
-.crossPlate {
-  width: 56px;
-  display: block;
-}
-
-.crossBody {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.crossName {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text);
-  text-decoration: none;
-  transition: color var(--sf-transition-fast);
-}
-
-.crossName:hover,
-.crossName:focus-visible {
-  color: var(--sf-color-gold);
-}
-
-.crossPrice {
-  font-size: var(--sf-text-xs);
-  font-variant-numeric: tabular-nums;
-  color: var(--sf-color-price);
-}
-
-.crossAdd {
-  flex: none;
 }
 
 /* =============================================================================
@@ -529,7 +475,7 @@
 }
 
 /* The suggestions below the card are already inside the wrapper's padding. */
-.emptyWrap .cross {
+.emptyWrap .crossSlot {
   padding: 0;
   border-bottom: 0;
 }
@@ -562,7 +508,6 @@
 @media (prefers-reduced-motion: reduce) {
   .couponChevron,
   .lineName,
-  .crossName,
   .couponInput {
     transition: none;
   }

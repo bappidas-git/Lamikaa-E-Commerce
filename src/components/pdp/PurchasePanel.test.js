@@ -119,12 +119,14 @@ describe("productSeoTitle", () => {
 });
 
 describe("hidesBottomNav", () => {
-  // The PDP grows its own sticky purchase bar below 769px; two stacked bars
-  // take 128px off a 640px screen.
-  it("stands the tab bar down on a product page and nowhere else", () => {
+  // The PDP grows its own sticky purchase bar below 769px, and /cart grew one
+  // in Prompt 29; two stacked bars take 128px off a 640px screen.
+  it("stands the tab bar down on a product page and on the cart, nowhere else", () => {
     expect(hidesBottomNav("/product/black-rice-face-wash")).toBe(true);
+    expect(hidesBottomNav("/cart")).toBe(true);
     expect(hidesBottomNav("/shop")).toBe(false);
     expect(hidesBottomNav("/products")).toBe(false);
+    expect(hidesBottomNav("/checkout")).toBe(false);
     expect(hidesBottomNav("/")).toBe(false);
     expect(hidesBottomNav(undefined)).toBe(false);
   });
