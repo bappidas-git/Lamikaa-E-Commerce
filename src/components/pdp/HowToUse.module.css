@@ -1,0 +1,109 @@
+/* =============================================================================
+ * HowToUse — directions, the ritual step, the routines
+ * =============================================================================
+ * Three stacked blocks divided by air rather than rules: the chapter's own
+ * heading is the only rule in this part of the page, and three more would turn
+ * a set of instructions into a form.
+ *
+ * The directions are a two-column grid per row — a fixed numeral track and the
+ * line beside it — so a wrapped second line hangs under the first word of the
+ * instruction instead of under the numeral.
+ * ========================================================================== */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-10);
+}
+
+.eyebrow {
+  margin: 0 0 var(--sf-space-3);
+}
+
+/* ---- 1. The directions --------------------------------------------------- */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sf-space-4);
+}
+
+/* The step chip is a 28px ring inside a 36px slot; it never grows with the
+   line beside it. */
+.numeral {
+  flex: none;
+}
+
+.direction {
+  padding-top: 3px;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- 2. The ritual step -------------------------------------------------- */
+/* A plate rather than a card: this is one fact, and a bordered box the width of
+   the column would out-weigh the instructions above it. */
+
+.ritualStep {
+  padding: var(--sf-space-5) var(--sf-space-6);
+  border-left: 2px solid var(--sf-color-gold);
+  background: var(--sf-color-surface);
+  border-radius: 0 var(--sf-radius-md) var(--sf-radius-md) 0;
+}
+
+.ritualStepLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sf-space-3);
+  margin: 0;
+}
+
+.ritualStepOrder {
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-gold-deep);
+}
+
+.ritualStepLabel {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.ritualStepFrequency {
+  margin: var(--sf-space-2) 0 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-muted);
+}
+
+/* ---- 3. Part of these rituals -------------------------------------------- */
+
+.ritualList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 769px) {
+  .ritualList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

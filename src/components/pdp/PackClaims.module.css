@@ -1,0 +1,72 @@
+/* =============================================================================
+ * PackClaims — the quotation block
+ * =============================================================================
+ * Everything here is set BELOW the voice of the chapter around it. The claims
+ * are 14px muted rows on a hairline ledger, the fragrance line closes them, the
+ * roundels are the shared trust pill, and only the caution takes a surface.
+ *
+ * The callout is `ContentBlocks`' own glass aside; the one thing added here is
+ * the gold hairline down its leading edge, which is why the rule reaches into
+ * the composed markup with `:global(.sf-glass)` rather than restating the
+ * recipe. One callout, one place it is defined.
+ * ========================================================================== */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+  margin-top: var(--sf-space-10);
+  padding-top: var(--sf-space-8);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+/* ---- The claims ---------------------------------------------------------- */
+/* A ledger, not a benefits list: no ticks and no gold, because a tick would
+   read as the shop endorsing the line rather than quoting it. */
+
+.claims {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.claim {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+.fragrance {
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-muted);
+}
+
+/* ---- The roundels -------------------------------------------------------- */
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: var(--sf-space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- The caution --------------------------------------------------------- */
+
+.caution {
+  margin-top: var(--sf-space-2);
+}
+
+.caution :global(.sf-glass) {
+  border-left: 2px solid var(--sf-color-gold);
+}

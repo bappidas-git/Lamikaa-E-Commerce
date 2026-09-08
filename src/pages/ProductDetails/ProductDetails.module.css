@@ -12,6 +12,12 @@
  * the bottle, not the CTA they have already walked past. The sticky bar at the
  * foot of a phone is what keeps the CTA reachable there.
  *
+ * WHAT LIVES HERE AND WHAT DOES NOT. The chapters that needed a component of
+ * their own took their stylesheet with them (`pdp/IngredientChapter`,
+ * `pdp/HowToUse`, `pdp/FarmerStory`, `pdp/PackClaims`). What is left below is
+ * the page's own furniture plus the two chapters that are markup rather than
+ * components: the benefits list and the full-ingredients disclosure.
+ *
  * No tabs, no promises band, no `.dark` block — the storefront has one theme.
  * Every value below is a token.
  * ========================================================================== */
@@ -79,27 +85,75 @@
   box-shadow: var(--sf-shadow-focus);
 }
 
-/* "Suitable for · All skin types — patch test recommended". A quiet closing
-   line under the overview prose, ruled off from it. */
-.suitableFor {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--sf-space-2) var(--sf-space-3);
-  margin: var(--sf-space-6) 0 0;
-  padding-top: var(--sf-space-4);
-  border-top: 1px solid var(--sf-color-border);
-  font-size: var(--sf-text-sm);
+/* ---- Benefits ------------------------------------------------------------ */
+/* A gold tick and the line as written. Two columns from 769px — a benefits list
+   is three or four short phrases, and one column of them down a 640px measure
+   is mostly white space. `column-gap` is generous because the two columns have
+   no rule between them and the ticks are what separate them. */
+
+.benefits {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-4) var(--sf-space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.benefit {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sf-space-3);
+  font-size: var(--sf-text-base);
   line-height: var(--sf-leading-normal);
   color: var(--sf-color-text-secondary);
 }
 
-.suitableForLabel {
-  color: var(--sf-color-text-muted);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
+.benefitMark {
+  width: 20px;
+  height: 20px;
+  /* Optically centred on the first line of a 16px/1.5 phrase. */
+  margin-top: 2px;
+  color: var(--sf-color-gold);
+}
+
+/* ---- Full ingredients ---------------------------------------------------- */
+
+/* The INCI list itself: the smallest type on the page, in the quiet tone, with
+   the relaxed leading a 40-word comma list needs to stay readable. */
+.inci {
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.disclosure {
+  margin-bottom: var(--sf-space-8);
+}
+
+/* "Good to know" — the suitability line, and the shelf life once an owner has
+   confirmed one. Ruled off from the disclosure above it. */
+.goodToKnow {
+  padding-top: var(--sf-space-6);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.goodToKnowLabel {
+  margin: 0 0 var(--sf-space-3);
+}
+
+.goodToKnowList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
 }
 
 /* ---- The loading silhouette ---------------------------------------------- */
@@ -126,6 +180,10 @@
 
   .mediaColumn .stage {
     aspect-ratio: 4 / 5;
+  }
+
+  .benefits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

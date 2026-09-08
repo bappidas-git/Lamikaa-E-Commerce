@@ -1,16 +1,23 @@
 /* =============================================================================
  * RelatedProducts — the rail shell
  * =============================================================================
- * A hairline rule, a tracked eyebrow, a serif heading, then the cards with air
- * between them. The affordance that there is more to the right is the peek of
- * the next card plus a hairline scrollbar — no arrows, no gradient veil that
- * would clip a card's focus ring at the edge of the scroller.
+ * A serif heading, then the cards with air between them. Two affordances say
+ * there is more to the right: the peek of the next card, and a soft fade at
+ * each edge of the scroller.
+ *
+ * THE FADE IS A MASK, NOT A VEIL. A gradient painted over the row would sit on
+ * top of a card's focus ring and dim it exactly when a keyboard visitor scrolled
+ * that card to the edge. `mask-image` does the same job in the compositor and —
+ * the reason it is used here — can be lifted wholesale under `:focus-within`, so
+ * the keyboard visitor's ring is never touched.
+ *
+ * The fade is symmetrical and constant rather than driven by scroll position: a
+ * rail of four to ten cards is short enough that a permanent soft edge reads as
+ * a treatment, and the alternative is a scroll listener on a decoration.
  * ========================================================================== */
 
 .section {
-  margin-top: var(--sf-space-16);
-  padding-top: var(--sf-space-8);
-  border-top: 1px solid var(--sf-color-border);
+  margin-top: var(--sf-space-12);
 }
 
 /* The heading is whatever the caller passed as `title` — the shell adds no copy
@@ -23,6 +30,38 @@
   letter-spacing: var(--sf-tracking-normal);
   line-height: var(--sf-leading-display);
   color: var(--sf-color-text);
+}
+
+/* The mask lives on the wrapper rather than the scroller: a mask on a scrolling
+   box is resolved against its padding box, so the fade would travel with the
+   content instead of staying at the edges of the viewport onto it. */
+.rail {
+  --rail-fade: var(--sf-space-8);
+
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--rail-fade),
+    #000 calc(100% - var(--rail-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--rail-fade),
+    #000 calc(100% - var(--rail-fade)),
+    transparent 100%
+  );
+  /* The default is `repeat`, which would tile a second fade over the 4px of
+     focus-ring room the scroller's negative margin claims either side. */
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* A focused card must never be the faded one. */
+.rail:focus-within {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .scroller {
@@ -68,7 +107,11 @@
 
 @media (max-width: 768px) {
   .section {
-    margin-top: var(--sf-space-12);
+    margin-top: var(--sf-space-10);
+  }
+
+  .rail {
+    --rail-fade: var(--sf-space-5);
   }
 
   .scroller {

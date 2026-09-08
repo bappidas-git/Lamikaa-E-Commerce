@@ -1586,6 +1586,108 @@ second one.
   named clips; the stage moved by rail/arrow/keyboard; the toggle appearing only
   where a crop exists; a one-image no-video product).
 
+**Updated by Prompt 27.** The PDP is finished: **nine chapters**, the three
+retained blocks rewritten, and the `Product` + `BreadcrumbList` graphs in the
+head. Every chapter is optional and every one of them prints DATA — the only
+copy this prompt types is section furniture.
+
+- `pages/ProductDetails/ProductDetails.js` (662 → 957) +
+  `ProductDetails.module.css` (161 → 218). **Chapters**, in document order and
+  each absent from the page AND from `ChapterNav` when the product has nothing
+  for it (both lists read one set of booleans, computed once):
+  `overview` · `benefits` · `ingredients` "Key ingredients" · `how-to-use` ·
+  `farmer-story` "The farmer story" · `full-ingredients` · `faqs` · `reviews`
+  (always) · `complete-the-ritual`. Benefits are a two-column list from 769px
+  with gold `mdi:check-circle-outline` marks; full ingredients are the INCI
+  string inside a closed `Accordion` ("Read the full INCI list") over a "Good to
+  know" row — `suitableFor[]` plus the shelf life ONLY once
+  `brand.productDefaults.shelfLife` stops being `{{SHELF_LIFE}}`. The
+  `suitableFor` line moved out of `overview` into that row rather than printing
+  twice. FAQs now mount `components/FAQ/FAQ` (the storefront's one accordion)
+  instead of a local `Accordion`, so the PDP gets its keyboard model, its
+  `#faq-<id>` deep links and its store-figure tokens.
+- **One `Promise.all`, six independent catches** (`fetchChapterData`, replacing
+  `fetchAov`): reviews, `getRelated`, `getFrequentlyBoughtTogether`,
+  `rituals.getAll()` and `siteContent.get("about"|"home")`. A failure degrades
+  its own chapter only. `RitualCard`'s step thumbnails resolve against
+  `[product, ...related, ...bundle]` — `getRelated`'s last pass sweeps the brand,
+  so on a catalogue this size that IS the catalogue and the page needs no
+  seventh request.
+- **Head**: `useSeo({ …, jsonLd: [breadcrumbJsonLd(trail), productJsonLd(…)] })`.
+  `trail` is the same array the visible `Breadcrumb` draws.
+- `utils/seo.js` (93 → 245): **`productJsonLd(product, { url, category, rating,
+  ratingCount })`** — `name`/`image`/`description`/`sku`/`brand`/`category`, and
+  three claims that are published only when the shop can back them: `offers`
+  only where `isPriceKnown(product)` (five of eight products are `priceTBA`),
+  `availability` only where `stock` is an actual number (`Number(null)` is 0, and
+  0 would publish "out of stock" for a product nobody counted), `aggregateRating`
+  only where a real average AND a real count exist — so on a fresh install no
+  graph carries it. The rating is the PAGE's blended pair, rounded to the one
+  decimal the page prints. `breadcrumbJsonLd` now accepts `{ name, url }`
+  alongside the trail's `{ label, to }`; both spellings produce the same graph.
+- `components/pdp/PackClaims.{js,module.css}` (new): the **"As printed on the
+  pack"** block — the one place on the storefront that quotes rather than
+  claims, and therefore the only place the carton's "anti-ageing antioxidants"
+  line appears. `packClaims[]` as a 14px muted ledger (no ticks, no gold — a tick
+  would read as endorsement), `fragranceNote`, `brand.packBadges` as
+  `Chip variant="trust"` with every `isPlaceholder` badge dropped, and `caution`
+  through `ContentBlocks`' own `::callout Caution` fence with a gold left
+  hairline. Exports `packBadgesToShow`, `cautionMarkup`, `PACK_EYEBROW`.
+- `components/pdp/IngredientChapter.{js,module.css}` (new): `keyIngredients[]`
+  as `GlassCard`s — name in the display serif at 20px, benefit at 14px — 1-up to
+  768px, 2-up to 1024, 3-up from 1025. Black rice is lifted to the front of the
+  row by a STABLE partition (the admin's order survives around it) and wears the
+  gold hairline; then `PackClaims`. Exports `orderedIngredients`,
+  `isHeroIngredient`.
+- `components/pdp/HowToUse.{js,module.css}` (new): `howToUse[]` as an `<ol>` with
+  `Chip variant="step"` numerals, the "Ritual step" plate
+  (`ritualStep.order/label/frequency`, gold leading edge), and "Part of these
+  rituals" — the routines whose `steps[].productId` **or**
+  `alternativeProductId` names this product, as `RitualCard compact`. Exports
+  `ritualsWithProduct`, `stepOrderLabel`.
+- `components/pdp/FarmerStory.{js,module.css}` (new): two sentences from
+  `siteContent.about.lede` + the About teaser, `ValueChain compact
+  orientation="vertical"`, `LegalNote`, `Button variant="ghost"` → `/about`. Two
+  decisions: the teaser's FIRST paragraph is the lede with "(FPC)" dropped, so
+  `farmerStoryLines` skips a paragraph whose WORD SET is ≥80% the lede's and
+  takes the next (a substring test cannot catch it — the two differ in the
+  middle); and the orientation is named because `auto` decides from the VIEWPORT
+  and at ≥1025px would lay seven steps in a row inside a half-viewport column,
+  which gave the whole page a horizontal scrollbar. Exports `farmerStoryLines`.
+- `components/storefront/ReviewsSection.{js,module.css}`: summary plate is now
+  `.sf-glass` (the section's ONE blurred layer), the distribution bars take
+  `--sf-gradient-gold`, and each review is a hairline card on
+  `--sf-color-surface`. Empty state — the normal state on this range — is "No
+  reviews yet / Reviews are written by customers from My Orders after delivery."
+  A row that arrives with `brand.flags.showSampleReviews` on wears a dashed
+  border and a "Sample" mark, which is what makes the flag safe to flip. Exports
+  `NO_REVIEWS_LINE`, `NO_REVIEWS_NOTE`. Props unchanged.
+- `components/storefront/FrequentlyBoughtTogether.{js,module.css}`: retitled
+  **"Complete the ritual"** ("The next steps of the routine, chosen for this
+  product."), with new `title`/`note` props — the PDP passes `title={null}`
+  because its chapter heading already carries it. A companion with no price is
+  rendered **unticked and disabled** behind the shared "Price on launch" chip
+  (`ui/Price`), and the total is the sum of the TICKED rows only; with nothing
+  ticked the total row is dropped entirely and the button reads "Nothing to add
+  yet" rather than offering ₹0.00. The plates take `.sf-plate` (contain, not
+  cover), each `+` travels with the tile it adds so a wrapped row never ends on a
+  dangling mark, and the 900px viewport split is gone for the same reason the
+  value chain's was. Exports `FBT_TITLE`, `FBT_NOTE`, `FBT_EYEBROW`.
+- `components/storefront/RelatedProducts.{js,module.css}`: new `headingLevel`
+  (the PDP passes `h3` under the chapter's `h2`) and `className`. The rail gains
+  edge fades as a **`mask-image`, lifted under `:focus-within`** — a painted veil
+  would dim a card's focus ring exactly when a keyboard visitor scrolled it to
+  the edge, which is why the rail had none.
+- `utils/faqs.js`: `faqsForProduct` gives an inline `product.faqs` row an id
+  (`p<productId>-<index>`) when it has none. Every inline row previously
+  answered to the anchor `faq-`, so under the shared `FAQ` component opening one
+  would have opened all of them.
+- **Tests**: `components/pdp/PdpChapters.test.js` (26) covers
+  `packBadgesToShow`, `cautionMarkup`, `orderedIngredients`, `isHeroIngredient`,
+  `ritualsWithProduct`, `stepOrderLabel`, `farmerStoryLines`, `productJsonLd`
+  (offers/availability/aggregateRating gating, image order) and
+  `breadcrumbJsonLd`'s two vocabularies.
+
 
 ## 7. Admin panel
 

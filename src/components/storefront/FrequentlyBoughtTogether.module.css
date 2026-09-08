@@ -1,27 +1,29 @@
 /* =============================================================================
- * FrequentlyBoughtTogether — "Completes the look"
+ * FrequentlyBoughtTogether — "Complete the ritual"
  * =============================================================================
- * A hairline rule opens the block; nothing here is a card.
+ * Nothing here is a card.
  *
- *   THE PLATES run left — the piece you are looking at, then each curated
+ *   THE PLATES run left — the product you are looking at, then each curated
  *   companion, divided by a thin plus mark that sits on the optical centre of
- *   the plates rather than the whole tile.
- *   THE CHECKLIST stands on the right as a ruled column: a tick, the name, the
- *   real price. The total sits over a hairline in the serif, and the ink
- *   button closes it.
+ *   the plates rather than the whole tile. Each one is `.sf-plate`, the shared
+ *   surface a pack is CENTRED on rather than cropped to: a bottle with its cap
+ *   sliced off by `object-fit: cover` is a defect, and packaging is the product.
+ *   THE CHECKLIST sits beneath them as a ruled ledger: a tick, the name, the
+ *   real price (or the "Price on launch" chip, on a row that cannot be bought
+ *   yet). The total sits over a hairline in the serif, and the button closes it.
+ *
+ * NO RULE ABOVE THE BLOCK. It sits inside the PDP's "Complete the ritual"
+ * chapter now, and the chapter heading already rules itself off; a second line
+ * two rows below the first is a box drawn by accident.
  *
  * The plate size is one custom property so the plus mark can centre itself
  * against it at every breakpoint without a second magic number.
  *
- * TOKENS ONLY — the button is the global .sf-btn primitive.
+ * TOKENS ONLY — the button is the shared `ui/Button`.
  * ========================================================================== */
 
 .section {
   --fbt-plate: 112px;
-
-  margin-top: var(--sf-space-16);
-  padding-top: var(--sf-space-8);
-  border-top: 1px solid var(--sf-color-border);
 }
 
 /* ---- The head ------------------------------------------------------------ */
@@ -63,7 +65,13 @@
   color: var(--sf-color-text);
 }
 
-/* One line of plain speech: this is a curation, and it says so. */
+/* One line of plain speech: this is a curation, and it says so. Where the
+   caller's own section heading carries the title (the PDP chapter does), the
+   note is the head's only child and needs no space above it. */
+.note:only-child {
+  margin-top: 0;
+}
+
 .note {
   margin: var(--sf-space-2) 0 0;
   max-width: 52ch;
@@ -73,6 +81,13 @@
 }
 
 /* ---- The layout ---------------------------------------------------------- */
+/* ONE COLUMN AT EVERY WIDTH: the plates read across the top, the ledger sits
+   under them. The block used to split into plates-beside-checklist past a 900px
+   VIEWPORT, which is a question it cannot answer from a media query — it lives
+   inside the PDP's content column, and that column is half a viewport wide at
+   every size above 769px. At 1440 the split left the plates about 220px to run
+   in and they stacked into a totem beside a ledger, which is the layout the
+   query existed to avoid. */
 
 .layout {
   display: grid;
@@ -80,21 +95,26 @@
   gap: var(--sf-space-8);
 }
 
-@media (min-width: 900px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-    gap: var(--sf-space-12);
-    align-items: start;
-  }
-}
-
 /* ---- The plates ---------------------------------------------------------- */
 
+/* The plates wrap rather than scroll: a curated bundle is three products, and a
+   scroller for three tiles is a control nobody needs. `align-items: flex-start`
+   keeps the plus marks on the plates' centre line when a caption runs to two
+   lines and makes one tile taller than its neighbour. */
 .visual {
   display: flex;
   align-items: flex-start;
   gap: var(--sf-space-4);
   flex-wrap: wrap;
+}
+
+/* A plus mark belongs to the tile AFTER it, so the two wrap together — on a
+   360px phone the row breaks after two tiles, and an unpaired "+" hanging off
+   the end of the first line is a sum with nothing to add. */
+.pair {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
 }
 
 .tile {
@@ -106,22 +126,12 @@
   text-decoration: none;
 }
 
+/* `.sf-plate` brings the ground, the hairline, the radius and `object-fit:
+   contain`; the tile sets only the size and the hover. */
 .plate {
-  display: block;
   width: var(--fbt-plate);
   height: var(--fbt-plate);
-  overflow: hidden;
-  border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface-2);
   transition: border-color var(--sf-transition);
-}
-
-.plate img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .tile:hover .plate {
@@ -241,9 +251,17 @@
 
 .checkPrice {
   flex: none;
-  font-size: var(--sf-text-sm);
-  color: var(--sf-color-text);
-  font-variant-numeric: tabular-nums;
+}
+
+/* A companion whose MRP is not set yet: the row still names the product (it is
+   part of the routine) but reads as unavailable rather than unticked-by-choice,
+   and its label is not a pointer, because there is nothing to click. */
+.unpriced {
+  cursor: default;
+}
+
+.unpriced .checkName {
+  color: var(--sf-color-text-muted);
 }
 
 /* ---- The total + the button ---------------------------------------------- */
@@ -281,9 +299,6 @@
 @media (max-width: 520px) {
   .section {
     --fbt-plate: 88px;
-
-    margin-top: var(--sf-space-12);
-    padding-top: var(--sf-space-6);
   }
   .visual {
     gap: var(--sf-space-3);

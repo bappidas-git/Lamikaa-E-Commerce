@@ -13,12 +13,26 @@ import styles from "./ReviewsSection.module.css";
 // the store's recorded aggregate and approved reviews), never invented here.
 //
 // EDITORIAL SET
-//   The section is a letters page, not a stack of cards. One summary plate —
-//   the average in the display serif beside five hairline bars — then each
-//   review as a ruled entry: who wrote it in a narrow left column, what they
-//   wrote in the measure beside it. No boxes, no tinted panels, and no derived
+//   The section is a letters page, not a stack of cards. One glass summary
+//   plate — the average in the display serif beside five gradient bars — then
+//   each review as a hairline card: who wrote it in a narrow left column, what
+//   they wrote in the measure beside it. No tinted panels and no derived
 //   statistics ("92% recommend" and friends): every number on this surface is
 //   either a real count or a real average.
+//
+// THE EMPTY STATE IS THE COMMON ONE, and it is the most important copy in this
+// file. Every LAMIKAA product is at zero reviews and the two seeded rows are
+// flagged `isSample` and hidden by `brand.flags.showSampleReviews` (BRAND.md
+// §3.9 rule 6), so on a fresh install this is what every product page shows.
+// It therefore has to do more than apologise: it says where a review comes
+// from — a real customer, from My Orders, after their order was delivered —
+// which is both an honest explanation of the blank space and a description of
+// the only path that can fill it.
+//
+// A SAMPLE ROW SAYS SO. With the flag on, the seeded rows arrive here mixed in
+// with real ones; each carries a "Sample" mark so nobody reviewing the site
+// mistakes the placeholder for a customer. The mark is the whole reason the
+// flag is safe to flip.
 //
 // Props (unchanged contract):
 //   reviews            array   approved reviews (real)
@@ -27,6 +41,11 @@ import styles from "./ReviewsSection.module.css";
 //   loading, error     boolean
 //   onRetry            fn
 // =============================================================================
+
+/** The empty state — see the note above; this is the page's normal state. */
+export const NO_REVIEWS_LINE = "No reviews yet";
+export const NO_REVIEWS_NOTE =
+  "Reviews are written by customers from My Orders after delivery.";
 
 // One row of the distribution. The bar is decorative — the row carries its own
 // sentence for assistive tech, so nothing here is conveyed by the fill alone.
@@ -69,7 +88,7 @@ const ReviewsSection = ({
   return (
     <div className={styles.section}>
       {/* ── The summary plate: the average, then the distribution ────────── */}
-      <div className={styles.summary}>
+      <div className={`sf-glass ${styles.summary}`}>
         <div className={styles.avgBlock}>
           {totalRatingsCount > 0 ? (
             <>
@@ -124,8 +143,8 @@ const ReviewsSection = ({
         </div>
       ) : list.length === 0 ? (
         <div className={styles.state}>
-          <p className={styles.stateLine}>No reviews yet.</p>
-          <p className={styles.stateNote}>Be the first to write about this piece.</p>
+          <p className={styles.stateLine}>{NO_REVIEWS_LINE}</p>
+          <p className={styles.stateNote}>{NO_REVIEWS_NOTE}</p>
         </div>
       ) : (
         <div className={styles.list}>
@@ -134,8 +153,16 @@ const ReviewsSection = ({
             const verified = review.isVerifiedPurchase || review.verified;
             const body = review.body || review.comment || review.text;
             const photos = Array.isArray(review.photos) ? review.photos : [];
+            // Only reachable with brand.flags.showSampleReviews on — the API
+            // filters these rows out otherwise.
+            const sample = review.isSample === true;
             return (
-              <article key={review.id || idx} className={styles.review}>
+              <article
+                key={review.id || idx}
+                className={[styles.review, sample ? styles.sample : ""]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
                 {/* Who wrote it — the narrow left column of the letters page */}
                 <header className={styles.reviewAside}>
                   <span className={styles.avatar} aria-hidden="true">
@@ -156,6 +183,7 @@ const ReviewsSection = ({
                         Verified purchase
                       </span>
                     )}
+                    {sample && <span className={styles.sampleMark}>Sample</span>}
                   </span>
                 </header>
 
