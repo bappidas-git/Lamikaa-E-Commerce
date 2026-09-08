@@ -9,6 +9,7 @@ import {
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 
 const emptyProduct = {
@@ -245,7 +246,7 @@ const AdminProducts = () => {
   const handleDelete = async (p) => {
     const result = await Swal.fire({
       title: "Delete product?", text: `"${p.name}" will be permanently deleted.`,
-      icon: "warning", showCancelButton: true, confirmButtonColor: "#d32f2f", confirmButtonText: "Delete",
+      icon: "warning", showCancelButton: true, confirmButtonColor: ADMIN_PALETTE.error.main, confirmButtonText: "Delete",
     });
     if (!result.isConfirmed) return;
     try {
@@ -256,6 +257,20 @@ const AdminProducts = () => {
   };
 
   const getCategoryName = (id) => categories.find((c) => String(c.id) === String(id))?.name || "—";
+
+  // What the gallery holds, at a glance: "3 img \u00b7 1 vid". normalizeProduct()
+  // guarantees `media[]` on every record the admin reads, so a catalogue seeded
+  // before media[] existed still counts its images here.
+  const mediaCounts = (p) => {
+    const rows = Array.isArray(p.media) ? p.media : [];
+    const images = rows.filter((m) => m.type === "image").length;
+    const videos = rows.filter((m) => m.type === "video").length;
+    if (!images && !videos) return { label: "—" };
+    const parts = [];
+    if (images) parts.push(`${images} img`);
+    if (videos) parts.push(`${videos} vid`);
+    return { label: parts.join(" \u00b7 ") };
+  };
   const fc = (n) => formatPrice(n, { decimals: 0 });
 
   // For variant products the product-level stock is rarely the real figure, so
@@ -303,9 +318,9 @@ const AdminProducts = () => {
             </Select>
           </FormControl>
         </Box>
-        {/* Horizontal scroll keeps all 8 columns reachable on small screens. */}
+        {/* Horizontal scroll keeps all 10 columns reachable on small screens. */}
         <TableContainer sx={{ overflowX: "auto" }}>
-          <Table sx={{ minWidth: 980 }}>
+          <Table sx={{ minWidth: 1160 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Product</TableCell>
@@ -313,6 +328,8 @@ const AdminProducts = () => {
                 <TableCell>Category</TableCell>
                 <TableCell>Price</TableCell>
                 <TableCell>Stock</TableCell>
+                <TableCell>Hero</TableCell>
+                <TableCell>Media</TableCell>
                 <TableCell>Flags</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
@@ -320,13 +337,14 @@ const AdminProducts = () => {
             </TableHead>
             <TableBody>
               {loading ? (
-                [...Array(5)].map((_, i) => (<TableRow key={i}><TableCell colSpan={8}><Skeleton height={56} /></TableCell></TableRow>))
+                [...Array(5)].map((_, i) => (<TableRow key={i}><TableCell colSpan={10}><Skeleton height={56} /></TableCell></TableRow>))
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No products found</Typography></TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No products found</Typography></TableCell></TableRow>
               ) : (
                 filtered.map((p) => {
                   const stock = effectiveStock(p);
                   const hasStock = typeof stock === "number";
+                  const media = mediaCounts(p);
                   return (
                     <TableRow key={p.id} hover>
                       <TableCell>
@@ -343,8 +361,14 @@ const AdminProducts = () => {
                       <TableCell><Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{p.sku || "—"}</Typography></TableCell>
                       <TableCell><Typography variant="body2">{getCategoryName(p.categoryId)}</Typography></TableCell>
                       <TableCell>
-                        <Typography variant="body2" fontWeight={500}>{fc(p.price)}</Typography>
-                        {p.comparePrice > p.price && <Typography variant="caption" color="text.secondary" sx={{ textDecoration: "line-through" }}>{fc(p.comparePrice)}</Typography>}
+                        {p.priceTBA ? (
+                          <Chip label="Price on launch" size="small" color="warning" sx={{ height: 22, fontSize: "0.7rem" }} />
+                        ) : (
+                          <>
+                            <Typography variant="body2" fontWeight={500}>{fc(p.price)}</Typography>
+                            {p.comparePrice > p.price && <Typography variant="caption" color="text.secondary" sx={{ textDecoration: "line-through" }}>{fc(p.comparePrice)}</Typography>}
+                          </>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -352,6 +376,16 @@ const AdminProducts = () => {
                           size="small"
                           color={!hasStock ? "default" : stock === 0 ? "error" : stock <= (p.lowStockThreshold || 10) ? "warning" : "success"}
                         />
+                      </TableCell>
+                      <TableCell>
+                        {Number.isFinite(p.heroOrder) ? (
+                          <Chip label={`#${p.heroOrder}`} size="small" color="primary" sx={{ height: 22, fontSize: "0.7rem" }} />
+                        ) : (
+                          <Typography variant="body2" color="text.disabled">—</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>{media.label}</Typography>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
@@ -388,7 +422,7 @@ const AdminProducts = () => {
               />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <TextField label="SKU" value={form.sku} onChange={(e) => setField("sku", e.target.value)} fullWidth size="small" placeholder="e.g., PRD-001" />
+              <TextField label="SKU" value={form.sku} onChange={(e) => setField("sku", e.target.value)} fullWidth size="small" placeholder="e.g. LK-BR-XX-000" />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -444,7 +478,7 @@ const AdminProducts = () => {
               <TextField label="Low Stock Threshold" type="number" value={form.lowStockThreshold} onChange={(e) => setField("lowStockThreshold", clampNum(e.target.value, { int: true, fallback: 10 }))} fullWidth size="small" inputProps={{ min: 0 }} />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <TextField label="Weight (kg)" type="number" value={form.weight} onChange={(e) => setField("weight", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} />
+              <TextField label="Shipping weight (kg)" type="number" value={form.weight} onChange={(e) => setField("weight", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} />
             </Grid>
             <Grid item xs={12} sm={4}>
               <TextField label="Length (cm)" type="number" value={form.dimensions.length} onChange={(e) => setDimension("length", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} />
@@ -486,7 +520,7 @@ const AdminProducts = () => {
                       onChange={(e) => updateVariant(idx, "name", e.target.value)}
                       size="small" sx={{ flex: 2, minWidth: 150 }}
                       error={!!errors.variantRows?.[idx]} helperText={errors.variantRows?.[idx]}
-                      placeholder="e.g., 16GB / 512GB"
+                      placeholder="e.g. 100 ml / 200 ml"
                     />
                     <TextField
                       label={`Price (${currencySymbol})`} type="number" value={v.price}
@@ -530,7 +564,7 @@ const AdminProducts = () => {
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
                 fullWidth size="small"
-                placeholder="e.g., laptop, gaming, ultrabook"
+                placeholder="e.g. black rice, face wash, cleanser"
               />
             </Grid>
 

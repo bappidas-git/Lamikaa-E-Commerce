@@ -35,7 +35,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 29 | Cart page and checkout restyle | complete | 2026-09-08 | (this commit) | `/cart` is a real page and `ComingSoon` has no route left (`grep -n "ComingSoon" src/App.js` → **0**). `components/cart/CrossSell.{js,module.css}` is "Complete your ritual" lifted out of the drawer whole — `crossSellFor` and the row markup now have ONE home and the tray and the page cannot disagree about what comes next. `pages/Cart/Cart.{js,module.css}` (482 + 508) is the two-column page: line items at 96px→112px of plate on the left, a sticky `GlassCard strong` summary on the right (subtotal · the drawer's coupon disclosure verbatim · discount · "Shipping and taxes calculated at checkout" · Checkout · Continue shopping · `LegalNote compact`), the cross-sell under the items, and below 769px one column with a 64px glass thumb bar — **`BottomNav` now stands down on `/cart` as well as `/product/*`** (verified: BottomNav nodes = 0 on `/cart`, 1 on `/shop` and `/checkout`). `Checkout.module.css` **rewritten from scratch**, 2 107 → 1 492 lines, on the shared primitives; `Checkout.js` edited for markup, classes and copy ONLY — the money block, the `orderData` payload, `STEPS`, `couponDiscountFor`, `etaFor`, `applyCoupon`/`removeCoupon`, `validateAddress`, `PAYMENT_OPTIONS` and `assurances` were diffed byte-for-byte and are **IDENTICAL**. Two additive guards only: the step-0 TBA drop and the order-failure alert. `grep -n "silk\|weave\|loom\|&#8377;" src/pages/Checkout/Checkout.js` → **0**. Measured live: inputs 48px, option cards 64px, CTA 52px, step chips 36px, `scrollWidth === clientWidth` at 360/390/414/768/1024/1280/1440 on both pages. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Two real orders placed end to end in mock mode (COD, then coupon + store credit) — see the Prompt 29 record. **`git status db.json` clean.** |
 | 30 | Auth, account, orders and wishlist restyle | complete | 2026-09-08 | (this commit) | `src/utils/orderStatus.js` is the one home for `deriveOrderStatus` + `STATUS_CONFIG` — the two byte-identical copies in `OrderHistory.js:18-47` and `Profile.js:18-47` are gone and both pages read `orderStatusInfo(order)` (`grep -rn "deriveOrderStatus" src --include=*.js | grep -v utils/orderStatus.js` → **2**, both docblock references; `grep -rln "utils/orderStatus" src` → **2 importers**). The config now carries a semantic **tone** instead of a per-page CSS-module class name, so a status is coloured once: `Chip variant="status"` on both screens. **`AuthModal` (1049 → 875) and `ReviewModal` (337 → 250) are on `ui/Modal`** — four hand-rolled overlays, focus traps, Escape handlers and body locks deleted, and both gained the route-change close and the scrollbar compensation they never had; the **disabled Google/Facebook buttons and their five brand hexes are removed** (Decisions), which leaves `ErrorBoundary` and `Footer`'s payment marks as the storefront's only documented hard-coded colours. `Profile` is a `320px 1fr` dashboard from 1025px (initials in a signature-gradient ring, three figures, a 52-55px index, recent orders); `OrderHistory` records are `GlassCard`s with 56px plates, a `Chip variant="step"` passage on a gradient hairline and pill actions; `Wishlist` is "Your wishlist" on a 1/2/3/4 grid with `Button variant="secondary" block` under each card. `RETURN_WINDOW_DAYS` now reads `STOREFRONT_CONFIG.returnsWindowDays`. All five stylesheets rewritten on the tokens (5 030 → 3 345 lines, **no colour hex and no `rgba()`**, every `var(--sf-*)` resolves). Logic diffed against HEAD: **Profile's 374-line effect+handler block is byte-identical**; OrderHistory's differs only in the four `orderStatusInfo` call sites and the deleted local `getStatusInfo` wrapper. `grep -rn "Muga\|Eri\|weave\|loom\|Collection" src/pages/Profile src/pages/OrderHistory src/pages/Wishlist src/components/AuthModal src/components/ReviewModal` → **0**. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Driven end to end in Chromium against mock mode — login, register validation, strength meter, address CRUD with the default rules, wallet ledger, order cancel (COD copy), reorder, and a review written from a delivered order → pending in Admin → approved → live on the PDP → the chip flips to "Review published". No horizontal scroll at 360/390/414/768/1024/1280/1440 on any of the four surfaces; zero page errors. **`git status db.json` clean.** See the Prompt 30 record below. |
 | 31 | Order confirmation, offers, search results and state consistency | complete | 2026-09-08 | (this commit) | **`ui/EmptyState` + `ui/ErrorState` are the storefront's two state cards** (87 + 150 + 64 lines; `ErrorState` composes `EmptyState`, so there is one stylesheet and a failure can never look like a different application). **20 `<EmptyState>` and 7 `<ErrorState>` call sites across 12 pages** replace 27 hand-rolled state blocks, five bespoke SVG marks (`EmptyMark`, `BagMark`, `SealedMark`, `AlertMark`, `TagMark`) and eight `.state*` / `.empty*` / `.panel*` class families (**−661 CSS lines net** across 13 stylesheets). Empty and failed stay DIFFERENT components everywhere, and `SpecialOffers` and `Search` gained the failed branch they never had (both `catch`es used to write `[]`, i.e. a dropped read read as "no offers" / "nothing matched"). `OrderConfirmation` keeps every behaviour — `getByOrderNumber`, the `paymentStatus`-driven chip + lede, estimated/real arrival, clipboard-verified copy, confetti, the store-credit ledger, the honest invoice placeholder — and is restyled to a 96px `GlowWrap tone="gold"` seal over a signature-gradient ring, a Fraunces "Thank you, {firstName}", a glass record card (`1fr 1fr` ≥769px), 15px hairline ledger rows, `Chip variant="status"` and three pill `Button`s (Continue shopping → **`/shop`**, was `/`). **`SpecialOffers` lost its 110-line copy of the shared card** (`grep -rn "const ProductCard" src/pages/SpecialOffers` → **0**): the markdown wall is `storefront/ProductCard`, the vouchers are `GlassCard glow="gold"` 3/2/1-up with the code in monospace gold, and the seed's disabled page is `EmptyState` "No offers right now" → `/shop`. `src/pages/_ComingSoon/` **deleted** (`grep -rn "ComingSoon" src` → **0**), and the now-unreferenced global `.loading-spinner` + `@keyframes spin` went with it (`grep -rn "loading-spinner" src/pages` → **0**; the four surviving spinners are all inside buttons). `DEFAULT_DEALS_HERO`/`DEFAULT_DEALS_TIMER` were the previous brand's promo voice and are now the seed's neutral wording with the clock off (Decisions). `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Driven in Chromium against mock mode at 390 and 1280: COD and store-credit confirmations, the not-found and failed branches, `/special-offers` disabled and enabled (SAMPLE10 voucher + auto-derived deals), no-results search, the 404, empty cart/checkout/orders/wishlist, Profile's five compact states, and every error state with JSON Server stopped. Confetti fires once with `aria-hidden`/`role=presentation` on its canvas and does not fire at all under `prefers-reduced-motion`. No horizontal scroll and no `{{` at any width. **`git status db.json` clean.** See the Prompt 31 record and its state checklist below. |
-| 32 | Admin rebrand and shell | pending | | | |
+| 32 | Admin rebrand and shell | complete | 2026-09-08 | (this commit) | `buildAdminTheme()` recoloured to the LAMIKAA palette (DESIGN_SYSTEM §10) and its `mode` argument retired to a no-op; `CHIP_TONES` re-derived as one dark map; radius 6 → 8; gold focus ring on every `MuiButtonBase`; glass-like AppBar. **`grep -rn "#[0-9a-fA-F]\{6\}" src/pages/Admin src/components/AdminLayout | grep -v "AdminOrders.js" | wc -l` → 0** (was 78; the five that remain are the invoice PRINT stylesheet — ink on white paper, logged in Decisions), and the seven short-hex/`common.white` literals the acceptance grep does not catch went too — three of them were white on the gold plate (1.6:1). **`grep -rn "MOCK_REVIEWERS\|My E-Commerce Store\|16GB\|laptop\|mekhela\|Muga\|Bihu\|Sualkuchi" src/pages/Admin src/components/AdminLayout` → 0.** Shell: `<Logo width={150}>` in the permanent drawer and `variant="mark" width={36}` in the temporary one, drawer ground `#0B0B0D`, gold active item with a 3px gradient rule, "Hero Section" → "Home & Hero" (route unchanged), `document.title = "{screen} · Admin · LAMIKAA NATURALS"` through the `documentTitle` claim/release protocol — **all 15 screens verified**. Login: one pane of glass, "Admin Console" / "Sign in to manage LAMIKAA NATURALS", gold button, no demo hints. Products table gains **Hero** and **Media** columns and a "Price on launch" chip; Reviews lost the eight fabricated reviewer chips and gained a **Sample** chip; the invoice prints the wordmark, `brand.name`, `brand.legalName` and GSTIN only when resolved. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (27 suites / 313 tests passed, 1 suite / 50 tests skipped). Browser QA (Chromium 1194, mock mode): **15 screens × 360/768/1280 = 45 loads, 0 horizontal overflow, 0 console errors**; a 24-step regression walk (product/category/coupon/shipping/FAQ/review create→edit→delete, order fulfil→deliver→cancel, refund initiate+complete, return create→approve→received→refund, payment refund, user deactivate→activate, lead update, settings save, deals save) **passed 24/24 with 0 console errors**; `git status db.json` clean afterwards. See "Prompt 32 record" below. |
 | 33 | Admin product form — media manager and new fields | pending | | | |
 | 34 | Admin content management | pending | | | |
 | 35 | Brand cleanup I — code identifiers | pending | | | |
@@ -386,6 +386,19 @@ Record every decision a prompt had to make that the reference files did not sett
 - `31 · 2026-09-08 · OrderHistory's signed-out screen is `EmptyState` as well · Not on the prompt's list, but it shared the same `.state*` family as the empty/no-match/error branches and it IS an empty state ("there is nothing to show you until you sign in"). Its two actions are unchanged. Wishlist's guest BAND is different and stays as it was, exactly as the prompt says: it sits above a populated list and invites a sign-in rather than reporting an absence.`
 - `31 · 2026-09-08 · Faq's empty card lost its `role="status"` · The page already announces the result count in a `role="status"` region directly above the results (`Faq.js:210`). Two live regions saying the same thing is two announcements for one fact. `EmptyState` is deliberately silent by default for the same reason — an empty list is ordinary content, not an event — which is why `role="alert"` belongs to `ErrorState` alone.`
 - `31 · 2026-09-08 · `EmptyState`'s default glyph is `mdi:tray-remove`, not the `mdi:leaf-off-outline` first written · Every Iconify name used here was checked against the MDI set through the API; `leaf-off-outline` does not exist (MDI has `leaf-off`), and an icon name that resolves to nothing renders an empty ring with no error. The other fifteen names were confirmed present.`
+- `32 · 2026-09-08 · The invoice print stylesheet in `AdminOrders.js` keeps its neutral ink-on-paper colours — the ONE hex exception in the admin · The sheet is injected into a print window, where the ground is white paper. Painting `#0B0B0D`/`#F5D76E` there would come out of the printer as a black rectangle with yellow text, and a tax invoice is a document, not a screen. Five literals remain (`#1a1a1a` body ink, `#ddd` cell rules, `#f5f5f5` head fill, `#666` muted, and the `#1a1a1a` total rule) and the acceptance grep excludes this file for exactly that reason. A comment above the template says so, so nobody "finishes the job" later.`
+- `32 · 2026-09-08 · `MOCK_REVIEWERS` and the eight one-click reviewer-name chips under the Add-a-Review form were DELETED, not renamed · They were fabricated shoppers ("Aarav Sharma", "Priya Menon"…), which BRAND.md 3.9 rule 6 forbids outright; renaming them to Assamese-neutral names would have kept the defect. The free-text "Reviewer name" field stays and now carries a helper line ("The name the review is published under."). Verified in the browser: the create dialog holds **0** clickable chips and a typed name still posts.`
+- `32 · 2026-09-08 · Rows with `isSample: true` wear an outlined "Sample" chip beside the reviewer name · The two seeded reviews are hidden from the storefront by `brand.flags.showSampleReviews`, so the admin was the only place they could be seen at all — and nothing said they were seed data. Two rows carry it on the tracked fixture.`
+- `32 · 2026-09-08 · `buildAdminTheme` keeps a parameter it ignores rather than becoming zero-arity · The prompt asks for the `mode` argument to be dropped; a hard removal would silently change nothing for `buildAdminTheme("dark")` but a linter/reviewer reading the signature would think the mode still exists. Both call sites were updated to `buildAdminTheme()`; the parameter survives only as a commented placeholder so an un-migrated caller cannot break.`
+- `32 · 2026-09-08 · The palette is EXPORTED as `ADMIN_PALETTE` (plus `ADMIN_FOCUS_RING`, `ADMIN_GOLD_GRADIENT`, `ADMIN_BRAND_WASH`) · SweetAlert2 renders directly under `<body>`, outside both ThemeProviders, so a per-call `confirmButtonColor` has to be a literal from somewhere. It is now `ADMIN_PALETTE.error.main` at all eight destructive confirms (products, categories, coupons, reviews, FAQs, shipping, leads, hero) plus the logout confirm — one definition, no hex at the call site.`
+- `32 · 2026-09-08 · Screen-level accent colours became a `tone` prop naming a PALETTE CHANNEL, never a hex · The dashboard stat cards, the payments summary, the FAQ stat tiles and the lead type badge all took a `color="#6366f1"`-style prop. They now take `tone="primary" | "success" | "info" | "warning" | "error" | "secondary"` and resolve it as `theme.palette[tone].main` / `alpha(…, .12)` at the call site, so the admin has exactly one file that names colours. Cyan (`info`) is spent at most once per screen, per DESIGN_SYSTEM §2's budget.`
+- `32 · 2026-09-08 · The three `color: "#fff"` icon labels on gold plates and the two `color: "#fff"` count chips became `primary.contrastText` · The acceptance grep only matches six-digit hex, so these would have survived it — and they are the one class of literal the palette flip actually BREAKS: white on `#F5D76E` is 1.6:1. `primary.contrastText` is `#0B0B0D` (13.4:1). `AdminSettings`' two `grey.400` / `common.white` social-icon tones moved to `text.secondary` / `text.primary` for the same reason.`
+- `32 · 2026-09-08 · `AdminHeroSection.js` was recoloured even though it is not in the prompt's file list · The acceptance grep covers ALL of `src/pages/Admin`, and the slide preview held seven literals plus two `var(--sf-*)` reads — the second of which breaks the prompt's own isolation rule ("the admin never imports storefront tokens"). The preview now paints from `ADMIN_PALETTE` (`ADMIN_BRAND_WASH` is the admin's own copy of the brand wash). **The four gradient PRESETS keep their `var(--sf-gradient-*)` values**: those are DATA written into `announcements[].gradient` and resolved by the STOREFRONT, not admin styling. Only the visible title changed ("Home & Hero"); the temporary announcements tab label stays for Prompt 34.`
+- `32 · 2026-09-08 · `AdminShipping`'s default carrier ("Shiprocket") and default SLA ("5-7") were blanked · Both are invented facts on a LAMIKAA method — `{{DISPATCH_SLA}}` is an unresolved token and no carrier has been named — and the new-method form pre-filled them into every row an admin created. The table now prints "—" for either when blank rather than a bare chip or the words "days" with no figure. The Shiprocket INTEGRATION card is untouched: that is a real feature, not a default.`
+- `32 · 2026-09-08 · Page titles are set through `utils/documentTitle`'s claim/release protocol, not a bare `document.title =` · `StoreSettingsContext` writes the store title on its own schedule; a plain assignment in `AdminLayout` would be overwritten the moment the settings request resolved. `setPageTitle` claims the tab and the claim is released ONCE on unmount (through a ref, so a settings save mid-session cannot hand the tab back while an admin is still on the screen). `AdminLogin` claims "Sign in · Admin · LAMIKAA NATURALS" and does not release — signing in unmounts it straight into `AdminLayout`, which claims the screen it lands on.`
+- `32 · 2026-09-08 · `App.css`'s `body.admin-area` block re-states the palette as literals instead of reading tokens · CSS cannot read a JS module, and reading `--sf-*` would breach the isolation rule the prompt sets. The block carries a comment naming `src/theme/adminTheme.js` as the file to keep it in step with. `--swal2-confirm-button-color` is pinned to the ink `#0b0b0d` THERE rather than per call, so a destructive confirm that overrides only the background (`error.main`, `#ff8a80`) still gets a readable label.`
+- `32 · 2026-09-08 · The login card is the admin's one pane of glass; the AppBar is "glass-like" but the drawer is not · DESIGN_SYSTEM §10 allows glass on the login card only, and the prompt asks for a glass-like AppBar. The card is `alpha(paper, .72)` + 20px blur, the AppBar `alpha(paper, .88)` + 12px blur (defined once in the theme's `MuiAppBar` override, so no screen re-states it), and both carry an opaque `@supports not (backdrop-filter)` fallback. Nothing else in the admin blurs.`
+- `32 · 2026-09-08 · The Products table's two new columns read `heroOrder` and `media[]` off the NORMALISED record, and the old form was left alone · `admin.getProducts()` runs `normalizeProducts`, so both fields are present on every row whatever the stored shape. The Price cell shows a "Price on launch" chip when `priceTBA`. The FORM is Prompt 33's — its `editable` payload still omits `media`/`heroOrder`/`priceTBA`, which survive an edit only because `updateProduct` merges over `editingProduct`. Table `minWidth` 980 → 1160; it scrolls inside its `TableContainer` and the page does not (verified at 360px).`
 
 ## Open TODOs
 
@@ -508,6 +521,9 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `31 · `EmptyState` renders a `GlassCard`, so the four `compact` states inside Profile's own `GlassCard` sections are two nested blurred layers — the ceiling DESIGN_SYSTEM §4 sets, not a breach, but the a11y/perf sweep should confirm it costs nothing on a phone. The other eighteen call sites sit on a plain section. · owner of 38 · 38`
 - `31 · `SpecialOffers`' Deal-of-the-Day feature still draws its own card (plate, badge, stock tag, price cluster, add button) — deliberately, it is a 4:5 editorial feature the shared card cannot be, and nothing else on the storefront has one. If a later prompt wants a second feature surface, that is the moment to promote it rather than copy it. · owner · 39`
 - `31 · The `dealsConfig.timer` window, the voucher wall at 2- and 3-up, and the markdown grid were exercised against a SCRATCHPAD db (`JSON_SERVER_DB` override) carrying `enabled: true`, `featuredCouponIds: [1]` and three products given a `comparePrice`. The committed seed has `enabled: false` and no `comparePrice` anywhere, so on the tracked fixture `/special-offers` shows only its disabled state and those code paths have no committed coverage. `git status db.json` is clean. · Prompt 39 · 39`
+- `32 · `AdminSpecialOffers.js:466` still offers `placeholder="Limited Time"` on the deals hero eyebrow field — the last of the previous brand's promo voice in the admin. Prompt 31 assigned it to 34, Prompt 32's copy sweep does not list that screen, and the file is untouched here; leaving the assignment where 31 put it rather than moving the boundary. · Prompt 34 / 35 · 34`
+- `32 · `AdminProducts`' OLD form still forces a selling price > 0, so editing one of the five `priceTBA` products through it writes a price the packaging does not carry (`form.price = p.price || 0` → validation). The table now flags them ("Price on launch") but the form is Prompt 33's to rewrite — nothing in this prompt touched the payload. · Prompt 33 · 33`
+- `32 · Iconify glyphs still fetch their data from `api.iconify.design` at runtime, so every admin icon renders as an empty box in this sandbox (same finding as Prompts 22 and 31). The rebrand was verified on layout, colour, copy and behaviour; the icon ART is unverified here. · owner of 38 · 38`
 
 ## Placeholders introduced / resolved
 
@@ -4096,3 +4112,114 @@ checked against the MDI set.
 Nothing from the storefront's state layer. The admin is untouched by this prompt and still carries the previous brand's
 `placeholder="Limited Time"` on `AdminSpecialOffers`' hero eyebrow field (Open TODOs) — the storefront defaults it feeds
 were rewritten here.
+
+---
+
+## Prompt 32 record (2026-09-08)
+
+### The theme (`src/theme/adminTheme.js`, 240 → 299)
+
+`buildAdminTheme()` now builds ONE dark theme on the LAMIKAA palette. The `mode` argument is a commented no-op and both
+call sites (`AdminLayout`, `AdminLogin`) pass nothing.
+
+| | before (slate/indigo) | after (DESIGN_SYSTEM §10) |
+|---|---|---|
+| `background.default` / `paper` | `#0b1220` / `#111927` | `#0B0B0D` / `#141416` |
+| `primary` main / light / dark / contrast | `#818cf8` / `#a5b4fc` / `#6366f1` / `#ffffff` | `#F5D76E` / `#FFEFA6` / `#B88924` / `#0B0B0D` |
+| `secondary` | `#94a3b8` | `#8B5CF6` (light `#C4B5FD`) |
+| `success` / `warning` / `error` / `info` | `#34d399` / `#fbbf24` / `#f87171` / `#60a5fa` | `#7ED9A6` / `#F5C76E` / `#FF8A80` / `#5DE7FF` |
+| `divider` | `rgba(148,163,184,.16)` | `rgba(255,255,255,.08)` |
+| `text` primary / secondary / disabled | `#f1f5f9` / `#94a3b8` / `#64748b` | `#F7F5F0` / `#B8B5B0` / `rgba(247,245,240,.62)` |
+| `shape.borderRadius` | 6 | **8** (chips 6, nothing is a pill) |
+
+Added: `palette.surface = { sunken: "#1C1C20", hover: "#222228" }` (MUI has no name for a sunken input plate — outlined
+inputs now sit on `sunken`); `ADMIN_FOCUS_RING` = `0 0 0 3px rgba(245,215,110,.55)`, applied on `MuiButtonBase`
+`&.Mui-focusVisible` **and** repeated on `MuiButton` so it still wins on a focused-and-hovered control; `ADMIN_GOLD_GRADIENT`
+(the active nav rule and the CTA preview); `ADMIN_BRAND_WASH` (the hero preview's fallback ground). `CHIP_TONES` collapsed
+from `{light, dark}` to one map, each foreground stepped up where the palette tone would not clear 4.5:1 on `#0B0B0D`
+(violet `#8B5CF6` → `#C4B5FD` for chip text). `MuiAppBar` carries the glass-like paper (88 % + 12px blur + an opaque
+`@supports not` fallback) so no screen re-states it. Table heads keep their uppercase tracking, now in `#B8B5B0` on a
+3 % white plate.
+
+### The shell (`AdminLayout.js`, 997 → 1054)
+
+- Drawer head: `<Logo width={150}>` in the permanent drawer, `<Logo variant="mark" width={36}>` in the temporary one.
+- Drawer ground `background.default` (`#0B0B0D`) with a hairline right edge; the AppBar is the glass-like paper above it.
+- Active nav item: `action.selected` (gold at 12 %), gold label, and a 3px `ADMIN_GOLD_GRADIENT` rule down its leading
+  edge (`::before`, `insetInlineStart`). Section captions Catalogue / Sales / Storefront / Operations and "Back to Store"
+  are untouched, as are the notification poll and the avatar menu.
+- "Hero Section" → **"Home & Hero"**; `path` stays `/admin/hero-section` until Prompt 34.
+- `document.title` = `` `${screen} · Admin · ${brand.name}` `` derived from the `menuItems` entry matching
+  `location.pathname`, written with `setPageTitle` and released once on unmount with `releasePageTitle`.
+- The logout confirm's `confirmButtonColor` is `ADMIN_PALETTE.error.main`.
+
+### The login (`AdminLogin.js`)
+
+Centred `Paper` at `alpha(background.paper, .72)` + 20px blur + a 24/64 shadow — the admin's only glass. Wordmark at 210,
+"Admin Console", "Sign in to manage LAMIKAA NATURALS" (from `brand.name`), gold contained button, `useAdminBodyClass`,
+`Sign in · Admin · LAMIKAA NATURALS` in the tab, and still no demo credentials anywhere on the screen.
+
+### Colour literals — 78 → 0 outside the invoice
+
+| file | what went |
+|---|---|
+| `AdminDashboard` | 13 → 0. `StatCard` takes `tone` (`primary`/`success`/`secondary`/`info`); the four secondary tiles take `warning`/`error`/`warning`/`secondary`; the "well stocked" glyph is `success.main`. |
+| `AdminPayments` | 5 → 0. Summary cards → `success` / `info` / `warning` / `primary` / `error`. |
+| `AdminFaqs` | 5 → 0. Stat tiles → `primary` / `success` / `info` / `warning`; `Mekhela Chador` placeholder → "e.g. Does the face wash suit sensitive skin?" (and the same example in the file's docblock). |
+| `AdminLeads` | 5 → 0. `getTypeColor` → `getTypeTone` (`primary` / `success`); the two tinted tiles and the "new" row tint use `alpha(palette…, .10/.06)`. |
+| `AdminShipping` | 4 → 0. Integration plate → `alpha(primary, .12)`, feature ticks → `success.main`. |
+| `AdminHeroSection` | 7 → 0 (+2 `var(--sf-*)` reads). Preview ground, scrim, copy, eyebrow and CTA chip all from `ADMIN_PALETTE`. |
+| `AdminProducts` / `AdminCategories` / `AdminCoupons` / `AdminReviews` / `AdminOrders` / `AdminLeads` / `AdminFaqs` / `AdminShipping` / `AdminLayout` | 9 destructive `confirmButtonColor` literals → `ADMIN_PALETTE.error.main`. |
+| `AdminSettings` / `AdminUsers` / `AdminOrders` | 5 `#fff` labels on gold → `primary.contrastText`; 2 `grey.400`/`common.white` → `text.secondary`/`text.primary`. |
+| `AdminOrders` (invoice) | **kept** — 5 print literals, see Decisions. |
+
+`grep -rn "palette.mode\|isDarkMode" src/pages/Admin src/components/AdminLayout src/theme/adminTheme.js` → 0.
+
+### Copy and data sweep
+
+- `AdminProducts`: SKU placeholder `e.g. LK-BR-XX-000` (matches the seeded `LK-BR-FW-001` shape), variant placeholder
+  "e.g. 100 ml / 200 ml", tags "e.g. black rice, face wash, cleanser", "Weight (kg)" → **"Shipping weight (kg)"**
+  (dimensions kept — shipping needs them). Table: **Hero** (`#n` chip or "—") and **Media** ("3 img · 2 vid" from
+  `media[]`, "—" when empty) columns, and a "Price on launch" chip wherever `priceTBA`. `minWidth` 980 → 1160.
+- `AdminReviews`: `MOCK_REVIEWERS` and the chip row deleted; free-text name kept with a helper line; outlined **Sample**
+  chip on `isSample` rows; the pending-row tint is `alpha(warning, .12)` (it was a light/dark branch).
+- `AdminOrders`: the invoice header is the Cloudinary wordmark at `w_400`, `brand.name`, `brand.legalName`, the store
+  address when it resolves, and `GSTIN` only when `brand.legal.gstin` is not a token; the store-name fallback is
+  `brand.name`, not "My E-Commerce Store". Verified in a real print window — the head renders exactly those four rows with
+  no GSTIN line and no `{{…}}`.
+- `AdminHeroSection`: visible title → "Home & Hero". `AdminSettings`: the tab, the pointer card and its button → "Home & Hero".
+- `AdminShipping`: carrier placeholder "e.g. Delhivery, Blue Dart, India Post", default carrier and SLA blank.
+
+### `App.css` admin block
+
+`body.admin-area` ground `#0b1220` → **`#0b0b0d`**; scrollbar track `rgba(255,255,255,.04)`, thumb `#2a2a30`, hover
+`#3a3a42`. The SweetAlert2 admin skin is the LAMIKAA palette: `#141416` ground, `#f7f5f0` text, an 8px radius, a gold
+confirm with `#0b0b0d` ink (pinned as `--swal2-confirm-button-color` so a per-call destructive background still reads),
+a white-8 % cancel, the gold focus ring and a gold timer bar, plus Manrope on the popup and its buttons (Swal renders
+outside the MUI tree). The storefront block is unchanged.
+
+### Verification
+
+- `CI=true npm run build` → **Compiled successfully, no warnings**.
+- `npm test -- --watchAll=false` → **27 suites / 313 tests passed**, 1 suite / 50 tests skipped (the live-API suite).
+- Acceptance greps: hex outside `AdminOrders.js` → **0**; `MOCK_REVIEWERS|My E-Commerce Store|16GB|laptop|mekhela|Muga|Bihu|Sualkuchi` → **0**;
+  `buildAdminTheme(` → the definition plus two `buildAdminTheme()` call sites.
+- Browser walk (Chromium 1194, mock mode, `npm run dev`): 15 screens × 360 / 768 / 1280 = **45 loads, 0 page-level
+  horizontal overflow** (every wide table scrolls inside its own `TableContainer`) and **0 console/page errors**. All 15
+  tab titles read `{screen} · Admin · LAMIKAA NATURALS`; the login reads `Sign in · Admin · LAMIKAA NATURALS`.
+- Regression walk, driven through the real UI and asserted against JSON Server — **24/24, 0 console errors**:
+  product create → edit → delete · category create → delete · coupon create → delete · shipping method create → delete
+  (and the carrier field confirmed blank on open) · FAQ create → delete · review create → delete (create dialog holds
+  **0** name chips; 2 seeded rows show the Sample chip) · user deactivate → activate · lead status + notes update ·
+  settings General save · deals config save · order fulfil → deliver · order refund initiate → complete
+  (₹100 partial; payment → `partially_refunded`) · return create → approve → received → **refunded** · payment refund
+  (₹100 → ₹150) · order cancel (on a scratch order POSTed for the purpose and deleted after).
+- `db.json` was restored from the pre-walk copy afterwards: `git status --short db.json` is clean.
+
+### Left for Prompt 33
+
+The product FORM is untouched — this prompt changed the Products TABLE, the three placeholders and the two labels only.
+`emptyProduct`, the validation, the image textarea and the `editable` payload are all still Prompt 33's to replace, and
+the payload still omits `media` / `heroOrder` / `priceTBA` (they survive an edit through the `{...editingProduct, ...editable}`
+merge). The admin theme, `ADMIN_PALETTE` and the chip tones are stable — Prompt 33's media manager should read
+`theme.palette.*` and add no colour of its own.

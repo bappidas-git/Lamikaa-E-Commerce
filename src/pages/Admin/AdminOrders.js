@@ -12,6 +12,10 @@ import Swal from "sweetalert2";
 import apiService from "../../services/api";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { formatCurrency as money0 } from "../../utils/helpers";
+import brand from "../../config/brand";
+import { cld } from "../../utils/cloudinary";
+import { resolveOrNull } from "../../utils/placeholders";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 
 // Status enums shared, label-for-label, with AdminDashboard and reconciled with
 // the storefront: a customer cancellation stamps fulfillmentStatus "cancelled"
@@ -292,7 +296,7 @@ const AdminOrders = () => {
       text: "Use this if the settlement bounced. You can re-initiate afterwards.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d32f2f",
+      confirmButtonColor: ADMIN_PALETTE.error.main,
       confirmButtonText: "Mark Failed",
     });
     if (!result.isConfirmed) return;
@@ -366,32 +370,45 @@ const AdminOrders = () => {
     } catch (e) { Swal.fire({ icon: "error", title: "Error", text: e.message }); }
   };
 
-  // Print-friendly invoice in a new window (store identity from Settings).
+  // Print-friendly invoice in a new window. Identity comes from Settings when
+  // it is filled in and from the brand config otherwise, so an invoice printed
+  // before anyone opens Settings still carries the real company on it.
   const handlePrintInvoice = async () => {
     const o = selectedOrder;
-    let storeName = "My E-Commerce Store";
+    let storeName = brand.name;
     let storeAddress = "";
     try {
       const settings = await apiService.settings.get();
-      storeName = settings?.store?.name || storeName;
-      storeAddress = settings?.store?.address || "";
-    } catch { /* fall back to defaults */ }
+      storeName = resolveOrNull(settings?.store?.name) || storeName;
+      storeAddress = resolveOrNull(settings?.store?.address) || "";
+    } catch { /* fall back to the brand config */ }
+    // Hidden while unresolved: a placeholder token must never print on a tax
+    // document (PLACEHOLDERS.md, "Rendering rules").
+    const gstin = resolveOrNull(brand.legal?.gstin);
     const addr = o.shippingAddress || {};
     // Whole units — an invoice line has no room for the minor unit.
     const money = (n) => formatPrice(n, { decimals: 0 });
     const rows = (o.items || [])
       .map((it) => `<tr><td>${it.name}</td><td>${it.sku || "—"}</td><td style="text-align:center">${it.quantity}</td><td style="text-align:right">${money(it.price)}</td><td style="text-align:right">${money(it.subtotal)}</td></tr>`)
       .join("");
+    // NOTE — the only hard-coded colours left in the admin. This stylesheet is
+    // injected into a PRINT window: the sheet is white, so the dark LAMIKAA
+    // palette would come out of the printer as a black rectangle. Ink on paper
+    // is neutral by design and is not read from the admin theme.
     const html = `<!DOCTYPE html><html><head><title>Invoice ${o.orderNumber}</title><style>
       body{font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;margin:32px}
+      .mark{height:44px;width:auto;display:block;margin-bottom:12px}
       h1{font-size:20px;margin:0} h2{font-size:14px;margin:24px 0 8px}
       table{width:100%;border-collapse:collapse;font-size:13px}
       th,td{border:1px solid #ddd;padding:8px;text-align:left}
       th{background:#f5f5f5} .totals td{border:none;padding:4px 8px}
       .muted{color:#666;font-size:12px}
     </style></head><body>
+      <img class="mark" src="${cld(brand.logoUrl, { w: 400 })}" alt="${storeName}" />
       <h1>${storeName}</h1>
-      <div class="muted">${storeAddress}</div>
+      <div class="muted">${brand.legalName}</div>
+      ${storeAddress ? `<div class="muted">${storeAddress}</div>` : ""}
+      ${gstin ? `<div class="muted">GSTIN ${gstin}</div>` : ""}
       <h2>Tax Invoice — ${o.orderNumber}</h2>
       <div class="muted">Order date: ${new Date(o.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })} · Payment: ${(o.paymentMethod || "").replace("_", " ").toUpperCase()} (${o.paymentStatus})</div>
       <h2>Bill / Ship To</h2>
@@ -472,7 +489,7 @@ const AdminOrders = () => {
           <Typography variant="h5" fontWeight="bold">Orders</Typography>
           <Typography variant="body2" color="text.secondary">Manage customer orders and fulfillment</Typography>
         </Box>
-        <Chip label={isFiltering ? `${filtered.length} of ${orders.length}` : `${orders.length} total`} sx={{ bgcolor: "primary.main", color: "#fff" }} />
+        <Chip label={isFiltering ? `${filtered.length} of ${orders.length}` : `${orders.length} total`} sx={{ bgcolor: "primary.main", color: "primary.contrastText" }} />
       </Box>
 
       {/* Status breakdown — mirrors the Returns page pattern */}
@@ -831,7 +848,7 @@ const AdminOrders = () => {
           return (
             <>
               <DialogTitle sx={{ fontWeight: "bold", display: "flex", alignItems: "center", gap: 1 }}>
-                <Icon icon={isRecall ? "mdi:truck-alert-outline" : "mdi:alert-circle-outline"} style={{ color: "#ed6c02" }} />
+                <Box component={Icon} icon={isRecall ? "mdi:truck-alert-outline" : "mdi:alert-circle-outline"} sx={{ color: "warning.main" }} />
                 {isRecall ? "Cancel & recall" : "Cancel order"} {selectedOrder.orderNumber}?
               </DialogTitle>
               <DialogContent dividers>

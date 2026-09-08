@@ -6,21 +6,17 @@ import {
   Rating, Dialog, DialogTitle, DialogContent, DialogActions, Button,
   Checkbox, FormControlLabel, Stack, Autocomplete,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 
 const STATUS_CONFIG = {
   pending: { label: "Pending", color: "warning" },
   approved: { label: "Approved", color: "success" },
   rejected: { label: "Rejected", color: "error" },
 };
-
-// Quick-pick mock shoppers so the admin can post varied reviews fast.
-const MOCK_REVIEWERS = [
-  "Aarav Sharma", "Priya Menon", "Rahul Verma", "Sneha Iyer",
-  "Vikram Singh", "Ananya Reddy", "Karan Mehta", "Divya Nair",
-];
 
 const EMPTY_REVIEW = {
   productId: "", userName: "", rating: 5, title: "", body: "",
@@ -71,7 +67,7 @@ const AdminReviews = () => {
   };
 
   const handleDelete = async (review) => {
-    const result = await Swal.fire({ title: "Delete review?", icon: "warning", showCancelButton: true, confirmButtonColor: "#d32f2f", confirmButtonText: "Delete" });
+    const result = await Swal.fire({ title: "Delete review?", icon: "warning", showCancelButton: true, confirmButtonColor: ADMIN_PALETTE.error.main, confirmButtonText: "Delete" });
     if (!result.isConfirmed) return;
     try {
       await apiService.admin.deleteReview(review.id);
@@ -170,11 +166,17 @@ const AdminReviews = () => {
                 filtered.map((review) => {
                   const sc = STATUS_CONFIG[review.status] || { label: review.status, color: "default" };
                   return (
-                    <TableRow key={review.id} hover sx={{ bgcolor: review.status === "pending" ? (t) => (t.palette.mode === "dark" ? "rgba(255, 167, 38, 0.16)" : "rgba(255, 152, 0, 0.12)") : "inherit" }}>
+                    <TableRow key={review.id} hover sx={(t) => ({ bgcolor: review.status === "pending" ? alpha(t.palette.warning.main, 0.12) : "inherit" })}>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                           <Avatar sx={{ width: 32, height: 32, fontSize: "0.8rem", bgcolor: "primary.light" }}>{review.userName?.[0]}</Avatar>
                           <Typography variant="body2">{review.userName}</Typography>
+                          {/* Seeded copy, not a customer — hidden from the
+                              storefront by brand.flags.showSampleReviews and
+                              marked here so it is easy to clear before launch. */}
+                          {review.isSample && (
+                            <Chip label="Sample" size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem" }} />
+                          )}
                         </Box>
                       </TableCell>
                       <TableCell><Typography variant="body2" sx={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{getProductName(review.productId)}</Typography></TableCell>
@@ -254,7 +256,7 @@ const AdminReviews = () => {
         )}
       </Dialog>
 
-      {/* Add Review Dialog (admin-authored, mock customer names) */}
+      {/* Add Review Dialog (admin-authored) */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: "bold" }}>Add a Review</DialogTitle>
         <DialogContent dividers>
@@ -276,25 +278,16 @@ const AdminReviews = () => {
               noOptionsText="No products found"
             />
 
-            <Box>
-              <TextField
-                fullWidth size="small" label="Reviewer name"
-                value={form.userName}
-                onChange={(e) => setForm((f) => ({ ...f, userName: e.target.value }))}
-              />
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1 }}>
-                {MOCK_REVIEWERS.map((name) => (
-                  <Chip
-                    key={name}
-                    label={name}
-                    size="small"
-                    variant={form.userName === name ? "filled" : "outlined"}
-                    color={form.userName === name ? "primary" : "default"}
-                    onClick={() => setForm((f) => ({ ...f, userName: name }))}
-                  />
-                ))}
-              </Box>
-            </Box>
+            {/* Free text only. The one-click name chips that used to sit under
+                this field offered eight invented shoppers — fabricated social
+                proof, which BRAND.md 3.9 rule 6 rules out. A review is typed in
+                with the name of the person who wrote it. */}
+            <TextField
+              fullWidth size="small" label="Reviewer name"
+              value={form.userName}
+              onChange={(e) => setForm((f) => ({ ...f, userName: e.target.value }))}
+              helperText="The name the review is published under."
+            />
 
             <Box>
               <Typography variant="caption" color="text.secondary">Rating</Typography>

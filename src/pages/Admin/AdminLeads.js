@@ -29,10 +29,12 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from "framer-motion";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { ADMIN_PALETTE } from "../../theme/adminTheme";
 
 const AdminLeads = () => {
   const [loading, setLoading] = useState(true);
@@ -140,7 +142,7 @@ const AdminLeads = () => {
       text: "This lead will be permanently removed.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d32f2f",
+      confirmButtonColor: ADMIN_PALETTE.error.main,
       confirmButtonText: "Delete",
     });
     if (!result.isConfirmed) return;
@@ -189,9 +191,9 @@ const AdminLeads = () => {
     return type === "contact" ? "mdi:message-text" : "mdi:email-newsletter";
   };
 
-  const getTypeColor = (type) => {
-    return type === "contact" ? "#6366f1" : "#10b981";
-  };
+  // The palette channel a lead type is painted in — resolved against the theme
+  // at the call site, so the admin keeps exactly one place that names colours.
+  const getTypeTone = (type) => (type === "contact" ? "primary" : "success");
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -286,12 +288,12 @@ const AdminLeads = () => {
               border: "1px solid",
               borderColor: "divider",
               cursor: "pointer",
-              bgcolor: typeFilter === "newsletter" ? "rgba(16, 185, 129, 0.10)" : "transparent",
+              bgcolor: (t) => (typeFilter === "newsletter" ? alpha(t.palette.success.main, 0.10) : "transparent"),
               "&:hover": { bgcolor: "action.hover" },
             }}
             onClick={() => { setTypeFilter("newsletter"); setStatusFilter("all"); }}
           >
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#10b981" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "success.main" }}>
               {newsletterCount}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -307,12 +309,12 @@ const AdminLeads = () => {
               border: "1px solid",
               borderColor: "divider",
               cursor: "pointer",
-              bgcolor: statusFilter === "new" ? "rgba(59, 130, 246, 0.10)" : "transparent",
+              bgcolor: (t) => (statusFilter === "new" ? alpha(t.palette.info.main, 0.10) : "transparent"),
               "&:hover": { bgcolor: "action.hover" },
             }}
             onClick={() => { setStatusFilter("new"); setTypeFilter("all"); }}
           >
-            <Typography variant="h4" fontWeight="bold" sx={{ color: "#3b82f6" }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: "info.main" }}>
               {newLeadsCount}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -450,7 +452,7 @@ const AdminLeads = () => {
                       exit={{ opacity: 0 }}
                       hover
                       sx={{
-                        bgcolor: lead.status === "new" ? "rgba(59, 130, 246, 0.05)" : "transparent",
+                        bgcolor: (t) => (lead.status === "new" ? alpha(t.palette.info.main, 0.06) : "transparent"),
                       }}
                     >
                       <TableCell>
@@ -459,8 +461,8 @@ const AdminLeads = () => {
                           label={lead.type}
                           size="small"
                           sx={{
-                            bgcolor: `${getTypeColor(lead.type)}15`,
-                            color: getTypeColor(lead.type),
+                            bgcolor: (t) => alpha(t.palette[getTypeTone(lead.type)].main, 0.12),
+                            color: `${getTypeTone(lead.type)}.main`,
                             textTransform: "capitalize",
                             fontWeight: 500,
                           }}
@@ -468,7 +470,7 @@ const AdminLeads = () => {
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                          <Avatar sx={{ width: 32, height: 32, fontSize: "0.8rem", bgcolor: getTypeColor(lead.type) }}>
+                          <Avatar sx={{ width: 32, height: 32, fontSize: "0.8rem", bgcolor: `${getTypeTone(lead.type)}.main`, color: `${getTypeTone(lead.type)}.contrastText` }}>
                             {lead.name?.[0] || lead.email?.[0]?.toUpperCase() || "?"}
                           </Avatar>
                           <Box>
@@ -592,8 +594,8 @@ const AdminLeads = () => {
                     label={selectedLead.type}
                     size="small"
                     sx={{
-                      bgcolor: `${getTypeColor(selectedLead.type)}15`,
-                      color: getTypeColor(selectedLead.type),
+                      bgcolor: (t) => alpha(t.palette[getTypeTone(selectedLead.type)].main, 0.12),
+                      color: `${getTypeTone(selectedLead.type)}.main`,
                       textTransform: "capitalize",
                     }}
                   />

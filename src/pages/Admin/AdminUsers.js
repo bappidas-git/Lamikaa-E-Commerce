@@ -95,7 +95,7 @@ const AdminUsers = () => {
           <Typography variant="h5" fontWeight="bold">Users</Typography>
           <Typography variant="body2" color="text.secondary">Manage customer accounts</Typography>
         </Box>
-        <Chip label={`${users.length} total`} sx={{ bgcolor: "primary.main", color: "#fff" }} />
+        <Chip label={`${users.length} total`} sx={{ bgcolor: "primary.main", color: "primary.contrastText" }} />
       </Box>
 
       <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
