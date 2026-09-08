@@ -44,6 +44,10 @@ export const ROUTES = {
   WHY: "/why-lamikaa",
   FAQ: "/faq",
   CONTACT: "/contact",
+  // The four documents are one route (Prompt 28): `POLICY` is what App.js
+  // mounts, and the four constants below are what every LINK to a policy uses,
+  // so a caller still names the document rather than building a path.
+  POLICY: "/policies/:policy",
   POLICY_PRIVACY: "/policies/privacy",
   POLICY_TERMS: "/policies/terms",
   POLICY_SHIPPING_RETURNS: "/policies/shipping-returns",
@@ -187,9 +191,12 @@ export const SUPPORT_PHONE = brand.contact.phone;
 export const SUPPORT_ADDRESS = brand.contact.address;
 export const SUPPORT_HOURS = brand.contact.hours;
 
-// Date the legal/policy pages were last reviewed. Single source so the Privacy,
-// Terms, Cookie and Refund pages never show contradictory "last updated" dates.
-export const POLICY_LAST_UPDATED = "September 6, 2026";
+// POLICY_LAST_UPDATED was here. It was one hard-coded date shared by four
+// hard-coded policy pages, and it had to be, because a date typed into a
+// component cannot know when the CLAUSES beside it were edited. Prompt 28 moved
+// the four documents into `siteContent.policies`, where each record carries its
+// own `updatedAt` — written when the owner saves that document in the admin —
+// and the page prints the stamp only for a document that actually has one.
 
 // FAQs — one shared set, read on three surfaces: the Help Centre (/faq), the
 // home FAQ block and the PDP's FAQ panel. This is also the set FaqContext falls
@@ -255,24 +262,6 @@ export const FAQ_ITEMS = [
   },
 ];
 
-// Why choose us — the four brand pillars (BRAND.md 3.2), in canonical order.
-// Title and description come from brand.pillars so the pillar copy is written
-// down once; only the glyph is chosen here, because it belongs to this surface
-// rather than to the brand.
-const PILLAR_ICONS = {
-  "indigenous-knowledge": "mdi:leaf",
-  "modern-science": "mdi:flask-outline",
-  "farmer-ownership": "mdi:account-group-outline",
-  "responsible-beauty": "mdi:earth",
-};
-
-export const WHY_CHOOSE_US = brand.pillars.map((pillar, index) => ({
-  id: index + 1,
-  title: pillar.title,
-  description: pillar.text,
-  icon: PILLAR_ICONS[pillar.key],
-}));
-
 // Framer Motion animation variants
 export const ANIMATION_VARIANTS = {
   fadeIn: {
@@ -323,4 +312,7 @@ export const BREAKPOINTS = {
 // remnants, so the alias had nothing left to alias for. `brand.trustBadges` is
 // unchanged and is what every surface reads.
 //
-// WHY_CHOOSE_US, two blocks up, is NOT removed: Support.js still maps over it.
+// WHY_CHOOSE_US was here too, and went the same way in Prompt 28: it re-shaped
+// `brand.pillars` into `{id, title, description, icon}` rows for the Contact
+// page's rail, and that rail now mounts <Pillars compact/>, which reads the
+// pillars from the config and owns its own glyphs. One shape, one owner.

@@ -1,0 +1,516 @@
+/* =============================================================================
+ * /contact — the care desk
+ * =============================================================================
+ * MOBILE FIRST: one column throughout — the channels stack, the form fields are
+ * full width, the rail follows the letter. From 769px the field grid becomes
+ * two columns (the message spans both) and the channels become a row; from
+ * 1025px the page splits into the letter and a 320px rail.
+ *
+ * THE FIELD is the design system's input (DESIGN_SYSTEM.md §7), the same one
+ * `NewsletterForm` uses: the --sf-color-surface-2 ground behind a 1px
+ * --sf-glass-border hairline, warm-white type, a gold focus ring, and an error
+ * that carries a glyph and a message rather than only a colour. 48px tall,
+ * which is --sf-space-12 on the scale — one step above the 44px WCAG floor.
+ * The radius is the medium one rather than the pill: a pill is right for a
+ * single field beside a button and wrong for a six-field form, where it makes
+ * every label float away from its box.
+ *
+ * TOKENS ONLY — no hex, no hard-coded spacing.
+ * ========================================================================== */
+
+.page {
+  padding-block: var(--sf-space-12) var(--sf-section-y);
+}
+
+/* ---- 1. The invitation --------------------------------------------------- */
+
+.head {
+  max-width: 62ch;
+}
+
+.eyebrow {
+  margin: 0 0 var(--sf-space-4);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.lede {
+  margin: var(--sf-space-4) 0 0;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- 2. The channels ----------------------------------------------------- */
+
+.channels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-4);
+  margin-top: var(--sf-space-12);
+}
+
+.channel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "icon label"
+    "icon value"
+    "note note";
+  align-items: center;
+  gap: var(--sf-space-1) var(--sf-space-4);
+  padding: var(--sf-space-5);
+  border-radius: var(--sf-radius-lg);
+  text-decoration: none;
+  color: var(--sf-color-text);
+  transition: border-color var(--sf-transition-fast),
+    background var(--sf-transition-fast);
+}
+
+.channel:hover {
+  border-color: var(--sf-color-border-strong);
+  background: var(--sf-color-surface-hover);
+}
+
+.channel:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.channelIcon {
+  grid-area: icon;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sf-space-10);
+  height: var(--sf-space-10);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  font-size: 20px;
+  color: var(--sf-color-gold);
+}
+
+.channelLabel {
+  grid-area: label;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+.channelValue {
+  grid-area: value;
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+  overflow-wrap: anywhere;
+}
+
+.channelNote {
+  grid-area: note;
+  margin-top: var(--sf-space-3);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- The two columns ----------------------------------------------------- */
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-16);
+  margin-top: var(--sf-space-16);
+  align-items: start;
+}
+
+/* ---- 3. The letter ------------------------------------------------------- */
+
+.letter {
+  min-width: 0;
+}
+
+.letterHead {
+  margin-bottom: var(--sf-space-8);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.sectionLede {
+  margin: var(--sf-space-3) 0 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.form {
+  margin: 0;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-6);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  min-width: 0;
+}
+
+.label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sf-space-2);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+}
+
+.optional {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-normal);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  /* 48px — --sf-space-12 IS 48px on the scale. */
+  min-height: var(--sf-space-12);
+  padding: var(--sf-space-3) var(--sf-space-4);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface-2);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text);
+  outline: none;
+  transition: border-color var(--sf-transition-fast);
+}
+
+.input::placeholder {
+  color: var(--sf-color-text-muted);
+}
+
+.input:hover,
+.input:focus {
+  border-color: var(--sf-color-border-strong);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--sf-color-focus-ring);
+  outline-offset: 3px;
+}
+
+/* The hairline only seconds the message below the field; colour is never the
+   sole carrier of the error. */
+.inputError {
+  border-color: var(--sf-color-danger);
+}
+
+.textarea {
+  min-height: 168px;
+  resize: vertical;
+}
+
+.fieldError {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-danger);
+}
+
+.fieldError svg {
+  flex: none;
+  margin-top: 0.15em;
+  font-size: 16px;
+}
+
+.hint {
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-muted);
+}
+
+.formError {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-2);
+  margin: var(--sf-space-6) 0 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-danger);
+}
+
+.formError svg {
+  flex: none;
+  margin-top: 0.15em;
+  font-size: 16px;
+}
+
+.formFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-4) var(--sf-space-6);
+  margin-top: var(--sf-space-8);
+}
+
+.formNote {
+  margin: 0;
+  flex: 1 1 24ch;
+  min-width: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-muted);
+}
+
+.formNote a {
+  color: var(--sf-color-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.formNote a:hover {
+  color: var(--sf-color-gold-light);
+}
+
+.formNote a:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- The success panel --------------------------------------------------- */
+
+.sent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+  border-radius: var(--sf-radius-lg);
+}
+
+.sentMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sf-space-12);
+  height: var(--sf-space-12);
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-pill);
+  font-size: 24px;
+  color: var(--sf-color-gold);
+}
+
+.sentTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+}
+
+.sentTitle:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.sentBody {
+  margin: 0;
+  max-width: 46ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- 4. The rail --------------------------------------------------------- */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-10);
+  min-width: 0;
+}
+
+.railCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-3);
+  border-radius: var(--sf-radius-lg);
+}
+
+.railBlock {
+  min-width: 0;
+}
+
+.railTitle {
+  margin: 0 0 var(--sf-space-4);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  color: var(--sf-color-gold-deep);
+}
+
+.railCard .railTitle {
+  margin-bottom: 0;
+}
+
+.railLine {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sf-space-3);
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.railIcon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 0.1em;
+  font-size: 16px;
+  color: var(--sf-color-gold);
+}
+
+.railLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-tap-target);
+  color: var(--sf-color-gold);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  text-decoration: none;
+}
+
+.railLink:hover {
+  color: var(--sf-color-gold-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.railLink:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* One column in the rail whatever the viewport: `Pillars compact` is a
+   responsive grid, and four cards side by side in a 320px column is four
+   slivers. */
+.railPillars {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  color: var(--sf-color-text-secondary);
+  transition: color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast);
+}
+
+.social:hover {
+  color: var(--sf-color-gold);
+  border-color: var(--sf-color-border-strong);
+}
+
+.social:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.railFoot {
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-muted);
+}
+
+.railFoot a {
+  color: var(--sf-color-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.railFoot a:hover {
+  color: var(--sf-color-gold-light);
+}
+
+.railFoot a:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- 769+ : two columns of fields, a row of channels --------------------- */
+
+@media (min-width: 769px) {
+  .title {
+    font-size: var(--sf-text-4xl);
+  }
+
+  .channels {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fieldWide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- 1025+ : the letter and the rail ------------------------------------- */
+
+@media (min-width: 1025px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--sf-space-20);
+  }
+}

@@ -243,3 +243,45 @@ export const productJsonLd = (product, { url, category, rating, ratingCount } = 
       : null,
   });
 };
+
+/**
+ * The `FAQPage` graph — the answers `/faq` publishes, as a crawler reads them.
+ *
+ * THE GRAPH SAYS EXACTLY WHAT THE PAGE SAYS. Every answer has already been
+ * through `fillCopy` (so a threshold in the graph is the store's own live one)
+ * and `stripPlaceholderSentences` (so a sentence still quoting a fact nobody
+ * has supplied is gone from both). That is the caller's job — the FAQ page
+ * hands over rows it has already prepared with the same `faqAnswerText` its
+ * accordion renders — because a graph built from the RAW answer would publish
+ * `{{DISPATCH_SLA}}` to Google while the page itself quietly dropped the line.
+ *
+ * A row with no question, or nothing publishable left in its answer, is not in
+ * the graph: `FAQPage` requires both, and an empty `acceptedAnswer` is an
+ * invalid entity rather than an empty one.
+ *
+ * @param {Array<{question: string, answer: string}>} rows the rendered answers,
+ *        already filled and stripped, in the order the page shows them
+ * @returns {object|null} schema.org FAQPage, or null when nothing survived —
+ *          `useSeo` publishes no <script> for a null graph.
+ */
+export const faqPageJsonLd = (rows) => {
+  const entities = (Array.isArray(rows) ? rows : [])
+    .map((row) => ({
+      question: crumbText(row?.question),
+      answer: crumbText(row?.answer),
+    }))
+    .filter((row) => row.question && row.answer)
+    .map((row) => ({
+      "@type": "Question",
+      name: row.question,
+      acceptedAnswer: { "@type": "Answer", text: row.answer },
+    }));
+
+  if (entities.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: entities,
+  };
+};

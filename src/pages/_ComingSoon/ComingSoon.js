@@ -8,11 +8,12 @@ import styles from "../NotFound/NotFound.module.css";
 // =============================================================================
 //
 // Prompt 08 installs the whole LAMIKAA route map at once, ahead of the pages
-// that will fill it: /rituals and /rituals/:slug arrive in Prompt 24,
-// /why-lamikaa in 28, /cart in 29, /search in 11. A route that 404s in the
-// meantime would make the navigation of the next five prompts untestable, and a
-// route quietly pointed at the homepage would hide the gap instead of showing
-// it — so each unbuilt page renders this, named with the prompt that owns it.
+// that will fill it: /search arrived in Prompt 11, /rituals and /rituals/:slug
+// in 24, /why-lamikaa in 28. ONE route still points here — /cart, which Prompt
+// 29 builds. A route that 404s in the meantime would make the navigation of the
+// next prompts untestable, and a route quietly pointed at the homepage would
+// hide the gap instead of showing it — so the unbuilt page renders this, named
+// with the prompt that owns it.
 //
 // It is `noindex`: nothing here is a page a search engine should ever hold.
 //
