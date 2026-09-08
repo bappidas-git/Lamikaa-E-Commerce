@@ -36,7 +36,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 30 | Auth, account, orders and wishlist restyle | complete | 2026-09-08 | (this commit) | `src/utils/orderStatus.js` is the one home for `deriveOrderStatus` + `STATUS_CONFIG` — the two byte-identical copies in `OrderHistory.js:18-47` and `Profile.js:18-47` are gone and both pages read `orderStatusInfo(order)` (`grep -rn "deriveOrderStatus" src --include=*.js | grep -v utils/orderStatus.js` → **2**, both docblock references; `grep -rln "utils/orderStatus" src` → **2 importers**). The config now carries a semantic **tone** instead of a per-page CSS-module class name, so a status is coloured once: `Chip variant="status"` on both screens. **`AuthModal` (1049 → 875) and `ReviewModal` (337 → 250) are on `ui/Modal`** — four hand-rolled overlays, focus traps, Escape handlers and body locks deleted, and both gained the route-change close and the scrollbar compensation they never had; the **disabled Google/Facebook buttons and their five brand hexes are removed** (Decisions), which leaves `ErrorBoundary` and `Footer`'s payment marks as the storefront's only documented hard-coded colours. `Profile` is a `320px 1fr` dashboard from 1025px (initials in a signature-gradient ring, three figures, a 52-55px index, recent orders); `OrderHistory` records are `GlassCard`s with 56px plates, a `Chip variant="step"` passage on a gradient hairline and pill actions; `Wishlist` is "Your wishlist" on a 1/2/3/4 grid with `Button variant="secondary" block` under each card. `RETURN_WINDOW_DAYS` now reads `STOREFRONT_CONFIG.returnsWindowDays`. All five stylesheets rewritten on the tokens (5 030 → 3 345 lines, **no colour hex and no `rgba()`**, every `var(--sf-*)` resolves). Logic diffed against HEAD: **Profile's 374-line effect+handler block is byte-identical**; OrderHistory's differs only in the four `orderStatusInfo` call sites and the deleted local `getStatusInfo` wrapper. `grep -rn "Muga\|Eri\|weave\|loom\|Collection" src/pages/Profile src/pages/OrderHistory src/pages/Wishlist src/components/AuthModal src/components/ReviewModal` → **0**. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Driven end to end in Chromium against mock mode — login, register validation, strength meter, address CRUD with the default rules, wallet ledger, order cancel (COD copy), reorder, and a review written from a delivered order → pending in Admin → approved → live on the PDP → the chip flips to "Review published". No horizontal scroll at 360/390/414/768/1024/1280/1440 on any of the four surfaces; zero page errors. **`git status db.json` clean.** See the Prompt 30 record below. |
 | 31 | Order confirmation, offers, search results and state consistency | complete | 2026-09-08 | (this commit) | **`ui/EmptyState` + `ui/ErrorState` are the storefront's two state cards** (87 + 150 + 64 lines; `ErrorState` composes `EmptyState`, so there is one stylesheet and a failure can never look like a different application). **20 `<EmptyState>` and 7 `<ErrorState>` call sites across 12 pages** replace 27 hand-rolled state blocks, five bespoke SVG marks (`EmptyMark`, `BagMark`, `SealedMark`, `AlertMark`, `TagMark`) and eight `.state*` / `.empty*` / `.panel*` class families (**−661 CSS lines net** across 13 stylesheets). Empty and failed stay DIFFERENT components everywhere, and `SpecialOffers` and `Search` gained the failed branch they never had (both `catch`es used to write `[]`, i.e. a dropped read read as "no offers" / "nothing matched"). `OrderConfirmation` keeps every behaviour — `getByOrderNumber`, the `paymentStatus`-driven chip + lede, estimated/real arrival, clipboard-verified copy, confetti, the store-credit ledger, the honest invoice placeholder — and is restyled to a 96px `GlowWrap tone="gold"` seal over a signature-gradient ring, a Fraunces "Thank you, {firstName}", a glass record card (`1fr 1fr` ≥769px), 15px hairline ledger rows, `Chip variant="status"` and three pill `Button`s (Continue shopping → **`/shop`**, was `/`). **`SpecialOffers` lost its 110-line copy of the shared card** (`grep -rn "const ProductCard" src/pages/SpecialOffers` → **0**): the markdown wall is `storefront/ProductCard`, the vouchers are `GlassCard glow="gold"` 3/2/1-up with the code in monospace gold, and the seed's disabled page is `EmptyState` "No offers right now" → `/shop`. `src/pages/_ComingSoon/` **deleted** (`grep -rn "ComingSoon" src` → **0**), and the now-unreferenced global `.loading-spinner` + `@keyframes spin` went with it (`grep -rn "loading-spinner" src/pages` → **0**; the four surviving spinners are all inside buttons). `DEFAULT_DEALS_HERO`/`DEFAULT_DEALS_TIMER` were the previous brand's promo voice and are now the seed's neutral wording with the clock off (Decisions). `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Driven in Chromium against mock mode at 390 and 1280: COD and store-credit confirmations, the not-found and failed branches, `/special-offers` disabled and enabled (SAMPLE10 voucher + auto-derived deals), no-results search, the 404, empty cart/checkout/orders/wishlist, Profile's five compact states, and every error state with JSON Server stopped. Confetti fires once with `aria-hidden`/`role=presentation` on its canvas and does not fire at all under `prefers-reduced-motion`. No horizontal scroll and no `{{` at any width. **`git status db.json` clean.** See the Prompt 31 record and its state checklist below. |
 | 32 | Admin rebrand and shell | complete | 2026-09-08 | (this commit) | `buildAdminTheme()` recoloured to the LAMIKAA palette (DESIGN_SYSTEM §10) and its `mode` argument retired to a no-op; `CHIP_TONES` re-derived as one dark map; radius 6 → 8; gold focus ring on every `MuiButtonBase`; glass-like AppBar. **`grep -rn "#[0-9a-fA-F]\{6\}" src/pages/Admin src/components/AdminLayout | grep -v "AdminOrders.js" | wc -l` → 0** (was 78; the five that remain are the invoice PRINT stylesheet — ink on white paper, logged in Decisions), and the seven short-hex/`common.white` literals the acceptance grep does not catch went too — three of them were white on the gold plate (1.6:1). **`grep -rn "MOCK_REVIEWERS\|My E-Commerce Store\|16GB\|laptop\|mekhela\|Muga\|Bihu\|Sualkuchi" src/pages/Admin src/components/AdminLayout` → 0.** Shell: `<Logo width={150}>` in the permanent drawer and `variant="mark" width={36}` in the temporary one, drawer ground `#0B0B0D`, gold active item with a 3px gradient rule, "Hero Section" → "Home & Hero" (route unchanged), `document.title = "{screen} · Admin · LAMIKAA NATURALS"` through the `documentTitle` claim/release protocol — **all 15 screens verified**. Login: one pane of glass, "Admin Console" / "Sign in to manage LAMIKAA NATURALS", gold button, no demo hints. Products table gains **Hero** and **Media** columns and a "Price on launch" chip; Reviews lost the eight fabricated reviewer chips and gained a **Sample** chip; the invoice prints the wordmark, `brand.name`, `brand.legalName` and GSTIN only when resolved. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (27 suites / 313 tests passed, 1 suite / 50 tests skipped). Browser QA (Chromium 1194, mock mode): **15 screens × 360/768/1280 = 45 loads, 0 horizontal overflow, 0 console errors**; a 24-step regression walk (product/category/coupon/shipping/FAQ/review create→edit→delete, order fulfil→deliver→cancel, refund initiate+complete, return create→approve→received→refund, payment refund, user deactivate→activate, lead update, settings save, deals save) **passed 24/24 with 0 console errors**; `git status db.json` clean afterwards. See "Prompt 32 record" below. |
-| 33 | Admin product form — media manager and new fields | pending | | | |
+| 33 | Admin product form — media manager and new fields | complete | 2026-09-08 | (this commit) | `"Image URLs (one per line)"` is gone (**grep → 0**) and the form now edits **every one of the 50 fields `PRODUCTS.md` §6 defines** — it edited 20. Four new files: `components/MediaManager.js` (image links + video links: add / remove / reorder / preview / validate / primary, 64px live thumbnails, `<video preload="metadata">` as the reachability check, a Cloudinary-only "Advanced: stage crop" disclosure, a "Placeholder" chip, drag handles **and** up/down buttons with focus restoration, a `3 images · 2 videos · primary: #1` summary), `components/ListEditor.js`, `components/KeyValueListEditor.js`, `components/ProductFormSections.js` (ten MUI `Accordion`s, first open, counts in the headers, error-bearing sections open themselves). `validateMedia()` added to `src/utils/product.js` (≥1 image, exactly one primary, http(s) URLs, no duplicates, video posters) with **8 new test cases**; `api.js` unchanged. Validation gained `priceTBA || price > 0 || variants.length`, media, `categoryIds ⊇ categoryId` and hero-position uniqueness ("Hero position 1 is already used by Black Rice Face Wash"). Table gained the **Hero / Price on launch / Drafts** chips and a **New** flag chip; the dialog is full-screen below `sm`. **Round trip verified in a real browser (Chromium 1194, mock mode, json-server on a scratch copy): all 8 seeded products opened → saved unchanged → the ONLY fields that differ are `updatedAt` and the derived `image` mirror the api layer writes** (see Decisions). Media edits (add image, reorder, re-primary, add video) land as `media[]` + derived `images[]`/`image` and are reflected on the PDP gallery, /shop, /category, /search, /wishlist, the home hero and the cart thumbnail. Creating a 9th product from scratch produces the full schema. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (27 suites / **321** tests passed, 1 suite / 50 skipped). Browser QA at 360/768/1280: 0 horizontal overflow, 10/10 sections reachable, 200 focusable controls, 0 console errors. See "Prompt 33 record" below. |
 | 34 | Admin content management | pending | | | |
 | 35 | Brand cleanup I — code identifiers | pending | | | |
 | 36 | Brand cleanup II — content, assets, seeds, verification | pending | | | |
@@ -399,6 +399,14 @@ Record every decision a prompt had to make that the reference files did not sett
 - `32 · 2026-09-08 · `App.css`'s `body.admin-area` block re-states the palette as literals instead of reading tokens · CSS cannot read a JS module, and reading `--sf-*` would breach the isolation rule the prompt sets. The block carries a comment naming `src/theme/adminTheme.js` as the file to keep it in step with. `--swal2-confirm-button-color` is pinned to the ink `#0b0b0d` THERE rather than per call, so a destructive confirm that overrides only the background (`error.main`, `#ff8a80`) still gets a readable label.`
 - `32 · 2026-09-08 · The login card is the admin's one pane of glass; the AppBar is "glass-like" but the drawer is not · DESIGN_SYSTEM §10 allows glass on the login card only, and the prompt asks for a glass-like AppBar. The card is `alpha(paper, .72)` + 20px blur, the AppBar `alpha(paper, .88)` + 12px blur (defined once in the theme's `MuiAppBar` override, so no screen re-states it), and both carry an opaque `@supports not (backdrop-filter)` fallback. Nothing else in the admin blurs.`
 - `32 · 2026-09-08 · The Products table's two new columns read `heroOrder` and `media[]` off the NORMALISED record, and the old form was left alone · `admin.getProducts()` runs `normalizeProducts`, so both fields are present on every row whatever the stored shape. The Price cell shows a "Price on launch" chip when `priceTBA`. The FORM is Prompt 33's — its `editable` payload still omits `media`/`heroOrder`/`priceTBA`, which survive an edit only because `updateProduct` merges over `editingProduct`. Table `minWidth` 980 → 1160; it scrolls inside its `TableContainer` and the page does not (verified at 360px).`
+- `33 · 2026-09-08 · Drag-and-drop is native HTML5 by the HANDLE only, and the DROP reads its source from the dataTransfer, not from React state · A `draggable` row would fight text selection inside its own inputs, which is where a merchant spends every second of their time, so only the 24px handle carries `draggable`. The list is encoded as a custom MIME type (`application/x-lamikaa-media-image` / `-video`) because `dragover` may only read `dataTransfer.types` — that is what lets an image row refuse a video — and the source index rides in `text/plain`, read back at the drop. The earlier version kept the source in React state and would have dropped a reorder whenever dragstart and dragover landed in the same tick; `dragging` now only dims the row being carried. No drag library was added (guardrail: no new dependencies) and the up/down buttons remain the contract for a keyboard, with focus restored onto the moved row's button (its twin when the row has reached an end and the button it pressed is now disabled).
+- `33 · 2026-09-08 · The stage-crop fields are exposed, but only behind a disclosure and only on Cloudinary URLs · `crop` is source-PIXEL geometry against a specific multi-megapixel original (`{x:1050,y:100,w:1500,h:3200}` on the face wash): meaningful to whoever measured it, meaningless typed at a picsum link, and `cld()` ignores it on any non-Cloudinary host anyway, so offering the boxes there would be offering a control that does nothing. `isCloudinary(url)` gates the whole disclosure; it is collapsed by default, and an untouched crop is passed through by object spread rather than rebuilt, so the five seeded rectangles survive a round trip byte for byte.
+- `33 · 2026-09-08 · The round trip changes `updatedAt` AND adds `image` — the second one is the api layer's, not the form's · `syncProductMedia()` (Prompt 07's contract, called inside `admin.createProduct/updateProduct`) writes the derived `image` mirror next to `media`/`images`, and Prompt 06 seeded db.json without it. So the first save of each seeded product adds `"image": "<primary url>"` and every later save leaves it alone. Every one of the other fifty fields — `media[]` with its crops, posters and `placeholder` flags, `keyIngredients` key order, `priceSource: null`, `ritualStep`, `dimensions: null` — comes back byte-identical, verified in a browser against all eight products. Removing `image` from the write side would have satisfied the acceptance wording exactly, and was rejected: it is Prompt 07's contract, the prompt says `api.js` takes no contract change, and `normalizeProduct()` derives the same field on every read, so the twin invariant in `utils/product.js` would have been the only casualty.
+- `33 · 2026-09-08 · The manager edits two lists but always persists ONE array, images first then videos · The PDP gallery reads `media[]` as a single authored sequence, while "which picture leads the card" and "which film opens the story" are two separate decisions, so the UI splits and the record does not. Every commit re-emits `[...images, ...videos]`, which is exactly the shape all eight seeded products already have — the reason opening one and saving it rewrites the same array. Reordering therefore never moves an image past a video, and a video dragged at the image list is refused.
+- `33 · 2026-09-08 · Live row validation wins over the save attempt's message on any row that has a URL · The first version preferred the save-time error, and a row fixed one keystroke after a failed save went on insisting "Enter an image URL" — caught in browser QA. A row that is still BLANK is the one case the live pass deliberately stays quiet about (a row added ten seconds ago is not yet a mistake), and that is the only case the save attempt's `errors` now answers.
+- `33 · 2026-09-08 · A ritual step with no label and no frequency is saved as `null`, whatever its order number · `emptyProduct` seeds `ritualStep.order = 1` so the field is not blank on a new product, and the first version kept the object whenever any of the three was set. The PDP and the card already skip a labelless step, but `components/cart/CrossSell.js` sorts candidates by `ritualStep.order` — an untouched new product would have joined the routine as its first step and started suggesting what comes next. The order alone is not a name.
+- `33 · 2026-09-08 · Tags live at the foot of the Basic section · The prompt lists ten sections and says only that tags stay comma-separated. They are a catalogue/discovery attribute like brand and category, not metadata, so they sit with identity rather than under SEO.
+- `33 · 2026-09-08 · Both MUI `Select`s on this screen gained a `labelId` · The `<InputLabel>` alone leaves the control unnamed for a screen reader (WCAG 4.1.2) — found because Playwright's `getByLabel` could not resolve the category select either. Fixed on the new primary-category select and on the pre-existing table filter beside it.
 
 ## Open TODOs
 
@@ -4223,3 +4231,115 @@ The product FORM is untouched — this prompt changed the Products TABLE, the th
 the payload still omits `media` / `heroOrder` / `priceTBA` (they survive an edit through the `{...editingProduct, ...editable}`
 merge). The admin theme, `ADMIN_PALETTE` and the chip tones are stable — Prompt 33's media manager should read
 `theme.palette.*` and add no colour of its own.
+
+## Prompt 33 record (2026-09-08)
+
+### What the form could not do before
+
+`AdminProducts.js` edited **20** of the **50** fields `PRODUCTS.md` §6 defines. The other thirty — the hero copy, the
+ritual step, the promise, the benefits, the key ingredients, the directions, the INCI list, the pack claims, the
+fragrance note, the caution, the size, the badges, the FAQs and the whole of `media[]` — were seeded once by Prompt 06
+and then unreachable. Two consequences, both now closed: nobody could add a ninth product (it would have been born
+without half a record), and images were a textarea of URLs with no alt text, no primary picker, no video, no preview and
+no validation.
+
+### `validateMedia()` (`src/utils/product.js`, 308 → 384)
+
+The gate between the manager and the API. Pure, order-independent, and the SAME function runs live in the manager and
+blocking in `handleSave`, so there is one rule set and one answer.
+
+| Rule | Reported as |
+|---|---|
+| every row has a fetchable `http(s)` URL | `errors[rowIndex]` — "Enter an image URL" / "The URL has to start with http:// or https://" |
+| a video's poster, when it has one, is a URL too | `errors[rowIndex]` — "The poster URL has to start with…" |
+| no URL appears twice (case-insensitive) | `errors[rowIndex]` — "Same URL as row 1 — every link must be different" |
+| at least one image | `message` — "Add at least one image link — a product cannot go out without a picture." |
+| exactly one image is `primary` | `message` — "Choose the primary image…" / "Only one image can be the primary…" |
+
+The return is `{ ok, errors, message }`: a superset of the documented `{ ok, errors }`, because rules 4–5 belong to the
+LIST and inventing a row-0 error for them would point at the wrong field. 8 new cases in `product.test.js` (21 total in
+that file), including one that pins `validateMedia` and `syncProductMedia` against each other: what the first passes,
+the second saves unchanged.
+
+### `components/MediaManager.js` (new, 675)
+
+Two ordered lists, one array. Images and videos are separate decisions — which picture leads a card, which film opens
+the story — but they persist as one `media[]`, images first, then videos, which is exactly the shape all eight seeded
+products already have.
+
+- **Image row** — 24px drag handle · 64px live thumbnail (`cld(url,{w:128})` for Cloudinary, the raw URL otherwise;
+  `onError` → "Invalid image URL") · URL · alt (placeholder defaults to `{productName} — image N`) · **Primary** `Radio`
+  (exactly one, `name="media-primary"`) · a "Placeholder" chip when the row carries `placeholder` · an
+  "Advanced: stage crop" disclosure with X/Y/W/H, rendered only for Cloudinary URLs · up / down / remove.
+- **Video row** — handle · 64px `<video preload="metadata" muted playsInline>` with the poster and a play badge, which
+  IS the reachability check (`onLoadedMetadata` ✓ / `onError` → "Video could not be loaded") · URL · title (defaults to
+  `Video N`) · poster URL, "the primary image is used when this is empty" · up / down / remove.
+- **Reorder three ways, one operation**: native HTML5 drag by the handle (drop target outlined in `primary.main`),
+  up/down buttons, and the same buttons for a keyboard — after a move the focus is put back on the button that moved the
+  row, or on its twin when that one has just become disabled at an end.
+- **Remove asks only for the primary** ("It leads the gallery, the product cards and the cart. The next image takes its
+  place."), and the first survivor inherits the flag; the first image a product ever gets is primary automatically.
+- Summary line `4 images · 3 videos · primary: #2`, and the list-level message in 12px `error.main` beneath it.
+
+### `components/ListEditor.js` (new, 165) and `components/KeyValueListEditor.js` (new, 175)
+
+Six string lists (`benefits`, `howToUse`, `packClaims`, `suitableFor`, `badges`, plus `concerns` as chips) and two
+two-field lists (`keyIngredients` name/benefit, `faqs` q/a) are the same two controls, so they are two components.
+`keyField`/`valueField` name the keys WRITTEN INTO THE RECORD and have no defaults; edits go through
+`{ ...row, [field]: text }`, so a seeded `{name, benefit}` round-trips as `{name, benefit}`. Blank rows are never an
+error while typing — `cleanList`/`cleanPairs` drop them at save. `badges` carries a "Reset to brand defaults" action
+(`brand.trustBadges`, BRAND.md §3.9 rule 4).
+
+### `components/ProductFormSections.js` (new, 886)
+
+Ten MUI `Accordion`s — Basic · Story · Pricing · Inventory & shipping · Details · FAQs · Media · Variants ·
+Visibility & flags · SEO — first open, counts in the headers (`Media 7`, `Details 21`, `FAQs 2`, `Variants 0`), and a
+section holding a validation error opens itself (`ERROR_SECTIONS`). Notable behaviour:
+
+- **Categories**: the primary `Select` is limited to `kind === "products"` (a category seeded before `kind` existed
+  counts as a product shelf) and adds itself to the multi-select; removing it from the multi-select puts it back.
+- **Concerns**: `Autocomplete multiple` over `admin.getConcerns()`, stored as slugs. A slug the vocabulary no longer
+  lists still shows as a chip rather than vanishing on the next save.
+- **Hero position**: 1–99, helper "Blank = not in the home hero".
+- **Price to be announced**: a `Switch` that disables the price field and stores `price: null, priceTBA: true`; turning
+  it off restores a zero rather than leaving a null in a numeric field.
+- Tags stay comma-separated, at the foot of Basic.
+
+### `AdminProducts.js` (603 → 683)
+
+`emptyProduct` carries all 50 keys. `openEdit` maps through `normalizeProduct` FIRST, so an images-only record
+hand-edited into db.json arrives in the manager instead of being dropped by the next save. `handleSave` adds four rules
+to the existing three: `priceTBA || price > 0 || variants.length`, `validateMedia().ok`, `categoryIds ⊇ categoryId`, and
+hero-position uniqueness across the current list ("Hero position 1 is already used by Black Rice Face Wash"). Video
+posters default to the primary image at save, where the primary is finally known. The payload deliberately omits
+`images`: it is derived by `syncProductMedia(...)` here and again inside the api layer, and a second opinion is how the
+two get out of step. Table: **Hero / Price on launch / Drafts** filter chips (AND, beside the existing search and
+category select) and a **New** flag chip; the dialog is `fullScreen` below `sm`.
+
+### Verification (Chromium 1194, mock mode, json-server against a scratch copy of db.json)
+
+| Check | Result |
+|---|---|
+| Round trip: 8 seeded products opened → saved unchanged | **only `updatedAt` and the derived `image` differ** (see Decisions); every other field byte-identical, no other collection touched |
+| `p.media.length`, `p.images[0] === p.media.find(m=>m.primary).url` | `5 true`, and true for all eight |
+| Media edit: add image → reorder → re-primary → add video | `media[]` = 4 images + 3 videos, `images[]` primary-first, new video's poster = the primary image, `placeholder` flags kept |
+| Storefront after that edit | PDP gallery 7 thumbnails in authored order (stage opens on `media[0]` by design; thumb 2 is the new image, thumb 7 mounts the new `<video>`), and the new primary on /shop, /category/face-care, /search, /wishlist, the home hero and the cart thumbnail |
+| Blank URL / duplicate URL / zero images / two primaries | save blocked, row errors under the right fields, list message in the toast |
+| Hero clash, no price without a variant or TBA | blocked with the specified messages; the TBA switch clears and disables the field and unblocks the save; `price: null, priceTBA: true` round-trips |
+| Drag: image 3 → position 1; a video dragged at the image list | reordered by insertion, gold drop outline; the video is refused (`defaultPrevented === false`) |
+| Create a 9th product from scratch | full 50-field record: brand badges, `media` with a primary, derived `images`/`image`, `categoryIds` holding the primary, `priceSource: null` |
+| 360 / 768 / 1280 | 0 page overflow, 0 dialog side-scroll, dialog full-screen at 360, 10/10 sections reachable, 200 focusable controls, **0 console errors** at every size |
+| `CI=true npm run build` | exit 0, **no warnings** |
+| `npm test -- --watchAll=false` | exit 0 — 27 suites / **321** tests passed, 1 suite / 50 skipped |
+| `grep -n "Image URLs (one per line)" src/pages/Admin/AdminProducts.js` | **0** |
+| `grep -rn "#[0-9a-fA-F]\{6\}" src/pages/Admin/AdminProducts.js src/pages/Admin/components/` | **0** — the manager reads `theme.palette.*` only |
+
+The repository's own `db.json` was never written to: json-server ran with `JSON_SERVER_DB` pointed at a scratch copy, and
+`git status db.json` is clean.
+
+### For Prompt 34
+
+`ListEditor`, `KeyValueListEditor` and the `Section` accordion pattern are the editors Prompt 34 was scheduled to reuse
+for categories, rituals, concerns, FAQ groups, site content and announcements. `MediaManager` takes
+`{ value, onChange, productName, errors }` and knows nothing about products — a ritual or a category hero image can be
+edited with it as it stands. `validateMedia` is exported from `utils/product` and from its default object.
