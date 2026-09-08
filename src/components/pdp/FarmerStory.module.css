@@ -1,0 +1,43 @@
+/* =============================================================================
+ * FarmerStory — the ownership chapter
+ * =============================================================================
+ * A column: two paragraphs held to a reading measure, the value chain, the
+ * qualifier, and one ghost button. Nothing is boxed — the chapter's heading is
+ * the only furniture it needs, and a card here would make the ownership claim
+ * look like an advertisement inside the page rather than part of it.
+ * ========================================================================== */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-8);
+}
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-4);
+}
+
+.line {
+  margin: 0;
+  max-width: 68ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* The chain is a list; it takes the column's full width so the seven links can
+   run horizontally wherever there is room for them. */
+.chain {
+  align-self: stretch;
+}
+
+.note {
+  margin: 0;
+}
+
+.cta {
+  margin-top: calc(var(--sf-space-2) * -1);
+}

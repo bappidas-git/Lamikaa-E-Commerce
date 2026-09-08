@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Icon } from "@iconify/react";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
@@ -9,13 +10,20 @@ import useSeo from "../../hooks/useSeo";
 import brand from "../../config/brand";
 import { isPriceKnown, stageSrc } from "../../utils/product";
 import { categoryPath } from "../../utils/categories";
+import { productPath } from "../../utils/helpers";
+import { isPlaceholder } from "../../utils/placeholders";
+import { breadcrumbJsonLd, productJsonLd } from "../../utils/seo";
 import { ROUTES } from "../../utils/constants";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import { Accordion, ContentBlocks, Skeleton } from "../../components/ui";
+import FAQ from "../../components/FAQ/FAQ";
 import Chapter from "../../components/pdp/Chapter";
 import MediaGallery from "../../components/pdp/MediaGallery";
 import ChapterNav from "../../components/pdp/ChapterNav";
 import PurchasePanel from "../../components/pdp/PurchasePanel";
+import IngredientChapter from "../../components/pdp/IngredientChapter";
+import HowToUse, { ritualsWithProduct } from "../../components/pdp/HowToUse";
+import FarmerStory, { farmerStoryLines } from "../../components/pdp/FarmerStory";
 import {
   AddToCartBar,
   FrequentlyBoughtTogether,
@@ -49,19 +57,42 @@ import styles from "./ProductDetails.module.css";
 // a seeded product. The promises band went the same way: it restated, two
 // screens lower, the trust badges the purchase panel already carries.
 //
-// THE HEAD IS `useSeo`'s NOW. The hand-rolled `setPageTitle` + `meta[name=
-// description]` effect this page carried (the last one in the app) is replaced
-// by the hook every other route uses, so the PDP also gets a canonical, the
-// Open Graph set and a share image. The product JSON-LD arrives in Prompt 27.
+// THE HEAD IS `useSeo`'s, GRAPHS INCLUDED. The hand-rolled `setPageTitle` +
+// `meta[name=description]` effect this page carried (the last one in the app)
+// is gone; the hook every other route uses also gives the PDP a canonical, the
+// Open Graph set, a share image and — through `utils/seo` — the `Product` and
+// `BreadcrumbList` graphs. `Product` is the one graph on this storefront a
+// search engine will render as a rich result, so it is also the one that must
+// not overstate: `offers` is published only for a product whose price is known
+// and `aggregateRating` only where a real rating exists, which on a fresh
+// install means neither key appears on five of the eight products and the
+// rating appears on none.
+//
+// NINE CHAPTERS, EACH ONE OPTIONAL. Overview, Benefits, Key ingredients, How to
+// use, The farmer story, Full ingredients, FAQs, Reviews, Complete the ritual —
+// in that order, and every one of them absent from the document AND from
+// `ChapterNav` when the product has nothing to put in it. The two lists cannot
+// disagree because both read the same booleans, computed once.
+//
+// THE CHAPTERS PRINT DATA, NOT PROSE. Benefits, ingredients, directions, the
+// INCI list, the ritual step and the FAQs are all fields an admin edits; this
+// file types section furniture and nothing else. The one place the page carries
+// pack copy it has not verified — the antioxidant line — is inside
+// `PackClaims`, under "As printed on the pack", where it is a quotation of the
+// carton rather than a claim the shop is making.
+//
+// ONE ROUND TRIP FOR THE CHAPTERS. Reviews, related, the bundle, the rituals
+// and the two `siteContent` sections are fetched together once the product has
+// resolved, and each of them catches its own failure: an unreachable rituals
+// endpoint costs the page its "Part of these rituals" list and nothing else.
 //
 // STAGED ACROSS THREE PROMPTS. Prompt 25 built the skeleton: layout, panel,
 // nav, the overview chapter and the mobile bar. Prompt 26 filled the media
 // column with `pdp/MediaGallery` — the mixed image/video gallery, its rail and
 // its lightbox — which is mounted with `key={product.id}` so a walk from one
 // product to the next resets the gallery's index and toggle the way a new page
-// should. Prompt 27 writes the benefits / ingredients / directions /
-// farmer-story / full-INCI chapters and rewrites the three retained blocks at
-// the foot of the column (FAQs, reviews, the cross-sell rails).
+// should. Prompt 27 wrote the remaining chapters, the cross-sell chapter and
+// the structured data.
 // =============================================================================
 
 /** Quantity ceiling for a product whose stock nobody has recorded. */
@@ -72,6 +103,16 @@ const ADDED_MS = 1400;
 
 /** The <h1>'s id — the purchase panel labels itself with it. */
 const TITLE_ID = "pdp-title";
+
+/**
+ * The disclosure the INCI list sits behind.
+ *
+ * "Full ingredients" is the chapter's own heading, so the trigger says what
+ * pressing it reveals instead of repeating it — a row labelled with its
+ * section's name reads, in a screen reader, as "Full ingredients, Full
+ * ingredients, collapsed".
+ */
+const INCI_DISCLOSURE_TITLE = "Read the full INCI list";
 
 /**
  * The tab title a product asks for.
@@ -160,6 +201,11 @@ const useProductPage = () => {
   const [bundle, setBundle] = useState([]);
   const [category, setCategory] = useState(null);
   const [shipping, setShipping] = useState([]);
+  // The chapter data: the routines this product belongs to, and the two
+  // `siteContent` sections the farmer story is written from.
+  const [rituals, setRituals] = useState([]);
+  const [aboutContent, setAboutContent] = useState(null);
+  const [homeContent, setHomeContent] = useState(null);
 
   // ── Fetch product ───────────────────────────────────────────────────────
   const fetchProduct = useCallback(async () => {
@@ -252,23 +298,48 @@ const useProductPage = () => {
     }
   }, [product?.id]);
 
-  // ── Related + bundle (AOV) — real catalogue data only ───────────────────
-  const fetchAov = useCallback(async () => {
+  // ── The chapters' own data ──────────────────────────────────────────────
+  // ONE ROUND TRIP, SIX INDEPENDENT FAILURES. Everything below the purchase
+  // panel is fetched together once the product has resolved, and each promise
+  // carries its own `catch`: a rituals endpoint that is down costs the page its
+  // "Part of these rituals" list and leaves the eight other chapters intact.
+  // `Promise.all` over already-settled promises therefore never rejects — it is
+  // here to run the six in parallel, not to bind their fates together.
+  const fetchChapterData = useCallback(async () => {
     if (!product) return;
     const cfg = STOREFRONT_CONFIG.aov;
-    if (cfg.relatedProducts) {
-      apiService.products
-        .getRelated(product, cfg.maxRelated)
-        .then(setRelatedProducts)
-        .catch(() => setRelatedProducts([]));
-    }
-    if (cfg.frequentlyBoughtTogether) {
-      apiService.products
-        .getFrequentlyBoughtTogether(product, cfg.maxBundle - 1)
-        .then(setBundle)
-        .catch(() => setBundle([]));
-    }
-  }, [product]);
+    await Promise.all([
+      // `fetchReviews` owns its own loading/error state — that is what feeds
+      // the reviews chapter's Retry button.
+      fetchReviews(),
+      cfg.relatedProducts
+        ? apiService.products
+            .getRelated(product, cfg.maxRelated)
+            .then(setRelatedProducts)
+            .catch(() => setRelatedProducts([]))
+        : Promise.resolve(),
+      cfg.frequentlyBoughtTogether
+        ? apiService.products
+            .getFrequentlyBoughtTogether(product, cfg.maxBundle - 1)
+            .then(setBundle)
+            .catch(() => setBundle([]))
+        : Promise.resolve(),
+      apiService.rituals
+        .getAll()
+        .then((rows) => setRituals(Array.isArray(rows) ? rows : []))
+        .catch(() => setRituals([])),
+      // `siteContent.get` answers null rather than rejecting; the catch is the
+      // belt to that braces.
+      apiService.siteContent
+        .get("about")
+        .then(setAboutContent)
+        .catch(() => setAboutContent(null)),
+      apiService.siteContent
+        .get("home")
+        .then(setHomeContent)
+        .catch(() => setHomeContent(null)),
+    ]);
+  }, [product, fetchReviews]);
 
   // Public store data for the delivery panel and the trust badges.
   useEffect(() => {
@@ -284,11 +355,8 @@ const useProductPage = () => {
   }, [fetchProduct]);
 
   useEffect(() => {
-    if (product) {
-      fetchReviews();
-      fetchAov();
-    }
-  }, [product, fetchReviews, fetchAov]);
+    if (product) fetchChapterData();
+  }, [product, fetchChapterData]);
 
   // ── Derived: stock, availability, the quantity ceiling ──────────────────
   const currentStock = selectedVariant
@@ -412,6 +480,10 @@ const useProductPage = () => {
     relatedProducts,
     bundle,
     faqs,
+    // Chapter data
+    rituals,
+    aboutContent,
+    homeContent,
   };
 };
 
@@ -449,40 +521,120 @@ const ProductDetailsView = ({
   relatedProducts,
   bundle,
   faqs,
+  rituals,
+  aboutContent,
+  homeContent,
 }) => {
   // The purchase panel's own CTA row: the anchor the sticky mobile bar watches,
   // which is what guarantees the bar can never cover the buttons it duplicates.
   const ctaRef = useRef(null);
 
-  // ── The head — Admin → Products → SEO (Optional), through the shared hook
-  useSeo({
-    title: productSeoTitle(product),
-    description:
-      product.metaDescription?.trim() || product.promise || product.shortDescription,
-    image: stageSrc(product, { w: 1200, ar: "1:1" }),
-    type: "product",
-  });
-
-  const faqItems = useMemo(
+  // ── What this product actually has to say ───────────────────────────────
+  // Computed ONCE, and read by both the chapter index and the chapter markup,
+  // so a chapter can never be listed in `ChapterNav` without being on the page
+  // (or vice versa) — the failure mode of two hand-kept lists.
+  const benefits = useMemo(
     () =>
-      faqs.map((faq, index) => ({
-        id: `pdp-faq-${index}`,
-        title: faq.question,
-        content: fillCopy(faq.answer),
-      })),
-    [faqs, fillCopy]
+      (Array.isArray(product.benefits) ? product.benefits : [])
+        .map((row) => (typeof row === "string" ? row.trim() : ""))
+        .filter(Boolean),
+    [product.benefits]
   );
 
-  // The chapter index. The order here IS document order — `ChapterNav` observes
-  // these sections and the first one in the reading band wins, so the two lists
-  // must not disagree.
+  const suitableFor = useMemo(
+    () =>
+      (Array.isArray(product.suitableFor) ? product.suitableFor : []).filter(Boolean),
+    [product.suitableFor]
+  );
+
+  // The shelf life is a PACK FACT nobody has confirmed. The cartons print a
+  // Mfg → Exp pair about 23 months apart, but "23 months" is an inference, so
+  // `brand.productDefaults.shelfLife` is still `{{SHELF_LIFE}}` and the row
+  // stays off the page until an owner supplies the real figure (PLACEHOLDERS.md).
+  const shelfLife = brand.productDefaults.shelfLife;
+  const goodToKnow = useMemo(
+    () => [
+      ...suitableFor,
+      ...(shelfLife && !isPlaceholder(shelfLife) ? [`Shelf life ${shelfLife}`] : []),
+    ],
+    [suitableFor, shelfLife]
+  );
+
+  const ingredientsList =
+    typeof product.ingredientsList === "string" ? product.ingredientsList.trim() : "";
+
+  // The routines that name this product — derived, so an admin who adds a step
+  // adds the link. Computed here rather than inside `HowToUse` because the
+  // chapter index needs the answer before the chapter renders.
+  const routines = useMemo(
+    () => ritualsWithProduct(rituals, product.id),
+    [rituals, product.id]
+  );
+
+  // The pool a compact `RitualCard` resolves its step thumbnails against.
+  // `getRelated` already returns every other product in a catalogue this size
+  // (its last pass sweeps the brand), so the page needs no ninth request to
+  // draw a routine's strip; where a catalogue outgrows that, a step whose
+  // product is missing keeps its numeral and shows an empty plate, which is
+  // `RitualCard`'s own documented degradation.
+  const ritualPool = useMemo(() => {
+    const seen = new Set();
+    return [product, ...relatedProducts, ...bundle].filter((row) => {
+      if (!row || seen.has(String(row.id))) return false;
+      seen.add(String(row.id));
+      return true;
+    });
+  }, [product, relatedProducts, bundle]);
+
+  const storyLines = useMemo(
+    () => farmerStoryLines(aboutContent, homeContent),
+    [aboutContent, homeContent]
+  );
+
+  const hasIngredients =
+    (Array.isArray(product.keyIngredients) && product.keyIngredients.length > 0) ||
+    (Array.isArray(product.packClaims) && product.packClaims.length > 0) ||
+    Boolean(product.fragranceNote) ||
+    Boolean(product.caution);
+  const hasHowToUse =
+    (Array.isArray(product.howToUse) && product.howToUse.length > 0) ||
+    Boolean(product.ritualStep) ||
+    routines.length > 0;
+  // The value chain and the ownership qualifier are brand constants and always
+  // render; the chapter is skipped only when there is no story copy to open it
+  // with, which is what an unreachable `siteContent` looks like.
+  const hasFarmerStory = storyLines.length > 0;
+  const hasFullIngredients = Boolean(ingredientsList) || goodToKnow.length > 0;
+  const hasCrossSell = bundle.length > 0 || relatedProducts.length > 0;
+
+  // ── The chapter index ───────────────────────────────────────────────────
+  // The order here IS document order — `ChapterNav` observes these sections and
+  // the first one in the reading band wins, so the two lists must not disagree.
   const chapters = useMemo(
     () => [
       { id: "overview", label: "Overview" },
+      ...(benefits.length > 0 ? [{ id: "benefits", label: "Benefits" }] : []),
+      ...(hasIngredients ? [{ id: "ingredients", label: "Key ingredients" }] : []),
+      ...(hasHowToUse ? [{ id: "how-to-use", label: "How to use" }] : []),
+      ...(hasFarmerStory ? [{ id: "farmer-story", label: "The farmer story" }] : []),
+      ...(hasFullIngredients
+        ? [{ id: "full-ingredients", label: "Full ingredients" }]
+        : []),
       ...(faqs.length > 0 ? [{ id: "faqs", label: "FAQs" }] : []),
       { id: "reviews", label: "Reviews" },
+      ...(hasCrossSell
+        ? [{ id: "complete-the-ritual", label: "Complete the ritual" }]
+        : []),
     ],
-    [faqs.length]
+    [
+      benefits.length,
+      hasIngredients,
+      hasHowToUse,
+      hasFarmerStory,
+      hasFullIngredients,
+      faqs.length,
+      hasCrossSell,
+    ]
   );
 
   const chapterIndex = (id) => chapters.findIndex((row) => row.id === id);
@@ -494,25 +646,50 @@ const ProductDetailsView = ({
     section.focus({ preventScroll: true });
   }, []);
 
-  // ONE ARRAY, TWO RENDERINGS: the visible trail, and the BreadcrumbList that
-  // Prompt 27 will publish from these same rows.
-  const trail = [
-    { label: "Home", to: ROUTES.HOME },
-    { label: "Shop", to: ROUTES.SHOP },
-    ...(category
-      ? [
-          {
-            label: category.displayName || category.name,
-            to: categoryPath(category),
-          },
-        ]
-      : []),
-    { label: product.shortName || product.name },
-  ];
+  // ONE ARRAY, TWO RENDERINGS: the visible trail, and the BreadcrumbList
+  // published from these same rows — so the crumb a visitor reads and the crumb
+  // a crawler is told about cannot drift apart.
+  const trail = useMemo(
+    () => [
+      { label: "Home", to: ROUTES.HOME },
+      { label: "Shop", to: ROUTES.SHOP },
+      ...(category
+        ? [
+            {
+              label: category.displayName || category.name,
+              to: categoryPath(category),
+            },
+          ]
+        : []),
+      { label: product.shortName || product.name },
+    ],
+    [category, product.shortName, product.name]
+  );
 
-  const suitableFor = Array.isArray(product.suitableFor)
-    ? product.suitableFor.filter(Boolean)
-    : [];
+  // ── The head — Admin → Products → SEO (Optional), through the shared hook
+  const jsonLd = useMemo(
+    () =>
+      [
+        breadcrumbJsonLd(trail),
+        productJsonLd(product, {
+          url: productPath(product),
+          category: category?.displayName || category?.name,
+          // The blended average the page itself prints, not the stored one.
+          rating: displayAvg,
+          ratingCount: totalRatingsCount,
+        }),
+      ].filter(Boolean),
+    [trail, product, category, displayAvg, totalRatingsCount]
+  );
+
+  useSeo({
+    title: productSeoTitle(product),
+    description:
+      product.metaDescription?.trim() || product.promise || product.shortDescription,
+    image: stageSrc(product, { w: 1200, ar: "1:1" }),
+    type: "product",
+    jsonLd,
+  });
 
   return (
     <div className={styles.page}>
@@ -561,32 +738,134 @@ const ProductDetailsView = ({
             {product.description ? (
               <ContentBlocks text={product.description} variant="prose" />
             ) : null}
-
-            {suitableFor.length > 0 && (
-              <p className={styles.suitableFor}>
-                <span className={styles.suitableForLabel}>Suitable for</span>
-                {suitableFor.join(" · ")}
-              </p>
-            )}
           </Chapter>
 
-          {/* ── Retained, pending Prompt 27 ───────────────────────────────
-              The FAQ accordion, the reviews and the two cross-sell rails are
-              the PDP's existing content features; they keep working exactly as
-              they did behind the tab strip. Prompt 27 rewrites them and adds
-              the benefits / ingredients / directions / farmer-story / full-INCI
-              chapters around them. */}
-          {faqItems.length > 0 && (
+          {/* ── Benefits ─────────────────────────────────────────────────
+              The product's own `benefits[]`, and nothing else: a gold tick, the
+              line as written, two columns where the column is wide enough. No
+              adjective is added here — a benefits list is the easiest place on
+              a skincare page to slip into medical language, so the only words
+              on it are the ones an admin typed. */}
+          {benefits.length > 0 && (
             <Chapter
-              id="faqs"
-              index={chapterIndex("faqs")}
-              title="Questions, answered"
+              id="benefits"
+              index={chapterIndex("benefits")}
+              title="Benefits"
               className={styles.chapter}
             >
-              <Accordion items={faqItems} headingLevel="h3" />
+              <ul className={styles.benefits}>
+                {benefits.map((line) => (
+                  <li key={line} className={styles.benefit}>
+                    <Icon
+                      icon="mdi:check-circle-outline"
+                      className={styles.benefitMark}
+                      aria-hidden="true"
+                    />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
             </Chapter>
           )}
 
+          {/* ── Key ingredients + "As printed on the pack" ─────────────── */}
+          {hasIngredients && (
+            <Chapter
+              id="ingredients"
+              index={chapterIndex("ingredients")}
+              title="Key ingredients"
+              className={styles.chapter}
+            >
+              <IngredientChapter product={product} />
+            </Chapter>
+          )}
+
+          {/* ── How to use, the ritual step, the routines ──────────────── */}
+          {hasHowToUse && (
+            <Chapter
+              id="how-to-use"
+              index={chapterIndex("how-to-use")}
+              title="How to use"
+              className={styles.chapter}
+            >
+              <HowToUse product={product} rituals={rituals} products={ritualPool} />
+            </Chapter>
+          )}
+
+          {/* ── The farmer story ──────────────────────────────────────── */}
+          {hasFarmerStory && (
+            <Chapter
+              id="farmer-story"
+              index={chapterIndex("farmer-story")}
+              title="The farmer story"
+              className={styles.chapter}
+            >
+              <FarmerStory about={aboutContent} home={homeContent} />
+            </Chapter>
+          )}
+
+          {/* ── Full ingredients ──────────────────────────────────────────
+              The INCI list is the longest single string on the page and the one
+              the fewest visitors read, so it goes behind a closed disclosure
+              rather than into the flow. It is still ONE Tab away and still in
+              the document for a find-in-page — a `<details>`-style accordion,
+              not a fetch. */}
+          {hasFullIngredients && (
+            <Chapter
+              id="full-ingredients"
+              index={chapterIndex("full-ingredients")}
+              title="Full ingredients"
+              className={styles.chapter}
+            >
+              {ingredientsList ? (
+                <Accordion
+                  items={[
+                    {
+                      id: "pdp-inci",
+                      title: INCI_DISCLOSURE_TITLE,
+                      content: <p className={styles.inci}>{ingredientsList}</p>,
+                    },
+                  ]}
+                  headingLevel="h3"
+                  className={styles.disclosure}
+                />
+              ) : null}
+
+              {goodToKnow.length > 0 && (
+                <div className={styles.goodToKnow}>
+                  <p className={`sf-eyebrow ${styles.goodToKnowLabel}`}>Good to know</p>
+                  <ul className={styles.goodToKnowList}>
+                    {goodToKnow.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </Chapter>
+          )}
+
+          {/* ── FAQs ──────────────────────────────────────────────────────
+              `useFaqs().forProduct` puts the product's own inline answers
+              first, then the rows targeted at it, then the general product-page
+              rows; `FAQ` is the one accordion every answered question on the
+              storefront is read in, so the keyboard model, the deep links and
+              the store-figure tokens all come with it. */}
+          {faqs.length > 0 && (
+            <Chapter
+              id="faqs"
+              index={chapterIndex("faqs")}
+              title="FAQs"
+              className={styles.chapter}
+            >
+              <FAQ faqs={faqs} headingLevel={3} />
+            </Chapter>
+          )}
+
+          {/* ── Reviews ───────────────────────────────────────────────────
+              Always a chapter, even at zero reviews: the empty state is the
+              page saying where reviews come from, which is the honest answer on
+              a range that has not shipped yet. `SocialProof` in the purchase
+              panel scrolls here. */}
           <Chapter
             id="reviews"
             index={chapterIndex("reviews")}
@@ -603,19 +882,35 @@ const ProductDetailsView = ({
             />
           </Chapter>
 
-          <FrequentlyBoughtTogether
-            anchor={product}
-            companions={bundle}
-            onAddToCart={addToCart}
-          />
+          {/* ── Complete the ritual ───────────────────────────────────────
+              The chapter's own h2 carries the title, so the bundle renders its
+              note and its plates without repeating it; the related rail drops
+              to an h3 under the same heading. */}
+          {hasCrossSell && (
+            <Chapter
+              id="complete-the-ritual"
+              index={chapterIndex("complete-the-ritual")}
+              title="Complete the ritual"
+              className={styles.chapter}
+            >
+              <FrequentlyBoughtTogether
+                anchor={product}
+                companions={bundle}
+                onAddToCart={addToCart}
+                currency={product.currency}
+                title={null}
+              />
 
-          <RelatedProducts
-            title="You may also like"
-            products={relatedProducts}
-            onAddToCart={addToCart}
-            onToggleWishlist={toggleWishlist}
-            isInWishlist={isInWishlist}
-          />
+              <RelatedProducts
+                title="You may also like"
+                headingLevel="h3"
+                products={relatedProducts}
+                onAddToCart={addToCart}
+                onToggleWishlist={toggleWishlist}
+                isInWishlist={isInWishlist}
+              />
+            </Chapter>
+          )}
         </div>
       </div>
 

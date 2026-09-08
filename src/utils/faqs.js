@@ -250,7 +250,16 @@ export const faqsForProduct = (faqs, product) => {
     .filter((faq) => faqHasPlacement(faq, "product"));
   const inline = (Array.isArray(product?.faqs) ? product.faqs : [])
     .map((faq, index) => normalizeFaq(faq, index))
-    .filter(isAnswered);
+    .filter(isAnswered)
+    // An inline row lives inside the product record and has no id of its own,
+    // but the accordion keys its panels — and its `#faq-<id>` deep links — off
+    // one. Without this every inline row on a page answers to the same anchor,
+    // and opening any of them opens all of them. The id is derived from the
+    // product and the row's position, so it is unique on the page and the same
+    // on every render.
+    .map((faq, index) =>
+      faq.id === undefined ? { ...faq, id: `p${product?.id ?? ""}-${index}` } : faq
+    );
 
   return dedupe([
     ...inline,

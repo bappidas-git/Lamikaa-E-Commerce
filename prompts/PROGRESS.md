@@ -30,7 +30,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 24 | Category pages and rituals pages | complete | 2026-09-08 | (this commit) | The seven categories have their heads and the rituals have their two pages. **`pages/Shop/Shop.js` is split in two**: `Shop` holds the route's two exits — a `kind: "rituals"` category (or the literal slug) → `<Navigate to="/rituals" replace/>`, an unknown slug → `<NotFound/>` — and `ShopView` holds every other hook and the JSX. The split is load-bearing, not tidy: `useSeo` BORROWS the head's existing tags and restores what it displaced, so two of them mounted at once (the page's and `NotFound`'s) restore child-then-parent and strand the child's description in the head. `RitualDetail` is split the same way for the same reason. New: **`catalogue/CategoryHead`** (full-bleed `.sf-placeholder-media` band — 4:3 phone / 21:9 + `clamp(260px,32vw,420px)` from 769px — under a `GlassCard strong scrim` panel on a NEGATIVE MARGIN, never `position:absolute`, so a long description grows the panel instead of being clipped), **`pages/Rituals/Rituals`** (three full-width rows, image left from 900px), **`pages/Rituals/RitualDetail`** (head → `RitualStep` rows → CTA panel → `LegalNote compact`) and **`catalogue/RitualStep`** (`72px 1fr` phone / `96px 240px 1fr auto` desktop, a 36px numeral, a 240px label plate, the promise, the note in display italics, a frequency chip, `Price` and one add-to-cart). `Breadcrumb` was **rewritten** — it had zero consumers — onto the FULL `{label, to}` trail, and `utils/seo.js` gained `breadcrumbJsonLd(items)` over **the same array**, so the crumb a visitor reads and the crumb a crawler is told cannot drift. Verified in Chromium 1194 at 360/390/414/768/1024/1280/1440: `/category/face-care` **6** chapters · `body-care` **2** · `cleansers` **3** · `serums` **1 PRODUCT** (singular) · `moisturizers` **2** · `masks` **2** · `rituals` → `/rituals`; `/category/nope` and `/rituals/nope` → a real 404 with the URL kept. `/rituals` lists three; `morning-glow` shows its four products in order; `black-rice-body` offers the soap/wash `radiogroup` (**one** tab stop, arrows both ways, the gold focus ring) which swaps the name, promise, plate, PDP link, price, add button AND the panel's total together. **With `enableRitualBundles: true` locally**: one press, ONE toast ("2 items added to your cart"), a cart holding exactly the two priced steps of five — the three TBA products never entered it; **reverted to `false` before the commit** (`git diff src/config/brand.js` empty). Both JSON-LD graphs valid on every page. **0 horizontal overflow at all seven widths**; reduced motion computes `opacity: 1 / transform: none` on the step rows and `scroll-snap-type: none`. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` **20 suites / 218 passed** (21 new in `RitualStep.test.js`; 1 suite / 50 skipped — the live-API suite). `grep -n "ComingSoon" src/App.js` → **only `/why-lamikaa` and `/cart`**. Reads only: no `db.json` and no `api.js` change. |
 | 25 | PDP — layout, chapters, purchase panel, mobile bar | complete | 2026-09-08 | (this commit) | The product page is the two-column composition: a **sticky media column** (`top: 96px` from 1025px) beside a scrolling column holding `PurchasePanel` and then the story as numbered **chapters**. `pages/ProductDetails/ProductDetails.js` 1143 → 693 and its stylesheet 1109 → 161: the tab strip, `SILK_SPEC_LABELS`/`deriveSilkSpecRows`/`deriveGenericSpecRows`/`deriveFabricCraft`/`deriveKeyFeatures`/`isPremiumProduct`, the promises band and the hand-rolled `setPageTitle` + `meta[name=description]` effect are all gone; `useSeo({title, description, image, type:"product"})` owns the head (JSON-LD in 27). Three new components in `components/pdp/`: **`PurchasePanel`** (trail → eyebrow → h1 → promise → rating → price → size/fragrance/SKU → trust chips → variants → quantity+stock → Add to Cart / Buy now / wishlist / share → delivery → the ownership note), **`ChapterNav`** (a glass pill bar after 320px of scroll, IntersectionObserver-tracked, `aria-current`, sticky at 72/56px) and **`Chapter`**. `AddToCartBar` rebuilt on `Button`/`Price`/`CloudinaryImage`; **`BottomNav` stands down on `/product/*`** so the two bars never stack. Everything the old page could do still works — reviews, FAQs, the bundle and the related rail are in the column, awaiting Prompt 27's chapters. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 21 suites / 233 passed (1 suite / 50 skipped), 15 of them new. |
 | 26 | PDP — media gallery with images and videos | complete | 2026-09-08 | (this commit) | The media column is the real gallery. **`pdp/MediaGallery`** (441 + 324) is one list of images and videos behind one index: a 4:5 plate (1:1 ≤768px) on a gold `GlowWrap`, a crossfaded stage that mounts **only the active row** (so a five-frame product never puts five `<video>` elements on the page), the "Full label / Front panel" toggle wherever a row carries a Cloudinary crop, a "Zoom" button, a live counter, 44px glass arrows and **one** rail — `role="tablist"` with roving tabindex, a 72px column beside the stage from 1025px and a 56px snap strip below it under that. **`pdp/Lightbox`** (448 + 249) is `ui/Modal size="full"` repainted as a flat 96% scrim: the picture at `w_2000` uncropped, wheel / pinch / ± / double-tap zoom from 1× to 4× with the pan clamped to the picture's own edges, ←/→/Esc, swipe, and focus back on the Zoom button. **`hooks/useSwipe`** (108) is pointer-based, ignores vertical gestures (`touch-action: pan-y`), **cancels the browser's native image drag** (without which a mouse drag across a photograph never completes) and works with a mouse. `storefront/ProductGallery.*` **deleted** with its export; `STOREFRONT_CONFIG.gallery` is now `{zoom, lightbox}`. One shared-primitive fix on the way: `Modal`'s `.full .body` had no `flex: 1`, so a full-screen dialog's body was content-height and the lightbox's picture region collapsed to 0 (the search overlay had the same latent bug). 17 new tests. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (22 suites / 250 passed). Browser QA at 360/390/414/768/1024/1280/1440 + touch swipe + keyboard-only + reduced motion: no horizontal scroll, no page errors. |
-| 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | pending | | | |
+| 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | complete | 2026-09-08 | (this commit) | The product page is finished: **nine chapters**, every one of them optional and every one of them printing DATA. `overview · benefits · ingredients · how-to-use · farmer-story · full-ingredients · faqs · reviews · complete-the-ritual`, with the chapter index and the chapter markup reading **one** set of booleans so `ChapterNav` and the document can never disagree. Four new components (`pdp/PackClaims`, `IngredientChapter`, `HowToUse`, `FarmerStory`, 487 lines + 4 modules), `utils/seo.js` 93 → 245 with **`productJsonLd`**, and the three retained blocks rewritten. **Claims discipline held**: `offers` only where `isPriceKnown`, `availability` only where `stock` is a real number, `aggregateRating` only where a real average AND count exist — so on a fresh install **no** graph carries a rating and five of eight carry no offer; the carton's "anti-ageing" line appears exactly once on the page, inside "As printed on the pack". Reviews empty state is now "No reviews yet — Reviews are written by customers from My Orders after delivery."; the flag flip was exercised and reverted. `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 276 passed / 50 skipped (26 new). Browser QA at 360/390/414/768/1024/1280/1440 — **`scrollWidth === clientWidth` at every one** after two container-vs-viewport fixes the browser found. See "Prompt 27 record" below. |
 | 28 | Content pages from siteContent | pending | | | |
 | 29 | Cart page and checkout restyle | pending | | | |
 | 30 | Auth, account, orders and wishlist restyle | pending | | | |
@@ -3324,3 +3324,186 @@ Two components, one hook, one suite — and the last of the old brand's storefro
 Nothing of the gallery. Prompt 27 writes the chapters around it and the product JSON-LD; Prompt 33's
 admin media manager writes the `media[]` — `crop`, `poster`, `title`, order and the primary flag —
 that everything above reads.
+
+
+## Prompt 27 record (2026-09-08)
+
+### What was built
+
+Nine chapters on `/product/:slug`, in document order, each one absent from the page **and** from
+`ChapterNav` when the product has nothing to put in it. The two lists read one set of booleans
+computed once in the view, which is the whole reason they cannot drift:
+
+| # | id | Heading | Present when |
+|---|---|---|---|
+| 01 | `overview` | Overview | always |
+| 02 | `benefits` | Benefits | `benefits[]` |
+| 03 | `ingredients` | Key ingredients | `keyIngredients[]` or any pack field |
+| 04 | `how-to-use` | How to use | `howToUse[]`, `ritualStep`, or a routine |
+| 05 | `farmer-story` | The farmer story | `siteContent` gave a sentence |
+| 06 | `full-ingredients` | Full ingredients | `ingredientsList` or a "Good to know" row |
+| 07 | `faqs` | FAQs | `useFaqs().forProduct(product)` |
+| 08 | `reviews` | Reviews | always — the empty state is the point |
+| 09 | `complete-the-ritual` | Complete the ritual | a bundle or a related rail |
+
+Four new components under `components/pdp/`:
+
+- **`PackClaims`** (114 + 74) — the "As printed on the pack" block, and the only place on the
+  storefront where the carton's *"Enriched with Anti-Ageing Antioxidants"* line is printed. The
+  eyebrow is what makes it honest: everything under it is a QUOTATION of the packaging, which is a
+  verifiable fact, rather than a promise the shop is making. Claims are set quiet (14px, muted, no
+  ticks and no gold — a tick would read as endorsement); `brand.packBadges` are `Chip variant="trust"`
+  with every `isPlaceholder` badge dropped; the caution goes through `ContentBlocks`' own
+  `::callout Caution` fence (one callout recipe in the design system, not a second copy) with a gold
+  left hairline.
+- **`IngredientChapter`** (97 + 71) — `keyIngredients[]` as `GlassCard`s, name in Fraunces at 20px
+  over a 14px benefit, 1-up ≤768 / 2-up 769–1024 / 3-up ≥1025. Black rice opens the row and takes
+  the gold hairline; the lift is a **stable partition**, so an admin's ordering survives around it.
+- **`HowToUse`** (132 + 108) — the directions as a real `<ol>` with `Chip variant="step"` numerals,
+  the "Ritual step" plate, and "Part of these rituals": the routines whose `steps[].productId` **or**
+  `alternativeProductId` names this product (the soap and the body wash are both step one of the body
+  ritual), as `RitualCard compact`. Nothing about which rituals exist is typed here — an admin who
+  adds a step adds the link.
+- **`FarmerStory`** (144 + 44) — two sentences from `siteContent`, `ValueChain compact vertical`,
+  `LegalNote` (which takes no text prop, so no surface can state the ownership benefit without the
+  qualifier) and a ghost button to `/about`.
+
+### The structured data, and what it refuses to say
+
+`utils/seo.js` 93 → 245. `productJsonLd(product, { url, category, rating, ratingCount })` publishes
+`name`, `image`, `description`, `sku`, `brand`, `category` — and three claims only when the shop can
+back them:
+
+- **`offers`** only where `isPriceKnown(product)`. Five of the eight products are `priceTBA`; an
+  Offer at ₹0 is a lie a search engine prints in a result card. Same predicate as the disabled Add
+  to Cart, so the page and the graph agree by construction.
+- **`availability`** only where `stock` is an actual number. `Number(null)` is `0`, and `0` would
+  have published "out of stock" for a product nobody has counted — caught by the unit test, not by
+  reading the code.
+- **`aggregateRating`** only where a real average AND a real count exist. On a fresh install that is
+  **none of the eight**. Flipping `showSampleReviews` locally produced
+  `{ ratingValue: 5, reviewCount: 1 }` on the serum, which is the blended pair the page itself
+  prints, rounded to the one decimal it prints it at.
+
+`breadcrumbJsonLd` now also accepts `{ name, url }` beside the trail's `{ label, to }`; the PDP hands
+it the same array the visible `Breadcrumb` draws, so the crumb a visitor reads and the crumb a
+crawler is told cannot drift.
+
+Measured on the running app (mock mode):
+
+| Product | offers | aggregateRating |
+|---|---|---|
+| `black-rice-goat-milk-soap` (₹90) | `price 90 · INR · InStock · NewCondition` | absent |
+| `black-rice-face-serum` (TBA) | **absent** | absent |
+| `black-rice-face-serum`, flag on | absent | `5 / 1 rating` |
+
+### The restyles
+
+- **`ReviewsSection`** — summary plate is `.sf-glass` (the section's ONE blurred layer; the review
+  cards stay `--sf-color-surface` behind a hairline, because a page of blurred cards is a scroll-jank
+  machine), distribution bars take `--sf-gradient-gold`, each review is a hairline card. Empty state
+  is now **"No reviews yet — Reviews are written by customers from My Orders after delivery."**,
+  which is the normal state on this range and therefore the most important copy in the file: it
+  explains the blank space and describes the only path that can fill it. A sample row wears a dashed
+  border and a "Sample" mark — that mark is what makes the flag safe to flip at all. Props unchanged.
+- **`FrequentlyBoughtTogether`** — retitled **"Complete the ritual"** with the copy "The next steps
+  of the routine, chosen for this product." and new `title`/`note` props (the PDP passes
+  `title={null}`; the chapter's own h2 carries it). A companion with no price is **unticked and
+  disabled** behind the shared "Price on launch" chip, and the total sums the ticked rows only; with
+  nothing ticked the total row is dropped and the button reads "Nothing to add yet" rather than
+  offering ₹0.00. Plates take `.sf-plate` (contain, not cover — a bottle with its cap sliced off is
+  a defect), and each `+` travels with the tile it adds.
+- **`RelatedProducts`** — new `headingLevel` (the PDP passes `h3`), and the edge fades the brief asks
+  for, implemented as a **`mask-image` lifted under `:focus-within`**. Prompt 25 had deliberately
+  refused a gradient veil because it would dim a card's focus ring exactly when a keyboard visitor
+  scrolled that card to the edge; a mask keeps the affordance and can be removed for the one visitor
+  it would have hurt.
+
+### One fix outside the brief
+
+`utils/faqs.js` — `faqsForProduct` now gives an inline `product.faqs` row an id
+(`p<productId>-<index>`). Inline rows carry no id, `faqAnchorId` is `faq-${id}`, and moving the PDP
+onto the shared `FAQ` component would therefore have given every inline row the anchor `faq-`:
+duplicate React keys, and opening one answer opens all of them. Confirmed fixed — the rendered page
+reports **zero duplicate ids**.
+
+### Verification
+
+```
+CI=true npm run build              exit 0, "Compiled successfully.", no warnings
+npm test -- --watchAll=false       23 suites passed / 1 skipped · 276 passed / 50 skipped
+                                   (+26 new in components/pdp/PdpChapters.test.js)
+grep -rn "piece\b|weave|loom" ReviewsSection.js FrequentlyBoughtTogether.js RelatedProducts.js   → 0
+grep -rn "studio" (same three)                                                                   → 0
+```
+
+### Browser QA (Chromium 1194, mock mode, `npm run dev`)
+
+- All nine chapters render on `/product/black-rice-face-serum` and
+  `/product/black-rice-goat-milk-soap`; `ChapterNav` lists all nine; a nav jump lands **focus** on
+  the section (`document.activeElement.id === "farmer-story"`).
+- Heading outline is clean: `h1` product → `h2` per chapter → `h3` for the INCI disclosure, each FAQ
+  and "You may also like". **Zero duplicate ids, zero images without `alt`, zero empty links.**
+- `document.body.innerText` contains **no `{{TOKEN}}`**.
+- **`scrollWidth === clientWidth` at 360 / 390 / 414 / 768 / 1024 / 1280 / 1440.**
+- Keyboard: the INCI disclosure opens on Enter (`aria-expanded` false → true, the list appears); the
+  FAQ accordion moves on ArrowDown and opens on Enter; Space on the one enabled bundle checkbox took
+  the total from "TOTAL (2 ITEMS) ₹480.00 / Add 2 to Cart" to "TOTAL (1 ITEM) ₹90.00 / Add 1 to Cart".
+- Bundle checkbox states on the soap, read from the DOM:
+  `[{checked:true,disabled:true}, {checked:false,disabled:true}, {checked:true,disabled:false}]` —
+  anchor locked, the TBA face mist unticked and disabled, the priced face wash the only live row.
+- `prefers-reduced-motion: reduce`: all nine chapters present, the value chain's first step at
+  `opacity: 1, transform: none` on frame one, no console errors.
+- Sample reviews: flag off → the empty state; flag flipped locally → the seeded row appears as a
+  dashed card with the "Sample" mark and the plate reads 5.0 / 1 rating. **Reverted** — `git diff`
+  on `src/config/brand.js` is empty.
+
+### Two things the browser found, both the same bug
+
+Both were components asking a **viewport** media query a question only their **container** could
+answer. The PDP's content column is roughly half a viewport at every width above 769px, so a query
+that reads "≥1025px, therefore wide" is simply wrong inside it.
+
+1. **`ValueChain` at `orientation="auto"`** laid seven steps in one row from 1025px and ran 83px past
+   the column — the whole page took a horizontal scrollbar. Fixed by naming `orientation="vertical"`
+   in `FarmerStory`: a narrow column gets the vertical chain, and a media query cannot know it is in
+   one.
+2. **`FrequentlyBoughtTogether`'s 900px split** gave the plates about 220px to run in and stacked
+   them into a totem beside the ledger — the exact layout the query existed to avoid. The split is
+   gone; the block is one column at every width, plates over ledger.
+
+A third, smaller: on a 360px phone the plate row wrapped after two tiles and left a `+` dangling at
+the end of the first line. Each `+` now travels with the tile it adds.
+
+### Decisions logged
+
+1. **`suitableFor` moved** out of the Overview chapter into the "Good to know" row of Full
+   ingredients, where the brief puts it. Printing the same line twice on one page is worse than
+   printing it lower.
+2. **The shelf-life row stays hidden.** `brand.productDefaults.shelfLife` is still `{{SHELF_LIFE}}`
+   (the cartons print a Mfg → Exp pair about 23 months apart, but that is an inference, not a
+   confirmed figure). The row appears the moment an owner supplies one — no code change needed.
+   Still tracked in `PLACEHOLDERS.md`.
+3. **The farmer story deduplicates its own source.** `siteContent.home.aboutTeaser.text`'s first
+   paragraph is `siteContent.about.lede` with "(FPC)" dropped — the two differ in the MIDDLE, so a
+   substring test cannot catch it. `farmerStoryLines` compares word sets and skips a paragraph that
+   shares ≥80% of the shorter one's vocabulary, taking the next instead. Measured on the seed: the
+   echo scores 1.00 and is skipped, the purpose paragraph scores 0.36 and is printed.
+4. **`RitualCard`'s step thumbnails resolve against `[product, ...related, ...bundle]`** rather than
+   a seventh request for the catalogue. `getRelated`'s last pass sweeps the brand, so on an
+   eight-product catalogue that list IS the catalogue; where one outgrows it, a step whose product is
+   missing keeps its numeral and shows an empty plate, which is `RitualCard`'s own documented
+   degradation ("an empty shelf is honest, a borrowed one is not").
+5. **`aggregateRating` carries `"@type": "AggregateRating"`** and `offers` carries `"@type": "Offer"`,
+   which the brief's shorthand omits — schema.org requires them, and a graph without them is not the
+   thing the acceptance criterion asks to validate.
+6. **The Rich Results test could not be run from this environment** (outbound HTTPS to Google is
+   blocked here). The graphs were validated structurally instead — every URL absolute and built from
+   `seoOrigin()`, every `@type` present, and the three conditional keys pinned by unit tests against
+   a priced product, a TBA product and a rated product. Worth one pass through
+   `search.google.com/test/rich-results` on a machine with network before launch.
+
+### Left for Prompt 28
+
+Nothing of the PDP. Prompt 28 builds the content pages from the same `siteContent` record this
+chapter reads two sections of, and `/about` is where the "Read our story" button already points.

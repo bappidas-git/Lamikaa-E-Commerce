@@ -1,0 +1,71 @@
+/* =============================================================================
+ * IngredientChapter — the botanical row
+ * =============================================================================
+ * One card per ingredient, in a grid that steps 1 → 2 → 3 across the
+ * breakpoints. The cards are `.sf-card` (a 6% ground and a hairline — no
+ * backdrop filter, so a row of them costs the glass budget nothing) and the
+ * only difference between the hero card and the rest is the tone of that
+ * hairline.
+ *
+ * The card is a flex column rather than a grid so a benefit line of any length
+ * simply pushes the card taller, and `align-items: stretch` on the row keeps
+ * every card in a line the same height regardless.
+ * ========================================================================== */
+
+.chapter {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+  height: 100%;
+}
+
+/* The hero ingredient: the same card, in gold hairline. */
+.hero {
+  border-color: var(--sf-color-gold);
+}
+
+.name {
+  font-family: var(--sf-font-display);
+  /* 20px — the card-name step, not a heading step: this row is a set of
+     labels, and the chapter's own h2 is the only display type above it. */
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.benefit {
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-secondary);
+}
+
+/* 769px — two across, which is as many as the content column can hold beside
+   a sticky media column without the benefit lines turning into confetti. */
+@media (min-width: 769px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 1025px — three across. */
+@media (min-width: 1025px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

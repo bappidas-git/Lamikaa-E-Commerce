@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Button, Price } from "../ui";
+import { isPriceKnown } from "../../utils/product";
 import {
   getProductMinPrice,
   buildCartItem,
@@ -12,7 +14,7 @@ import {
 import styles from "./FrequentlyBoughtTogether.module.css";
 
 // =============================================================================
-// FrequentlyBoughtTogether — "Completes the look" (raises AOV, honestly)
+// FrequentlyBoughtTogether — "Complete the ritual"
 // =============================================================================
 // Shows the current product plus REAL companion products (passed by the caller,
 // resolved from the merchant's own curated `frequentlyBoughtTogetherIds`). The
@@ -21,48 +23,71 @@ import styles from "./FrequentlyBoughtTogether.module.css";
 // module renders nothing.
 //
 // STRUCTURAL HONESTY
-//   The heading is "Completes the look", not "Frequently bought together". The
-//   list is a CURATION the merchant set by hand; it is not a co-purchase
-//   statistic, and this surface must never phrase it as one.
+//   The heading is "Complete the ritual", not "Frequently bought together". The
+//   list is a CURATION the merchant set by hand — the next steps of the LAMIKAA
+//   routine for this product — and it is not a co-purchase statistic. This
+//   surface must never phrase it as one.
+//
+// A COMPANION WITH NO PRICE CANNOT BE BOUGHT, AND SAYS SO. Five of the eight
+// products ship before their MRP is set, so a bundle whose companion is one of
+// them would otherwise quietly add ₹0 to the cart and to the total. Such a row
+// is rendered UNTICKED and DISABLED, wearing the same "Price on launch" chip
+// the rest of the storefront uses, and the total is the sum of the ticked rows
+// only. The same rule applies to the anchor: on a `priceTBA` product page this
+// block still lists the routine, and the button reads how many of it can
+// actually be bought.
 //
 // EDITORIAL SET
-//   A hairline rule opens the block, the plates run left with thin plus marks
-//   between them, and the checklist stands as a ruled column on the right —
-//   ticks, real prices, a live total over a hairline, then the ink button.
+//   A rule of plates runs left — the product you are looking at, then each
+//   companion, divided by thin plus marks — and the checklist sits beneath them
+//   as a ruled ledger: ticks, real prices, a live total over a hairline, then
+//   the button.
 //
-// Props (unchanged contract):
-//   anchor       object  the product being viewed (always included, locked)
+// Props:
+//   anchor       object  the product being viewed (always listed first)
 //   companions   array   real companion products (selectable)
 //   onAddToCart  fn      (cartItem) => void — called once per selected item
 //   currency     string
+//   title        string  the heading; `null` where the caller's own section
+//                        heading already carries it (the PDP chapter does)
+//   note         string  the line under it
 // =============================================================================
+
+export const FBT_TITLE = "Complete the ritual";
+export const FBT_EYEBROW = "Curated pairing";
+export const FBT_NOTE = "The next steps of the routine, chosen for this product.";
+
 const FrequentlyBoughtTogether = ({
   anchor,
   companions = [],
   onAddToCart,
   currency,
+  title = FBT_TITLE,
+  note = FBT_NOTE,
+  className = "",
 }) => {
   const items = useMemo(
     () => (Array.isArray(companions) ? companions.filter(Boolean) : []),
     [companions]
   );
 
-  // Companions start selected (anchor is always in). Keyed by product id. We
-  // store only explicit toggles and treat "unset" as selected, so companions
-  // that arrive AFTER first render (async load) still default to checked without
-  // needing a sync effect.
+  // Companions start selected (the anchor is always listed). Keyed by product
+  // id. We store only explicit toggles and treat "unset" as selected, so
+  // companions that arrive AFTER first render (async load) still default to
+  // checked without needing a sync effect.
   const [selected, setSelected] = useState({});
 
   if (!anchor || items.length === 0) return null;
 
-  const isOn = (id) => selected[id] !== false;
+  // A row can only be ticked if there is a price to charge for it.
+  const isOn = (product) => isPriceKnown(product) && selected[product.id] !== false;
   const toggle = (id) => setSelected((s) => ({ ...s, [id]: s[id] === false }));
 
-  const chosen = [anchor, ...items.filter((p) => isOn(p.id))];
-  const total = chosen.reduce(
-    (sum, p) => sum + getProductMinPrice(p).sellingPrice,
-    0
-  );
+  const chosen = [
+    ...(isPriceKnown(anchor) ? [anchor] : []),
+    ...items.filter(isOn),
+  ];
+  const total = chosen.reduce((sum, p) => sum + getProductMinPrice(p).sellingPrice, 0);
 
   const handleAddAll = () => {
     chosen.forEach((p) => onAddToCart?.(buildCartItem(p)));
@@ -72,7 +97,7 @@ const FrequentlyBoughtTogether = ({
   // companions name themselves.
   const renderTile = (p, locked) => (
     <Link to={productPath(p)} className={styles.tile} key={p.id}>
-      <span className={styles.plate}>
+      <span className={`sf-plate ${styles.plate}`}>
         <img
           src={p.images?.[0] || p.image || PLACEHOLDER_IMG}
           alt={p.name}
@@ -86,77 +111,97 @@ const FrequentlyBoughtTogether = ({
     </Link>
   );
 
+  // One checklist row. The anchor's is locked (you are on its page); a
+  // companion with no price is locked for the opposite reason.
+  const renderCheck = (p, locked) => {
+    const known = isPriceKnown(p);
+    const checked = locked ? known : isOn(p);
+    return (
+      <li className={styles.check} key={p.id}>
+        <label className={[styles.checkLabel, known ? "" : styles.unpriced]
+          .filter(Boolean)
+          .join(" ")}
+        >
+          <input
+            type="checkbox"
+            checked={checked}
+            disabled={locked || !known}
+            readOnly={locked}
+            onChange={locked || !known ? undefined : () => toggle(p.id)}
+          />
+          <span className={styles.checkText}>
+            <span className={styles.checkName}>
+              {truncateText(p.name, 40)}
+              {locked ? <em> (this item)</em> : null}
+            </span>
+            <Price product={p} size="sm" live={false} className={styles.checkPrice} />
+          </span>
+        </label>
+      </li>
+    );
+  };
+
   return (
-    <section className={styles.section} aria-label="Completes the look">
-      <header className={styles.head}>
-        <span className={styles.eyebrow}>Curated pairing</span>
-        <h2 className={styles.title}>Completes the look</h2>
-        <p className={styles.note}>
-          Pieces our studio pairs with this one. Untick anything you already own.
-        </p>
-      </header>
+    <section
+      className={[styles.section, className].filter(Boolean).join(" ")}
+      aria-label={title || FBT_TITLE}
+    >
+      {(title || note) && (
+        <header className={styles.head}>
+          {title ? (
+            <>
+              <span className={styles.eyebrow}>{FBT_EYEBROW}</span>
+              <h2 className={styles.title}>{title}</h2>
+            </>
+          ) : null}
+          {note ? <p className={styles.note}>{note}</p> : null}
+        </header>
+      )}
 
       <div className={styles.layout}>
         <div className={styles.visual}>
           {renderTile(anchor, true)}
+          {/* The mark travels with the tile it adds, so a row that wraps never
+              ends on a dangling "+". */}
           {items.map((p) => (
-            <React.Fragment key={p.id}>
+            <span className={styles.pair} key={p.id}>
               <span className={styles.plus} aria-hidden="true">
                 +
               </span>
               {renderTile(p, false)}
-            </React.Fragment>
+            </span>
           ))}
         </div>
 
         <div className={styles.summary}>
           <ul className={styles.checklist}>
-            <li className={styles.check}>
-              <label className={styles.checkLabel}>
-                <input type="checkbox" checked readOnly disabled />
-                <span className={styles.checkText}>
-                  <span className={styles.checkName}>
-                    {truncateText(anchor.name, 40)} <em>(this item)</em>
-                  </span>
-                  <span className={styles.checkPrice}>
-                    {formatCurrency(getProductMinPrice(anchor).sellingPrice, currency)}
-                  </span>
-                </span>
-              </label>
-            </li>
-            {items.map((p) => (
-              <li className={styles.check} key={p.id}>
-                <label className={styles.checkLabel}>
-                  <input
-                    type="checkbox"
-                    checked={isOn(p.id)}
-                    onChange={() => toggle(p.id)}
-                  />
-                  <span className={styles.checkText}>
-                    <span className={styles.checkName}>{truncateText(p.name, 40)}</span>
-                    <span className={styles.checkPrice}>
-                      {formatCurrency(getProductMinPrice(p).sellingPrice, currency)}
-                    </span>
-                  </span>
-                </label>
-              </li>
-            ))}
+            {renderCheck(anchor, true)}
+            {items.map((p) => renderCheck(p, false))}
           </ul>
 
-          <div className={styles.totalRow}>
-            <span className={styles.totalLabel}>
-              Total ({chosen.length} item{chosen.length !== 1 ? "s" : ""})
-            </span>
-            <span className={styles.totalValue}>{formatCurrency(total, currency)}</span>
-          </div>
-          <button
-            type="button"
-            className={`sf-btn sf-btn--emerald sf-btn--block ${styles.addBtn}`}
+          {/* No ticked rows, no total. "₹0.00" for a routine whose products
+              are all still unpriced is a price claim, and the wrong one. */}
+          {chosen.length > 0 && (
+            <div className={styles.totalRow}>
+              <span className={styles.totalLabel}>
+                Total ({chosen.length} item{chosen.length !== 1 ? "s" : ""})
+              </span>
+              <span className={styles.totalValue}>
+                {formatCurrency(total, currency)}
+              </span>
+            </div>
+          )}
+          <Button
+            variant="primary"
+            block
             onClick={handleAddAll}
             disabled={chosen.length === 0}
+            className={styles.addBtn}
           >
-            Add {chosen.length} to Cart
-          </button>
+            {chosen.length === 0
+              ? "Nothing to add yet"
+              : `Add ${chosen.length} to Cart`}
+          </Button>
         </div>
       </div>
     </section>
