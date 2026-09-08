@@ -134,7 +134,7 @@ const isPrintable = (row) =>
 const isLiveNow = (row, now = Date.now()) =>
   row?.isActive !== false && inWindow(row, now) && isPrintable(row);
 
-/** A `{{` that is not a recognised `{{UPPER_SNAKE}}` token prints RAW on the
+/** A `{{` that is not a recognised upper-snake token prints RAW on the
     storefront: the placeholder gate would not catch it, so the editor must. */
 const hasBrokenToken = (text) =>
   typeof text === "string" && text.includes("{{") && !isPlaceholder(text);
@@ -428,8 +428,8 @@ const AdminAnnouncements = () => {
           {placeholderRows.length === 1
             ? "One announcement still carries a placeholder and stays hidden"
             : `${placeholderRows.length} announcements still carry a placeholder and stay hidden`}{" "}
-          on the storefront until the real wording replaces it — a <code>{"{{TOKEN}}"}</code> is
-          never printed raw.
+          on the storefront until the real wording replaces it — a placeholder is never printed
+          raw.
         </Alert>
       )}
 
@@ -522,7 +522,7 @@ const AdminAnnouncements = () => {
                             </Tooltip>
                           )}
                           {hasBrokenToken(row.text) && (
-                            <Tooltip title="This is not a recognised {{UPPER_SNAKE}} token, so it would print exactly as typed">
+                            <Tooltip title="Not a recognised placeholder token, so it would print exactly as typed">
                               <Chip
                                 size="small"
                                 color="error"
@@ -638,8 +638,9 @@ const AdminAnnouncements = () => {
             {hasBrokenToken(form.text) && (
               <Grid item xs={12}>
                 <Alert severity="error" icon={<Icon icon="mdi:alert-outline" />}>
-                  Those braces are not a recognised <code>{"{{UPPER_SNAKE}}"}</code> token, so they
-                  would print on the bar exactly as typed.
+                  Those braces are not a recognised placeholder token — a token is upper-case
+                  letters, digits and underscores between double braces — so they would print on
+                  the bar exactly as typed.
                 </Alert>
               </Grid>
             )}

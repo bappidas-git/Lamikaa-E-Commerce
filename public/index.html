@@ -51,9 +51,17 @@
 
     <!--
       Copy mirrors brand.seo in src/config/brand.js (and settings.seo in
-      db.json). {{LAMIKAA_DOMAIN}} is still unresolved: a placeholder is
-      tolerated in static HTML for now, and Prompt 36 verifies it has either
-      been resolved or removed before release.
+      db.json).
+
+      THERE IS NO STATIC og:url / twitter:url. brand.seo.siteUrl is still the
+      LAMIKAA_DOMAIN placeholder — the owner has not named the public domain —
+      and a literal token must never ship in a crawled tag, so Prompt 36 removed
+      both rather than guessing a host. Nothing is lost: useSeo (src/hooks/useSeo.js)
+      claims og:url and <link rel=canonical> on every route from seoOrigin(),
+      which returns brand.seo.siteUrl the moment it stops being a placeholder
+      and window.location.origin until then. Resolving the domain is a one-line
+      edit in brand.js; re-adding a static tag here is optional and Prompt 38
+      owns that call alongside the sitemap.
     -->
     <meta
       name="description"
@@ -69,7 +77,6 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="LAMIKAA NATURALS" />
     <meta property="og:locale" content="en_IN" />
-    <meta property="og:url" content="https://{{LAMIKAA_DOMAIN}}/" />
     <meta
       property="og:title"
       content="LAMIKAA NATURALS — Black Rice Skincare, Farmer-Owned"
@@ -94,7 +101,6 @@
       3.5:1 wordmark.
     -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:url" content="https://{{LAMIKAA_DOMAIN}}/" />
     <meta
       name="twitter:title"
       content="LAMIKAA NATURALS — Black Rice Skincare, Farmer-Owned"

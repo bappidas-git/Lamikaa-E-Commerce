@@ -10,9 +10,9 @@ Total hits: **531** across **62** files.
 
 | Group | Files | Hits | Cleanup owner | Status |
 |---|---|---|---|---|
-| A · Seed data (db.json) | 1 | 204 | Prompt 06 (reseed) → verified by 36 | cleared — verify in 36 |
-| B · Public shell (index.html, manifest) | 2 | 24 | Prompt 02 (index.html/manifest/favicons) → verified by 36 | cleared — verify in 36 |
-| C · Env / package | 3 | 4 | Prompt 02 (.env app name) + 36 (.env comments, package-lock unaffected) | cleared — verify in 36 |
+| A · Seed data (db.json) | 1 | 204 | Prompt 06 (reseed) → verified by 36 | **done (36)** |
+| B · Public shell (index.html, manifest) | 2 | 24 | Prompt 02 (index.html/manifest/favicons) → verified by 36 | **done (36)** |
+| C · Env / package | 3 | 4 | Prompt 02 (.env app name) + 36 (.env comments, package-lock root name) | **done (36)** |
 | D · Theme tokens & global CSS | 4 | 9 | Prompt 03 (token rewrite) + 35 (token names, comments) | **done (35)** |
 | E · Constants & utils | 4 | 31 | Prompt 02 (constants → brand config) + 36 | **done (35)** |
 | F · API layer & live test | 2 | 3 | Prompt 07 (comments) + 36 (live test BASE_URL, address fixtures) | **done (35)** |
@@ -23,26 +23,34 @@ Total hits: **531** across **62** files.
 
 > **Status legend.** `done (35)` — every hit in the group is cleared AND the
 > group's code identifiers (token names, class names, variables, comments, test
-> names) were swept by Prompt 35. `cleared — verify in 36` — no hit survives the
-> §3 grep, but the group is content/assets/seed data, so Prompt 36 owns the
-> confirmation. Prompt 35 re-ran §3 over the whole repository and over `build/`:
-> **both return zero**, so no group carries an outstanding hit.
+> names) were swept by Prompt 35. `done (36)` — the group is content, assets or
+> seed data, and Prompt 36 re-ran the seed validation, the asset checks and the
+> §3 greps over it and confirmed the clearance. **Every group is now closed:**
+> Prompt 36 ran §3 over the whole repository, over the production `build/` and
+> over every route of the running app — all three return zero (see §4).
 
 ## 1. Identifiers that are brand-bound but do not contain a searched term
 
-These do not appear in the grep above but must go in the same cleanup passes:
+These do not appear in the grep above but must go in the same cleanup passes.
+**Every row below is now marked** — `done (NN)` names the prompt that cleared
+it, and Prompt 36 re-checked each one against the working tree (§4).
 
-- **Old asset URLs:** `https://res.cloudinary.com/v8vrixwq/image/upload/v1787592407/meghali-silk-logo.png` and `…/v1787592405/meghali-silk-logo-white.png` (5 components, `public/index.html` ×3, admin ×2); Cloudinary catalogue images `…/v1788289312/muga_1_V1.png`, `muga_1_V2.png`, `muga_1_V3.png`, `muga_2_V1.png` (db.json products/categories, AboutUs); `placehold.co/...?text=Muga+Mekhela|Eri+Shawl|Silk+Suit|Baluchari+Silk|Georgette+Silk|Gamosa|Handwoven+in+Assam|The+Looms+of+Sualkuchi|In+the+Loom+Room` (db.json, `src/utils/heroConfig.js:144`, AboutUs).
-- **Old domains / emails / phones / addresses:** `meghalissilk.com` (public/index.html OG/twitter urls), `core.meghalisilk.in` (.env comment, baseURL.js comment, api.live.test.js:152), `care@meghalisilk.com` (constants.js, db.json settings), `+91 33 4000 1100` / `wa.me/913340001100` (constants.js, db.json), `Galleria Producer Company Limited, Park Street, Kolkata, West Bengal 700016` (constants.js, db.json, PrivacyPolicy, TermsOfService, AboutUs), social handles `facebook.com/meghalisilk`, `instagram.com/meghalisilk`, `twitter.com/meghalisilk`, `youtube.com/@meghalisilk` (constants.js, db.json), `admin@mystore.com` (db.json notifications), `shubendu@assamdigital.com` (db.json users/leads).
-- **Token / class / variable names carrying Meghali-era semantics:** `--sf-gradient-heritage`, `--sf-color-brand-green`, `--sf-color-brand-green-deep`, `--brand-logo-bg`, `--sf-color-emerald*` (legacy CTA name), `--sf-gradient-announce-1/2/3`, `--sf-cat-pink/purple/orange/blue/teal/red` ("muted silk tones"), `.weave`, `.heritageWeave`, `.heritage*` (Home), `.silks/.silk/.silkTerm/.silkName/.silkNote/.silkText/.loom` (AboutUs), `SILK_SPEC_LABELS`, `deriveSilkSpecRows`, `deriveFabricCraft`, `FABRIC_FAMILIES`, `productFabricLabels`, `isPremiumProduct` (`bridal` tag), `HERO_FALLBACK_SLIDES`, `HERO_FALLBACK_IMAGE`, `GRADIENT_PRESETS` (AdminHeroSection), `PROMISE_DETAIL["Authentic Silk"]`, `TRUST_BADGES` ("Authentic Silk"), `WHY_CHOOSE_US` (loom copy), `FAQ_ITEMS` (silk FAQs), `APP_TAGLINE`, `APP_DESCRIPTION`, `SUPPORT_*`, `SOCIAL_LINKS`, `MOCK_REVIEWERS` (AdminReviews).
-- **localStorage / sessionStorage keys:** `theme` (removed with the toggle), `cart`, `wishlist`, `recentlyViewed`, `user`, `token`, `admin`, `adminToken` — none brand-named; keep them (no migration needed) except `theme`, which Prompt 03 deletes on first load.
-- **File names:** none contain the old brand. `src/pages/Products/*` and `src/pages/HelpCenter/*`, `Support/*` are renamed for IA reasons, not brand reasons.
-- **Test fixtures:** `src/services/api.live.test.js` uses `Guwahati / Assam` addresses (fine) and asserts the old API host (line 152).
-- **Coupon codes:** `MUGA500`, `SUALKUCHI1000` and the other five Meghali codes in db.json.
-- **Sample orders/customers/reviews:** all of db.json `users`, `orders`, `returns`, `payments`, `refunds`, `reviews`, `wishlist`, `cart`, `leads`, `walletTransactions` reference silk products or the old customers.
-- **Email/invoice templates:** none exist in the repo (the admin invoice is generated inline in `src/pages/Admin/AdminOrders.js:370-416` from `settings.store`, fallback string "My E-Commerce Store").
-- **Analytics IDs:** `settings.seo.googleAnalyticsId` / `facebookPixelId` are empty strings (nothing to remove).
-- **Dangling doc references:** `STOREFRONT_UX_GUIDELINES.md`, `prompt_testing/09_authentication_and_session.md`, `backend-developer-guideline/postman-api-collection.json` (files do not exist; comments removed in Prompt 35).
+- **Old asset URLs:** `https://res.cloudinary.com/v8vrixwq/image/upload/v1787592407/meghali-silk-logo.png` and `…/v1787592405/meghali-silk-logo-white.png` (5 components, `public/index.html` ×3, admin ×2); Cloudinary catalogue images `…/v1788289312/muga_1_V1.png`, `muga_1_V2.png`, `muga_1_V3.png`, `muga_2_V1.png` (db.json products/categories, AboutUs); `placehold.co/...?text=Muga+Mekhela|Eri+Shawl|Silk+Suit|Baluchari+Silk|Georgette+Silk|Gamosa|Handwoven+in+Assam|The+Looms+of+Sualkuchi|In+the+Loom+Room` (db.json, `src/utils/heroConfig.js:144`, AboutUs). — **done (36)**: the two logo versions and the four `v1788289*` catalogue images were replaced by the LAMIKAA artwork in Prompt 02/06; the last `placehold.co` in the tree (`OrderConfirmation.js:423`, an order-line thumbnail) became `PLACEHOLDER_IMG` in Prompt 36. `grep -riIn -e v1787592407 -e v1787592405 -e v1788289312 -e v1788289308 -e v1788289311 -e placehold.co` over the source and over `build/` → **0**.
+- **Old domains / emails / phones / addresses:** `meghalissilk.com` (public/index.html OG/twitter urls), `core.meghalisilk.in` (.env comment, baseURL.js comment, api.live.test.js:152), `care@meghalisilk.com` (constants.js, db.json settings), `+91 33 4000 1100` / `wa.me/913340001100` (constants.js, db.json), `Galleria Producer Company Limited, Park Street, Kolkata, West Bengal 700016` (constants.js, db.json, PrivacyPolicy, TermsOfService, AboutUs), social handles `facebook.com/meghalisilk`, `instagram.com/meghalisilk`, `twitter.com/meghalisilk`, `youtube.com/@meghalisilk` (constants.js, db.json), `admin@mystore.com` (db.json notifications), `shubendu@assamdigital.com` (db.json users/leads). — **done (36)**: the domain, email, phone, WhatsApp number, postal address and all four social handles are gone from source and build; the storefront's contact and social values are `{{TOKENS}}` blanked by `normalizeStoreSettings`/`normalizeSocialUrl`, and the seeded sample identities are `admin@store.com`, `sample.customer@example.com` and `sample.subscriber@example.com`. The `meghalissilk.com` OG/Twitter URLs were the last two, removed with the tags themselves (see §4, OG URL decision).
+- **Token / class / variable names carrying Meghali-era semantics:** `--sf-gradient-heritage`, `--sf-color-brand-green`, `--sf-color-brand-green-deep`, `--brand-logo-bg`, `--sf-color-emerald*` (legacy CTA name), `--sf-gradient-announce-1/2/3`, `--sf-cat-pink/purple/orange/blue/teal/red` ("muted silk tones"), `.weave`, `.heritageWeave`, `.heritage*` (Home), `.silks/.silk/.silkTerm/.silkName/.silkNote/.silkText/.loom` (AboutUs), `SILK_SPEC_LABELS`, `deriveSilkSpecRows`, `deriveFabricCraft`, `FABRIC_FAMILIES`, `productFabricLabels`, `isPremiumProduct` (`bridal` tag), `HERO_FALLBACK_SLIDES`, `HERO_FALLBACK_IMAGE`, `GRADIENT_PRESETS` (AdminHeroSection), `PROMISE_DETAIL["Authentic Silk"]`, `TRUST_BADGES` ("Authentic Silk"), `WHY_CHOOSE_US` (loom copy), `FAQ_ITEMS` (silk FAQs), `APP_TAGLINE`, `APP_DESCRIPTION`, `SUPPORT_*`, `SOCIAL_LINKS`, `MOCK_REVIEWERS` (AdminReviews). — **done (35)**, re-checked in 36. The list mixes two kinds of name, and each ended differently:
+
+  - **Gone from the tree entirely** (0 hits each): every token above, `.weave`/`.heritageWeave`/`.heritage*`, the AboutUs `.silk*`/`.loom` classes, `SILK_SPEC_LABELS`, `deriveSilkSpecRows`, `deriveFabricCraft`, `FABRIC_FAMILIES`, `productFabricLabels`, `isPremiumProduct`, `HERO_FALLBACK_IMAGE`, `GRADIENT_PRESETS`, `PROMISE_DETAIL`, `TRUST_BADGES`, `WHY_CHOOSE_US`, `MOCK_REVIEWERS` — the last two survive only as the comments in `constants.js:308-320` that record their deletion.
+  - **Kept by name, re-pointed at the brand config** — they were listed because of the Meghali VALUES they held, not because the identifier itself names a brand: `APP_TAGLINE` = `brand.tagline`, `APP_DESCRIPTION` = `brand.seo.defaultDescription`, `SUPPORT_EMAIL/PHONE/ADDRESS/HOURS` = `brand.contact.*`, `SOCIAL_LINKS` = `brand.social.*`, `FAQ_ITEMS` = the LAMIKAA questions. Every one now reads through `src/config/brand.js`, so the value can only ever be the brand's or a documented token.
+
+  Two further near-misses are deliberate and carry no brand: `--sf-gradient-announce` is Prompt 03's single announcement wash (it replaced the Meghali `-1/2/3` triple, as `--sf-cat-*` became `--sf-concern-*`), and `HERO_FALLBACK_SLIDES` appears only inside the Prompt 34 comment in `src/utils/heroConfig.js` that records its own deletion.
+- **localStorage / sessionStorage keys:** `theme` (removed with the toggle), `cart`, `wishlist`, `recentlyViewed`, `user`, `token`, `admin`, `adminToken` — none brand-named; keep them (no migration needed) except `theme`, which Prompt 03 deletes on first load. — **done (03)**, re-checked in 36: no brand-named key.
+- **File names:** none contain the old brand. `src/pages/Products/*` and `src/pages/HelpCenter/*`, `Support/*` are renamed for IA reasons, not brand reasons. — **done (28/31)**, re-checked in 36: no file name in the tree carries the old brand.
+- **Test fixtures:** `src/services/api.live.test.js` uses `Guwahati / Assam` addresses (fine) and asserts the old API host (line 152). — **done (35)**: the assertion is the LAMIKAA host; `Guwahati / Assam` stays, because Assam is LAMIKAA's own home state.
+- **Coupon codes:** `MUGA500`, `SUALKUCHI1000` and the other five Meghali codes in db.json. — **done (06)**, re-verified in 36: `coupons` holds one row, `SAMPLE10`, flagged in `PLACEHOLDERS.md` as replace-before-launch.
+- **Sample orders/customers/reviews:** all of db.json `users`, `orders`, `returns`, `payments`, `refunds`, `reviews`, `wishlist`, `cart`, `leads`, `walletTransactions` reference the old catalogue or the old customers. — **done (06)**, re-verified in 36 by the seed validation: every order, payment, refund, wallet row, review and lead is re-seeded against the LAMIKAA catalogue, and `returns`, `wishlist` and `cart` are empty by design.
+- **Email/invoice templates:** none exist in the repo (the admin invoice is generated inline in `src/pages/Admin/AdminOrders.js:370-416` from `settings.store`). — **done (32)**, re-checked in 36: the invoice now falls back to `brand.name` and `brand.legalName` rather than "My E-Commerce Store", prints `brand.logoUrl`, and hides the GSTIN row while the token is unresolved — a placeholder must never print on a tax document. `grep -rin "my e-commerce store\|mystore"` → 0.
+- **Analytics IDs:** `settings.seo.googleAnalyticsId` / `facebookPixelId` are empty strings (nothing to remove). — **done (36)**: confirmed still `""` in `db.json`. `REACT_APP_ENABLE_ANALYTICS` stays in `.env*`; nothing reads it, and it names no vendor.
+- **Dangling doc references:** `STOREFRONT_UX_GUIDELINES.md`, `prompt_testing/09_authentication_and_session.md`, `backend-developer-guideline/postman-api-collection.json` (files do not exist; comments removed in Prompt 35). — **done (35)**, re-checked in 36: none of the three names appears in the tree.
 
 ## 2. Hits by file (file:line — kind — excerpt)
 
@@ -50,8 +58,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `db.json` — 204 hits
 
-**Status: cleared — verify in 36** — no hit below survives the §3 grep;
-Prompt 36 owns the confirmation for content, assets and seed data.
+**Status: done (36)** — no hit below survives the §3 grep, and Prompt 36
+re-verified it: the seed validation, the icon/asset checks and the package,
+env and public-shell sweeps all pass.
 
 - `5` — seed value — `"title": "The Bridal Muga Edit",`
 - `6` — seed value — `"subtitle": "Heirloom Mekhela Chador woven to order in undyed Sualkuchi Muga",`
@@ -262,8 +271,9 @@ Prompt 36 owns the confirmation for content, assets and seed data.
 
 #### `public/index.html` — 21 hits
 
-**Status: cleared — verify in 36** — no hit below survives the §3 grep;
-Prompt 36 owns the confirmation for content, assets and seed data.
+**Status: done (36)** — no hit below survives the §3 grep, and Prompt 36
+re-verified it: the seed validation, the icon/asset checks and the package,
+env and public-shell sweeps all pass.
 
 - `17` — old logo asset URL — `href="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png"`
 - `23` — code / copy — `NOTE ON THE ARTWORK: the shipped icons draw the gold Assamese silk motif on`
@@ -289,8 +299,9 @@ Prompt 36 owns the confirmation for content, assets and seed data.
 
 #### `public/manifest.json` — 3 hits
 
-**Status: cleared — verify in 36** — no hit below survives the §3 grep;
-Prompt 36 owns the confirmation for content, assets and seed data.
+**Status: done (36)** — no hit below survives the §3 grep, and Prompt 36
+re-verified it: the seed validation, the icon/asset checks and the package,
+env and public-shell sweeps all pass.
 
 - `2` — copy string — `"short_name": "Meghali's Silk",`
 - `3` — copy string — `"name": "Meghali's Silk",`
@@ -300,23 +311,26 @@ Prompt 36 owns the confirmation for content, assets and seed data.
 
 #### `.env` — 2 hits
 
-**Status: cleared — verify in 36** — no hit below survives the §3 grep;
-Prompt 36 owns the confirmation for content, assets and seed data.
+**Status: done (36)** — no hit below survives the §3 grep, and Prompt 36
+re-verified it: the seed validation, the icon/asset checks and the package,
+env and public-shell sweeps all pass.
 
 - `5` — URL / domain — `# Default: the live Laravel API on Cloudways (https://core.meghalisilk.in).`
 - `30` — code / copy — `REACT_APP_NAME=Meghali's Silk`
 
 #### `.env.production` — 1 hit
 
-**Status: cleared — verify in 36** — no hit below survives the §3 grep;
-Prompt 36 owns the confirmation for content, assets and seed data.
+**Status: done (36)** — no hit below survives the §3 grep, and Prompt 36
+re-verified it: the seed validation, the icon/asset checks and the package,
+env and public-shell sweeps all pass.
 
 - `21` — code / copy — `REACT_APP_NAME=Meghali's Silk`
 
 #### `package-lock.json` — 1 hit
 
-**Status: cleared — verify in 36** — no hit below survives the §3 grep;
-Prompt 36 owns the confirmation for content, assets and seed data.
+**Status: done (36)** — no hit below survives the §3 grep, and Prompt 36
+re-verified it: the seed validation, the icon/asset checks and the package,
+env and public-shell sweeps all pass.
 
 - `7733` — copy string — `"integrity": "sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==",`
 
@@ -976,9 +990,49 @@ grep -riIn --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=build --e
   -e "meghali" -e "mekhela" -e "mekhla" -e "chador" -e "saree" -e "sari\b" -e "handloom" -e "muga" .
 grep -riIn --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=build --exclude-dir=prompts -e "silk" .
 grep -riIn --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=build --exclude-dir=prompts \
-  -e "sualkuchi" -e "galleria" -e "meghalisilk" -e "meghalissilk" -e "gamosa" -e "blouse" -e "v1787592407" -e "v1787592405" -e "v1788289312" -e "v1788289308" -e "v1788289311" .
-# after `npm run build`:
-grep -riIl -e "meghali" -e "mekhela" -e "chador" -e "saree" -e "handloom" -e "muga" -e "silk" build/ || echo "build clean"
+  -e "sualkuchi" -e "galleria" -e "meghalisilk" -e "meghalissilk" -e "gamosa" -e "blouse" -e "v1787592407" -e "v1787592405" -e "v1788289312" -e "v1788289308" -e "v1788289311" -e "placehold.co" .
+grep -riIn --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=build --exclude-dir=prompts -e "kolkata" . | grep -v "Asia/Kolkata"
+# after `CI=true npm run build`:
+grep -riIl -e "meghali" -e "mekhela" -e "chador" -e "saree" -e "handloom" -e "muga" -e "silk" -e "sualkuchi" -e "galleria" \
+  -e "v1787592407" -e "v1787592405" -e "placehold.co" build/ || echo "build clean"
+# every placeholder token in the bundle must be a row of PLACEHOLDERS.md:
+grep -rhoE "\{\{[A-Z0-9_]+\}\}" build/static/js | sort -u
 ```
 
 `kolkata` and `assam` are checked separately: the only permitted survivors are `"timezone": "Asia/Kolkata"` and genuine LAMIKAA/Assam references (the brand *is* from Assam).
+
+`prompts/` is excluded on purpose — this file, and the prompt texts beside it,
+legitimately quote the old brand. That exclusion is the reason the footprint can
+be documented at all; it is not a gap in the sweep.
+
+## 4. Verified zero
+
+> **Verified zero on 2026-09-08** at commit `(this commit)` — branch
+> `claude/brand-cleanup-content-assets-6crinr`, parent `b03434b` — by Prompt 36.
+
+Every check in §3 returns **zero**, over three independent surfaces:
+
+| Surface | Check | Result |
+|---|---|---|
+| Source tree | §3 grep 1 (`meghali`, `mekhela`, `mekhla`, `chador`, `saree`, `sari`, `handloom`, `muga`) | 0 lines |
+| Source tree | §3 grep 2 (`silk`) | 0 lines |
+| Source tree | §3 grep 3 (`sualkuchi`, `galleria`, the two old domains, `gamosa`, `blouse`, the five old Cloudinary versions, `placehold.co`) | 0 lines |
+| Source tree | §3 grep 4 (`kolkata` outside `Asia/Kolkata`) | 0 lines |
+| Source tree | §1 identifier sweep (29 names) | every brand-bound name at 0; the constants kept by name (`SUPPORT_*`, `SOCIAL_LINKS`, `APP_TAGLINE/DESCRIPTION`, `FAQ_ITEMS`) all read through `brand.js`, and two names survive only in comments recording their deletion — see §1 |
+| `build/` | the consolidated brand grep after `CI=true npm run build` | 0 files |
+| `build/static/js` | `{{TOKEN}}` inventory | 18 tokens, **every one a row of `PLACEHOLDERS.md`** |
+| `db.json` | Prompt 06 seed validation + the brand/asset/Kolkata rules; 48/48 seeded asset URLs answer a ranged GET | PASS |
+| `public/` | icon sizes (16/32/48/180/192/512/512), every icon byte-different from the pre-rebuild artwork, no unreferenced file | PASS |
+| Running app | 45 routes × 2 viewports (390 / 1280): `document.body.innerText.includes("{{")` and `v17875924` in the DOM | false everywhere |
+
+**The two things Prompt 36 changed rather than merely confirmed**, both because a
+literal placeholder must not ship in a crawled surface:
+
+- `public/index.html` — the `og:url` and `twitter:url` tags carried
+  `https://{{LAMIKAA_DOMAIN}}/`. `brand.seo.siteUrl` is still unresolved, so both
+  tags were **removed**. `useSeo` writes `og:url` and `<link rel=canonical>` on
+  every route from `seoOrigin()`, which returns the real domain the moment
+  `brand.seo.siteUrl` stops being a placeholder, so nothing is lost.
+- `public/robots.txt` — the `Sitemap:` line pointed at the same unresolved host
+  and was **dropped**. Prompt 38 writes `public/sitemap.xml` only once the domain
+  is named and re-adds the line with the real host then.
