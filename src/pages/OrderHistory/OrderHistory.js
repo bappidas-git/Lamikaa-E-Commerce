@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../hooks/useAuth";
@@ -8,13 +8,39 @@ import {
   formatCurrency,
   formatDate,
   normalizeOrderAddress,
-  onImageError,
-  PLACEHOLDER_IMG,
 } from "../../utils/helpers";
 import ReviewModal from "../../components/ReviewModal/ReviewModal";
+import {
+  Button,
+  Chip,
+  CloudinaryImage,
+  GlassCard,
+  SectionHeading,
+} from "../../components/ui";
+import { orderStatusInfo } from "../../utils/orderStatus";
+import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import { ROUTES } from "../../utils/constants";
 import useSeo from "../../hooks/useSeo";
 import styles from "./OrderHistory.module.css";
+
+// =============================================================================
+// /orders — the ledger
+// =============================================================================
+//
+// Every order the customer has placed, newest first: searchable by number,
+// filtered by the five states, five to a page. Each record is a `GlassCard`
+// carrying its number, its date, its status chip, a strip of the pieces it
+// contains, the three-step passage it is on, and the actions still open to it —
+// cancel, return, reorder, tracking, details.
+//
+// WHAT PROMPT 30 CHANGED, AND ONLY THIS: the look, plus two facts that had been
+// written down twice. `deriveOrderStatus`/`STATUS_CONFIG` now live in
+// `utils/orderStatus` (the account dashboard reads the same module, so the two
+// screens cannot disagree about one order), and the return window is
+// `STOREFRONT_CONFIG.returnsWindowDays` — the same number the PDP's "Easy
+// returns" badge and the Delivery & Returns panel print. Every handler, guard,
+// fetch and payload is otherwise untouched.
+// =============================================================================
 
 // Short, privacy-friendly display name for a review, e.g. "Bappi D." — matches
 // the style of the seeded reviews.
@@ -32,50 +58,18 @@ const reviewDisplayName = (user) => {
 const DANGER_HEX = "#FF8A80";
 
 const REVIEW_STATUS = {
-  pending: { label: "Review pending approval", className: "reviewPending" },
-  approved: { label: "Review published", className: "reviewApproved" },
-  rejected: { label: "Review not approved", className: "reviewRejected" },
-};
-
-const STATUS_CONFIG = {
-  processing: { label: "Processing", className: "statusProcessing" },
-  shipped: { label: "Shipped", className: "statusShipped" },
-  delivered: { label: "Delivered", className: "statusDelivered" },
-  cancelled: { label: "Cancelled", className: "statusCancelled" },
-  returned: { label: "Returned", className: "statusCancelled" },
-  pending: { label: "Processing", className: "statusProcessing" },
-  completed: { label: "Delivered", className: "statusDelivered" },
-  failed: { label: "Cancelled", className: "statusCancelled" },
-  refunded: { label: "Cancelled", className: "statusCancelled" },
+  pending: { label: "Review pending approval", tone: "warning" },
+  approved: { label: "Review published", tone: "success" },
+  rejected: { label: "Review not approved", tone: "danger" },
 };
 
 const FILTER_OPTIONS = ["All", "Processing", "Shipped", "Delivered", "Cancelled"];
 const ORDERS_PER_PAGE = 5;
-const RETURN_WINDOW_DAYS = 7; // per the 7-day return policy (/policies/shipping-returns)
+// ONE source for the window (Prompt 30). It was a local `7` here and a
+// `returnsWindowDays: 7` in theme/tokens.js — two numbers for one policy, and
+// the badge on the product page was already reading the other one.
+const RETURN_WINDOW_DAYS = STOREFRONT_CONFIG.returnsWindowDays;
 const TIMELINE_STEPS = ["Placed", "Shipped", "Delivered"];
-
-// Orders carry paymentStatus / fulfillmentStatus / shippingStatus (the shape
-// checkout writes and Admin manages) — collapse those into the single display
-// status this page badges and filters by. A legacy `status` field is only
-// honoured when none of the canonical fields exist.
-const deriveOrderStatus = (order) => {
-  if (order.paymentStatus || order.fulfillmentStatus || order.shippingStatus) {
-    // A returned order is its own outcome — show it honestly rather than
-    // collapsing it into "Cancelled" (full refund) or "Delivered" (partial).
-    if (order.fulfillmentStatus === "returned") return "returned";
-    if (
-      order.fulfillmentStatus === "cancelled" ||
-      order.paymentStatus === "failed" ||
-      order.paymentStatus === "refunded"
-    ) {
-      return "cancelled";
-    }
-    if (order.shippingStatus === "delivered") return "delivered";
-    if (order.shippingStatus === "shipped") return "shipped";
-    return "processing";
-  }
-  return order.status || "processing";
-};
 
 /* ------------------------------------------------------------------ */
 /*  Marks — hairline line art, never a filled icon                     */
@@ -161,55 +155,35 @@ const IconStar = ({ size = 13 }) => (
   </svg>
 );
 
-// The ledger mark — a bound page with three ruled lines and one gold rule.
-const LedgerMark = () => (
+// The empty mark — a shopping bag in one hairline, with a gold handle.
+const BagMark = () => (
   <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true" focusable="false">
     <path
-      d="M18 10h30a4 4 0 014 4v48l-7-4-6 4-6-4-6 4-6-4-7 4V14a4 4 0 014-4z"
+      d="M18 24h36l-3.4 34a4 4 0 01-4 3.6H25.4a4 4 0 01-4-3.6L18 24z"
       stroke="currentColor"
       strokeWidth="1.2"
       strokeLinejoin="round"
     />
-    <line x1="26" y1="26" x2="46" y2="26" stroke="currentColor" strokeWidth="1.2" />
-    <line x1="26" y1="34" x2="46" y2="34" stroke="currentColor" strokeWidth="1.2" />
-    <line
-      x1="26"
-      y1="42"
-      x2="38"
-      y2="42"
+    <path
+      d="M28 28v-6a8 8 0 0116 0v6"
       stroke="var(--sf-color-gold)"
       strokeWidth="1.2"
+      strokeLinecap="round"
     />
   </svg>
 );
 
-// The signed-out mark — the same bound page, closed, with a gold keyhole.
+// The signed-out mark — the same bag, closed, with a gold keyhole.
 const SealedMark = () => (
   <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true" focusable="false">
-    <rect
-      x="16"
-      y="10"
-      width="40"
-      height="52"
-      rx="4"
-      stroke="currentColor"
-      strokeWidth="1.2"
-    />
+    <rect x="16" y="10" width="40" height="52" rx="4" stroke="currentColor" strokeWidth="1.2" />
     <path
       d="M29 34v-5a7 7 0 0114 0v5"
       stroke="var(--sf-color-gold)"
       strokeWidth="1.2"
       strokeLinecap="round"
     />
-    <rect
-      x="26"
-      y="34"
-      width="20"
-      height="15"
-      rx="2"
-      stroke="currentColor"
-      strokeWidth="1.2"
-    />
+    <rect x="26" y="34" width="20" height="15" rx="2" stroke="currentColor" strokeWidth="1.2" />
   </svg>
 );
 
@@ -223,7 +197,7 @@ const AlertMark = () => (
 
 const OrderHistory = () => {
   useSeo({
-    title: "Orders",
+    title: "Your orders",
     description: "Track your LAMIKAA Naturals orders, returns and refunds.",
     noindex: true,
   });
@@ -294,12 +268,8 @@ const OrderHistory = () => {
     }
   };
 
-  const getStatusInfo = (status) => {
-    return STATUS_CONFIG[status] || STATUS_CONFIG.processing;
-  };
-
   const isReturnEligible = (order) => {
-    if (deriveOrderStatus(order) !== "delivered") return false;
+    if (orderStatusInfo(order).status !== "delivered") return false;
     // The window starts when the parcel arrived: deliveredAt when recorded,
     // else updatedAt (bumped by the delivered status change) — never
     // createdAt, which would open the window before delivery.
@@ -311,12 +281,12 @@ const OrderHistory = () => {
 
   // Orders can be cancelled until they ship — i.e. while the derived status
   // is still "processing" (covers pending-payment and unfulfilled orders).
-  const isCancellable = (order) => deriveOrderStatus(order) === "processing";
+  const isCancellable = (order) => orderStatusInfo(order).status === "processing";
 
   // Purchase-gated reviews: a product is reviewable only from an order the
   // customer kept — derived status "delivered" (delivered, and NOT cancelled,
   // returned or refunded).
-  const isReviewable = (order) => deriveOrderStatus(order) === "delivered";
+  const isReviewable = (order) => orderStatusInfo(order).status === "delivered";
 
   // Reorder re-adds the order's lines through the cart. An item can only be
   // re-added when it carries a productId (the key the cart lines on). We don't
@@ -475,7 +445,7 @@ const OrderHistory = () => {
   };
 
   const filteredOrders = orders.filter((order) => {
-    const statusInfo = getStatusInfo(deriveOrderStatus(order));
+    const statusInfo = orderStatusInfo(order);
     const matchesFilter =
       activeFilter === "All" ||
       statusInfo.label.toLowerCase() === activeFilter.toLowerCase();
@@ -506,7 +476,9 @@ const OrderHistory = () => {
   // The page shell, so every state below is framed the same way.
   const shell = (children) => (
     <div className={styles.page}>
-      <div className={styles.container}>{children}</div>
+      <section className="sf-section">
+        <div className="sf-container">{children}</div>
+      </section>
     </div>
   );
 
@@ -533,643 +505,645 @@ const OrderHistory = () => {
   );
 
   const statusChip = (statusInfo) => (
-    <span className={`${styles.chip} ${styles[statusInfo.className]}`}>
-      <span className={styles.chipDot} aria-hidden="true" />
+    <Chip variant="status" tone={statusInfo.tone}>
       {statusInfo.label}
-    </span>
+    </Chip>
   );
 
   // Not authenticated — show the sign-in invitation (only once the session
   // restore has settled, so a reload while logged in doesn't flash this screen)
   if (!authLoading && !isAuthenticated) {
     return shell(
-      <div className={styles.state}>
-        <div className={styles.stateMark}>
-          <SealedMark />
-        </div>
-        <p className={styles.stateEyebrow}>Your account</p>
-        <h1 className={styles.stateTitle}>Your orders live here</h1>
-        <p className={styles.stateText}>
-          Sign in and every piece you have ordered — placed, on its way or
-          delivered — is waiting on this page, with its tracking and its papers.
-        </p>
-        <div className={styles.stateActions}>
-          <button
-            type="button"
-            className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
-            onClick={() => openAuthModal("login")}
-          >
-            Sign In
-          </button>
-          <Link to="/" className={`sf-btn sf-btn--ghost ${styles.stateBtn}`}>
-            Back to Home
-          </Link>
-        </div>
-      </div>
+      <>
+        <SectionHeading
+          as="h1"
+          eyebrow="Your account"
+          title="Your orders"
+          lede="Sign in and every order you have placed — on its way or delivered — is waiting on this page, with its tracking and its papers."
+        />
+        <GlassCard padding="lg" glow="gold" className={styles.state}>
+          <span className={styles.stateMark}>
+            <SealedMark />
+          </span>
+          <p className={styles.stateTitle}>Your orders live here</p>
+          <div className={styles.stateActions}>
+            <Button variant="primary" onClick={() => openAuthModal("login")}>
+              Sign in
+            </Button>
+            <Button variant="secondary" to={ROUTES.SHOP}>
+              Continue shopping
+            </Button>
+          </div>
+        </GlassCard>
+      </>
     );
   }
 
   return (
     <div className={styles.page}>
-      <div className={styles.container}>
-        {/* ── The head ─────────────────────────────────────────────────── */}
-        <header className={styles.head}>
-          <div className={styles.headText}>
-            <p className={styles.eyebrow}>Your account</p>
-            <h1 className={styles.title}>Order History</h1>
-            {!loading && !fetchError && (
-              <p className={styles.countLine}>
-                {filteredOrders.length} order{filteredOrders.length !== 1 ? "s" : ""}
-                {activeFilter !== "All" || searchQuery ? " matching" : " on record"}.
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            className={styles.refreshBtn}
-            onClick={fetchOrders}
-            disabled={loading}
-            aria-label="Refresh orders"
-            title="Refresh orders"
-          >
-            <IconRefresh size={16} className={loading ? styles.spinning : undefined} />
-          </button>
-        </header>
-
-        {/* ── Search & filters ─────────────────────────────────────────── */}
-        <div className={styles.controls}>
-          <div className={styles.search}>
-            <IconSearch size={16} className={styles.searchIcon} />
-            <input
-              type="text"
-              className={styles.searchInput}
-              placeholder="Search by order number"
-              aria-label="Search by order number"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className={styles.clearSearch}
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-              >
-                <IconClose size={15} />
-              </button>
-            )}
-          </div>
-          <div className={styles.tabs} role="group" aria-label="Filter orders by status">
-            {FILTER_OPTIONS.map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                className={`sf-chip ${styles.tab} ${activeFilter === filter ? "sf-chip--active" : ""}`}
-                onClick={() => setActiveFilter(filter)}
-                aria-pressed={activeFilter === filter}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Loading — the list's own silhouette ──────────────────────── */}
-        {loading && (
-          <div className={styles.skeletonList} aria-busy="true" aria-live="polite">
-            <p className={styles.srOnly}>Loading your orders…</p>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className={styles.skeletonCard}>
-                <div className={styles.skeletonRow}>
-                  <span
-                    className={`sf-skeleton ${styles.skeletonLine}`}
-                    style={{ width: "11rem" }}
-                  />
-                  <span
-                    className={`sf-skeleton ${styles.skeletonLine}`}
-                    style={{ width: "6rem", marginLeft: "auto" }}
-                  />
-                </div>
-                <div className={styles.skeletonRow}>
-                  <span className={`sf-skeleton ${styles.skeletonPlate}`} />
-                  <span className={`sf-skeleton ${styles.skeletonPlate}`} />
-                  <span
-                    className={`sf-skeleton ${styles.skeletonLine}`}
-                    style={{ width: "7rem", marginLeft: "auto" }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Error — a failed fetch never masquerades as an empty ledger ── */}
-        {!loading && fetchError && (
-          <div className={styles.state}>
-            <div className={styles.stateMark}>
-              <AlertMark />
-            </div>
-            <h2 className={styles.stateTitle}>We couldn't reach your orders</h2>
-            <p className={styles.stateText}>
-              Something went wrong while fetching them. Check your connection and
-              try again — nothing has been lost.
-            </p>
-            <div className={styles.stateActions}>
-              <button
-                type="button"
-                className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
+      <section className="sf-section">
+        <div className="sf-container">
+          {/* ── The head ─────────────────────────────────────────────────── */}
+          <SectionHeading
+            as="h1"
+            eyebrow="Your account"
+            title="Your orders"
+            lede={
+              !loading && !fetchError
+                ? `${filteredOrders.length} order${filteredOrders.length !== 1 ? "s" : ""}${
+                    activeFilter !== "All" || searchQuery ? " matching" : " on record"
+                  }.`
+                : undefined
+            }
+            actions={
+              <Button
+                variant="icon"
+                srLabel="Refresh orders"
                 onClick={fetchOrders}
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        )}
+                disabled={loading}
+                title="Refresh orders"
+                icon={<IconRefresh size={16} className={loading ? styles.spinning : undefined} />}
+              />
+            }
+          />
 
-        {/* ── Empty ───────────────────────────────────────────────────── */}
-        {!loading && !fetchError && filteredOrders.length === 0 && orders.length === 0 && (
-          <div className={styles.state}>
-            <div className={styles.stateMark}>
-              <LedgerMark />
-            </div>
-            <h2 className={styles.stateTitle}>No orders yet</h2>
-            <p className={styles.stateText}>
-              Your ledger opens with the first piece you take home. Muga, Pat and
-              Eri — woven in Assam, and waiting.
-            </p>
-            <div className={styles.stateActions}>
-              <button
-                type="button"
-                className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
-                onClick={() => navigate("/")}
-              >
-                Start Shopping
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── No matches ──────────────────────────────────────────────── */}
-        {!loading && !fetchError && filteredOrders.length === 0 && orders.length > 0 && (
-          <div className={styles.state}>
-            <h2 className={styles.stateTitle}>No matching orders</h2>
-            <p className={styles.stateText}>
-              Nothing on record answers to that search or filter. Widen it and
-              your orders come back.
-            </p>
-            <div className={styles.stateActions}>
-              <button
-                type="button"
-                className={`sf-btn sf-btn--outline-gold ${styles.stateBtn}`}
-                onClick={() => {
-                  setSearchQuery("");
-                  setActiveFilter("All");
-                }}
-              >
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── The records ─────────────────────────────────────────────── */}
-        {!loading && paginatedOrders.length > 0 && (
-          <div className={styles.list}>
-            {paginatedOrders.map((order, index) => {
-              const derived = deriveOrderStatus(order);
-              const statusInfo = getStatusInfo(derived);
-              const orderItems = order.items || [];
-              const orderKey = order.id || order.orderNumber;
-              const orderRef = order.orderNumber || `#${order.id}`;
-              const copyRef = order.orderNumber || order.id;
-              const visibleItems = orderItems.slice(0, 3);
-              const remainingCount = orderItems.length - 3;
-              const isExpanded = expandedOrder === orderKey;
-              const showTracking = trackingVisible === orderKey;
-              const showPassage = derived !== "cancelled" && derived !== "returned";
-              const stageIndex = derived === "delivered" ? 2 : derived === "shipped" ? 1 : 0;
-              const addr = normalizeOrderAddress(order.shippingAddress);
-              const canReorder = reorderableItems(order).length > 0;
-
-              return (
-                <article
-                  key={orderKey}
-                  className={styles.record}
-                  style={{ animationDelay: `${Math.min(index, 4) * 60}ms` }}
-                  aria-label={`Order ${orderRef}`}
+          {/* ── Search & filters ─────────────────────────────────────────── */}
+          <div className={styles.controls}>
+            <div className={`sf-glass ${styles.search}`}>
+              <IconSearch size={16} className={styles.searchIcon} />
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Search by order number"
+                aria-label="Search by order number"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className={styles.clearSearch}
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
                 >
-                  {/* Identity */}
-                  <div className={styles.recordHead}>
-                    <div className={styles.identity}>
-                      <div className={styles.numberRow}>
-                        <span className={styles.number}>{orderRef}</span>
-                        {copyControl(copyRef, "order number")}
-                      </div>
-                      <p className={styles.meta}>
-                        {formatDate(order.createdAt)}
-                        <span className={styles.metaSep} aria-hidden="true">
-                          /
-                        </span>
-                        {orderItems.length} item{orderItems.length !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    {statusChip(statusInfo)}
+                  <IconClose size={15} />
+                </button>
+              )}
+            </div>
+            <div className={styles.tabs} role="group" aria-label="Filter orders by status">
+              {FILTER_OPTIONS.map((filter) => (
+                <Chip
+                  key={filter}
+                  as="button"
+                  variant="glass"
+                  active={activeFilter === filter}
+                  className={styles.tab}
+                  onClick={() => setActiveFilter(filter)}
+                  aria-pressed={activeFilter === filter}
+                >
+                  {filter}
+                </Chip>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Loading — the list's own silhouette ──────────────────────── */}
+          {loading && (
+            <div className={styles.list} aria-busy="true" aria-live="polite">
+              <p className="sf-visually-hidden">Loading your orders…</p>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <GlassCard key={i} padding="lg" className={styles.skeletonCard}>
+                  <div className={styles.skeletonRow}>
+                    <span className={`sf-skeleton ${styles.skeletonLine}`} style={{ width: "11rem" }} />
+                    <span className={`sf-skeleton ${styles.skeletonLine}`} style={{ width: "6rem", marginLeft: "auto" }} />
                   </div>
-
-                  {/* The pieces, and the total */}
-                  <div className={styles.pieces}>
-                    <div className={styles.plates}>
-                      {visibleItems.map((item, i) => (
-                        <span key={i} className={styles.plate}>
-                          <img
-                            src={item.image || PLACEHOLDER_IMG}
-                            alt={item.name || "Product"}
-                            loading="lazy"
-                            onError={onImageError}
-                          />
-                        </span>
-                      ))}
-                      {remainingCount > 0 && (
-                        <span className={styles.plateMore}>+{remainingCount} more</span>
-                      )}
-                    </div>
-                    <p className={styles.total}>
-                      <span className={styles.totalLabel}>Total</span>
-                      <span className={styles.totalValue}>{formatCurrency(order.total)}</span>
-                    </p>
+                  <div className={styles.skeletonRow}>
+                    <span className={`sf-skeleton ${styles.skeletonPlate}`} />
+                    <span className={`sf-skeleton ${styles.skeletonPlate}`} />
+                    <span className={`sf-skeleton ${styles.skeletonLine}`} style={{ width: "7rem", marginLeft: "auto" }} />
                   </div>
+                </GlassCard>
+              ))}
+            </div>
+          )}
 
-                  {/* The passage — hidden for a cancelled or returned order,
-                      where the chip has already said the outcome. */}
-                  {showPassage && (
-                    <div className={styles.passage}>
-                      <p className={styles.srOnly}>
-                        {`Progress: stage ${stageIndex + 1} of 3. ` +
-                          TIMELINE_STEPS.map(
-                            (label, i) => `${label}: ${i <= stageIndex ? "done" : "not yet"}`
-                          ).join(". ")}
-                      </p>
-                      <div className={styles.track} aria-hidden="true">
-                        {TIMELINE_STEPS.map((label, i) => (
-                          <React.Fragment key={label}>
-                            {i > 0 && (
-                              <span
-                                className={`${styles.rail} ${i <= stageIndex ? styles.railDone : ""}`}
-                              />
-                            )}
-                            <span className={styles.stage}>
-                              <span
-                                className={`${styles.node} ${i <= stageIndex ? styles.nodeDone : ""}`}
-                              />
-                              <span
-                                className={`${styles.stageLabel} ${i <= stageIndex ? styles.stageLabelDone : ""}`}
-                              >
-                                {label}
-                              </span>
-                            </span>
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+          {/* ── Error — a failed fetch never masquerades as an empty ledger ── */}
+          {!loading && fetchError && (
+            <GlassCard padding="lg" className={styles.state}>
+              <span className={styles.stateMark}>
+                <AlertMark />
+              </span>
+              <h2 className={styles.stateTitle}>We couldn't reach your orders</h2>
+              <p className={styles.stateText}>
+                Something went wrong while fetching them. Check your connection and
+                try again — nothing has been lost.
+              </p>
+              <div className={styles.stateActions}>
+                <Button variant="primary" onClick={fetchOrders}>
+                  Try again
+                </Button>
+              </div>
+            </GlassCard>
+          )}
 
-                  {/* Actions */}
-                  <div className={styles.actions}>
-                    {isCancellable(order) && (
-                      <button
-                        type="button"
-                        className={`${styles.action} ${styles.actionDanger}`}
-                        onClick={() => handleCancelOrder(order)}
-                        disabled={cancellingId !== null}
-                      >
-                        {cancellingId === order.id ? (
-                          <>
-                            <span className={styles.btnSpinner} aria-hidden="true" />
-                            Cancelling…
-                          </>
-                        ) : (
-                          "Cancel Order"
-                        )}
-                      </button>
-                    )}
-                    {isReturnEligible(order) && (
-                      <button
-                        type="button"
-                        className={`${styles.action} ${styles.actionAccent}`}
-                        onClick={() => navigate(ROUTES.CONTACT)}
-                      >
-                        Return / Exchange
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className={styles.action}
-                      onClick={() => handleReorder(order)}
-                      disabled={reorderingId !== null || !canReorder}
-                      title={
-                        canReorder
-                          ? "Add these items to your cart again"
-                          : "These items can't be re-added to the cart"
-                      }
-                    >
-                      {reorderingId === order.id ? (
-                        <>
-                          <span className={styles.btnSpinner} aria-hidden="true" />
-                          Adding…
-                        </>
-                      ) : (
-                        "Reorder"
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.action} ${showTracking ? styles.actionOpen : ""}`}
-                      onClick={() => setTrackingVisible(showTracking ? null : orderKey)}
-                      aria-expanded={showTracking}
-                      aria-controls={`tracking-${orderKey}`}
-                    >
-                      Tracking
-                      <IconChevron
-                        size={14}
-                        className={`${styles.chevron} ${showTracking ? styles.chevronUp : ""}`}
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.action} ${isExpanded ? styles.actionOpen : ""}`}
-                      onClick={() => setExpandedOrder(isExpanded ? null : orderKey)}
-                      aria-expanded={isExpanded}
-                      aria-controls={`details-${orderKey}`}
-                    >
-                      Details
-                      <IconChevron
-                        size={14}
-                        className={`${styles.chevron} ${isExpanded ? styles.chevronUp : ""}`}
-                      />
-                    </button>
-                  </div>
+          {/* ── Empty ───────────────────────────────────────────────────── */}
+          {!loading && !fetchError && filteredOrders.length === 0 && orders.length === 0 && (
+            <GlassCard padding="lg" glow="gold" className={styles.state}>
+              <span className={styles.stateMark}>
+                <BagMark />
+              </span>
+              <h2 className={styles.stateTitle}>No orders yet</h2>
+              <p className={styles.stateText}>
+                Your first ritual opens this page. Everything you order is
+                recorded here, with its tracking and its papers.
+              </p>
+              <div className={styles.stateActions}>
+                <Button variant="primary" to={ROUTES.SHOP}>
+                  Start shopping
+                </Button>
+              </div>
+            </GlassCard>
+          )}
 
-                  {/* Drawer — tracking */}
-                  <div
-                    id={`tracking-${orderKey}`}
-                    className={`${styles.drawer} ${showTracking ? styles.drawerOpen : ""}`}
+          {/* ── No matches ──────────────────────────────────────────────── */}
+          {!loading && !fetchError && filteredOrders.length === 0 && orders.length > 0 && (
+            <GlassCard padding="lg" className={styles.state}>
+              <h2 className={styles.stateTitle}>No matching orders</h2>
+              <p className={styles.stateText}>
+                Nothing on record answers to that search or filter. Widen it and
+                your orders come back.
+              </p>
+              <div className={styles.stateActions}>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setActiveFilter("All");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              </div>
+            </GlassCard>
+          )}
+
+          {/* ── The records ─────────────────────────────────────────────── */}
+          {!loading && paginatedOrders.length > 0 && (
+            <div className={styles.list}>
+              {paginatedOrders.map((order) => {
+                const statusInfo = orderStatusInfo(order);
+                const derived = statusInfo.status;
+                const orderItems = order.items || [];
+                const orderKey = order.id || order.orderNumber;
+                const orderRef = order.orderNumber || `#${order.id}`;
+                const copyRef = order.orderNumber || order.id;
+                const visibleItems = orderItems.slice(0, 3);
+                const remainingCount = orderItems.length - 3;
+                const isExpanded = expandedOrder === orderKey;
+                const showTracking = trackingVisible === orderKey;
+                const showPassage = derived !== "cancelled" && derived !== "returned";
+                const stageIndex = derived === "delivered" ? 2 : derived === "shipped" ? 1 : 0;
+                const addr = normalizeOrderAddress(order.shippingAddress);
+                const canReorder = reorderableItems(order).length > 0;
+
+                return (
+                  <GlassCard
+                    key={orderKey}
+                    as="article"
+                    padding="none"
+                    className={styles.record}
+                    aria-label={`Order ${orderRef}`}
                   >
-                    <div className={styles.drawerPane}>
-                      <div className={styles.drawerInner}>
-                        <div className={styles.trackRow}>
-                          <span className={styles.trackLabel}>Tracking number</span>
-                          {order.trackingNumber ? (
-                            <>
-                              <span className={`${styles.trackValue} ${styles.trackMono}`}>
-                                {order.trackingNumber}
-                              </span>
-                              {copyControl(order.trackingNumber, "tracking number")}
-                            </>
-                          ) : (
-                            <span className={`${styles.trackValue} ${styles.trackMuted}`}>
-                              Not yet available
+                    <div className={styles.recordBody}>
+                      {/* Identity */}
+                      <div className={styles.recordHead}>
+                        <div className={styles.identity}>
+                          <div className={styles.numberRow}>
+                            <span className={styles.number}>{orderRef}</span>
+                            {copyControl(copyRef, "order number")}
+                          </div>
+                          <p className={styles.meta}>
+                            {formatDate(order.createdAt)}
+                            <span className={styles.metaSep} aria-hidden="true">
+                              /
                             </span>
+                            {orderItems.length} item{orderItems.length !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+                        {statusChip(statusInfo)}
+                      </div>
+
+                      {/* The pieces, and the total */}
+                      <div className={styles.pieces}>
+                        <div className={styles.plates}>
+                          {visibleItems.map((item, i) => (
+                            <CloudinaryImage
+                              key={i}
+                              src={item.image}
+                              alt={item.name || "Product"}
+                              plate
+                              ar="1:1"
+                              pad
+                              aspectRatio="1 / 1"
+                              widths={[112, 168, 224]}
+                              sizes="56px"
+                              className={styles.plate}
+                            />
+                          ))}
+                          {remainingCount > 0 && (
+                            <span className={styles.plateMore}>+{remainingCount} more</span>
                           )}
                         </div>
-                        {order.trackingUrl && (
-                          <div className={styles.trackRow}>
-                            <span className={styles.trackLabel}>Carrier</span>
-                            <a
-                              href={order.trackingUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={styles.trackLink}
-                            >
-                              <IconExternal size={14} />
-                              Open carrier tracking page
-                              <span className={styles.srOnly}>(opens in a new tab)</span>
-                            </a>
-                          </div>
-                        )}
-                        <div className={styles.trackRow}>
-                          <span className={styles.trackLabel}>Status</span>
-                          {statusChip(statusInfo)}
-                        </div>
-                        {order.refundStatus && (
-                          <div className={styles.trackRow}>
-                            <span className={styles.trackLabel}>Refund</span>
-                            <span
-                              className={`${styles.refundLine} ${
-                                order.refundStatus === "completed"
-                                  ? styles.refundOk
-                                  : order.refundStatus === "processing"
-                                  ? styles.refundPending
-                                  : order.refundStatus === "failed"
-                                  ? styles.refundFailed
-                                  : ""
-                              }`}
-                            >
-                              {order.refundStatus === "completed"
-                                ? `Refunded${order.refundedAmount ? ` ${formatCurrency(order.refundedAmount)}` : ""} to your ${(order.refundMethod || "original payment").replace(/_/g, " ")}`
-                                : order.refundStatus === "processing"
-                                ? "Refund in progress — typically 5–7 business days"
-                                : order.refundStatus === "failed"
-                                ? "Refund delayed — our team is on it"
-                                : order.refundStatus}
-                            </span>
-                          </div>
-                        )}
+                        <p className={styles.total}>
+                          <span className={styles.totalLabel}>Total</span>
+                          <span className={styles.totalValue}>{formatCurrency(order.total)}</span>
+                        </p>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Drawer — the full record */}
-                  <div
-                    id={`details-${orderKey}`}
-                    className={`${styles.drawer} ${isExpanded ? styles.drawerOpen : ""}`}
-                  >
-                    <div className={styles.drawerPane}>
-                      <div className={`${styles.drawerInner} ${styles.detailGrid}`}>
-                        <div className={styles.detailCol}>
-                          <section>
-                            <h3 className={styles.blockTitle}>Items ordered</h3>
-                            <ul className={styles.lines}>
-                              {orderItems.map((item, i) => {
-                                const existing =
-                                  item.productId != null ? reviewFor(item.productId) : null;
-                                const sc = existing ? REVIEW_STATUS[existing.status] : null;
-                                return (
-                                  <li key={i} className={styles.line}>
-                                    <span className={styles.lineThumb}>
-                                      <img
-                                        src={item.image || PLACEHOLDER_IMG}
-                                        alt={item.name || "Product"}
-                                        loading="lazy"
-                                        onError={onImageError}
-                                      />
-                                    </span>
-                                    <div className={styles.lineBody}>
-                                      <p className={styles.lineName}>{item.name}</p>
-                                      {item.variantName && (
-                                        <span className={styles.lineVariant}>
-                                          {item.variantName}
-                                        </span>
-                                      )}
-                                      <span className={styles.lineQty}>
-                                        Qty {item.quantity}
-                                      </span>
-                                      {isReviewable(order) && item.productId != null && (
-                                        <div className={styles.reviewControl}>
-                                          <button
-                                            type="button"
-                                            className={styles.reviewBtn}
-                                            onClick={() => openReviewModal(order, item)}
-                                          >
-                                            <span className={styles.reviewStar}>
-                                              <IconStar />
-                                            </span>
-                                            {existing ? "Edit review" : "Rate & review"}
-                                          </button>
-                                          {existing && sc && (
-                                            <span
-                                              className={`${styles.chip} ${styles[sc.className]}`}
-                                            >
-                                              <span
-                                                className={styles.chipDot}
-                                                aria-hidden="true"
-                                              />
-                                              {sc.label}
-                                            </span>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <span className={styles.linePrice}>
-                                      {formatCurrency(item.price * item.quantity, item.currency)}
-                                    </span>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </section>
-                        </div>
-
-                        <div className={styles.detailCol}>
-                          <section>
-                            <h3 className={styles.blockTitle}>Shipping address</h3>
-                            {addr ? (
-                              <>
-                                {addr.name && <p className={styles.addrName}>{addr.name}</p>}
-                                {addr.line1 && <p className={styles.addrLine}>{addr.line1}</p>}
-                                {addr.line2 && <p className={styles.addrLine}>{addr.line2}</p>}
-                                {addr.cityLine && (
-                                  <p className={styles.addrLine}>{addr.cityLine}</p>
+                      {/* The passage — hidden for a cancelled or returned order,
+                          where the chip has already said the outcome. */}
+                      {showPassage && (
+                        <div className={styles.passage}>
+                          <p className="sf-visually-hidden">
+                            {`Progress: stage ${stageIndex + 1} of 3. ` +
+                              TIMELINE_STEPS.map(
+                                (label, i) => `${label}: ${i <= stageIndex ? "done" : "not yet"}`
+                              ).join(". ")}
+                          </p>
+                          <div className={styles.track} aria-hidden="true">
+                            {TIMELINE_STEPS.map((label, i) => (
+                              <React.Fragment key={label}>
+                                {i > 0 && (
+                                  <span
+                                    className={`${styles.rail} ${i <= stageIndex ? styles.railDone : ""}`}
+                                  />
                                 )}
-                                {addr.country && <p className={styles.addrLine}>{addr.country}</p>}
-                                {addr.phone && <p className={styles.addrPhone}>{addr.phone}</p>}
+                                <span className={styles.stage}>
+                                  <Chip
+                                    variant="step"
+                                    className={`${styles.node} ${i <= stageIndex ? styles.nodeDone : ""}`}
+                                  >
+                                    {i + 1}
+                                  </Chip>
+                                  <span
+                                    className={`${styles.stageLabel} ${i <= stageIndex ? styles.stageLabelDone : ""}`}
+                                  >
+                                    {label}
+                                  </span>
+                                </span>
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className={styles.actions}>
+                        {isCancellable(order) && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className={styles.actionDanger}
+                            onClick={() => handleCancelOrder(order)}
+                            disabled={cancellingId !== null}
+                          >
+                            {cancellingId === order.id ? (
+                              <>
+                                <span className={styles.btnSpinner} aria-hidden="true" />
+                                Cancelling…
                               </>
                             ) : (
-                              <p className={styles.muted}>Shipping address not available</p>
+                              "Cancel order"
                             )}
-                          </section>
+                          </Button>
+                        )}
+                        {isReturnEligible(order) && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className={styles.actionAccent}
+                            onClick={() => navigate(ROUTES.CONTACT)}
+                          >
+                            Return / exchange
+                          </Button>
+                        )}
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleReorder(order)}
+                          disabled={reorderingId !== null || !canReorder}
+                          title={
+                            canReorder
+                              ? "Add these items to your cart again"
+                              : "These items can't be re-added to the cart"
+                          }
+                        >
+                          {reorderingId === order.id ? (
+                            <>
+                              <span className={styles.btnSpinner} aria-hidden="true" />
+                              Adding…
+                            </>
+                          ) : (
+                            "Reorder"
+                          )}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className={showTracking ? styles.actionOpen : undefined}
+                          onClick={() => setTrackingVisible(showTracking ? null : orderKey)}
+                          aria-expanded={showTracking}
+                          aria-controls={`tracking-${orderKey}`}
+                          icon={
+                            <IconChevron
+                              size={14}
+                              className={`${styles.chevron} ${showTracking ? styles.chevronUp : ""}`}
+                            />
+                          }
+                          iconPosition="right"
+                        >
+                          Tracking
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className={isExpanded ? styles.actionOpen : undefined}
+                          onClick={() => setExpandedOrder(isExpanded ? null : orderKey)}
+                          aria-expanded={isExpanded}
+                          aria-controls={`details-${orderKey}`}
+                          icon={
+                            <IconChevron
+                              size={14}
+                              className={`${styles.chevron} ${isExpanded ? styles.chevronUp : ""}`}
+                            />
+                          }
+                          iconPosition="right"
+                        >
+                          Details
+                        </Button>
+                      </div>
+                    </div>
 
-                          <section>
-                            <h3 className={styles.blockTitle}>Payment</h3>
-                            <p className={styles.payMethod}>
-                              {order.paymentMethod
-                                ? order.paymentMethod.replace(/_/g, " ").toUpperCase()
-                                : "N/A"}
-                            </p>
-                            {order.paymentStatus && (
-                              <p className={styles.muted}>
-                                Status: {order.paymentStatus.replace(/_/g, " ")}
-                              </p>
+                    {/* Drawer — tracking */}
+                    <div
+                      id={`tracking-${orderKey}`}
+                      className={`${styles.drawer} ${showTracking ? styles.drawerOpen : ""}`}
+                    >
+                      <div className={styles.drawerPane}>
+                        <div className={styles.drawerInner}>
+                          <div className={styles.trackRow}>
+                            <span className={styles.trackLabel}>Tracking number</span>
+                            {order.trackingNumber ? (
+                              <>
+                                <span className={`${styles.trackValue} ${styles.trackMono}`}>
+                                  {order.trackingNumber}
+                                </span>
+                                {copyControl(order.trackingNumber, "tracking number")}
+                              </>
+                            ) : (
+                              <span className={`${styles.trackValue} ${styles.trackMuted}`}>
+                                Not yet available
+                              </span>
                             )}
-                          </section>
-
-                          <section>
-                            <h3 className={styles.blockTitle}>Order summary</h3>
-                            <dl className={styles.ledger}>
-                              <div className={styles.ledgerRow}>
-                                <dt>Subtotal</dt>
-                                <dd>{formatCurrency(order.subtotal)}</dd>
-                              </div>
-                              {(order.discountAmount ?? 0) > 0 && (
-                                <div className={`${styles.ledgerRow} ${styles.ledgerDiscount}`}>
-                                  <dt>
-                                    Discount{order.couponCode ? ` (${order.couponCode})` : ""}
-                                  </dt>
-                                  <dd>-{formatCurrency(order.discountAmount)}</dd>
-                                </div>
-                              )}
-                              <div className={styles.ledgerRow}>
-                                <dt>Shipping</dt>
-                                <dd>
-                                  {(order.shippingAmount ?? order.shipping ?? 0) > 0
-                                    ? formatCurrency(order.shippingAmount ?? order.shipping)
-                                    : "FREE"}
-                                </dd>
-                              </div>
-                              <div className={styles.ledgerRow}>
-                                <dt>Tax</dt>
-                                <dd>{formatCurrency(order.taxAmount ?? order.tax ?? 0)}</dd>
-                              </div>
-                              <div className={`${styles.ledgerRow} ${styles.ledgerTotal}`}>
-                                <dt>Total</dt>
-                                <dd>{formatCurrency(order.total)}</dd>
-                              </div>
-                            </dl>
-                          </section>
+                          </div>
+                          {order.trackingUrl && (
+                            <div className={styles.trackRow}>
+                              <span className={styles.trackLabel}>Carrier</span>
+                              <a
+                                href={order.trackingUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.trackLink}
+                              >
+                                <IconExternal size={14} />
+                                Open carrier tracking page
+                                <span className="sf-visually-hidden">(opens in a new tab)</span>
+                              </a>
+                            </div>
+                          )}
+                          <div className={styles.trackRow}>
+                            <span className={styles.trackLabel}>Status</span>
+                            {statusChip(statusInfo)}
+                          </div>
+                          {order.refundStatus && (
+                            <div className={styles.trackRow}>
+                              <span className={styles.trackLabel}>Refund</span>
+                              <span
+                                className={`${styles.refundLine} ${
+                                  order.refundStatus === "completed"
+                                    ? styles.refundOk
+                                    : order.refundStatus === "processing"
+                                    ? styles.refundPending
+                                    : order.refundStatus === "failed"
+                                    ? styles.refundFailed
+                                    : ""
+                                }`}
+                              >
+                                {order.refundStatus === "completed"
+                                  ? `Refunded${order.refundedAmount ? ` ${formatCurrency(order.refundedAmount)}` : ""} to your ${(order.refundMethod || "original payment").replace(/_/g, " ")}`
+                                  : order.refundStatus === "processing"
+                                  ? "Refund in progress — typically 5–7 business days"
+                                  : order.refundStatus === "failed"
+                                  ? "Refund delayed — our team is on it"
+                                  : order.refundStatus}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
 
-        {/* ── The pager ───────────────────────────────────────────────── */}
-        {!loading && totalPages > 1 && (
-          <nav className={styles.pager} aria-label="Order history pages">
-            <div className={styles.pagerRow}>
-              <button
-                type="button"
-                className={styles.pagerStep}
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                aria-label="Previous page"
-              >
-                <IconChevron size={14} style={{ transform: "rotate(90deg)" }} />
-                Prev
-              </button>
-              <div className={styles.pagerNums}>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    className={`${styles.pagerNum} ${currentPage === page ? styles.pagerNumActive : ""}`}
-                    onClick={() => setCurrentPage(page)}
-                    aria-label={`Page ${page}`}
-                    aria-current={currentPage === page ? "page" : undefined}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className={styles.pagerStep}
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                aria-label="Next page"
-              >
-                Next
-                <IconChevron size={14} style={{ transform: "rotate(-90deg)" }} />
-              </button>
+                    {/* Drawer — the full record */}
+                    <div
+                      id={`details-${orderKey}`}
+                      className={`${styles.drawer} ${isExpanded ? styles.drawerOpen : ""}`}
+                    >
+                      <div className={styles.drawerPane}>
+                        <div className={`${styles.drawerInner} ${styles.detailGrid}`}>
+                          <div className={styles.detailCol}>
+                            <section>
+                              <h3 className={styles.blockTitle}>Items ordered</h3>
+                              <ul className={styles.lines}>
+                                {orderItems.map((item, i) => {
+                                  const existing =
+                                    item.productId != null ? reviewFor(item.productId) : null;
+                                  const sc = existing ? REVIEW_STATUS[existing.status] : null;
+                                  return (
+                                    <li key={i} className={styles.line}>
+                                      <CloudinaryImage
+                                        src={item.image}
+                                        alt={item.name || "Product"}
+                                        plate
+                                        ar="1:1"
+                                        pad
+                                        aspectRatio="1 / 1"
+                                        widths={[112, 168, 224]}
+                                        sizes="56px"
+                                        className={styles.lineThumb}
+                                      />
+                                      <div className={styles.lineBody}>
+                                        <p className={styles.lineName}>{item.name}</p>
+                                        {item.variantName && (
+                                          <span className={styles.lineVariant}>
+                                            {item.variantName}
+                                          </span>
+                                        )}
+                                        <span className={styles.lineQty}>
+                                          Qty {item.quantity}
+                                        </span>
+                                        {isReviewable(order) && item.productId != null && (
+                                          <div className={styles.reviewControl}>
+                                            <button
+                                              type="button"
+                                              className={styles.reviewBtn}
+                                              onClick={() => openReviewModal(order, item)}
+                                            >
+                                              <span className={styles.reviewStar}>
+                                                <IconStar />
+                                              </span>
+                                              {existing ? "Edit review" : "Write a review"}
+                                            </button>
+                                            {existing && sc && (
+                                              <Chip variant="status" tone={sc.tone}>
+                                                {sc.label}
+                                              </Chip>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <span className={styles.linePrice}>
+                                        {formatCurrency(item.price * item.quantity, item.currency)}
+                                      </span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </section>
+                          </div>
+
+                          <div className={styles.detailCol}>
+                            <section>
+                              <h3 className={styles.blockTitle}>Shipping address</h3>
+                              {addr ? (
+                                <>
+                                  {addr.name && <p className={styles.addrName}>{addr.name}</p>}
+                                  {addr.line1 && <p className={styles.addrLine}>{addr.line1}</p>}
+                                  {addr.line2 && <p className={styles.addrLine}>{addr.line2}</p>}
+                                  {addr.cityLine && (
+                                    <p className={styles.addrLine}>{addr.cityLine}</p>
+                                  )}
+                                  {addr.country && <p className={styles.addrLine}>{addr.country}</p>}
+                                  {addr.phone && <p className={styles.addrPhone}>{addr.phone}</p>}
+                                </>
+                              ) : (
+                                <p className={styles.muted}>Shipping address not available</p>
+                              )}
+                            </section>
+
+                            <section>
+                              <h3 className={styles.blockTitle}>Payment</h3>
+                              <p className={styles.payMethod}>
+                                {order.paymentMethod
+                                  ? order.paymentMethod.replace(/_/g, " ").toUpperCase()
+                                  : "N/A"}
+                              </p>
+                              {order.paymentStatus && (
+                                <p className={styles.muted}>
+                                  Status: {order.paymentStatus.replace(/_/g, " ")}
+                                </p>
+                              )}
+                            </section>
+
+                            <section>
+                              <h3 className={styles.blockTitle}>Order summary</h3>
+                              <dl className={styles.ledger}>
+                                <div className={styles.ledgerRow}>
+                                  <dt>Subtotal</dt>
+                                  <dd>{formatCurrency(order.subtotal)}</dd>
+                                </div>
+                                {(order.discountAmount ?? 0) > 0 && (
+                                  <div className={`${styles.ledgerRow} ${styles.ledgerDiscount}`}>
+                                    <dt>
+                                      Discount{order.couponCode ? ` (${order.couponCode})` : ""}
+                                    </dt>
+                                    <dd>-{formatCurrency(order.discountAmount)}</dd>
+                                  </div>
+                                )}
+                                <div className={styles.ledgerRow}>
+                                  <dt>Shipping</dt>
+                                  <dd>
+                                    {(order.shippingAmount ?? order.shipping ?? 0) > 0
+                                      ? formatCurrency(order.shippingAmount ?? order.shipping)
+                                      : "FREE"}
+                                  </dd>
+                                </div>
+                                <div className={styles.ledgerRow}>
+                                  <dt>Tax</dt>
+                                  <dd>{formatCurrency(order.taxAmount ?? order.tax ?? 0)}</dd>
+                                </div>
+                                <div className={`${styles.ledgerRow} ${styles.ledgerTotal}`}>
+                                  <dt>Total</dt>
+                                  <dd>{formatCurrency(order.total)}</dd>
+                                </div>
+                              </dl>
+                            </section>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </GlassCard>
+                );
+              })}
             </div>
-            <p className={styles.pagerInfo}>
-              Page {currentPage} of {totalPages}
-            </p>
-          </nav>
-        )}
-      </div>
+          )}
+
+          {/* ── The pager ───────────────────────────────────────────────── */}
+          {!loading && totalPages > 1 && (
+            <nav className={styles.pager} aria-label="Order history pages">
+              <div className={styles.pagerRow}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                  aria-label="Previous page"
+                  icon={<IconChevron size={14} className={styles.chevronPrev} />}
+                >
+                  Prev
+                </Button>
+                <div className={styles.pagerNums}>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      className={`${styles.pagerNum} ${currentPage === page ? styles.pagerNumActive : ""}`}
+                      onClick={() => setCurrentPage(page)}
+                      aria-label={`Page ${page}`}
+                      aria-current={currentPage === page ? "page" : undefined}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  aria-label="Next page"
+                  icon={<IconChevron size={14} className={styles.chevronNext} />}
+                  iconPosition="right"
+                >
+                  Next
+                </Button>
+              </div>
+              <p className={styles.pagerInfo}>
+                Page {currentPage} of {totalPages}
+              </p>
+            </nav>
+          )}
+        </div>
+      </section>
 
       <ReviewModal
         open={reviewModal.open}

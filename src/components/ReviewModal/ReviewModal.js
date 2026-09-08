@@ -1,17 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
-import { onImageError, PLACEHOLDER_IMG } from "../../utils/helpers";
+import React, { useState, useEffect } from "react";
+import { Button, Modal } from "../ui";
+import CloudinaryImage from "../ui/CloudinaryImage";
 import styles from "./ReviewModal.module.css";
 
-/* Tab-cycling needs the dialog's own focusables; queried broadly, then filtered
-   to what is actually tabbable and on screen. */
-const FOCUSABLE_SELECTOR = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  "[tabindex]",
-].join(",");
+// =============================================================================
+// ReviewModal — rate and review a product you actually bought
+// =============================================================================
+//
+// ON THE SHARED PRIMITIVE (Prompt 30). The hand-rolled overlay, focus trap,
+// Escape handler, body lock and close button are gone; `ui/Modal` owns them,
+// and owns the route-change close and the scrollbar compensation this dialog
+// never had. What is left here is the form.
+//
+// ELIGIBILITY IS THE CALLER'S. Order History decides who may write (a delivered
+// order, a line that carries a productId); this component is purely the form,
+// and it says out loud that a submission — new or edited — re-enters moderation.
+//
+// THE RATING IS NEVER THE GOLD ALONE. The stars are a radiogroup, each star a
+// real radio, and the score is repeated in words beside them, so the value
+// survives a colour-blind reading and a keyboard-only one.
+// =============================================================================
 
 const TITLE_MAX = 80;
 const BODY_MAX = 1000;
@@ -73,21 +81,12 @@ const StarInput = ({ value, onChange }) => {
   );
 };
 
-// Rate / review (or edit an existing review for) a purchased product. Used from
-// Order History — eligibility (purchase-gated, kept order) is decided by the
-// caller; this is purely the form. Submitting (or editing) (re)enters the
-// pending state for admin moderation, which the dialog states outright.
 const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  // Focus-trap refs: the dialog to constrain Tab within, and the element that
-  // had focus before opening so we can restore it on close (a11y).
-  const dialogRef = useRef(null);
-  const previousFocusRef = useRef(null);
 
   useEffect(() => {
     if (open) {
@@ -97,74 +96,6 @@ const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
       setError("");
     }
   }, [open, existing]);
-
-  // Lock the page behind the sheet while it is open.
-  useEffect(() => {
-    if (!open) return undefined;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  // Escape closes, as it does on every other dialog on the storefront.
-  useEffect(() => {
-    if (!open) return undefined;
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
-
-  // Focus trap: on open, move focus into the dialog and keep Tab/Shift+Tab
-  // cycling within it; on close, return focus to whatever opened it.
-  useEffect(() => {
-    if (!open) return undefined;
-
-    previousFocusRef.current = document.activeElement;
-    const dialog = dialogRef.current;
-    if (!dialog) return undefined;
-
-    const getFocusable = () =>
-      Array.from(dialog.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
-        (el) =>
-          el.tabIndex >= 0 &&
-          (el.offsetParent !== null || el === document.activeElement)
-      );
-
-    // Focus moves in straight away — the dialog renders nothing until `open`,
-    // so by the time this effect runs its nodes are already committed and
-    // there is no frame to wait for.
-    const focusables = getFocusable();
-    if (focusables[0]) focusables[0].focus();
-
-    const handleTab = (e) => {
-      if (e.key !== "Tab") return;
-      const focusables = getFocusable();
-      if (!focusables.length) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first || !dialog.contains(document.activeElement)) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else if (document.activeElement === last || !dialog.contains(document.activeElement)) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-
-    dialog.addEventListener("keydown", handleTab);
-    return () => {
-      dialog.removeEventListener("keydown", handleTab);
-      const prev = previousFocusRef.current;
-      if (prev && typeof prev.focus === "function") prev.focus();
-    };
-  }, [open]);
-
-  if (!open) return null;
 
   const handleSubmit = async () => {
     if (!rating) {
@@ -181,156 +112,136 @@ const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
     }
   };
 
-  return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div
-        className={styles.modal}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="review-modal-title"
-        ref={dialogRef}
+  // The two controls live in Modal's own footer rail, which keeps them on the
+  // sheet while the form above scrolls.
+  const footer = (
+    <>
+      <Button variant="secondary" onClick={onClose} disabled={submitting}>
+        Cancel
+      </Button>
+      <Button
+        variant="primary"
+        onClick={handleSubmit}
+        disabled={submitting}
+        aria-busy={submitting || undefined}
       >
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label="Close"
-        >
+        {submitting && <span className={styles.btnSpinner} aria-hidden="true" />}
+        {submitting ? "Submitting…" : existing ? "Update review" : "Submit review"}
+      </Button>
+    </>
+  );
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      labelledBy="review-modal-title"
+      footer={footer}
+      className={styles.dialog}
+    >
+      <p className="sf-eyebrow">{existing ? "Edit your review" : "Write a review"}</p>
+      <h2 className={styles.heading} id="review-modal-title">
+        Share your thoughts
+      </h2>
+
+      {/* The product on a plate — the packaging is never cropped. */}
+      <div className={styles.productRow}>
+        <CloudinaryImage
+          src={product?.image}
+          alt={product?.name || "Product"}
+          plate
+          ar="1:1"
+          pad
+          aspectRatio="1 / 1"
+          widths={[120, 180, 240]}
+          sizes="60px"
+          className={styles.productThumb}
+        />
+        <span className={styles.productName}>{product?.name}</span>
+      </div>
+
+      {existing && (
+        <p className={styles.editNote}>
+          Editing sends your review back for approval before it shows on the
+          product page again.
+        </p>
+      )}
+
+      <div className={styles.field}>
+        <div className={styles.labelRow}>
+          <span className={styles.label} id="review-rating-label">
+            Your rating *
+          </span>
+        </div>
+        <StarInput value={rating} onChange={setRating} />
+      </div>
+
+      <div className={styles.field}>
+        <div className={styles.labelRow}>
+          <label className={styles.label} htmlFor="review-title">
+            Title
+          </label>
+          <span className={styles.counter}>
+            {title.length}/{TITLE_MAX}
+          </span>
+        </div>
+        <input
+          id="review-title"
+          className={styles.input}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Sum it up in a line"
+          maxLength={TITLE_MAX}
+        />
+      </div>
+
+      <div className={styles.field}>
+        <div className={styles.labelRow}>
+          <label className={styles.label} htmlFor="review-body">
+            Review
+          </label>
+          <span className={styles.counter}>
+            {body.length}/{BODY_MAX}
+          </span>
+        </div>
+        <textarea
+          id="review-body"
+          className={styles.textarea}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="How does it feel on your skin? How does it smell? What would you tell a friend?"
+          rows={4}
+          maxLength={BODY_MAX}
+        />
+      </div>
+
+      <p className={styles.moderationNote}>
+        Reviews are read before they are published — yours will appear on the
+        product page after approval.
+      </p>
+
+      {error && (
+        <p className={styles.error} role="alert">
           <svg
-            width="18"
-            height="18"
+            width="15"
+            height="15"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.5"
+            strokeWidth="1.6"
             strokeLinecap="round"
             aria-hidden="true"
             focusable="false"
           >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="13" />
+            <line x1="12" y1="16.5" x2="12" y2="16.5" />
           </svg>
-        </button>
-
-        <p className={styles.eyebrow}>{existing ? "Edit your review" : "Write a review"}</p>
-        <h2 className={styles.heading} id="review-modal-title">
-          Share your thoughts
-        </h2>
-
-        <div className={styles.productRow}>
-          <span className={styles.productThumb}>
-            <img
-              src={product?.image || PLACEHOLDER_IMG}
-              alt={product?.name || "Product"}
-              onError={onImageError}
-            />
-          </span>
-          <span className={styles.productName}>{product?.name}</span>
-        </div>
-
-        {existing && (
-          <p className={styles.editNote}>
-            Editing sends your review back for approval before it shows on the
-            product page again.
-          </p>
-        )}
-
-        <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <span className={styles.label} id="review-rating-label">
-              Your rating *
-            </span>
-          </div>
-          <StarInput value={rating} onChange={setRating} />
-        </div>
-
-        <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <label className={styles.label} htmlFor="review-title">
-              Title
-            </label>
-            <span className={styles.counter}>
-              {title.length}/{TITLE_MAX}
-            </span>
-          </div>
-          <input
-            id="review-title"
-            className={styles.input}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Sum it up in a line"
-            maxLength={TITLE_MAX}
-          />
-        </div>
-
-        <div className={styles.field}>
-          <div className={styles.labelRow}>
-            <label className={styles.label} htmlFor="review-body">
-              Review
-            </label>
-            <span className={styles.counter}>
-              {body.length}/{BODY_MAX}
-            </span>
-          </div>
-          <textarea
-            id="review-body"
-            className={styles.textarea}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="How does the weave feel? How true is the colour? What would you tell a friend?"
-            rows={4}
-            maxLength={BODY_MAX}
-          />
-        </div>
-
-        <p className={styles.moderationNote}>
-          Reviews are read before they are published — yours will appear on the
-          product page after approval.
+          {error}
         </p>
-
-        {error && (
-          <p className={styles.error} role="alert">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <line x1="12" y1="8" x2="12" y2="13" />
-              <line x1="12" y1="16.5" x2="12" y2="16.5" />
-            </svg>
-            {error}
-          </p>
-        )}
-
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.cancelBtn}
-            onClick={onClose}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className={styles.submitBtn}
-            onClick={handleSubmit}
-            disabled={submitting}
-          >
-            {submitting && <span className={styles.btnSpinner} aria-hidden="true" />}
-            {submitting ? "Submitting…" : existing ? "Update review" : "Submit review"}
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 };
 
