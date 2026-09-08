@@ -28,7 +28,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 22 | Home assembly, performance and SEO | complete | 2026-09-07 | (this commit) | The home page is assembled: **eleven sections in the brief's order**, `ShopByCategory` moved from under the trust strip to **after** the eight product chapters (brief §7.2 item 4), and every pre-rebuild section deleted — collection stories, featured grid, offers rail + countdown, craft interlude, trending rail, promises row — along with `components/FeaturedProducts/*` and `components/CTASection/*` (0 consumers) and the now-unused `TRUST_BADGES` alias in `constants.js` (`WHY_CHOOSE_US` **kept** — `pages/Support/Support.js:594` still maps over it). `Home.js` 742 → 279 lines, `Home.module.css` 779 → 105 (page rhythm only: ground, hero, trust edge, deferral). **One data load:** new `components/home/useHomeData.js` reads `products.getAll` · `getHeroProducts` · `categories` · `concerns` · `rituals` · `siteContent` **once each, in parallel**, and the nine sections take their slices as props — the naively assembled page issued **15 requests for 6 collections**, it now issues **6**. Tri-state slices (`undefined` = in flight, `null` = failed, value = loaded). **Nine lazy chunks** behind a `DeferredSection` (`useInView` + `rootMargin: 600px`, measured reserve heights, `content-visibility: auto` on the six sections that draw no glow). New `components/home/RecentlyViewed.{js,module.css,test.js}` ports the localStorage reconciliation and the `useRail`/ResizeObserver logic verbatim; threshold raised 1 → 2 (8 new tests). `organizationJsonLd()` + `websiteJsonLd()` added to `hooks/useSeo.js` — **schema.org validator: 0 errors, 0 warnings**. **Lighthouse mobile (production build, median of 3): Performance 68, Accessibility 100, Best Practices 100, SEO 100** — three of four targets met; Performance is **below the ≥85 target** and the cause is measured and recorded below. CLS 0.174 → **0.042**; Speed Index 20.7s → **3.2s**; total JS on `/` **253 kB gzipped** (≤350 budget ✓). `CI=true npm run build` exit 0 **no warnings**; `npm test -- --watchAll=false` exit 0 (18 suites / 181 passed, 1 suite / 50 skipped). See the Prompt 22 record below.
 | 23 | Shop page — chaptered editorial listing | complete | 2026-09-08 | (this commit) | `/shop` is the chaptered listing: **eight full editorial chapters in hero order, no filter, no sort, no pagination, no sidebar** (brief §7.3 — the removal is an owner decision, recorded below). `pages/Products/*` (1 687 + 1 335 lines) is **deleted**; `pages/Shop/Shop.js` is 380. New: `catalogue/ChapterIndex.{js,module.css}` (a 220px sticky rail at ≥1025px, a sticky pill strip at ≤1024px) and `catalogue/BuildRitualPanel.{js,module.css}` (the closing `GlassCard strong glow="duo"`), plus `utils/seo.js` with `itemListJsonLd`. `ProductChapter` gained `variant="shop"` proper — 88svh floor on the split screen, no floor on a phone, `scroll-margin-top: 96px`, `data-slug`, a focusable `h2` and an `onVisible(index)` IntersectionObserver at threshold 0.5. **`/category/:slug` now routes to `<Shop mode="category" />`**, which is what kept the category listing alive when `Products` went (Prompt 24 adds its head, breadcrumb and 404). `utils/categories.js` lost `getCategoryScopeIds` and `orderCategoriesHierarchically`; `utils/helpers.js` lost `getDeviceType`; `getDescendantIds` stays for the admin. **Scroll-snap was KEPT** after measurement (see the decisions log). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (19 suites / 197 passed, 1 suite / 50 skipped — 16 of the passing tests are new, `ChapterIndex.test.js`). Browser QA in Chromium 1194 at 360/390/414/768/1024/1280/1440 + reduced motion: **no horizontal scroll at any width, zero page errors**. See the Prompt 23 record below. |
 | 24 | Category pages and rituals pages | complete | 2026-09-08 | (this commit) | The seven categories have their heads and the rituals have their two pages. **`pages/Shop/Shop.js` is split in two**: `Shop` holds the route's two exits — a `kind: "rituals"` category (or the literal slug) → `<Navigate to="/rituals" replace/>`, an unknown slug → `<NotFound/>` — and `ShopView` holds every other hook and the JSX. The split is load-bearing, not tidy: `useSeo` BORROWS the head's existing tags and restores what it displaced, so two of them mounted at once (the page's and `NotFound`'s) restore child-then-parent and strand the child's description in the head. `RitualDetail` is split the same way for the same reason. New: **`catalogue/CategoryHead`** (full-bleed `.sf-placeholder-media` band — 4:3 phone / 21:9 + `clamp(260px,32vw,420px)` from 769px — under a `GlassCard strong scrim` panel on a NEGATIVE MARGIN, never `position:absolute`, so a long description grows the panel instead of being clipped), **`pages/Rituals/Rituals`** (three full-width rows, image left from 900px), **`pages/Rituals/RitualDetail`** (head → `RitualStep` rows → CTA panel → `LegalNote compact`) and **`catalogue/RitualStep`** (`72px 1fr` phone / `96px 240px 1fr auto` desktop, a 36px numeral, a 240px label plate, the promise, the note in display italics, a frequency chip, `Price` and one add-to-cart). `Breadcrumb` was **rewritten** — it had zero consumers — onto the FULL `{label, to}` trail, and `utils/seo.js` gained `breadcrumbJsonLd(items)` over **the same array**, so the crumb a visitor reads and the crumb a crawler is told cannot drift. Verified in Chromium 1194 at 360/390/414/768/1024/1280/1440: `/category/face-care` **6** chapters · `body-care` **2** · `cleansers` **3** · `serums` **1 PRODUCT** (singular) · `moisturizers` **2** · `masks` **2** · `rituals` → `/rituals`; `/category/nope` and `/rituals/nope` → a real 404 with the URL kept. `/rituals` lists three; `morning-glow` shows its four products in order; `black-rice-body` offers the soap/wash `radiogroup` (**one** tab stop, arrows both ways, the gold focus ring) which swaps the name, promise, plate, PDP link, price, add button AND the panel's total together. **With `enableRitualBundles: true` locally**: one press, ONE toast ("2 items added to your cart"), a cart holding exactly the two priced steps of five — the three TBA products never entered it; **reverted to `false` before the commit** (`git diff src/config/brand.js` empty). Both JSON-LD graphs valid on every page. **0 horizontal overflow at all seven widths**; reduced motion computes `opacity: 1 / transform: none` on the step rows and `scroll-snap-type: none`. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` **20 suites / 218 passed** (21 new in `RitualStep.test.js`; 1 suite / 50 skipped — the live-API suite). `grep -n "ComingSoon" src/App.js` → **only `/why-lamikaa` and `/cart`**. Reads only: no `db.json` and no `api.js` change. |
-| 25 | PDP — layout, chapters, purchase panel, mobile bar | pending | | | |
+| 25 | PDP — layout, chapters, purchase panel, mobile bar | complete | 2026-09-08 | (this commit) | The product page is the two-column composition: a **sticky media column** (`top: 96px` from 1025px) beside a scrolling column holding `PurchasePanel` and then the story as numbered **chapters**. `pages/ProductDetails/ProductDetails.js` 1143 → 693 and its stylesheet 1109 → 161: the tab strip, `SILK_SPEC_LABELS`/`deriveSilkSpecRows`/`deriveGenericSpecRows`/`deriveFabricCraft`/`deriveKeyFeatures`/`isPremiumProduct`, the promises band and the hand-rolled `setPageTitle` + `meta[name=description]` effect are all gone; `useSeo({title, description, image, type:"product"})` owns the head (JSON-LD in 27). Three new components in `components/pdp/`: **`PurchasePanel`** (trail → eyebrow → h1 → promise → rating → price → size/fragrance/SKU → trust chips → variants → quantity+stock → Add to Cart / Buy now / wishlist / share → delivery → the ownership note), **`ChapterNav`** (a glass pill bar after 320px of scroll, IntersectionObserver-tracked, `aria-current`, sticky at 72/56px) and **`Chapter`**. `AddToCartBar` rebuilt on `Button`/`Price`/`CloudinaryImage`; **`BottomNav` stands down on `/product/*`** so the two bars never stack. Everything the old page could do still works — reviews, FAQs, the bundle and the related rail are in the column, awaiting Prompt 27's chapters. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 21 suites / 233 passed (1 suite / 50 skipped), 15 of them new. |
 | 26 | PDP — media gallery with images and videos | pending | | | |
 | 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | pending | | | |
 | 28 | Content pages from siteContent | pending | | | |
@@ -322,6 +322,16 @@ Record every decision a prompt had to make that the reference files did not sett
 - `24 · 2026-09-08 · The rituals index rows are built in the page, not on `RitualCard` · `RitualCard` is the grid form and already has two consumers (the home teaser and the shop's closing panel), both of which link TO this index. Reusing it here would make the index of the rituals look exactly like the two places that point at it, and a full-width row is the only place on the site where the photograph, two paragraphs of story and a whole line of step plates all fit at once. The page reuses `stepCountLabel` and `stepNumeral` rather than retyping either.`
 - `24 · 2026-09-08 · The row's heading is plain text and "See the ritual" is the single control, named for its routine · A row holds a button, and a button inside an anchor is invalid markup that swallows the tap — so the whole-card link `RitualCard` uses is not available here. Rather than give each row two stops to one place, the name stays text and the button carries `aria-label="See the ritual: {name}"`: three identical link names in a screen reader's link list are three links to nowhere in particular, and the visible label is contained in the accessible one.`
 - `24 · 2026-09-08 · `stepNumeral` requires a POSITIVE order, and the unit test is what found it · The obvious `Number.isFinite(Number(order)) ? … : index + 1` prints "00" for a step whose order is `null`, because `Number(null)` is 0 and 0 is finite. `resolveRitualSteps` fills the field in for every seeded step so nothing on screen showed it, but the fallback exists for the case where it has not — and a step numbered 00 is worse than one numbered by its position. `RitualCard`'s own copy of the expression has the same shape and the same practical immunity; it belongs to Prompt 18's file and is left for the Prompt 35 sweep.`
+- `25 · 2026-09-08 · The BOTTOM NAV stands down on `/product/*` below 769px, and its SearchModal goes with it · Two sticky bars take 128px off a 640px screen, and the labels of the lower one read as part of the buy control above it. The rule lives in the bar (`hidesBottomNav(pathname)`, exported and unit-tested) rather than in `App.js`, so the component that knows it is 64px tall is the one that decides — and it returns `null` AFTER every hook, so React's hook order is untouched. The bar mounts the search overlay and therefore takes it along; navigation is still a tap away in the masthead (menu, search, cart) at every width, and the tab bar is back the moment you leave the route (verified with Back). This is Adaptation 18 in `00_INDEX.md`, now implemented.`
+- `25 · 2026-09-08 · The retained content blocks (FAQs, reviews, the bundle, the related rail) stay ON THE PAGE, in the content column, rather than waiting for Prompt 27 · The prompt says "chapters in this prompt: `overview` only", and its own task 1 keeps the `useFaqs` read in the list of things to preserve verbatim. Deleting four working features for one prompt would break the global guardrail ("never remove a feature to make styling easier"), so `overview` is the only chapter written from product fields, and the three blocks that already had headings — FAQs, reviews and the cross-sell — keep theirs. FAQs and reviews are rendered THROUGH `Chapter` (they are titled sections with ids, which is all a chapter is) so `ChapterNav` has more than one target and can be seen doing its job; the two rails keep their own `<section>`s and stay out of the index. Prompt 27 rewrites all four and adds benefits / ingredients / directions / farmer story / full INCI around them.`
+- `25 · 2026-09-08 · The h1 stays at `--sf-text-3xl`, and the design spec's "price 24px gold" is NOT delivered · The prompt names both `--sf-text-3xl` for the name (task 3) and "name 40/32px · price 24px gold" (design spec). Those cannot both hold: `PriceBlock`'s `lg` size — which the same task mandates — is itself `--sf-text-3xl`, and `PriceBlock` is not in this prompt's file list. Taking the name down to `--sf-text-2xl` (which is exactly 40/28px) would therefore have made the PRICE larger than the product's name. The token the task names wins; the two sit at the same size, separated by the promise and the rating, and the price is gold where the name is warm white. Re-open when a prompt owns `PriceBlock`.`
+- `25 · 2026-09-08 · A shipping method with no `estimatedDays` is DROPPED from the delivery panel, not printed without its ETA · The one seeded method is `{flatRate: 0, freeAbove: null, estimatedDays: ""}` and its own description says "Delivery time and charges will be confirmed before launch". `describeCost()` renders a zero flat rate as "Free", so keeping the row would have printed a free-shipping promise nobody has configured — the exact failure the retired `FREE_SHIPPING_THRESHOLD` constant was removed for in Prompt 02. The predicate is `hasDeliveryEstimate()`, exported and unit-tested; COD, the returns window and the tax note follow the same rule, and the tax line now comes from `fillCopy("Prices are {taxNote}.")` so an unresolved rate loses its sentence rather than printing a token.`
+- `25 · 2026-09-08 · The media placeholder requests a 4:5 PADDED tile and lets the plate letterbox it on a phone, rather than the square `stageSrc()` builds · The covers crop tall (the face wash is 1500×3200). Delivered square, the pack set as a narrow strip down the middle of a very wide mount at BOTH the desktop 4:5 plate and the phone 1:1 one — measured and photographed before the change. At 4:5 the desktop plate is filled exactly and the phone letterboxes by 36px a side. One request, correct at the ratio that matters most; Prompt 26 replaces the whole placeholder with the real gallery.`
+- `25 · 2026-09-08 · `ChapterNav` and `AddToCartBar` take a FIRMER ground than `.sf-glass` gives them · Both are slim bars that a live page scrolls under, and 6–8% white is a tint rather than a ground: a gold headline or a pack shot passing beneath them takes the pills or the price with it, and where a compositor declares `backdrop-filter` and then skips it there is nothing behind the text at all (which is exactly what the QA renderer did). Each keeps `.sf-glass` for the blur, the hairline and the shadow, and overrides only the background with a `color-mix()` of `--sf-color-surface` (88% for the nav, 92% for the purchase bar) — the treatment DESIGN_SYSTEM §7 already gives the SweetAlert popup at 94%. Written with a doubled class so it beats the primitive whichever order the sheets land in.`
+- `25 · 2026-09-08 · The stock line is SILENT for a product with no price yet · "In stock" beside a button that says "Coming soon" is two answers to one question, and neither "Only 3 left" nor "Out of stock" means anything about a thing nobody can buy. `stockLabel({comingSoon: true})` returns `""` for every stock value; the quantity stepper is still disabled and the price chip still says "Price on launch".`
+- `25 · 2026-09-08 · `ChapterNav` renders NOTHING with fewer than two chapters, and its pills are `<a href="#id">` · An index that offers only the place you are already standing in is chrome, not a shortcut. The pills are anchors so they are keyboard-reachable, middle-clickable and still work if the click handler never runs; the handler only upgrades the jump to a smooth one and moves focus into the chapter. The SECTION is the focus target (`tabIndex={-1}` on `Chapter`, labelled by its own heading) rather than the heading, so a keyboard visitor lands IN the chapter and the next Tab stays there — and `.chapter:focus{outline:none}` with a `:focus-visible` ring keeps a mouse click from drawing one.`
+- `25 · 2026-09-08 · The PDP's `metaTitle` has the site suffix taken off before it reaches `useSeo` · The seed writes `metaTitle` as a WHOLE title ("Black Rice Face Wash · LAMIKAA NATURALS") because Prompt 06 wrote it for the hand-rolled title effect this page used to run; `useSeo` applies `brand.seo.titleTemplate` on top, so the first run printed the brand twice. `productSeoTitle()` (exported, unit-tested) strips a trailing suffix if the override already carries one. Fixed in the PAGE, not the seed: the admin's field keeps meaning "the title I want", whatever an owner types into it.`
+- `25 · 2026-09-08 · Two components outside the prompt's expected-files list changed by one line each of substance · `Breadcrumb.js` no longer gives the `.current` STYLE to a linkless crumb in the middle of a trail (only the last crumb is the current page); `TrustBadges.js` gained a third `variant` ("chips") beside `grid` and `row`. Both were named for restyle by the prompt; neither changes an existing call site's rendering (`CategoryHead` and the ritual head pass full trails and no PDP-only variant).`
 
 ## Open TODOs
 
@@ -3067,3 +3077,122 @@ were found that way and fixed: the ritual stage was 200px taller than its story
 (the 1200×1500 image was driving the row), and the category panel needed `scrim`
 to stay legible over a bright Picsum seed. It is a harness trick, not the app's
 own path; `onImageError` was exercised separately by aborting the same requests.
+
+
+## Prompt 25 record (2026-09-08)
+
+### What was built
+
+Three new components, one page rewritten around them, and five restyles.
+
+- **`components/pdp/PurchasePanel.js` (387) + `.module.css` (286)** — **new**. Every commerce control
+  the page has, in the order a shopper makes the decisions: `Breadcrumb` (Home / Shop / {category
+  displayName} / {shortName}) → the eyebrow (the category as a link, the ritual step "01 — Cleanse" in
+  Fraunces tabular figures, and whatever flags the merchant has actually set) → `h1`
+  (`--sf-text-3xl`) → `promise` → `SocialProof` **only when a real rating or review exists** →
+  `Price product size="lg"` with the tax note from `fillCopy` → size / fragrance / SKU as a two-column
+  `<dl>` → `TrustBadges variant="chips"` → `VariantSelector` (only where variants exist) →
+  `QuantityStepper` + the stock line → `Button variant="addToCart"` and `variant="primary"` "Buy now",
+  with the wishlist and share circles → `DeliveryReturnsInfo` → `LegalNote compact` + "Read our
+  story". `GlassCard padding="lg"` at every width, with the ground, blur, border and padding taken
+  OFF below 769px — on a phone the panel is the page.
+  **It owns no data.** Price, stock, the variant, the quantity and the cart wiring are the page's,
+  because the sticky bar, the head tags and the chapters need the same answers. Its two local things
+  are the share gesture (`navigator.share`, else the clipboard, with a "Link copied" toast either way)
+  and the tab order.
+- **`components/pdp/ChapterNav.js` (204) + `.module.css` (150)** — **new**. A glass pill bar that
+  arrives after **320px** of scroll (`visibility`/`opacity`, never `display`, so nothing reflows),
+  sticks at `top: 72px` from 1025px and `56px` below it, scrolls sideways on a phone with the active
+  pill kept in view, and steps aside entirely while `body[data-drawer-open]` is set. The active
+  chapter is **observed, not computed**: one IntersectionObserver with a reading band for a root
+  margin (`-30% 0px -55% 0px`), and the first chapter in document order that is in the band wins —
+  nothing is measured on scroll.
+- **`components/pdp/Chapter.js` (73)** — **new**, and deliberately without a stylesheet: the rhythm is
+  `.sf-section--tight` and the type is `SectionHeading`'s, so the only thing left is the scroll offset
+  under the sticky chrome, which is the page's (`scroll-margin-top: 120/148px`). It owns the three ids
+  that have to agree — the section's, the heading's (`chapterHeadingId`) and the numeral
+  (`chapterNumeral`).
+- **`pages/ProductDetails/ProductDetails.js` (693, was 1143) + `.module.css` (161, was 1109)** —
+  rewritten as `useProductPage()` (data + handlers) / `ProductDetailsView` (the head and the markup) /
+  `ProductDetails` (the three states), the same split `/shop` uses so **exactly one `useSeo` is ever
+  mounted on the route** and `<NotFound/>` can restore the head it borrowed.
+- **`components/pdp/PurchasePanel.test.js` (131)** — 15 tests over the six pure rules this prompt
+  added: `stockLabel`, `ritualStepLabel`, `chapterNumeral`/`chapterHeadingId`, `hasDeliveryEstimate`,
+  `productSeoTitle` and `hidesBottomNav`.
+
+### The restyles
+
+- **`AddToCartBar`** rebuilt on `Button` / `Price` / `CloudinaryImage`: a strong-glass band with a
+  **56px plate** of the pack, the name on one line, the live price (TBA-aware) and the same
+  three-state Add to Cart the panel carries, plus a Buy-now icon button when there is something to
+  buy. It still reveals itself through the existing `anchorRef` IntersectionObserver contract — the
+  anchor is now the panel's own CTA row — at `--sf-z-stickybar` with
+  `padding-bottom: env(safe-area-inset-bottom)`.
+- **`DeliveryReturnsInfo`** — 14px rows with gold glyphs (they were 12px with the SUCCESS green, the
+  only place a policy was inked in an outcome's colour), and every line dropped until its fact is
+  known: `hasDeliveryEstimate()` for a method, `codEnabled` for COD, a positive window for returns,
+  and `fillCopy("Prices are {taxNote}.")` for tax.
+- **`TrustBadges`** — a third variant, `chips`: glass pills that wrap, with a 16px gold mark.
+- **`SocialProof`** — the figure goes gold (13.4:1) so it belongs to the marks beside it rather than
+  reading as a second headline; the count moves from muted to secondary (10.5:1).
+- **`Breadcrumb`** — 12px, and a linkless crumb in the middle of a trail no longer takes the
+  current-page style. The last crumb keeps `aria-current="page"` and drops any `to` it is handed.
+- **`BottomNav`** — `hidesBottomNav("/product/...")`, after every hook.
+
+### Verification run
+
+- `CI=true npm run build` — exit 0, **Compiled successfully, 0 warnings**.
+- `npm test -- --watchAll=false` — 21 suites (1 skipped: the live API), **233 passed**, 15 new.
+- `grep -n "SILK_SPEC\|Fabric\|weave\|handloom\|Tabs" src/pages/ProductDetails/ProductDetails.js` → **0**.
+- Word-boundary Meghali sweep over every touched file → **0**. No hard-coded colour in any new
+  stylesheet; the one non-token length is the 56px desktop gutter the prompt specifies (the 4px scale
+  has 48 and 64, not 56) and it says so at the declaration.
+- No `db.json` and no `api.js` change (`git diff --stat db.json` empty after the state QA below).
+
+### Browser QA (Chromium 1194, mock mode, real seeded frames)
+
+`document.title` "Black Rice Face Wash · LAMIKAA NATURALS", description and `og:type=product` set,
+canonical written. `/products/1` and `/product/1` both land on `/product/black-rice-face-wash`;
+an unknown slug and a product with `isActive:false` both render `<NotFound/>` with
+`robots: noindex,nofollow` and the URL kept. The TBA product (`black-rice-face-mist`) shows "Price on
+launch", a disabled "Coming soon", **no** Buy now and **no** stock line. Quantity clamps at the real
+stock (set to 3: "Only 3 left", + disabled at 3) and a zero-stock product reads "Out of stock" in
+three places. Add to Cart → "Added"; wishlist → `aria-pressed="true"`; share → the URL on the
+clipboard and the "Link copied" toast; Buy now → `/checkout`.
+
+`ChapterNav`: hidden at scroll 0, visible past 320px, `aria-current` on exactly one pill, Enter on a
+pill lands focus on the target section (`document.activeElement.id === "faqs"`) and moves the mark;
+the champagne focus ring is present on the pills; `body[data-drawer-open]` hides the bar. Heading
+outline `h1 → h2 Delivery & Returns → h2 Overview → h2 Questions, answered → h3 …`, and every
+`section[data-chapter]` resolves its own `aria-labelledby`.
+
+| width | document overflow | layout | media plate | bottom nav | sticky bar |
+|---|---|---|---|---|---|
+| 360 / 390 / 414 | 0 | 1 col, media first | 1:1 | hidden | present, 56px thumb dropped < 400 |
+| 768 | 0 | 1 col, media first | 1:1 | hidden | present |
+| 1024 | 0 | 44 / 56, gap 32px | 4:5 | n/a | not rendered |
+| 1280 / 1440 | 0 | 1.05fr / 1fr, gap 56px, media sticky at 96px | 4:5 | n/a | not rendered |
+
+Under `prefers-reduced-motion: reduce` both the bar and the nav compute `transition-duration: 0s`.
+`/`, `/shop`, `/category/face-care` and `/rituals/morning-glow` re-checked after the shared restyles:
+0 overflow, 0 page errors, trails unchanged; the tab bar returns the moment the route leaves
+`/product/*` (verified with Back).
+
+### Three things the browser found
+
+1. **The container had no gutter.** `sf-container--wide` is a MODIFIER (it sets `max-width` only);
+   without `sf-container` beside it the page bled to the viewport edges and the related rail's -4px
+   focus-ring margins pushed the document 4px wide at every width. Both call sites now carry the pair.
+2. **The title printed the brand twice** — see the decision above.
+3. **"FRAGRANCE" ran under its own value.** The size/fragrance/SKU rows were a flex list with a fixed
+   `9ch` label; they are now a two-column grid (`max-content minmax(0,1fr)`) with the rows as
+   `display: contents`, so the labels form their own column whatever they are called.
+
+### Left for Prompt 26 / 27
+
+The media column is a single `CloudinaryImage` on a plate — no thumbnails, no video, no lightbox, no
+swipe (26). The chapters are `overview` plus the three retained blocks; benefits, key ingredients, how
+to use, the farmer story, the full INCI list, the pack claims, `caution` and the ritual cross-sell are
+27's, as is the product JSON-LD and the `BreadcrumbList` (the trail is already built as one array for
+exactly that). `FrequentlyBoughtTogether` still says "Completes the look" — its own copy, in 27's file
+list.

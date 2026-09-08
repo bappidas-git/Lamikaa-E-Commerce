@@ -1,10 +1,13 @@
 /* =============================================================================
  * Breadcrumb — the trail above a page's title
  * =============================================================================
- * Quiet by design: 13px Manrope in muted text, with the current page in the
- * secondary tone so the eye lands on the <h1> underneath rather than here. It
- * is rendered inside the glass panels of the category head and the ritual head,
- * so it declares no background and no gutter of its own.
+ * Quiet by design: 12px Manrope in muted text (Prompt 25 takes it down a step —
+ * the trail now opens the PDP's purchase panel directly above a display-scale
+ * <h1>, and at 14px it was competing with the promise line under it), with the
+ * current page in the secondary tone so the eye lands on the heading rather
+ * than here. It is rendered inside the glass panels of the category head, the
+ * ritual head and the purchase panel, so it declares no background and no
+ * gutter of its own.
  * ========================================================================== */
 
 .breadcrumb {
@@ -19,7 +22,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: var(--sf-text-sm);
+  font-size: var(--sf-text-xs);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text-muted);
 }
@@ -84,7 +87,12 @@
     margin-block: calc(var(--sf-space-3) * -1);
   }
 
+  /* A product's short name is two or three words, so on a phone the last crumb
+     WRAPS rather than truncating: "Exfoliating Face…" tells a visitor less than
+     a second line does, and the trail is the one place on the page where the
+     name is not repeated in full underneath. */
   .current {
-    max-width: 24ch;
+    white-space: normal;
+    max-width: 28ch;
   }
 }

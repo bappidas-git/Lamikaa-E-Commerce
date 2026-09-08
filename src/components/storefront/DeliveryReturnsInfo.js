@@ -11,13 +11,29 @@ import styles from "./DeliveryReturnsInfo.module.css";
 // the authenticity rule, so it's gone. Instead we surface the REAL, store-
 // configured delivery options, free-shipping threshold, COD availability and
 // returns window — the same data checkout and the admin use — so costs are never
-// hidden until checkout. If a data source is empty, its line simply doesn't show.
+// hidden until checkout.
+//
+// EVERY LINE IS DROPPED UNTIL ITS FACT IS KNOWN (tightened in Prompt 25):
+//
+//   a shipping method   needs an `estimatedDays`. A method with no ETA and a
+//                       zero flat rate is not a "Free · same day" promise, it
+//                       is an unconfigured row — and the seeded LAMIKAA method
+//                       says so in its own description ("Delivery time and
+//                       charges will be confirmed before launch"). Printing
+//                       "Free" against it would invent the one fact a shopper
+//                       would hold us to.
+//   COD                 needs `codEnabled`
+//   returns             needs a `returnsWindowDays` above 0
+//   the tax note        comes from `fillCopy("{taxNote}")`, which resolves it
+//                       from Admin → Settings and removes the sentence entirely
+//                       if the underlying fact is still a placeholder
 //
 // Props:
 //   shipping           array   active shipping methods from the API
 //   settings           object  public store settings (tax, COD)
 //   returnsWindowDays  number  defaults to STOREFRONT_CONFIG.returnsWindowDays
 //   currency           string
+//   fillCopy           fn      the store-settings copy filler (optional)
 // =============================================================================
 const Icon = ({ paths }) => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -25,14 +41,19 @@ const Icon = ({ paths }) => (
   </svg>
 );
 
+/** A method is printable only once its delivery time is known. */
+export const hasDeliveryEstimate = (method) =>
+  method?.estimatedDays != null && String(method.estimatedDays).trim() !== "";
+
 const DeliveryReturnsInfo = ({
   shipping = [],
   settings,
   returnsWindowDays = STOREFRONT_CONFIG.returnsWindowDays,
   currency,
+  fillCopy,
 }) => {
   const methods = (Array.isArray(shipping) ? shipping : []).filter(
-    (m) => m && m.isActive !== false
+    (m) => m && m.isActive !== false && hasDeliveryEstimate(m)
   );
   const codEnabled = settings?.payment?.codEnabled;
   const codMax = Number(settings?.payment?.codMaxOrder) || 0;
@@ -45,6 +66,20 @@ const DeliveryReturnsInfo = ({
     }
     return parts.join(" · ");
   };
+
+  // The tax sentence, resolved from the live settings. `fillCopy` strips the
+  // whole sentence when the fact behind it is still a placeholder token, so an
+  // unresolved tax rate prints nothing rather than "{{TAX_RATE_PERCENT}}".
+  const taxNote = fillCopy
+    ? fillCopy("Prices are {taxNote}.")
+    : settings?.store?.taxIncluded != null
+    ? settings.store.taxIncluded
+      ? "Prices are inclusive of all taxes."
+      : "Taxes are calculated at checkout."
+    : "";
+
+  const facts = codEnabled || returnsWindowDays > 0 || taxNote;
+  if (methods.length === 0 && !facts) return null;
 
   return (
     <div className={styles.panel}>
@@ -59,13 +94,11 @@ const DeliveryReturnsInfo = ({
             <li className={styles.row} key={m.id || m.name}>
               <span className={styles.rowMain}>
                 <span className={styles.rowName}>{m.name}</span>
-                {m.estimatedDays != null && m.estimatedDays !== "" && (
-                  <span className={styles.rowEta}>
-                    {String(m.estimatedDays) === "0"
-                      ? "Same day"
-                      : `${m.estimatedDays} business days`}
-                  </span>
-                )}
+                <span className={styles.rowEta}>
+                  {String(m.estimatedDays) === "0"
+                    ? "Same day"
+                    : `${m.estimatedDays} business days`}
+                </span>
               </span>
               <span className={styles.rowCost}>{describeCost(m)}</span>
             </li>
@@ -73,31 +106,29 @@ const DeliveryReturnsInfo = ({
         </ul>
       )}
 
-      <ul className={styles.facts}>
-        {codEnabled && (
-          <li className={styles.fact}>
-            <Icon paths={<><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /></>} />
-            Cash on Delivery available
-            {codMax > 0 ? ` on orders up to ${formatCurrency(codMax, currency)}` : ""}
-          </li>
-        )}
-        {returnsWindowDays > 0 && (
-          <li className={styles.fact}>
-            <Icon paths={<><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></>} />
-            Easy {returnsWindowDays}-day returns
-          </li>
-        )}
-        {settings?.store?.taxIncluded != null && (
-          <li className={styles.fact}>
-            <Icon paths={<><path d="M9 12l2 2 4-4" /><circle cx="12" cy="12" r="10" /></>} />
-            {settings.store.taxIncluded
-              ? "Prices inclusive of all taxes"
-              : `Taxes calculated at checkout${
-                  settings.store.taxRate ? ` (${settings.store.taxRate}% GST)` : ""
-                }`}
-          </li>
-        )}
-      </ul>
+      {facts && (
+        <ul className={styles.facts}>
+          {codEnabled && (
+            <li className={styles.fact}>
+              <Icon paths={<><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /></>} />
+              Cash on Delivery available
+              {codMax > 0 ? ` on orders up to ${formatCurrency(codMax, currency)}` : ""}
+            </li>
+          )}
+          {returnsWindowDays > 0 && (
+            <li className={styles.fact}>
+              <Icon paths={<><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></>} />
+              Easy {returnsWindowDays}-day returns
+            </li>
+          )}
+          {taxNote && (
+            <li className={styles.fact}>
+              <Icon paths={<><path d="M9 12l2 2 4-4" /><circle cx="12" cy="12" r="10" /></>} />
+              {taxNote}
+            </li>
+          )}
+        </ul>
+      )}
     </div>
   );
 };

@@ -1,0 +1,150 @@
+/* =============================================================================
+ * ChapterNav — the slim glass pill bar
+ * =============================================================================
+ * MOBILE FIRST: a full-width band that sticks under the 56px masthead and
+ * scrolls its pills sideways. From 1025px it sits under the 64px header with
+ * air (72px) and spans the content column it belongs to, which is why it has
+ * no width of its own — the column gives it one.
+ *
+ * It is never `display: none` when hidden: the bar occupies its line in the
+ * column from the first paint, so revealing it moves nothing. Everything here
+ * is token-driven — no hardcoded colour, radius, shadow or duration.
+ * ========================================================================== */
+
+/* The doubled class is deliberate: the ground below has to beat `.sf-glass`'s
+   own `background` whichever order the two sheets land in. */
+.nav.nav {
+  position: sticky;
+  /* The masthead is 56px at <= 768px; the desktop offset is below. */
+  top: 56px;
+  z-index: var(--sf-z-sticky);
+  /* `.sf-glass` supplies the blur, the hairline and the shadow; the GROUND is
+     firmer than the 6% white the primitive uses. A 40px bar that a chapter
+     heading scrolls under needs more than a tint to stay legible — and where a
+     compositor declares backdrop-filter and then skips it, 6% white is no
+     ground at all. The same reasoning DESIGN_SYSTEM §7 applies to the
+     SweetAlert popup, one step lighter. */
+  background: color-mix(in srgb, var(--sf-color-surface) 88%, transparent);
+  border-radius: var(--sf-radius-pill);
+  padding: var(--sf-space-1);
+  margin-bottom: var(--sf-space-6);
+  transition: opacity var(--sf-duration-fast) var(--sf-ease),
+    transform var(--sf-duration-fast) var(--sf-ease);
+}
+
+/* Below 320px of scroll — and while any overlay is up — the bar is out of the
+   way but still in the layout, so nothing reflows when it returns. */
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(calc(var(--sf-space-2) * -1));
+}
+
+.revealed {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+/* An open drawer, modal or search overlay is the thing being read; the bar
+   steps out rather than floating over the scrim. Same rule the shop's chapter
+   strip follows, so the two sticky bands behave alike. */
+:global(body[data-drawer-open]) .nav {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.item {
+  flex: none;
+}
+
+/* 40px pills at 13px, the size DESIGN_SYSTEM gives this bar. The full 44px tap
+   target is restored on touch pointers below. */
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--sf-space-4);
+  border-radius: var(--sf-radius-pill);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  white-space: nowrap;
+  color: var(--sf-color-text-secondary);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast),
+    background-color var(--sf-transition-fast);
+}
+
+.pill:hover {
+  color: var(--sf-color-text);
+  background: var(--sf-color-surface-hover);
+}
+
+.pill:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* Active: gold type over a gradient underline — two differences, so the state
+   is never carried by colour alone. */
+.pillActive,
+.pillActive:hover {
+  color: var(--sf-color-gold);
+  background: var(--sf-color-primary-soft);
+}
+
+.pillActive::after {
+  content: "";
+  position: absolute;
+  left: var(--sf-space-4);
+  right: var(--sf-space-4);
+  bottom: var(--sf-space-2);
+  height: 1px;
+  border-radius: var(--sf-radius-pill);
+  background-image: var(--sf-gradient-signature);
+}
+
+@media (pointer: coarse) {
+  .pill {
+    min-height: var(--sf-tap-target);
+  }
+}
+
+/* ---- >= 1025px: under the 64px masthead, with air ------------------------ */
+@media (min-width: 1025px) {
+  .nav {
+    top: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav,
+  .pill {
+    transition: none;
+  }
+
+  .list {
+    scroll-behavior: auto;
+  }
+}

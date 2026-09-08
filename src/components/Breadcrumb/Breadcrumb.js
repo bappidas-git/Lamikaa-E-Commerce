@@ -29,6 +29,12 @@ import styles from "./Breadcrumb.module.css";
 // It is an ordered list because a trail is ordered, and the separators are
 // pseudo-elements — a "/" between two crumbs is punctuation drawn by the
 // stylesheet, not a character a screen reader should read out.
+//
+// A LINKLESS CRUMB IN THE MIDDLE IS NOT THE CURRENT PAGE (Prompt 25). A caller
+// can hand over a crumb with no `to` — an ancestor with no route of its own —
+// and that used to take both the current-page STYLE and, visually, the emphasis
+// that belongs to the page you are standing on. Only the last crumb is current;
+// everything else without a link is plain text.
 // =============================================================================
 
 const Breadcrumb = ({ items = [], className = "" }) => {
@@ -52,7 +58,10 @@ const Breadcrumb = ({ items = [], className = "" }) => {
                   {item.label}
                 </Link>
               ) : (
-                <span className={styles.current} aria-current={last ? "page" : undefined}>
+                <span
+                  className={last ? styles.current : undefined}
+                  aria-current={last ? "page" : undefined}
+                >
                   {item.label}
                 </span>
               )}

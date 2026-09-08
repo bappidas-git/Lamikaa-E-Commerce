@@ -1,15 +1,30 @@
 /* =============================================================================
  * AddToCartBar — the thumb rail
  * =============================================================================
- * A slim ivory band on a hairline, holding the frame, the name, the real price
- * and the actions. Mobile only: it exists because on a phone the primary CTA
- * has to stay a thumb away once the buy box has scrolled off. It slides up from
- * the foot of the screen and is otherwise invisible.
+ * A strong-glass band across the foot of the screen holding the pack, the name,
+ * the live price and the same Add to Cart button the purchase panel carries. It
+ * slides up once the panel's own CTA row has scrolled away and is otherwise not
+ * on the page at all.
  *
- * Note the two `display` declarations on .bar — none by default, flex inside the
- * phone query. That is deliberate: this is a phone device, not a small viewport
- * treatment of a desktop one.
+ * Note the two `display` declarations on .bar — none by default, flex inside
+ * the phone query. That is deliberate: this is a phone device, not a small
+ * viewport treatment of a desktop one.
+ *
+ * `.sf-glass` + `.sf-glass--strong` (applied in the component) supply the blur,
+ * the hairline and the shadow; the GROUND is firmer than either — see the note
+ * on it below.
  * ========================================================================== */
+
+/* Doubled so the ground beats `.sf-glass`'s own background whichever order the
+   two sheets land in. */
+.bar.bar {
+  /* A purchase bar has a live page scrolling under it, and 8% white is a tint,
+     not a ground: a gold headline or a pack shot passing beneath "Add to Cart"
+     takes the price with it, and where a compositor declares backdrop-filter
+     and then skips it there is nothing behind the text at all. Same reasoning
+     DESIGN_SYSTEM §7 applies to the SweetAlert popup. */
+  background: color-mix(in srgb, var(--sf-color-surface) 92%, transparent);
+}
 
 .bar {
   position: fixed;
@@ -25,9 +40,12 @@
   justify-content: space-between;
   gap: var(--sf-space-3);
   padding: var(--sf-space-2) var(--sf-space-4);
+  /* The home indicator's strip, on the devices that have one. */
   padding-bottom: calc(var(--sf-space-2) + env(safe-area-inset-bottom));
-  background: var(--sf-color-bg);
-  border-top: 1px solid var(--sf-color-border-strong);
+  /* The band spans the screen: it rounds nothing and rules only its top edge. */
+  border-inline: 0;
+  border-bottom: 0;
+  border-radius: 0;
   font-family: var(--sf-font-family);
   transform: translateY(110%);
   transition: transform var(--sf-transition);
@@ -44,54 +62,37 @@
   min-width: 0;
 }
 
-.thumb {
-  width: 40px;
-  height: 52px;
-  flex-shrink: 0;
-  object-fit: cover;
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface-2);
+/* 56px of plate — the pack, on the same surface the page's stage uses, never
+   cropped. Two classes deep so the radius beats `.sf-plate`'s own, whichever
+   order the sheets land in. */
+.bar .thumb {
+  width: 56px;
+  flex: none;
+  aspect-ratio: 1;
+  border-radius: var(--sf-radius-md);
 }
 
-.priceWrap {
+.text {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
+/* One line, always. The pack is directly above the bar and the panel says the
+   name in full — this is a reminder, not a label. */
 .name {
   font-size: var(--sf-text-xs);
   line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text-muted);
+  color: var(--sf-color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 34vw;
+  max-width: 38vw;
 }
 
-.priceRow {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sf-space-2);
-}
-
-/* The same serif figure the buy box shows, one step down. */
 .price {
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  font-weight: var(--sf-font-medium);
-  line-height: 1;
-  color: var(--sf-color-price);
-  font-variant-numeric: tabular-nums;
-}
-
-.compare {
-  font-size: var(--sf-text-xs);
-  color: var(--sf-color-compare);
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-  font-variant-numeric: tabular-nums;
+  min-width: 0;
 }
 
 .actions {
@@ -101,86 +102,13 @@
   flex-shrink: 0;
 }
 
-/* Both actions are the house button: tracked capitals, near-square, hairline.
-   Add to Cart takes the ink fill; Buy Now stands beside it as an outline, so
-   the bar carries one filled control and not two. */
-.addBtn,
-.buyNow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--sf-tap-target);
-  padding: 0 var(--sf-space-4);
-  border: 1px solid transparent;
-  border-radius: var(--sf-radius-sm);
-  font-family: inherit;
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
+.add {
   white-space: nowrap;
-  cursor: pointer;
-  transition: background-color var(--sf-transition),
-    border-color var(--sf-transition), color var(--sf-transition);
 }
 
-.addBtn {
-  background: var(--sf-color-emerald);
-  border-color: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
-}
-
-.addBtn:hover:not(:disabled) {
-  background: var(--sf-color-gold-deep);
-  border-color: var(--sf-color-gold-deep);
-}
-
-/* The confirmation moment — the SAME "Added ✓" microstate the product card
-   gives (ProductCard.module.css `.addBtn.added`): the fill drops away and the
-   button becomes a gold hairline for a beat. It used to flip to a solid
-   success green here, which was the only place on the storefront where a
-   confirmed add looked like that. */
-.addBtnDone,
-.addBtnDone:hover:not(:disabled) {
-  background: var(--sf-color-surface);
-  border-color: var(--sf-color-gold-deep);
-  color: var(--sf-color-gold-deep);
-}
-
-.buyNow {
-  background: transparent;
-  border-color: var(--sf-color-border-strong);
-  color: var(--sf-color-text);
-}
-
-.buyNow:hover:not(:disabled) {
-  border-color: var(--sf-color-text);
-}
-
-.addBtn:focus-visible,
-.buyNow:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-}
-
-.addBtn:disabled,
-.buyNow:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* Mobile-first: the bar only exists on phones/large phones. It sits ABOVE the
-   global BottomNav so the PDP's primary CTA is never hidden while a shopper is
-   deciding — which the base `z-index: var(--sf-z-stickybar)` (60 against the
-   bar's 40) already says.
-
-   The raw `z-index: 1300` this query used to add is gone (Prompt 10). It dated
-   from a BottomNav the comment described as "z 1200" and no longer is, and at
-   1300 the bar painted over --sf-z-modal (1100): opening the navigation drawer
-   or the cart on a product page left "Buy now" floating on top of the dialog.
-   Prompt 25 rebuilds this bar; the stacking order is settled here so it
-   inherits a correct one. */
+/* Mobile-first: the bar only exists on phones and large phones. From 769px the
+   page is two columns and the panel keeps a whole column to itself, so its CTA
+   row is reachable by scrolling the thing you are already reading. */
 @media (max-width: 768px) {
   .bar {
     display: flex;
@@ -188,26 +116,15 @@
 }
 
 /* The bar sheds its parts in order of how little the shopper needs them, so the
-   two actions never drop below the 44px minimum on a narrow phone.
-
-   First to go is the struck compare price — the real price and the CTA are what
-   the bar exists for, and the saving is stated in full a scroll away. */
-@media (max-width: 520px) {
-  .compare {
-    display: none;
-  }
-}
-
-/* Then the frame: the photograph it repeats is directly above the bar. The name
-   keeps its ellipsis and is the last thing to shrink. */
-@media (max-width: 420px) {
-  .thumb {
+   button never drops below the 44px minimum on a narrow phone. First to go is
+   the plate: the photograph it repeats is directly above the bar. */
+@media (max-width: 400px) {
+  .bar .thumb {
     display: none;
   }
 
-  .addBtn,
-  .buyNow {
-    padding: 0 var(--sf-space-3);
+  .name {
+    max-width: 44vw;
   }
 }
 

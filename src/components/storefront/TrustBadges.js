@@ -17,11 +17,19 @@ import styles from "./TrustBadges.module.css";
 // the value is resolved from LIVE settings/shipping data so it is never stale or
 // invented; if the real data doesn't support it, the badge's sub-label is hidden.
 //
+// THREE SHAPES, ONE LIST (Prompt 25 adds the third):
+//   grid    two-up, ruled — the old buy-box block
+//   row     one scrolling line, ruled between cells
+//   chips   glass pills that wrap — what the LAMIKAA purchase panel wears. The
+//           promises sit BETWEEN the price and the choice of variant there, and
+//           a ruled two-up block in that slot reads as a table of terms; pills
+//           read as marks on the product, which is what they are.
+//
 // Props:
 //   ids       array   override the configured badge ids (optional)
 //   settings  object  public store settings (for COD)
 //   shipping  array   active shipping methods (for the free-shipping threshold)
-//   variant   "row"|"grid"
+//   variant   "row"|"grid"|"chips"
 // =============================================================================
 
 const ICONS = {
@@ -108,8 +116,13 @@ const TrustBadges = ({
 
   if (badges.length === 0) return null;
 
+  const isChips = variant === "chips";
+
   return (
-    <ul className={`${styles.badges} ${styles[variant]}`} aria-label="Our promises">
+    <ul
+      className={`${styles.badges} ${styles[variant] || styles.grid}`}
+      aria-label="Our promises"
+    >
       {badges.map((b) => {
         const detail = b.dynamic
           ? resolveTrustBadgeDetail(b.id, { settings, shipping })
@@ -119,8 +132,8 @@ const TrustBadges = ({
             <span className={styles.iconWrap} aria-hidden="true">
               <svg
                 viewBox="0 0 24 24"
-                width="22"
-                height="22"
+                width={isChips ? 16 : 22}
+                height={isChips ? 16 : 22}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.4"

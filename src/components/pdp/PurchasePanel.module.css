@@ -1,0 +1,286 @@
+/* =============================================================================
+ * PurchasePanel — the buy column
+ * =============================================================================
+ * One flex column with a single rhythm, so every control in it is a step in the
+ * same sentence rather than eight boxes stacked. The card is glass on a desktop
+ * and PLAIN on a phone: below 769px the panel is the width of the screen, and a
+ * backdrop filter that wide is a blur of the page's own ground for no gain (and
+ * the second blurred layer under a glass masthead, which DESIGN_SYSTEM §4
+ * budgets against).
+ *
+ * Fully token-driven: no hardcoded colour, radius, shadow, duration or gutter.
+ * ========================================================================== */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-5);
+  /* The panel is a column in a grid; without this a long unbroken word (a SKU,
+     an INCI term) would push the whole two-column layout wider than the page. */
+  min-width: 0;
+}
+
+/* ---- Phone: the card takes its surface off ------------------------------- */
+@media (max-width: 768px) {
+  .panel {
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    gap: var(--sf-space-4);
+  }
+}
+
+/* ---- The trail ----------------------------------------------------------- */
+
+.crumbs {
+  margin-bottom: calc(var(--sf-space-2) * -1);
+}
+
+/* ---- The eyebrow: category · ritual step · the merchant's flags ---------- */
+
+.eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-2) var(--sf-space-3);
+  margin: 0;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  line-height: var(--sf-leading-tight);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+.categoryLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--sf-color-gold);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+.categoryLink:hover {
+  color: var(--sf-color-gold-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.categoryLink:focus-visible {
+  outline: none;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* "01 — Cleanse". Fraunces tabular figures, in the secondary tone so the gold
+   category link stays the one accent on the line. */
+.step {
+  color: var(--sf-color-text-secondary);
+  letter-spacing: var(--sf-tracking-wide);
+}
+
+/* ---- The name and the promise ------------------------------------------- */
+
+.name {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+  /* Display type at this size wants a short measure; a four-word product name
+     should break as a stack, not run to the panel's edge. */
+  max-width: 18ch;
+}
+
+.promise {
+  margin: 0;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+  max-width: 46ch;
+}
+
+.rating {
+  margin: 0;
+}
+
+.price {
+  margin: 0;
+}
+
+/* ---- Size / fragrance / SKU — the quiet rows ----------------------------- */
+
+/* A two-column definition list: the labels form their own column, sized to the
+   longest of them, and the values line up against it. A fixed label width was
+   the first attempt and "FRAGRANCE" — tracked uppercase at 12px — ran straight
+   under its own value. */
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sf-space-2) var(--sf-space-5);
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-tight);
+}
+
+/* The rows are `<div>`s inside the `<dl>` (the only way to group a term with
+   its definition), so they hand their two children to the grid rather than
+   forming a track of their own. */
+.fact {
+  display: contents;
+}
+
+.factLabel {
+  color: var(--sf-color-text-muted);
+  text-transform: uppercase;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-normal);
+  letter-spacing: var(--sf-tracking-wide);
+  white-space: nowrap;
+}
+
+.factValue {
+  margin: 0;
+  min-width: 0;
+  color: var(--sf-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.sku {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Variants ------------------------------------------------------------ */
+
+.variants {
+  min-width: 0;
+}
+
+/* ---- Quantity + stock ---------------------------------------------------- */
+
+.quantityRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sf-space-3) var(--sf-space-5);
+}
+
+.quantity {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+}
+
+.quantityLabel {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+/* Stock is stated in words, never by colour alone — the tone only reinforces
+   what the sentence already says. */
+.stock {
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text-secondary);
+}
+
+.stockLow {
+  color: var(--sf-color-warning);
+}
+
+.stockOut {
+  color: var(--sf-color-danger);
+}
+
+/* ---- The CTA row --------------------------------------------------------- */
+/* Add to Cart takes the width it can get, Buy now sits beside it, and the two
+   marks close the row. Below 480px everything goes full width in the order a
+   thumb reaches it. */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-3);
+}
+
+/* The basis is 10rem, not the 12rem the row first carried: at a 1024px tablet
+   the content column is ~500px, and a 12rem basis pushed the two marks onto a
+   line of their own. Ten holds "Add to Cart" and "Buy now" side by side there
+   with the wishlist and share circles still on the row. */
+.add,
+.buy {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.marks {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  flex: none;
+}
+
+/* A wishlisted product keeps its mark inked, not just filled. */
+.wishlisted,
+.wishlisted:hover {
+  color: var(--sf-color-gold);
+  border-color: var(--sf-color-border-strong);
+}
+
+@media (max-width: 480px) {
+  .add,
+  .buy {
+    flex: 1 1 100%;
+  }
+
+  .marks {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* ---- The ownership note -------------------------------------------------- */
+
+.ownership {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sf-space-2) var(--sf-space-3);
+}
+
+.story {
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-gold);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.story:hover {
+  text-decoration: underline;
+}
+
+.story:focus-visible {
+  outline: none;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+@media (max-width: 768px) {
+  .promise {
+    font-size: var(--sf-text-base);
+  }
+}

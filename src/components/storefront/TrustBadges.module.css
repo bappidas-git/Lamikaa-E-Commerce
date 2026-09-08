@@ -6,9 +6,9 @@
  * gold line-mark, the promise, and — when live data backs it — the real number
  * underneath.
  *
- * `grid` (the PDP buy box) rules them two-up; `row` scrolls them in one line.
- * The dividers are drawn per cell so the block needs no wrapper rules and works
- * with any badge count.
+ * `grid` rules them two-up; `row` scrolls them in one line; `chips` (Prompt 25,
+ * the LAMIKAA purchase panel) wraps them as glass pills. The dividers are drawn
+ * per cell so the block needs no wrapper rules and works with any badge count.
  * ========================================================================== */
 
 .badges {
@@ -33,6 +33,16 @@
 
 .row::-webkit-scrollbar {
   display: none;
+}
+
+/* ---- chips — glass pills, the purchase panel's treatment ----------------- */
+/* A flex row that wraps rather than a grid: the pills are as wide as their
+   words, and four promises settle into two lines on a phone and one on a
+   desktop without a column count deciding it for them. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
 }
 
 .badge {
@@ -72,6 +82,39 @@
 .row .badge:first-child {
   padding-left: 0;
   border-left: none;
+}
+
+/* The pill: the glass surface, a hairline and the pill radius, at 13px. It is
+   not `.sf-chip` — that primitive is 36px and carries an interactive floor for
+   its button/link forms, and these are facts, not targets. */
+.chips .badge {
+  align-items: center;
+  gap: var(--sf-space-2);
+  padding: var(--sf-space-2) var(--sf-space-4);
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-glass-bg);
+}
+
+.chips .iconWrap {
+  margin-top: 0;
+  color: var(--sf-color-gold);
+}
+
+.chips .iconWrap svg {
+  width: 16px;
+  height: 16px;
+}
+
+.chips .text {
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--sf-space-2);
+}
+
+.chips .label {
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-secondary);
 }
 
 /* The mark — gold line-art at type scale, aligned to the label's cap height. */
