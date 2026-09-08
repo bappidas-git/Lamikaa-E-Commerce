@@ -50,24 +50,28 @@
   box-shadow: var(--sf-shadow-focus);
 }
 
-/* The figure — serif, because it is a number the shopper is meant to believe. */
+/* The figure — serif, because it is a number the shopper is meant to believe,
+   and gold (Prompt 25) so it belongs to the marks beside it rather than reading
+   as a second, smaller headline under the product's name. 13.4:1 on the page
+   ground, so it carries as text and not only as an accent. */
 .badge {
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-lg);
   font-weight: var(--sf-font-medium);
   line-height: 1;
   letter-spacing: var(--sf-tracking-normal);
-  color: var(--sf-color-text);
+  color: var(--sf-color-gold);
   font-variant-numeric: tabular-nums;
 }
 
-/* The count — a note in the muted tone, with the house gold hairline growing in
-   under it on hover so it reads as the way through to the reviews. */
+/* The count — a note in the secondary tone (10.5:1), with the house gold
+   hairline growing in under it on hover so it reads as the way through to the
+   reviews. */
 .count {
   position: relative;
   font-size: var(--sf-text-sm);
   line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text-muted);
+  color: var(--sf-color-text-secondary);
   transition: color var(--sf-transition-fast);
 }
 

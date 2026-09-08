@@ -101,19 +101,22 @@
   gap: var(--sf-space-2);
 }
 
+/* 14px rows with gold glyphs (Prompt 25). The green tick these carried was the
+   only place on the storefront where a POLICY was inked in the success colour —
+   a semantic that belongs to an outcome, not to a promise. */
 .fact {
   display: flex;
   align-items: flex-start;
-  gap: var(--sf-space-2);
-  font-size: var(--sf-text-xs);
+  gap: var(--sf-space-3);
+  font-size: var(--sf-text-sm);
   line-height: var(--sf-leading-normal);
   color: var(--sf-color-text-secondary);
 }
 
 .fact svg {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   margin-top: 2px;
-  color: var(--sf-color-discount);
+  color: var(--sf-color-gold-deep);
 }

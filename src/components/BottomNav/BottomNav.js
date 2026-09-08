@@ -36,9 +36,18 @@ import styles from "./BottomNav.module.css";
 // are the two flags that say so, and a drawer sliding in over a bar that is
 // mid-retreat is a distraction the visitor did not ask for.
 //
-// Z-ORDER, reserved here so Prompt 25 does not have to guess: the bar sits at
-// --sf-z-sticky (40) and the PDP's sticky purchase bar at --sf-z-stickybar (60),
-// which is ABOVE it — the buy action wins the bottom of a product page.
+// Z-ORDER: the bar sits at --sf-z-sticky (40) and the PDP's sticky purchase bar
+// at --sf-z-stickybar (60), which is ABOVE it — the buy action wins the bottom
+// of a product page.
+//
+// NOT ON A PRODUCT PAGE AT ALL (Prompt 25). Below 769px the PDP grows its own
+// sticky bar — the pack, the price and Add to Cart — and two stacked bars take
+// 128px off a 640px screen, leave the tab labels reading as part of the buy
+// control, and push the page's own content behind both. The bar therefore
+// stands down on /product/*, which is the ONE route where the thing a visitor
+// came to do lives at the bottom of the screen. Navigation is still a tap away
+// in the masthead (menu, search, cart) at every width. The bar exists only
+// below 769px anyway, so this is a decision about phones and large phones.
 // =============================================================================
 
 const NAV_ITEMS = [
@@ -69,6 +78,10 @@ const overlayIsOpen = () => {
   const { body } = document;
   return Boolean(body?.dataset.drawerOpen || body?.dataset.scrollLock);
 };
+
+/** The one route the bar stands down on — see the note above. */
+export const hidesBottomNav = (pathname) =>
+  typeof pathname === "string" && pathname.startsWith("/product/");
 
 const BottomNav = () => {
   const { getWishlistCount } = useWishlist();
@@ -118,6 +131,11 @@ const BottomNav = () => {
     (item, isActive) => (item.key === "shop" ? isShopActive : isActive),
     [isShopActive]
   );
+
+  // Every hook above has run: the bar may now decline to render. Its search
+  // modal goes with it — the modal is opened from this bar and from nowhere
+  // else, and the masthead carries its own search at every width.
+  if (hidesBottomNav(pathname)) return null;
 
   const renderInner = (item) => (
     <>

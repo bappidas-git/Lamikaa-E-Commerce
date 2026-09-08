@@ -1,326 +1,188 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { useFaqs } from "../../context/FaqContext";
 import apiService from "../../services/api";
+import useSeo from "../../hooks/useSeo";
+import brand from "../../config/brand";
+import { isPriceKnown, primaryImage, productAlt, stageSrc } from "../../utils/product";
 import { categoryPath } from "../../utils/categories";
-import { productFlagMarks } from "../../utils/helpers";
 import { ROUTES } from "../../utils/constants";
-import {
-  setPageTitle,
-  releasePageTitle,
-  storeDocumentTitle,
-} from "../../utils/documentTitle";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
-import { DURATION, RISE, tween } from "../../theme/motion";
 import {
-  ProductGallery,
-  SocialProof,
-  PriceBlock,
-  VariantSelector,
-  QuantityStepper,
-  TrustBadges,
-  DeliveryReturnsInfo,
+  Accordion,
+  CloudinaryImage,
+  ContentBlocks,
+  Skeleton,
+} from "../../components/ui";
+import Chapter from "../../components/pdp/Chapter";
+import ChapterNav from "../../components/pdp/ChapterNav";
+import PurchasePanel from "../../components/pdp/PurchasePanel";
+import {
   AddToCartBar,
-  ReviewsSection,
-  RelatedProducts,
   FrequentlyBoughtTogether,
+  RelatedProducts,
+  ReviewsSection,
 } from "../../components/storefront";
+import NotFound from "../NotFound/NotFound";
 import styles from "./ProductDetails.module.css";
 
 // =============================================================================
-// Product Detail Page (PDP)
+// /product/:slug — the product page
 // =============================================================================
-// Assembled entirely from the reusable, themeable, domain-agnostic storefront
-// component library (src/components/storefront). This page owns DATA (loading,
-// variant/stock derivation, the reviews blend, cart wiring); the components own
-// PRESENTATION + the UX principles. Everything here is API/db.json-driven — no
-// hardcoded business content — and every persuasive element is bound to real
-// data (see the ethics notes in STOREFRONT_UX_GUIDELINES.md).
+//
+// TWO COLUMNS, ONE OF THEM STILL. From 1025px the pack holds its place on the
+// left (`position: sticky`) while the right column scrolls the whole way: the
+// purchase panel first, then the product's story as numbered chapters. The
+// product is never off screen while a shopper reads about it, and the page
+// needs no second gallery further down to put it back.
+//
+// THE TAB STRIP IS GONE, and its absence is the design. Five panels behind one
+// control hid four fifths of the page, on a range whose whole story — the
+// ritual step, the ingredients, the farmer ownership — is the reason to buy.
+// Everything is on the page now, in order, and `ChapterNav` is how you skip: a
+// slim glass bar that arrives after 320px of scroll, tracks the chapter being
+// read and jumps to any other.
+//
+// WHAT WENT WITH IT. Six derivation helpers built a textile spec table, a
+// craft narrative and a "PREMIUM" ribbon for the previous brand. None of that
+// has a LAMIKAA meaning — a face wash carries an INCI list and a ritual step,
+// not a textile record — and the fields those helpers read do not exist on
+// a seeded product. The promises band went the same way: it restated, two
+// screens lower, the trust badges the purchase panel already carries.
+//
+// THE HEAD IS `useSeo`'s NOW. The hand-rolled `setPageTitle` + `meta[name=
+// description]` effect this page carried (the last one in the app) is replaced
+// by the hook every other route uses, so the PDP also gets a canonical, the
+// Open Graph set and a share image. The product JSON-LD arrives in Prompt 27.
+//
+// STAGED ACROSS THREE PROMPTS. This one is the skeleton: layout, panel, nav,
+// the overview chapter and the mobile bar. Prompt 26 replaces the media
+// placeholder below with the real gallery (images, video, lightbox); Prompt 27
+// writes the benefits / ingredients / directions / farmer-story / full-INCI
+// chapters and rewrites the three retained blocks at the foot of the column
+// (FAQs, reviews, the cross-sell rails).
 // =============================================================================
 
-// ─── Loading Skeleton ───────────────────────────────────────────────────────
-// The page's silhouette, drawn on the shared `sf-skeleton` primitive — the same
-// warm sand sweep every other loading surface on the storefront uses. The
-// stylesheet below supplies only the shapes.
-const Skeleton = () => (
-  <div className={styles.skeletonPage} aria-hidden="true">
-    <div className={`sf-skeleton ${styles.skeletonBreadcrumb}`} />
-    <div className={styles.skeletonLayout}>
-      <div className={`sf-skeleton ${styles.skeletonMainImage}`} />
-      <div className={styles.skeletonRight}>
-        <div className={`sf-skeleton ${styles.skeletonTitle}`} />
-        <div className={`sf-skeleton ${styles.skeletonRating}`} />
-        <div className={`sf-skeleton ${styles.skeletonPrice}`} />
-        <div className={`sf-skeleton ${styles.skeletonDesc}`} />
-        <div className={`sf-skeleton ${styles.skeletonDesc}`} />
-        <div className={`sf-skeleton ${styles.skeletonButtons}`} />
+/** Quantity ceiling for a product whose stock nobody has recorded. */
+const STOCK_UNKNOWN_MAX = 10;
+
+/** How long the "Added" state holds on the Add to Cart button. */
+const ADDED_MS = 1400;
+
+/** The <h1>'s id — the purchase panel labels itself with it. */
+const TITLE_ID = "pdp-title";
+
+/**
+ * The tab title a product asks for.
+ *
+ * `useSeo` owns the "%s · LAMIKAA NATURALS" template, and the seeded
+ * `metaTitle` is a WHOLE title ("Black Rice Face Wash · LAMIKAA NATURALS") —
+ * written in Prompt 06 for the hand-rolled title effect this page used to run.
+ * Handed to the hook unchanged it printed the brand name twice. An override
+ * that already ends in the site's own suffix therefore has it taken off HERE
+ * rather than out of the seed: the admin's field keeps meaning "the title I
+ * want", whatever an owner types into it, and neither answer says LAMIKAA
+ * NATURALS twice.
+ */
+export const productSeoTitle = (product) => {
+  const override = product?.metaTitle?.trim();
+  if (!override) return product?.name;
+  const suffix = brand.seo.titleTemplate.replace("%s", "");
+  if (suffix && override.endsWith(suffix)) {
+    return override.slice(0, -suffix.length).trim() || product?.name;
+  }
+  return override;
+};
+
+// ─── Loading skeleton ────────────────────────────────────────────────────────
+// The page's silhouette in the two-column shape it is about to take, drawn on
+// the shared `Skeleton` primitive.
+const PageSkeleton = () => (
+  <div className={styles.page}>
+    <div className={`sf-container sf-container--wide ${styles.layout}`} aria-hidden="true">
+      <div className={styles.mediaColumn}>
+        <Skeleton variant="block" className={styles.stage} />
+      </div>
+      <div className={styles.contentColumn}>
+        <div className={styles.panelSkeleton}>
+          <Skeleton variant="text" lines={1} width="40%" />
+          <Skeleton variant="text" lines={2} />
+          <Skeleton variant="text" lines={1} width="30%" />
+          <Skeleton variant="text" lines={3} />
+          <Skeleton variant="block" height="52px" />
+        </div>
       </div>
     </div>
   </div>
 );
 
-// ─── Not Found State ────────────────────────────────────────────────────────
-const NotFound = () => (
-  <div className={styles.notFound}>
-    <div className={styles.notFoundIcon}>404</div>
-    <h2>Product Not Found</h2>
-    <p>The product you are looking for does not exist or has been removed.</p>
-    <Link to={ROUTES.SHOP} className={styles.notFoundLink}>
-      Browse Products
-    </Link>
-  </div>
-);
-
-// ─── Authenticity helpers (PREMIUM ribbon + KEY FEATURES) ─────────────────────
-// The gold "PREMIUM" ribbon shows ONLY when the product is genuinely flagged —
-// same rule the storefront ProductCard uses (featured / bridal / premium tag).
-// TRENDING / HOT are the merchant's other two switches and are read the same
-// way, through `productFlagMarks` — set beside the eyebrow in the buy head
-// rather than on the plate, exactly as the card sets them beside its brand.
-const isPremiumProduct = (product) => {
-  const tags = Array.isArray(product?.tags) ? product.tags : [];
+// ─── Media, until Prompt 26 ──────────────────────────────────────────────────
+// The primary image on a plate: 1:1 on a phone, 4:5 from 769px, and the pack
+// never cropped by CSS at either ratio.
+//
+// THE DELIVERED TILE IS 4:5, not square. The product's own source crop is
+// letterboxed by Cloudinary onto a ground sampled from the pack's own edges
+// (`c_pad,b_auto`), which fills the desktop plate exactly. The covers are tall
+// (the face wash crops to 1500x3200), so a square tile would have set the pack
+// as a narrow strip down the middle of a very wide mount at BOTH ratios; the
+// 4:5 tile only letterboxes on the phone, by 36px a side.
+//
+// Prompt 26 replaces this with the swipeable gallery.
+const MediaGalleryPlaceholder = ({ product }) => {
+  const media = primaryImage(product);
   return (
-    product?.featured === true ||
-    tags.includes("bridal") ||
-    tags.includes("premium")
+    <CloudinaryImage
+      src={media?.url}
+      alt={productAlt(product, media)}
+      crop={media?.crop}
+      ar="4:5"
+      pad
+      plate
+      priority
+      sizes="(min-width: 1025px) 46vw, 100vw"
+      className={styles.stage}
+    />
   );
 };
 
-// KEY FEATURES bind to REAL product fields only. Prefer an explicit
-// features/highlights array; otherwise derive concise bullets from genuine spec
-// fields (fabric attribute, brand, weight, dimensions). Returns [] when there is
-// nothing real to show — the block is then omitted entirely. The product's
-// shortDescription is never repurposed here, so it stays visible on its own.
-const deriveKeyFeatures = (product) => {
-  if (!product) return [];
-
-  const explicit = Array.isArray(product.features)
-    ? product.features
-    : Array.isArray(product.highlights)
-    ? product.highlights
-    : null;
-  if (explicit && explicit.length > 0) {
-    return explicit.map((f) => String(f)).filter(Boolean);
-  }
-
-  const bullets = [];
-
-  // Fabric composition — read from the real variant attributes.
-  const fabrics = [
-    ...new Set(
-      (product.variants || [])
-        .map((v) => v?.attributes?.Fabric)
-        .filter((f) => f != null && f !== "")
-    ),
-  ];
-  if (fabrics.length > 0) {
-    bullets.push(
-      fabrics.length === 1
-        ? `Woven in pure ${fabrics[0]}`
-        : `Available in ${fabrics.join(", ")}`
-    );
-  }
-
-  if (product.brand) bullets.push(`Crafted by ${product.brand}`);
-
-  if (product.weight != null && product.weight !== "") {
-    bullets.push(`Net weight ${product.weight} kg`);
-  }
-
-  const d = product.dimensions;
-  if (d) {
-    const dims =
-      typeof d === "object"
-        ? [d.length, d.width, d.height]
-            .filter((v) => v != null && v !== "")
-            .join(" × ")
-        : String(d);
-    if (dims) bullets.push(`Measures ${dims} cm`);
-  }
-
-  return bullets;
-};
-
-// ─── Specifications / Fabric & Craft / FAQ assembly (REAL data only) ──────────
-// The PDP owns all data assembly; the panels below are pure render. Every helper
-// here returns ONLY real values and OMITS anything missing — nothing is invented.
-
-// The silk spec rows, in the order the design shows them.
-const SILK_SPEC_LABELS = [
-  "Warp Yarn",
-  "Weft Yarn",
-  "Design",
-  "Saree Length",
-  "Blouse Length",
-  "Border Width",
-  "Blouse Width",
-  "Weave Type",
-  "Origin",
-  "Occasion",
-  "Craft Time",
-];
-
-const normalizeSpecKey = (k) => String(k).toLowerCase().replace(/[^a-z0-9]/g, "");
-
-// Merge the structured spec sources (specifications → specs → attributes) into a
-// single normalized-key map. Earlier sources win; empty values are dropped.
-const collectSpecSources = (product) => {
-  const merged = {};
-  [product?.specifications, product?.specs, product?.attributes].forEach((src) => {
-    if (src && typeof src === "object" && !Array.isArray(src)) {
-      Object.entries(src).forEach(([k, v]) => {
-        const nk = normalizeSpecKey(k);
-        if (merged[nk] === undefined && v != null && String(v).trim() !== "") {
-          merged[nk] = v;
-        }
-      });
-    }
-  });
-  return merged;
-};
-
-const cleanSpecValue = (v) => {
-  if (v == null) return "";
-  if (Array.isArray(v)) return v.filter((x) => x != null && x !== "").join(", ");
-  return String(v).trim();
-};
-
-// Distinct fabrics across the real variants — a genuine yarn hint when the
-// product carries no explicit warp/weft spec.
-const variantFabrics = (product) => [
-  ...new Set(
-    (product?.variants || [])
-      .map((v) => v?.attributes?.Fabric)
-      .filter((f) => f != null && f !== "")
-  ),
-];
-
-// Build the silk spec table rows. Returns [] unless the product carries at least
-// one EXPLICIT silk spec field (specifications/specs/attributes) — the variant
-// fabric / occasion fallbacks only enrich an already-silk product, they never
-// fabricate a silk table on their own.
-const deriveSilkSpecRows = (product) => {
-  const map = collectSpecSources(product);
-  const hasExplicit = SILK_SPEC_LABELS.some((l) =>
-    cleanSpecValue(map[normalizeSpecKey(l)])
-  );
-  if (!hasExplicit) return [];
-
-  const fabrics = variantFabrics(product);
-  const singleFabric = fabrics.length === 1 ? fabrics[0] : null;
-  const fallbacks = {
-    "Warp Yarn": singleFabric,
-    "Weave Type": product?.weaveType,
-    Origin: product?.origin || product?.originRegion,
-    "Craft Time": product?.craftTime,
-    Occasion: product?.occasion || product?.occasions,
-  };
-
-  const rows = [];
-  SILK_SPEC_LABELS.forEach((label) => {
-    let value = map[normalizeSpecKey(label)];
-    if (value == null || value === "") value = fallbacks[label];
-    const text = cleanSpecValue(value);
-    if (text) rows.push({ label, value: text });
-  });
-  return rows;
-};
-
-// Generic spec fallback (Brand/SKU/Weight/Dimensions/Category/Tags) — used only
-// when no silk-specific data is present. Still real-data-only.
-const deriveGenericSpecRows = (product, category, sku) => {
-  const rows = [];
-  if (product?.brand) rows.push({ label: "Brand", value: product.brand });
-  if (sku) rows.push({ label: "SKU", value: sku });
-  if (product?.weight != null && product.weight !== "") {
-    rows.push({ label: "Weight", value: `${product.weight} kg` });
-  }
-  const d = product?.dimensions;
-  if (d) {
-    const dims =
-      typeof d === "object"
-        ? [d.length, d.width, d.height]
-            .filter((v) => v != null && v !== "")
-            .join(" × ")
-        : String(d);
-    if (dims) rows.push({ label: "Dimensions", value: `${dims} cm` });
-  }
-  if (category?.name) rows.push({ label: "Category", value: category.name });
-  if (Array.isArray(product?.tags) && product.tags.length > 0) {
-    rows.push({ label: "Tags", value: product.tags.join(", ") });
-  }
-  return rows;
-};
-
-// Fabric & Craft narrative. Returns null (→ tab hidden) unless there is genuine
-// craft-specific content: an explicit story field, OR a real weave/origin/craft
-// fact. Fabric alone (already shown elsewhere) never triggers the tab.
-const deriveFabricCraft = (product) => {
-  const map = collectSpecSources(product);
-  const get = (label) => cleanSpecValue(map[normalizeSpecKey(label)]);
-  const story = cleanSpecValue(product?.fabricAndCraft || product?.craftStory);
-
-  const facts = [];
-  const fabrics = variantFabrics(product);
-  const fabricVal = fabrics.length ? fabrics.join(", ") : get("Fabric");
-  if (fabricVal) facts.push({ label: "Fabric", value: fabricVal });
-
-  const weave = get("Weave Type") || cleanSpecValue(product?.weaveType);
-  if (weave) facts.push({ label: "Weave Type", value: weave });
-  const origin =
-    get("Origin") || cleanSpecValue(product?.origin || product?.originRegion);
-  if (origin) facts.push({ label: "Origin", value: origin });
-  const craftTime = get("Craft Time") || cleanSpecValue(product?.craftTime);
-  if (craftTime) facts.push({ label: "Craft Time", value: craftTime });
-
-  const craftFacts = facts.filter((f) => f.label !== "Fabric");
-  if (!story && craftFacts.length === 0) return null;
-  return { story, facts };
-};
-
-// FAQs are no longer assembled here. They come from the admin-managed `faqs`
-// collection through FaqContext: the product's own inline answers first, then
-// the ones written for this product, then the general product-page ones —
-// de-duped by question, so the most specific answer wins. See utils/faqs.js.
-
-// ═══════════════════════════════════════════════════════════════════════════
-const ProductDetails = () => {
-  // Route is /product/:slug (slug canonical; legacy numeric id still resolves).
+// ═════════════════════════════════════════════════════════════════════════════
+// DATA
+// ═════════════════════════════════════════════════════════════════════════════
+/**
+ * Everything the page knows and everything it can do, in one hook.
+ *
+ * It lives outside the view so the route can decide between the skeleton, the
+ * 404 and the page BEFORE the component that owns the <head> mounts — see the
+ * note on `ProductDetails` at the bottom of this file.
+ */
+const useProductPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  // Currency and the tax note come from the admin's Settings > General; the
-  // whole record is handed on to the trust badges and delivery panel, which
-  // read the COD rules out of it.
+  // Currency, the tax note and the COD rules come from Admin → Settings; the
+  // whole record is handed on to the trust badges and the delivery panel.
   const {
     store: settingsStore,
     payment: settingsPayment,
     currency: storeCurrency,
-    taxIncluded,
-    formatPrice,
     fillCopy,
   } = useStoreSettings();
-  const settings = { store: settingsStore, payment: settingsPayment };
-  // The FAQs tab reads the admin's answer set — see Admin > Storefront > FAQs.
+  const settings = useMemo(
+    () => ({ store: settingsStore, payment: settingsPayment }),
+    [settingsStore, settingsPayment]
+  );
+  // The FAQs chapter reads the admin's answer set — Admin → Storefront → FAQs.
   const { forProduct: faqsForThisProduct } = useFaqs();
-  const prefersReducedMotion = useReducedMotion();
-  const tabsRef = useRef(null);
-  const tabRefs = useRef([]); // roving focus across the tablist
-  const buyBoxRef = useRef(null); // anchor for the sticky mobile Add-to-Cart bar
 
-  // ── State ──────────────────────────────────────────────────────────────
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState("description");
-  const [openFaq, setOpenFaq] = useState(null);
   const [added, setAdded] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -330,7 +192,7 @@ const ProductDetails = () => {
   const [category, setCategory] = useState(null);
   const [shipping, setShipping] = useState([]);
 
-  // ── Fetch product ──────────────────────────────────────────────────────
+  // ── Fetch product ───────────────────────────────────────────────────────
   const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
@@ -348,6 +210,7 @@ const ProductDetails = () => {
       }
 
       if (!data) {
+        setProduct(null);
         setNotFound(true);
         return;
       }
@@ -438,10 +301,12 @@ const ProductDetails = () => {
     }
   }, [product]);
 
-  // ── Public store data for trust signals + transparent delivery info ─────
-  // (store settings come from StoreSettingsContext, one shared read.)
+  // Public store data for the delivery panel and the trust badges.
   useEffect(() => {
-    apiService.shipping.getMethods().then((m) => setShipping(Array.isArray(m) ? m : [])).catch(() => {});
+    apiService.shipping
+      .getMethods()
+      .then((m) => setShipping(Array.isArray(m) ? m : []))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -456,65 +321,7 @@ const ProductDetails = () => {
     }
   }, [product, fetchReviews, fetchAov]);
 
-  // ── SEO — Admin → Products → SEO (Optional) ────────────────────────────
-  // metaTitle / metaDescription were persisted by the product editor but read
-  // by nothing, so filling them in changed neither the tab nor the description
-  // a link preview quotes. This is the reader. Each falls back to real product
-  // copy when the admin left the field blank, and the cleanup hands the tab and
-  // the meta tag back to the store-wide defaults.
-  useEffect(() => {
-    if (!product) return;
-
-    const title =
-      product.metaTitle?.trim() ||
-      [product.name, settingsStore?.name].filter(Boolean).join(" | ");
-
-    const description =
-      product.metaDescription?.trim() ||
-      product.shortDescription?.trim() ||
-      "";
-
-    setPageTitle(title);
-
-    let tag = document.querySelector('meta[name="description"]');
-    const hadTag = !!tag;
-    const previousDescription = tag?.getAttribute("content") ?? "";
-    if (description) {
-      if (!tag) {
-        tag = document.createElement("meta");
-        tag.setAttribute("name", "description");
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute("content", description);
-    }
-
-    return () => {
-      releasePageTitle(storeDocumentTitle(settingsStore));
-      if (!description) return;
-      // Put back whatever was there — or take our own tag away again.
-      if (hadTag) tag.setAttribute("content", previousDescription);
-      else tag.remove();
-    };
-  }, [product, settingsStore]);
-
-  // ── Derived values ─────────────────────────────────────────────────────
-  const images =
-    product?.images?.length > 0
-      ? product.images
-      : product?.image
-      ? [product.image]
-      : [];
-
-  const currentPrice = selectedVariant ? selectedVariant.price : product?.price || 0;
-  const comparePrice = product?.comparePrice || 0;
-  const discount =
-    comparePrice > currentPrice
-      ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100)
-      : 0;
-  const currentSku = selectedVariant?.sku || product?.sku || "";
-
-  // Stock for the active selection — variant stock, else product stock (never
-  // silently 0). Low-stock uses the product's REAL threshold (not a magic 5).
+  // ── Derived: stock, availability, the quantity ceiling ──────────────────
   const currentStock = selectedVariant
     ? typeof selectedVariant.stock === "number"
       ? selectedVariant.stock
@@ -524,14 +331,17 @@ const ProductDetails = () => {
   const isOutOfStock = hasStockInfo && currentStock <= 0;
   const lowStockThreshold = Number(product?.lowStockThreshold) || 5;
   const isLowStock = !isOutOfStock && hasStockInfo && currentStock <= lowStockThreshold;
-  const STOCK_UNKNOWN_MAX = 10;
   const maxQuantity = hasStockInfo ? Math.max(1, currentStock) : STOCK_UNKNOWN_MAX;
 
   useEffect(() => {
     setQuantity((q) => Math.min(Math.max(1, q), maxQuantity));
   }, [maxQuantity]);
 
-  // ── Reviews blend (consistent average across the page) ──────────────────
+  // "Price on launch" — the one flag that disables buying anywhere on the site.
+  const comingSoon = product ? !isPriceKnown(product) : false;
+  const unavailable = comingSoon || isOutOfStock;
+
+  // ── Reviews blend (one average across the page) ─────────────────────────
   const baseRating = Number(product?.rating) || 0;
   const baseCount = Number(product?.totalReviews) || 0;
   const reviewSum = reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
@@ -541,11 +351,13 @@ const ProductDetails = () => {
       ? (baseRating * baseCount + reviewSum) / totalRatingsCount
       : baseRating;
 
-  // ── Cart wiring ────────────────────────────────────────────────────────
+  // ── Cart wiring. The line id scheme is the cart's contract: `<id>` for a
+  // plain product, `<id>-<variantId>` for a variant. Changing it orphans every
+  // line already in a shopper's cart.
   const handleAddToCart = useCallback(
     (options) => {
-      if (!product) return;
-      if (product.variants?.length > 0 && !selectedVariant) return;
+      if (!product) return undefined;
+      if (product.variants?.length > 0 && !selectedVariant) return undefined;
 
       const effectivePrice = selectedVariant ? selectedVariant.price : product.price;
       const effectiveStock = selectedVariant ? selectedVariant.stock : product.stock;
@@ -569,575 +381,313 @@ const ProductDetails = () => {
     [product, selectedVariant, quantity, addToCart, storeCurrency]
   );
 
-  // Primary CTA with a brief, satisfying "Added ✓" confirmation (the cart toast
-  // + mini-cart drawer also fire from CartContext).
+  // The primary CTA, with the brief "Added" confirmation the Button variant
+  // owns (the cart toast and the drawer also fire, from CartContext).
+  const addedTimer = useRef(null);
+  useEffect(() => () => clearTimeout(addedTimer.current), []);
+
   const handleAddClick = useCallback(() => {
-    if (isOutOfStock) return;
+    if (unavailable) return;
     handleAddToCart();
     setAdded(true);
-    setTimeout(() => setAdded(false), 1400);
-  }, [handleAddToCart, isOutOfStock]);
+    clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAdded(false), ADDED_MS);
+  }, [handleAddToCart, unavailable]);
 
   const handleBuyNow = useCallback(async () => {
+    if (unavailable) return;
     await handleAddToCart({ openDrawer: false });
-    navigate("/checkout");
-  }, [handleAddToCart, navigate]);
+    navigate(ROUTES.CHECKOUT);
+  }, [handleAddToCart, unavailable, navigate]);
+
+  // ── Below-the-panel content ─────────────────────────────────────────────
+  const faqs = useMemo(
+    () => (product ? faqsForThisProduct(product) : []),
+    [product, faqsForThisProduct]
+  );
+
+  return {
+    product,
+    loading,
+    notFound,
+    category,
+    shipping,
+    settings,
+    fillCopy,
+    // Selection
+    selectedVariant,
+    setSelectedVariant,
+    quantity,
+    setQuantity,
+    maxQuantity,
+    // Availability
+    hasStockInfo,
+    isOutOfStock,
+    isLowStock,
+    currentStock,
+    comingSoon,
+    // Actions
+    added,
+    handleAddClick,
+    handleBuyNow,
+    addToCart,
+    toggleWishlist,
+    isInWishlist,
+    // Reviews + AOV
+    reviews,
+    reviewsLoading,
+    reviewsError,
+    fetchReviews,
+    displayAvg,
+    totalRatingsCount,
+    relatedProducts,
+    bundle,
+    faqs,
+  };
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+// VIEW
+// ═════════════════════════════════════════════════════════════════════════════
+const ProductDetailsView = ({
+  product,
+  category,
+  shipping,
+  settings,
+  fillCopy,
+  selectedVariant,
+  setSelectedVariant,
+  quantity,
+  setQuantity,
+  maxQuantity,
+  hasStockInfo,
+  isOutOfStock,
+  isLowStock,
+  currentStock,
+  comingSoon,
+  added,
+  handleAddClick,
+  handleBuyNow,
+  addToCart,
+  toggleWishlist,
+  isInWishlist,
+  reviews,
+  reviewsLoading,
+  reviewsError,
+  fetchReviews,
+  displayAvg,
+  totalRatingsCount,
+  relatedProducts,
+  bundle,
+  faqs,
+}) => {
+  // The purchase panel's own CTA row: the anchor the sticky mobile bar watches,
+  // which is what guarantees the bar can never cover the buttons it duplicates.
+  const ctaRef = useRef(null);
+
+  // ── The head — Admin → Products → SEO (Optional), through the shared hook
+  useSeo({
+    title: productSeoTitle(product),
+    description:
+      product.metaDescription?.trim() || product.promise || product.shortDescription,
+    image: stageSrc(product, { w: 1200, ar: "1:1" }),
+    type: "product",
+  });
+
+  const faqItems = useMemo(
+    () =>
+      faqs.map((faq, index) => ({
+        id: `pdp-faq-${index}`,
+        title: faq.question,
+        content: fillCopy(faq.answer),
+      })),
+    [faqs, fillCopy]
+  );
+
+  // The chapter index. The order here IS document order — `ChapterNav` observes
+  // these sections and the first one in the reading band wins, so the two lists
+  // must not disagree.
+  const chapters = useMemo(
+    () => [
+      { id: "overview", label: "Overview" },
+      ...(faqs.length > 0 ? [{ id: "faqs", label: "FAQs" }] : []),
+      { id: "reviews", label: "Reviews" },
+    ],
+    [faqs.length]
+  );
+
+  const chapterIndex = (id) => chapters.findIndex((row) => row.id === id);
 
   const scrollToReviews = useCallback(() => {
-    setActiveTab("reviews");
-    tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const section = document.getElementById("reviews");
+    if (!section) return;
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    section.focus({ preventScroll: true });
   }, []);
 
-  // ── Render ─────────────────────────────────────────────────────────────
-  if (loading) return <Skeleton />;
-  if (notFound || !product) return <NotFound />;
-
-  const wishlisted = isInWishlist(product.id);
-  const premium = isPremiumProduct(product);
-  const flagMarks = productFlagMarks(product);
-  const keyFeatures = deriveKeyFeatures(product);
-  const categoryLabel = category?.name || product.brand;
-
-  // ── Below-the-fold panel data (assembled here; panels just render it) ─────
-  const silkSpecRows = deriveSilkSpecRows(product);
-  const specRows =
-    silkSpecRows.length > 0
-      ? silkSpecRows
-      : deriveGenericSpecRows(product, category, currentSku);
-  const fabricCraft = deriveFabricCraft(product);
-  const faqs = faqsForThisProduct(product);
-
-  // The description is typeset, not dumped: blank lines become real paragraphs
-  // so the panel can lead with a drop cap and hold a comfortable measure. A
-  // single-paragraph description (the usual case) simply becomes one <p>.
-  const descriptionParagraphs = String(product.description || "")
-    .split(/\n\s*\n/)
-    .map((para) => para.trim())
-    .filter(Boolean);
-
-  // Tabs in the design order; Fabric & Craft / FAQs appear only with real data.
-  const tabs = [
-    { id: "description", label: "Description" },
-    { id: "specifications", label: "Specifications" },
-    ...(fabricCraft ? [{ id: "fabric", label: "Fabric & Craft" }] : []),
-    { id: "reviews", label: `Reviews (${reviews.length})` },
-    ...(faqs.length > 0 ? [{ id: "faqs", label: "FAQs" }] : []),
+  // ONE ARRAY, TWO RENDERINGS: the visible trail, and the BreadcrumbList that
+  // Prompt 27 will publish from these same rows.
+  const trail = [
+    { label: "Home", to: ROUTES.HOME },
+    { label: "Shop", to: ROUTES.SHOP },
+    ...(category
+      ? [
+          {
+            label: category.displayName || category.name,
+            to: categoryPath(category),
+          },
+        ]
+      : []),
+    { label: product.shortName || product.name },
   ];
 
-  // Roving keyboard navigation across the tablist (Left/Right/Home/End).
-  const handleTabKeyDown = (e, idx) => {
-    const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
-    if (!keys.includes(e.key)) return;
-    e.preventDefault();
-    const last = tabs.length - 1;
-    let next = idx;
-    if (e.key === "ArrowRight") next = idx === last ? 0 : idx + 1;
-    else if (e.key === "ArrowLeft") next = idx === 0 ? last : idx - 1;
-    else if (e.key === "Home") next = 0;
-    else if (e.key === "End") next = last;
-    setActiveTab(tabs[next].id);
-    tabRefs.current[next]?.focus();
-  };
-
-  // Tab panels swap on the shared in-place treatment (theme/motion.js) — the
-  // same fade-and-short-rise Checkout's steps and Profile's sections use.
-  // There is no AnimatePresence around these panels, so only the arrival runs.
-  const panelMotion = prefersReducedMotion
-    ? {}
-    : {
-        initial: { opacity: 0, y: RISE.micro },
-        animate: { opacity: 1, y: 0 },
-        transition: tween(DURATION.base),
-      };
-
-  // The promises band — owner-attested. The free-shipping line resolves
-  // its threshold from LIVE shipping data, so any number shown is never invented.
-  const freeShipThresholds = (Array.isArray(shipping) ? shipping : [])
-    .map((m) => Number(m.freeAbove))
-    .filter((n) => Number.isFinite(n) && n > 0);
-  const minFreeShip = freeShipThresholds.length
-    ? Math.min(...freeShipThresholds)
-    : null;
-  const trustCards = [
-    {
-      key: "offers",
-      title: "Offers",
-      text: "Seasonal offers & savings",
-      icon: (
-        <>
-          <path d="M20 12v10H4V12" />
-          <rect x="2" y="7" width="20" height="5" />
-          <line x1="12" y1="22" x2="12" y2="7" />
-          <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
-          <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
-        </>
-      ),
-    },
-    {
-      key: "shipping",
-      title: "Free shipping",
-      text: minFreeShip
-        ? `Free above ${formatPrice(minFreeShip, { decimals: 0 })}`
-        : "Free shipping across India",
-      icon: (
-        <>
-          <rect x="1" y="3" width="15" height="13" />
-          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-          <circle cx="5.5" cy="18.5" r="2.5" />
-          <circle cx="18.5" cy="18.5" r="2.5" />
-        </>
-      ),
-    },
-    {
-      key: "authentic",
-      title: "100% authentic",
-      text: "Certified genuine silk",
-      icon: (
-        <>
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <path d="M9 12l2 2 4-4" />
-        </>
-      ),
-    },
-    {
-      key: "artisans",
-      title: "Handwoven by artisans",
-      text: "Crafted on the handloom",
-      icon: (
-        <>
-          <path d="M12 3l1.9 4.6L19 8.3l-3.6 3.3.9 4.9L12 14.3 7.7 16.5l.9-4.9L5 8.3l5.1-.7z" />
-        </>
-      ),
-    },
-  ];
+  const suitableFor = Array.isArray(product.suitableFor)
+    ? product.suitableFor.filter(Boolean)
+    : [];
 
   return (
-    // No page-level fade here: the route transition is applied once, to the
-    // keyed wrapper around <Routes> in App.js, so every storefront route —
-    // and every one of this page's own branches — arrives the same way.
     <div className={styles.page}>
-      <div className={styles.container}>
-        {/* ── Breadcrumb (orientation) ──────────────────────────────────── */}
-        <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-          <Link to="/" className={styles.breadcrumbLink}>
-            Home
-          </Link>
-          <span className={styles.breadcrumbSep} aria-hidden="true">
-            /
-          </span>
-          {category ? (
-            <>
-              <Link
-                to={categoryPath(category)}
-                className={styles.breadcrumbLink}
-              >
-                {category.name}
-              </Link>
-              <span className={styles.breadcrumbSep} aria-hidden="true">
-                /
-              </span>
-            </>
-          ) : null}
-          <span className={styles.breadcrumbCurrent}>{product.name}</span>
-        </nav>
+      <div className={`sf-container sf-container--wide ${styles.layout}`}>
+        {/* ── The pack, held in place ─────────────────────────────────── */}
+        <div className={styles.mediaColumn}>
+          <MediaGalleryPlaceholder product={product} />
+        </div>
 
-        {/* ═══ Above the fold — the plate on the left, the buy box on the right.
-            The gallery column scrolls; the buy box is a sticky rail from 981px
-            up so the price and the CTA stay with the shopper. ═══════════════ */}
-        <div className={styles.mainLayout}>
-          <div className={styles.gallerySection}>
-            {/* PREMIUM ribbon + In-Stock mark bind to REAL flags only (default off) */}
-            <ProductGallery
-              images={images}
-              alt={product.name}
-              discount={discount}
-              ribbon={premium ? "PREMIUM" : null}
-              inStock={!isOutOfStock && hasStockInfo}
+        {/* ── The column that scrolls ─────────────────────────────────── */}
+        <div className={styles.contentColumn}>
+          <PurchasePanel
+            product={product}
+            category={category}
+            trail={trail}
+            titleId={TITLE_ID}
+            selectedVariant={selectedVariant}
+            onVariantChange={setSelectedVariant}
+            quantity={quantity}
+            onQuantityChange={setQuantity}
+            maxQuantity={maxQuantity}
+            hasStockInfo={hasStockInfo}
+            isOutOfStock={isOutOfStock}
+            isLowStock={isLowStock}
+            stock={currentStock}
+            comingSoon={comingSoon}
+            onAddToCart={handleAddClick}
+            onBuyNow={handleBuyNow}
+            added={added}
+            wishlisted={isInWishlist(product.id)}
+            onToggleWishlist={() => toggleWishlist(product)}
+            showRating={totalRatingsCount > 0}
+            rating={displayAvg}
+            ratingsCount={totalRatingsCount}
+            onReviewsClick={scrollToReviews}
+            shipping={shipping}
+            settings={settings}
+            fillCopy={fillCopy}
+            ctaRef={ctaRef}
+          />
+
+          <ChapterNav chapters={chapters} className={styles.nav} />
+
+          {/* ── 01 Overview ──────────────────────────────────────────── */}
+          <Chapter id="overview" index={0} title="Overview" className={styles.chapter}>
+            {product.description ? (
+              <ContentBlocks text={product.description} variant="prose" />
+            ) : null}
+
+            {suitableFor.length > 0 && (
+              <p className={styles.suitableFor}>
+                <span className={styles.suitableForLabel}>Suitable for</span>
+                {suitableFor.join(" · ")}
+              </p>
+            )}
+          </Chapter>
+
+          {/* ── Retained, pending Prompt 27 ───────────────────────────────
+              The FAQ accordion, the reviews and the two cross-sell rails are
+              the PDP's existing content features; they keep working exactly as
+              they did behind the tab strip. Prompt 27 rewrites them and adds
+              the benefits / ingredients / directions / farmer-story / full-INCI
+              chapters around them. */}
+          {faqItems.length > 0 && (
+            <Chapter
+              id="faqs"
+              index={chapterIndex("faqs")}
+              title="Questions, answered"
+              className={styles.chapter}
+            >
+              <Accordion items={faqItems} headingLevel="h3" />
+            </Chapter>
+          )}
+
+          <Chapter
+            id="reviews"
+            index={chapterIndex("reviews")}
+            title="Reviews"
+            className={styles.chapter}
+          >
+            <ReviewsSection
+              reviews={reviews}
+              displayAvg={displayAvg}
+              totalRatingsCount={totalRatingsCount}
+              loading={reviewsLoading}
+              error={reviewsError}
+              onRetry={fetchReviews}
             />
-          </div>
+          </Chapter>
 
-          <div className={styles.infoSection}>
-            {/* ── The head: eyebrow, the name in the serif, one line of fact ── */}
-            <header className={styles.buyHead}>
-              {/* The eyebrow row — the category, then whatever flags the
-                  merchant has actually set. Wraps on a phone. */}
-              {(categoryLabel || flagMarks.length > 0) && (
-                <div className={styles.headMeta}>
-                  {categoryLabel && (
-                    <span className={styles.categoryLabel}>{categoryLabel}</span>
-                  )}
-                  {flagMarks.map((flag) => (
-                    <span key={flag.key} className={`sf-flag ${flag.className}`}>
-                      {flag.label}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <h1 className={styles.productName}>{product.name}</h1>
+          <FrequentlyBoughtTogether
+            anchor={product}
+            companions={bundle}
+            onAddToCart={addToCart}
+          />
 
-              {/* Social proof — real ratings only, jumps to the reviews */}
-              <SocialProof
-                rating={displayAvg}
-                count={totalRatingsCount}
-                onReviewsClick={scrollToReviews}
-              />
-            </header>
-
-            {/* ── The price moment — honest compare/discount + tax note ────── */}
-            <div className={styles.pricePanel}>
-              <PriceBlock
-                price={currentPrice}
-                comparePrice={comparePrice}
-                size="lg"
-                taxNote={
-                  taxIncluded
-                    ? "Inclusive of all taxes"
-                    : "Exclusive of taxes — calculated at checkout"
-                }
-              />
-              {currentSku && (
-                <div className={styles.skuLine}>
-                  <span className={styles.skuLabel}>SKU</span>
-                  <span className={styles.skuValue}>{currentSku}</span>
-                </div>
-              )}
-            </div>
-
-            {product.shortDescription && (
-              <p className={styles.shortDescription}>{product.shortDescription}</p>
-            )}
-
-            {/* KEY FEATURES — real spec-derived bullets only (omitted if none),
-                set as a ruled list rather than a boxed panel. */}
-            {keyFeatures.length > 0 && (
-              <div className={styles.featuresPanel}>
-                <span className={styles.featuresTitle}>Key Features</span>
-                <ul className={styles.featuresList}>
-                  {keyFeatures.map((feature, i) => (
-                    <li key={i} className={styles.featureItem}>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Variant selection — visible swatches/tiles, never a dropdown */}
-            {product.variants && product.variants.length > 0 && (
-              <div className={styles.variantBlock}>
-                <VariantSelector
-                  variants={product.variants}
-                  value={selectedVariant}
-                  onChange={setSelectedVariant}
-                  productStock={product.stock}
-                  />
-              </div>
-            )}
-
-            {/* Quantity + honest stock status */}
-            <div className={styles.purchaseRow}>
-              <div className={styles.quantityBlock}>
-                <span className={styles.quantityLabel}>Quantity</span>
-                <QuantityStepper
-                  value={quantity}
-                  onChange={setQuantity}
-                  min={1}
-                  max={maxQuantity}
-                  disabled={isOutOfStock}
-                />
-              </div>
-              <div className={styles.stockStatus}>
-                {isOutOfStock ? (
-                  <span className={styles.stockOut}>Out of Stock</span>
-                ) : isLowStock ? (
-                  <span className={styles.stockLow}>Only {currentStock} left</span>
-                ) : hasStockInfo ? (
-                  <span className={styles.stockIn}>In Stock</span>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Primary / secondary CTAs. This row is ALSO the anchor the sticky
-                mobile bar observes — keep the ref here. */}
-            <div className={styles.actionButtons} ref={buyBoxRef}>
-              <button
-                type="button"
-                className={`sf-btn sf-btn--emerald sf-btn--lg ${styles.buyNowBtn}`}
-                onClick={handleBuyNow}
-                disabled={isOutOfStock}
-              >
-                {isOutOfStock ? "Out of Stock" : "Buy Now"}
-              </button>
-              <button
-                type="button"
-                className={`sf-btn sf-btn--lg ${styles.addToCartBtn} ${
-                  added ? styles.addToCartDone : ""
-                }`}
-                onClick={handleAddClick}
-                disabled={isOutOfStock}
-              >
-                {isOutOfStock ? "Out of Stock" : added ? "Added ✓" : "Add to Cart"}
-              </button>
-              <button
-                type="button"
-                className={`${styles.wishlistBtn} ${
-                  wishlisted ? styles.wishlistBtnActive : ""
-                }`}
-                onClick={() => toggleWishlist(product)}
-                aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                aria-pressed={wishlisted}
-              >
-                <svg viewBox="0 0 24 24" width="20" height="20" fill={wishlisted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                </svg>
-              </button>
-            </div>
-
-            {/* ── The assurance block: the promises and the delivery note read
-                as ONE ruled block, every number resolved from live data. ──── */}
-            <div className={styles.assurance}>
-              <TrustBadges settings={settings} shipping={shipping} variant="grid" />
-              <DeliveryReturnsInfo shipping={shipping} settings={settings} />
-            </div>
-          </div>
+          <RelatedProducts
+            title="You may also like"
+            products={relatedProducts}
+            onAddToCart={addToCart}
+            onToggleWishlist={toggleWishlist}
+            isInWishlist={isInWishlist}
+          />
         </div>
-
-        {/* ── The promises band — owner-attested, ruled across the page. The
-            free-shipping line resolves its threshold from LIVE shipping data,
-            so any number shown here is never invented. ──────────────────── */}
-        <ul className={styles.trustRow} aria-label="Our promises">
-          {trustCards.map((card) => (
-            <li className={styles.trustCard} key={card.key}>
-              <span className={styles.trustIcon} aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                  {card.icon}
-                </svg>
-              </span>
-              <span className={styles.trustText}>
-                <span className={styles.trustTitle}>{card.title}</span>
-                <span className={styles.trustDetail}>{card.text}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        {/* ═══ Below the fold — the product's own story ═══════════════════
-            The tab strip is the index of the story, not a row of buttons:
-            tracked labels standing on one hairline, the open one inked and
-            underlined in gold. Roving Left/Right/Home/End move between them
-            and the panels below carry no frames at all. ═══════════════════ */}
-        <div className={styles.tabsSection} ref={tabsRef}>
-          <div className={styles.tabNav} role="tablist" aria-label="Product information">
-            {tabs.map((tab, idx) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  ref={(el) => (tabRefs.current[idx] = el)}
-                  type="button"
-                  role="tab"
-                  id={`pdp-tab-${tab.id}`}
-                  aria-selected={isActive}
-                  aria-controls={`pdp-panel-${tab.id}`}
-                  tabIndex={isActive ? 0 : -1}
-                  className={`${styles.tabButton} ${isActive ? styles.tabButtonActive : ""}`}
-                  onClick={() => setActiveTab(tab.id)}
-                  onKeyDown={(e) => handleTabKeyDown(e, idx)}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className={styles.tabContent}>
-            {/* ── Description — long-form, one comfortable measure ──────── */}
-            {activeTab === "description" && (
-              <motion.div
-                {...panelMotion}
-                role="tabpanel"
-                id="pdp-panel-description"
-                aria-labelledby="pdp-tab-description"
-                className={styles.panel}
-              >
-                <h3 className={styles.panelTitle}>About this piece</h3>
-                {descriptionParagraphs.length > 0 ? (
-                  <div className={styles.prose}>
-                    {descriptionParagraphs.map((para, i) => (
-                      <p key={i} className={i === 0 ? styles.proseLead : undefined}>
-                        {para}
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <p className={styles.panelNote}>No description available.</p>
-                )}
-              </motion.div>
-            )}
-
-            {/* ── Specification — the silk table, rows the product really
-                carries; the generic set when it carries none ───────────── */}
-            {activeTab === "specifications" && (
-              <motion.div
-                {...panelMotion}
-                role="tabpanel"
-                id="pdp-panel-specifications"
-                aria-labelledby="pdp-tab-specifications"
-                className={styles.panel}
-              >
-                <h3 className={styles.panelTitle}>Specification</h3>
-                {specRows.length > 0 ? (
-                  <dl className={styles.specTable}>
-                    {specRows.map((row) => (
-                      <div className={styles.specRow} key={row.label}>
-                        <dt className={styles.specLabel}>{row.label}</dt>
-                        <dd className={styles.specValue}>{row.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : (
-                  <p className={styles.panelNote}>Full specifications coming soon.</p>
-                )}
-              </motion.div>
-            )}
-
-            {/* ── Fabric & Craft — the loom story as an interlude. Only ever
-                rendered when the tab exists, i.e. when there is real craft
-                content behind it ───────────────────────────────────────── */}
-            {activeTab === "fabric" && fabricCraft && (
-              <motion.div
-                {...panelMotion}
-                role="tabpanel"
-                id="pdp-panel-fabric"
-                aria-labelledby="pdp-tab-fabric"
-                className={styles.panel}
-              >
-                <h3 className={styles.panelTitle}>Fabric &amp; Craft</h3>
-                {fabricCraft.story && (
-                  <blockquote className={styles.craftQuote}>
-                    {fabricCraft.story}
-                  </blockquote>
-                )}
-                {fabricCraft.facts.length > 0 && (
-                  <dl className={styles.craftFacts}>
-                    {fabricCraft.facts.map((f) => (
-                      <div className={styles.craftFact} key={f.label}>
-                        <dt className={styles.craftFactLabel}>{f.label}</dt>
-                        <dd className={styles.craftFactValue}>{f.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-              </motion.div>
-            )}
-
-            {/* ── Reviews — approved only, honest states, no derived stats ─ */}
-            {activeTab === "reviews" && (
-              <motion.div
-                {...panelMotion}
-                role="tabpanel"
-                id="pdp-panel-reviews"
-                aria-labelledby="pdp-tab-reviews"
-                className={styles.panel}
-              >
-                <h3 className={styles.panelTitle}>What buyers wrote</h3>
-                <ReviewsSection
-                  reviews={reviews}
-                  displayAvg={displayAvg}
-                  totalRatingsCount={totalRatingsCount}
-                  loading={reviewsLoading}
-                  error={reviewsError}
-                  onRetry={fetchReviews}
-                />
-              </motion.div>
-            )}
-
-            {/* ── FAQs — a hairline accordion. Each question is a heading, so
-                the list is navigable by heading as well as by Tab ───────── */}
-            {activeTab === "faqs" && faqs.length > 0 && (
-              <motion.div
-                {...panelMotion}
-                role="tabpanel"
-                id="pdp-panel-faqs"
-                aria-labelledby="pdp-tab-faqs"
-                className={styles.panel}
-              >
-                <h3 className={styles.panelTitle}>Questions, answered</h3>
-                <div className={styles.faqList}>
-                  {faqs.map((faq, i) => {
-                    const isOpen = openFaq === i;
-                    return (
-                      <div
-                        className={`${styles.faqItem} ${isOpen ? styles.faqItemOpen : ""}`}
-                        key={i}
-                      >
-                        <h4 className={styles.faqHeading}>
-                          <button
-                            type="button"
-                            className={styles.faqQuestion}
-                            aria-expanded={isOpen}
-                            aria-controls={`pdp-faq-answer-${i}`}
-                            id={`pdp-faq-question-${i}`}
-                            onClick={() => setOpenFaq(isOpen ? null : i)}
-                          >
-                            <span className={styles.faqIndex} aria-hidden="true">
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                            <span className={styles.faqText}>{faq.question}</span>
-                            <span className={styles.faqIcon} aria-hidden="true" />
-                          </button>
-                        </h4>
-                        {isOpen && (
-                          <div
-                            className={styles.faqAnswer}
-                            id={`pdp-faq-answer-${i}`}
-                            role="region"
-                            aria-labelledby={`pdp-faq-question-${i}`}
-                          >
-                            {fillCopy(faq.answer)}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </div>
-
-        {/* ── AOV: the curated pairing, then the farewell rail. Both are pure
-            catalogue data — the bundle comes from the merchant's own curated
-            ids and hides itself when there are none, and the rail renders the
-            same product cards the collection page uses. ─────────────────── */}
-        <FrequentlyBoughtTogether
-          anchor={product}
-          companions={bundle}
-          onAddToCart={addToCart}
-        />
-
-        <RelatedProducts
-          title="You may also like"
-          products={relatedProducts}
-          onAddToCart={addToCart}
-          onToggleWishlist={toggleWishlist}
-          isInWishlist={isInWishlist}
-        />
       </div>
 
-      {/* ── Sticky mobile Add-to-Cart (mobile-first) ──────────────────────── */}
+      {/* ── The sticky purchase bar (≤ 768px) ──────────────────────────── */}
       <AddToCartBar
-        anchorRef={buyBoxRef}
-        price={currentPrice}
-        comparePrice={comparePrice}
-        image={product.images?.[0] || product.image}
+        anchorRef={ctaRef}
+        product={product}
+        variant={selectedVariant}
         name={selectedVariant?.name || product.name}
-        disabled={isOutOfStock}
+        outOfStock={isOutOfStock}
+        comingSoon={comingSoon}
+        added={added}
         onAddToCart={handleAddClick}
-        onBuyNow={handleBuyNow}
+        onBuyNow={comingSoon || isOutOfStock ? undefined : handleBuyNow}
       />
     </div>
   );
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+/**
+ * The route's three states, and nothing else.
+ *
+ * THE SPLIT IS NOT COSMETIC — the same rule `/shop` follows. `useSeo` claims
+ * the tab, the description, the Open Graph set and the canonical, and remembers
+ * what it displaced so it can put it back. Two of them mounted at once (this
+ * page's and the one inside <NotFound/>) restore in the wrong order and leave a
+ * stale description behind, so both exits are taken BEFORE the view that owns
+ * the head, and exactly one useSeo is ever mounted on this route.
+ *
+ * A DRAFT IS A 404. `products.getById/getBySlug` answer `null` for a product
+ * whose "Active (visible on store)" switch is off, which is the same answer a
+ * missing slug gets and the same page it deserves.
+ */
+const ProductDetails = () => {
+  const data = useProductPage();
+
+  if (data.loading) return <PageSkeleton />;
+  if (data.notFound || !data.product) return <NotFound />;
+
+  return <ProductDetailsView {...data} />;
 };
 
 export default ProductDetails;

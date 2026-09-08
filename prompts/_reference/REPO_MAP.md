@@ -1410,6 +1410,92 @@ have their two pages. `/rituals` and `/rituals/:slug` are real; **two**
   `stepNumeral`, `stepActionLabel`, `choiceLabel`, `ritualEyebrow`,
   `ritualTotal`, `concernsOf` and `breadcrumbJsonLd`.
 
+**Updated by Prompt 25.** The PDP skeleton. `/product/:slug` is a **sticky media
+column beside a scrolling column of chapters**; the tab strip, the textile spec
+machinery, the promises band and the app's last hand-rolled `<head>` effect are
+gone. Prompt 26 replaces the media placeholder with the real gallery; Prompt 27
+writes the remaining chapters and the product JSON-LD.
+
+- `pages/ProductDetails/ProductDetails.js` (1143 → 693) +
+  `ProductDetails.module.css` (1109 → 161): **split in three**, the same shape
+  `/shop` uses. `useProductPage()` holds the slug/legacy-id resolution with its
+  canonical redirect, the `recentlyViewed` write (cap 20), the reviews and AOV
+  reads, the variant/stock/quantity derivation and the cart handlers;
+  `ProductDetailsView` owns `useSeo` and the markup; `ProductDetails` takes the
+  three states (skeleton · `<NotFound/>` · the page) so **exactly one `useSeo`
+  is ever mounted on the route**. Head:
+  `useSeo({ title: productSeoTitle(product), description: metaDescription ||
+  promise || shortDescription, image: stageSrc(product,{w:1200,ar:"1:1"}),
+  type: "product" })` — `productSeoTitle()` strips the site suffix a stored
+  `metaTitle` already carries, because `useSeo` applies
+  `brand.seo.titleTemplate` itself. **Layout**: `sf-container sf-container--wide`
+  (BOTH classes — `--wide` only raises `max-width`), one column below 769px with
+  the media first, `44fr / 56fr` at 32px from 769px, `1.05fr / 1fr` at 56px from
+  1025px where the media column is `position: sticky; top: 96px`. The media is a
+  local `MediaGalleryPlaceholder` — one `CloudinaryImage` with the product's own
+  crop padded to **4:5** on a `.sf-plate` (1:1 box on a phone, 4:5 from 769px).
+  Chapters: `overview` (description through `ContentBlocks`, then the
+  `suitableFor` line), plus the retained FAQ accordion (`ui/Accordion` over
+  `useFaqs().forProduct`), `ReviewsSection` and the two cross-sell rails.
+  Exports `productSeoTitle`.
+- `components/pdp/PurchasePanel.{js,module.css}` (new): the commerce column —
+  `Breadcrumb` · category link + ritual step + flag marks · `h1`
+  (`--sf-text-3xl`) · `promise` · `SocialProof` **only when
+  `totalReviews > 0 || reviews.length > 0`** · `Price product size="lg"` with
+  the `fillCopy` tax note · size / fragrance / SKU as a two-column `<dl>` ·
+  `TrustBadges variant="chips"` · `VariantSelector` (only where variants exist) ·
+  `QuantityStepper` + the stock line · `Button variant="addToCart"` (idle /
+  success / "Coming soon" / "Out of stock") and `variant="primary"` "Buy now"
+  (absent, not disabled, when there is nothing to buy) · wishlist and share
+  `variant="icon"` circles · `DeliveryReturnsInfo` · `LegalNote compact` +
+  "Read our story" → `/about`. `GlassCard padding="lg"`, with the glass taken
+  off below 769px. **It owns no data** — everything arrives as props, because
+  the sticky bar, the head and the chapters need the same answers. `ctaRef` is
+  the anchor the sticky bar observes. Share is `navigator.share`, else the
+  clipboard, with a "Link copied" toast either way. Exports `stockLabel`,
+  `ritualStepLabel`.
+- `components/pdp/ChapterNav.{js,module.css}` (new): `chapters=[{id,label}]`,
+  rendering nothing below two. A glass pill bar (40px pills, 13px, active gold
+  over a gradient underline) revealed past **320px** of scroll
+  (`visibility`/`opacity`, so nothing reflows), sticky at `top: 72px` from
+  1025px and `56px` below, horizontally scrolling with the active pill kept in
+  view, hidden while `body[data-drawer-open]`. Pills are `<a href="#id">` with
+  `aria-current`; the click handler upgrades the jump and moves focus into the
+  section. The active chapter comes from ONE IntersectionObserver with a reading
+  band (`rootMargin: "-30% 0px -55% 0px"`), first-in-document-order wins.
+  Exports `REVEAL_AFTER`.
+- `components/pdp/Chapter.js` (new, no stylesheet): `<section id tabIndex={-1}
+  aria-labelledby>` on `.sf-section--tight` with a `SectionHeading as="h2"`
+  (eyebrow "Chapter 0N", `rule`). The SECTION is the focus target, so a jump
+  lands inside the chapter. Exports `chapterNumeral`, `chapterHeadingId`.
+- `components/storefront/AddToCartBar.{js,module.css}` (rewritten): strong glass
+  over a `color-mix(--sf-color-surface 92%)` ground, a **56px plate**
+  thumbnail (dropped below 400px), the name on one line, `Price` (TBA-aware) and
+  `Button variant="addToCart"` with an optional Buy-now icon button. New props
+  `product` · `variant` · `outOfStock` · `comingSoon` · `added` (the numeric
+  `price`/`comparePrice` pair still works for a caller with no product record).
+  The `anchorRef` IntersectionObserver contract is unchanged; `--sf-z-stickybar`
+  and `env(safe-area-inset-bottom)` are unchanged. **≤ 768px only.**
+- `components/storefront/DeliveryReturnsInfo.js`: every line is dropped until
+  its fact is known — a method needs `hasDeliveryEstimate()` (exported), COD
+  needs `codEnabled`, returns need a positive window, and the tax line is
+  `fillCopy("Prices are {taxNote}.")` (new optional `fillCopy` prop) so an
+  unresolved rate loses its sentence. Rows restyled to 14px with gold glyphs.
+- `components/storefront/TrustBadges.js`: third variant **`chips`** — glass
+  pills that wrap, 16px gold mark, beside the existing `grid` and `row`.
+- `components/storefront/SocialProof.module.css`: the figure is gold, the count
+  moves to `--sf-color-text-secondary`.
+- `components/Breadcrumb/{Breadcrumb.js,.module.css}`: 12px; only the LAST crumb
+  takes the current-page style (a linkless crumb mid-trail is plain text); the
+  last crumb wraps rather than truncating below 769px.
+- `components/BottomNav/BottomNav.js`: exports `hidesBottomNav(pathname)` and
+  returns `null` on `/product/*` (after every hook) so the tab bar and the PDP's
+  sticky purchase bar can never stack — Adaptation 18 in `00_INDEX.md`. The
+  SearchModal it mounts goes with it; the masthead still carries search.
+- **Tests**: `components/pdp/PurchasePanel.test.js` (15) covers `stockLabel`,
+  `ritualStepLabel`, `chapterNumeral`, `chapterHeadingId`, `hasDeliveryEstimate`,
+  `productSeoTitle` and `hidesBottomNav`.
+
 
 ## 7. Admin panel
 
