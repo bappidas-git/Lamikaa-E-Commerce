@@ -15,5 +15,9 @@ Disallow: /profile
 Disallow: /orders
 Disallow: /cart
 
-# Prompt 38 generates the sitemap and resolves this host (or removes the line).
-Sitemap: https://{{LAMIKAA_DOMAIN}}/sitemap.xml
+# NO Sitemap: LINE ON PURPOSE. It pointed at the LAMIKAA_DOMAIN placeholder
+# until Prompt 36: brand.seo.siteUrl is still unresolved, robots.txt is served
+# verbatim to crawlers, and a literal placeholder there is a broken directive —
+# worse than no directive at all. Prompt 38's generate-sitemap script writes
+# public/sitemap.xml only once the owner names the domain, and re-adds this line
+# with the real host at the same time.
