@@ -339,7 +339,7 @@ const AdminReturns = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, gap: 2, flexWrap: "wrap" }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Returns & Refunds</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Returns & Refunds</Typography>
           <Typography variant="body2" color="text.secondary">Manage customer return requests and refunds</Typography>
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
@@ -363,14 +363,21 @@ const AdminReturns = () => {
             InputProps={{ startAdornment: <InputAdornment position="start"><Icon icon="mdi:magnify" /></InputAdornment> }}
           />
           <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Status</InputLabel>
-            <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
+            <InputLabel id="admin-returns-status-label">Status</InputLabel>
+            <Select labelId="admin-returns-status-label" value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
               <MenuItem value="all">All</MenuItem>
               {Object.entries(STATUS_CONFIG).map(([k, v]) => (<MenuItem key={k} value={k}>{v.label}</MenuItem>))}
             </Select>
           </FormControl>
         </Box>
-        <TableContainer>
+        {/* A KEYBOARD USER MUST BE ABLE TO SCROLL IT (Prompt 38). At a phone
+            width this table is wider than its container, and unlike the
+            admin's other tables its cells hold nothing focusable — so
+            there was no way to reach the horizontal scroll from the
+            keyboard at all (axe `scrollable-region-focusable`, serious).
+            `tabIndex` makes the container itself a stop; the region role
+            and label are what make that stop announce what it is. */}
+        <TableContainer tabIndex={0} role="region" aria-label="Returns and refunds">
           <Table sx={{ minWidth: 900 }}>
             <TableHead>
               <TableRow>
@@ -491,8 +498,8 @@ const AdminReturns = () => {
                       helperText="Restocking / shipping fee"
                     />
                     <FormControl size="small" sx={{ minWidth: 200 }}>
-                      <InputLabel>Refund Method</InputLabel>
-                      <Select value={refundMethod} label="Refund Method" onChange={(e) => setRefundMethod(e.target.value)}>
+                      <InputLabel id="admin-returns-refund-method-label">Refund Method</InputLabel>
+                      <Select labelId="admin-returns-refund-method-label" value={refundMethod} label="Refund Method" onChange={(e) => setRefundMethod(e.target.value)}>
                         {REFUND_METHODS.map((m) => (<MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>))}
                       </Select>
                     </FormControl>
@@ -630,14 +637,14 @@ const AdminReturns = () => {
 
               <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mt: 2 }}>
                 <FormControl size="small">
-                  <InputLabel>Reason</InputLabel>
-                  <Select value={createReason} label="Reason" onChange={(e) => setCreateReason(e.target.value)}>
+                  <InputLabel id="admin-returns-reason-label">Reason</InputLabel>
+                  <Select labelId="admin-returns-reason-label" value={createReason} label="Reason" onChange={(e) => setCreateReason(e.target.value)}>
                     {RETURN_REASONS.map((r) => (<MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>))}
                   </Select>
                 </FormControl>
                 <FormControl size="small">
-                  <InputLabel>Refund Method</InputLabel>
-                  <Select value={createMethod} label="Refund Method" onChange={(e) => setCreateMethod(e.target.value)}>
+                  <InputLabel id="admin-returns-refund-method-2-label">Refund Method</InputLabel>
+                  <Select labelId="admin-returns-refund-method-2-label" value={createMethod} label="Refund Method" onChange={(e) => setCreateMethod(e.target.value)}>
                     {REFUND_METHODS.map((m) => (<MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>))}
                   </Select>
                 </FormControl>

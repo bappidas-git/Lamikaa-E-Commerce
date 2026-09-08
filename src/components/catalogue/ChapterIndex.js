@@ -265,4 +265,18 @@ const ChapterIndex = ({
   );
 };
 
+/**
+ * The strip's slot, held open while the range is still loading (Prompt 38).
+ *
+ * The band itself only exists once there are chapters to index, so on a phone
+ * it was inserted above the listing the moment the fetch returned and pushed
+ * everything under it down — a measured layout shift on /shop and on every
+ * category page. Its height is a constant, so the honest fix is to reserve it:
+ * this renders the same box with none of the chrome, and disappears at the same
+ * 1025px breakpoint the strip does. Nothing is drawn and nothing is announced.
+ */
+export const ChapterIndexReserve = () => (
+  <div className={styles.stripReserve} aria-hidden="true" />
+);
+
 export default ChapterIndex;

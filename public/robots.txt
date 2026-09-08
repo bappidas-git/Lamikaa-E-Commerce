@@ -2,8 +2,9 @@
 #
 # LAMIKAA NATURALS — the storefront is open to crawlers; the account, checkout
 # and admin surfaces are not. Every path below is either private to one visitor
-# (orders, profile, a cart, an order confirmation) or a step in a transaction.
-# The pages themselves also carry `noindex` where it matters
+# (orders, profile, a cart, an order confirmation), a step in a transaction, or
+# a query-shaped page whose every permutation is a duplicate of the listing it
+# filters. The pages themselves also carry `noindex` where it matters
 # (useSeo), because a Disallow only stops the crawl, not the indexing of a URL
 # someone else links to.
 User-agent: *
@@ -14,10 +15,22 @@ Disallow: /order-confirmation
 Disallow: /profile
 Disallow: /orders
 Disallow: /cart
+Disallow: /wishlist
+Disallow: /search
+Disallow: /login
+Disallow: /register
 
-# NO Sitemap: LINE ON PURPOSE. It pointed at the LAMIKAA_DOMAIN placeholder
-# until Prompt 36: brand.seo.siteUrl is still unresolved, robots.txt is served
-# verbatim to crawlers, and a literal placeholder there is a broken directive —
-# worse than no directive at all. Prompt 38's generate-sitemap script writes
-# public/sitemap.xml only once the owner names the domain, and re-adds this line
-# with the real host at the same time.
+# THE Sitemap: LINE IS COMMENTED OUT ON PURPOSE, AND UNCOMMENTING IT IS ONE
+# EDIT. It pointed at the LAMIKAA_DOMAIN placeholder until Prompt 36:
+# brand.seo.siteUrl is still unresolved, robots.txt is served verbatim to
+# crawlers, and a literal placeholder there is a broken directive — worse than
+# no directive at all. Prompt 38 audited the pair and left them in step: the
+# `npm run sitemap` script (scripts/generate-sitemap.js) refuses to write
+# public/sitemap.xml while the domain is a token, so there is no file for this
+# line to point at either. Naming the domain resolves both at once:
+#
+#   1. src/config/brand.js  →  seo.siteUrl: "lamikanaturals.com"
+#   2. npm run sitemap                     (writes public/sitemap.xml)
+#   3. uncomment the line below, with the same host
+#
+# Sitemap: https://lamikanaturals.com/sitemap.xml

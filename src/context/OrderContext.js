@@ -1,7 +1,10 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import apiService from "../services/api";
-import Swal from "sweetalert2";
+// Loaded on first use, not at mount: these providers wrap every route and
+// sweetalert2 is 79 kB that nothing needs until a visitor acts (Prompt 38 —
+// see src/utils/alerts.js).
+import { fireAlert } from "../utils/alerts";
 
 const OrderContext = createContext();
 
@@ -79,7 +82,7 @@ export const OrderProvider = ({ children }) => {
     } catch (error) {
       console.error("Error creating order:", error);
 
-      Swal.fire({
+      fireAlert({
         icon: "error",
         title: "Order Failed",
         text: "There was an error processing your order. Please try again.",

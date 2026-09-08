@@ -482,8 +482,15 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
       {/* ---- Form content ---- */}
       <div className={styles.formWrapper}>
         <AnimatePresence custom={direction} mode="wait">
+          {/* THE PANEL IS THE WRAPPER, THE FORM IS THE FORM (Prompt 38).
+              `role="tabpanel"` was on the <form> itself, which ARIA does not
+              allow on a form element (axe `aria-allowed-role`) — a form with a
+              name is already a `form` landmark and the role cannot be swapped
+              for one. Splitting them keeps the whole tab pattern intact (same
+              ids, same `aria-controls`, same animation) and gives the fields
+              back a real <form> to be submitted from. */}
           {isLogin ? (
-            <motion.form
+            <motion.div
               key="login"
               id="auth-panel-login"
               role="tabpanel"
@@ -493,114 +500,113 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
               initial="enter"
               animate="center"
               exit="exit"
-              onSubmit={handleLoginSubmit}
-              noValidate
-              className={styles.form}
             >
-              {/* Email */}
-              <div className={styles.fieldGroup}>
-                <label className={styles.label} htmlFor="login-email">Email</label>
-                <div className={`${styles.field} ${errors.email ? styles.fieldInvalid : ""}`}>
-                  <input
-                    id="login-email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={loginData.email}
-                    onChange={handleLoginChange}
-                    className={styles.input}
-                    aria-invalid={errors.email ? true : undefined}
-                    aria-describedby={describedBy(errors.email && "login-email-error")}
-                  />
+              <form onSubmit={handleLoginSubmit} noValidate className={styles.form}>
+                {/* Email */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="login-email">Email</label>
+                  <div className={`${styles.field} ${errors.email ? styles.fieldInvalid : ""}`}>
+                    <input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      value={loginData.email}
+                      onChange={handleLoginChange}
+                      className={styles.input}
+                      aria-invalid={errors.email ? true : undefined}
+                      aria-describedby={describedBy(errors.email && "login-email-error")}
+                    />
+                  </div>
+                  {errors.email && (
+                    <span id="login-email-error" className={styles.fieldError}>{errors.email}</span>
+                  )}
                 </div>
-                {errors.email && (
-                  <span id="login-email-error" className={styles.fieldError}>{errors.email}</span>
-                )}
-              </div>
 
-              {/* Password */}
-              <div className={styles.fieldGroup}>
-                <label className={styles.label} htmlFor="login-password">Password</label>
-                <div className={`${styles.field} ${errors.password ? styles.fieldInvalid : ""}`}>
-                  <input
-                    id="login-password"
-                    name="password"
-                    type={showLoginPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    value={loginData.password}
-                    onChange={handleLoginChange}
-                    className={styles.input}
-                    aria-invalid={errors.password ? true : undefined}
-                    aria-describedby={describedBy(errors.password && "login-password-error")}
-                  />
+                {/* Password */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="login-password">Password</label>
+                  <div className={`${styles.field} ${errors.password ? styles.fieldInvalid : ""}`}>
+                    <input
+                      id="login-password"
+                      name="password"
+                      type={showLoginPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      placeholder="Enter your password"
+                      value={loginData.password}
+                      onChange={handleLoginChange}
+                      className={styles.input}
+                      aria-invalid={errors.password ? true : undefined}
+                      aria-describedby={describedBy(errors.password && "login-password-error")}
+                    />
+                    <button
+                      type="button"
+                      className={styles.eyeBtn}
+                      onClick={() => setShowLoginPassword((v) => !v)}
+                      aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showLoginPassword}
+                    >
+                      {showLoginPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <span id="login-password-error" className={styles.fieldError}>{errors.password}</span>
+                  )}
+                </div>
+
+                {/* Remember me + Forgot */}
+                <div className={styles.optionsRow}>
+                  <label className={styles.checkLabel}>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className={styles.checkbox}
+                    />
+                    <span className={styles.checkMark} />
+                    Remember me
+                  </label>
                   <button
                     type="button"
-                    className={styles.eyeBtn}
-                    onClick={() => setShowLoginPassword((v) => !v)}
-                    aria-label={showLoginPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showLoginPassword}
+                    className={`${styles.link} ${styles.forgotBtn}`}
+                    onClick={handleForgotPassword}
                   >
-                    {showLoginPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    Forgot password?
                   </button>
                 </div>
-                {errors.password && (
-                  <span id="login-password-error" className={styles.fieldError}>{errors.password}</span>
-                )}
-              </div>
 
-              {/* Remember me + Forgot */}
-              <div className={styles.optionsRow}>
-                <label className={styles.checkLabel}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className={styles.checkbox}
-                  />
-                  <span className={styles.checkMark} />
-                  Remember me
-                </label>
-                <button
-                  type="button"
-                  className={`${styles.link} ${styles.forgotBtn}`}
-                  onClick={handleForgotPassword}
+                {/* Submit */}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  block
+                  disabled={loading}
+                  aria-busy={loading || undefined}
+                  className={styles.submitBtn}
                 >
-                  Forgot password?
-                </button>
-              </div>
+                  {loading ? (
+                    <>
+                      <SpinnerIcon />
+                      <span className="sf-visually-hidden">Signing in, please wait</span>
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
 
-              {/* Submit */}
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                block
-                disabled={loading}
-                aria-busy={loading || undefined}
-                className={styles.submitBtn}
-              >
-                {loading ? (
-                  <>
-                    <SpinnerIcon />
-                    <span className="sf-visually-hidden">Signing in, please wait</span>
-                  </>
-                ) : (
-                  "Sign in"
-                )}
-              </Button>
-
-              {/* Switch link */}
-              <p className={styles.switchText}>
-                New to {storeName}?{" "}
-                <button type="button" className={styles.link} onClick={() => switchTab("signup")}>
-                  Create an account
-                </button>
-              </p>
-            </motion.form>
+                {/* Switch link */}
+                <p className={styles.switchText}>
+                  New to {storeName}?{" "}
+                  <button type="button" className={styles.link} onClick={() => switchTab("signup")}>
+                    Create an account
+                  </button>
+                </p>
+              </form>
+            </motion.div>
           ) : (
-            <motion.form
+            <motion.div
               key="signup"
               id="auth-panel-signup"
               role="tabpanel"
@@ -610,261 +616,260 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
               initial="enter"
               animate="center"
               exit="exit"
-              onSubmit={handleSignupSubmit}
-              noValidate
-              className={styles.form}
             >
-              {/* Name row */}
-              <div className={styles.nameRow}>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label} htmlFor="signup-first">First name</label>
-                  <div className={`${styles.field} ${errors.firstName ? styles.fieldInvalid : ""}`}>
-                    <input
-                      id="signup-first"
-                      name="firstName"
-                      type="text"
-                      autoComplete="given-name"
-                      placeholder="First name"
-                      value={signupData.firstName}
-                      onChange={handleSignupChange}
-                      className={styles.input}
-                      aria-invalid={errors.firstName ? true : undefined}
-                      aria-describedby={describedBy(errors.firstName && "signup-first-error")}
-                    />
-                  </div>
-                  {errors.firstName && (
-                    <span id="signup-first-error" className={styles.fieldError}>{errors.firstName}</span>
-                  )}
-                </div>
-
-                <div className={styles.fieldGroup}>
-                  <label className={styles.label} htmlFor="signup-last">Last name</label>
-                  <div className={`${styles.field} ${errors.lastName ? styles.fieldInvalid : ""}`}>
-                    <input
-                      id="signup-last"
-                      name="lastName"
-                      type="text"
-                      autoComplete="family-name"
-                      placeholder="Last name"
-                      value={signupData.lastName}
-                      onChange={handleSignupChange}
-                      className={styles.input}
-                      aria-invalid={errors.lastName ? true : undefined}
-                      aria-describedby={describedBy(errors.lastName && "signup-last-error")}
-                    />
-                  </div>
-                  {errors.lastName && (
-                    <span id="signup-last-error" className={styles.fieldError}>{errors.lastName}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className={styles.fieldGroup}>
-                <label className={styles.label} htmlFor="signup-email">Email</label>
-                <div className={`${styles.field} ${errors.email ? styles.fieldInvalid : ""}`}>
-                  <input
-                    id="signup-email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={signupData.email}
-                    onChange={handleSignupChange}
-                    className={styles.input}
-                    aria-invalid={errors.email ? true : undefined}
-                    aria-describedby={describedBy(errors.email && "signup-email-error")}
-                  />
-                </div>
-                {errors.email && (
-                  <span id="signup-email-error" className={styles.fieldError}>{errors.email}</span>
-                )}
-              </div>
-
-              {/* Phone */}
-              <div className={styles.fieldGroup}>
-                <label className={styles.label} htmlFor="signup-phone">Phone (optional)</label>
-                <div className={`${styles.field} ${errors.phone ? styles.fieldInvalid : ""}`}>
-                  <span className={styles.phonePrefix} aria-hidden="true">+91</span>
-                  <input
-                    id="signup-phone"
-                    name="phone"
-                    type="tel"
-                    autoComplete="tel-national"
-                    placeholder="9876543210"
-                    value={signupData.phone}
-                    onChange={handleSignupChange}
-                    className={`${styles.input} ${styles.phoneInput}`}
-                    aria-invalid={errors.phone ? true : undefined}
-                    aria-describedby={describedBy("signup-phone-hint", errors.phone && "signup-phone-error")}
-                  />
-                  <span id="signup-phone-hint" className="sf-visually-hidden">
-                    Indian number, country code +91, ten digits
-                  </span>
-                </div>
-                {errors.phone && (
-                  <span id="signup-phone-error" className={styles.fieldError}>{errors.phone}</span>
-                )}
-              </div>
-
-              {/* Password */}
-              <div className={styles.fieldGroup}>
-                <label className={styles.label} htmlFor="signup-password">Password</label>
-                <div className={`${styles.field} ${errors.password ? styles.fieldInvalid : ""}`}>
-                  <input
-                    id="signup-password"
-                    name="password"
-                    type={showSignupPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    placeholder="Min. 6 characters"
-                    value={signupData.password}
-                    onChange={handleSignupChange}
-                    className={styles.input}
-                    aria-invalid={errors.password ? true : undefined}
-                    aria-describedby={describedBy(
-                      errors.password && "signup-password-error",
-                      signupData.password && "signup-password-strength"
-                    )}
-                  />
-                  <button
-                    type="button"
-                    className={styles.eyeBtn}
-                    onClick={() => setShowSignupPassword((v) => !v)}
-                    aria-label={showSignupPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showSignupPassword}
-                  >
-                    {showSignupPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <span id="signup-password-error" className={styles.fieldError}>{errors.password}</span>
-                )}
-
-                {/* Password strength — the word carries the meaning,
-                    the four rules only echo it (never colour alone) */}
-                {signupData.password && (
-                  <div
-                    id="signup-password-strength"
-                    className={`${styles.strengthWrap} ${styles[passwordStrength.className] || ""}`}
-                    aria-live="polite"
-                  >
-                    <div className={styles.strengthBar} aria-hidden="true">
-                      {[1, 2, 3, 4].map((segment) => (
-                        <div
-                          key={segment}
-                          className={`${styles.strengthSegment} ${
-                            segment <= passwordStrength.score ? styles.strengthSegmentOn : ""
-                          }`}
-                        />
-                      ))}
+              <form onSubmit={handleSignupSubmit} noValidate className={styles.form}>
+                {/* Name row */}
+                <div className={styles.nameRow}>
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="signup-first">First name</label>
+                    <div className={`${styles.field} ${errors.firstName ? styles.fieldInvalid : ""}`}>
+                      <input
+                        id="signup-first"
+                        name="firstName"
+                        type="text"
+                        autoComplete="given-name"
+                        placeholder="First name"
+                        value={signupData.firstName}
+                        onChange={handleSignupChange}
+                        className={styles.input}
+                        aria-invalid={errors.firstName ? true : undefined}
+                        aria-describedby={describedBy(errors.firstName && "signup-first-error")}
+                      />
                     </div>
-                    <span className={styles.strengthLabel}>
-                      {passwordStrength.label ? `${passwordStrength.label} password` : ""}
+                    {errors.firstName && (
+                      <span id="signup-first-error" className={styles.fieldError}>{errors.firstName}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.label} htmlFor="signup-last">Last name</label>
+                    <div className={`${styles.field} ${errors.lastName ? styles.fieldInvalid : ""}`}>
+                      <input
+                        id="signup-last"
+                        name="lastName"
+                        type="text"
+                        autoComplete="family-name"
+                        placeholder="Last name"
+                        value={signupData.lastName}
+                        onChange={handleSignupChange}
+                        className={styles.input}
+                        aria-invalid={errors.lastName ? true : undefined}
+                        aria-describedby={describedBy(errors.lastName && "signup-last-error")}
+                      />
+                    </div>
+                    {errors.lastName && (
+                      <span id="signup-last-error" className={styles.fieldError}>{errors.lastName}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="signup-email">Email</label>
+                  <div className={`${styles.field} ${errors.email ? styles.fieldInvalid : ""}`}>
+                    <input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      value={signupData.email}
+                      onChange={handleSignupChange}
+                      className={styles.input}
+                      aria-invalid={errors.email ? true : undefined}
+                      aria-describedby={describedBy(errors.email && "signup-email-error")}
+                    />
+                  </div>
+                  {errors.email && (
+                    <span id="signup-email-error" className={styles.fieldError}>{errors.email}</span>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="signup-phone">Phone (optional)</label>
+                  <div className={`${styles.field} ${errors.phone ? styles.fieldInvalid : ""}`}>
+                    <span className={styles.phonePrefix} aria-hidden="true">+91</span>
+                    <input
+                      id="signup-phone"
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel-national"
+                      placeholder="9876543210"
+                      value={signupData.phone}
+                      onChange={handleSignupChange}
+                      className={`${styles.input} ${styles.phoneInput}`}
+                      aria-invalid={errors.phone ? true : undefined}
+                      aria-describedby={describedBy("signup-phone-hint", errors.phone && "signup-phone-error")}
+                    />
+                    <span id="signup-phone-hint" className="sf-visually-hidden">
+                      Indian number, country code +91, ten digits
                     </span>
                   </div>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div className={styles.fieldGroup}>
-                <label className={styles.label} htmlFor="signup-confirm">Confirm password</label>
-                <div className={`${styles.field} ${errors.confirmPassword ? styles.fieldInvalid : ""}`}>
-                  <input
-                    id="signup-confirm"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    placeholder="Re-enter password"
-                    value={signupData.confirmPassword}
-                    onChange={handleSignupChange}
-                    className={styles.input}
-                    aria-invalid={errors.confirmPassword ? true : undefined}
-                    aria-describedby={describedBy(errors.confirmPassword && "signup-confirm-error")}
-                  />
-                  <button
-                    type="button"
-                    className={styles.eyeBtn}
-                    onClick={() => setShowConfirmPassword((v) => !v)}
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showConfirmPassword}
-                  >
-                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
+                  {errors.phone && (
+                    <span id="signup-phone-error" className={styles.fieldError}>{errors.phone}</span>
+                  )}
                 </div>
-                {errors.confirmPassword && (
-                  <span id="signup-confirm-error" className={styles.fieldError}>{errors.confirmPassword}</span>
-                )}
-              </div>
 
-              {/* Terms */}
-              <div className={styles.fieldGroup}>
-                <label className={`${styles.checkLabel} ${styles.termsLabel}`}>
-                  <input
-                    type="checkbox"
-                    checked={agreeTerms}
-                    onChange={(e) => {
-                      setAgreeTerms(e.target.checked);
-                      if (errors.terms) setErrors((prev) => ({ ...prev, terms: "" }));
-                    }}
-                    className={styles.checkbox}
-                    aria-invalid={errors.terms ? true : undefined}
-                    aria-describedby={describedBy(errors.terms && "signup-terms-error")}
-                  />
-                  <span className={styles.checkMark} />
-                  <span>
-                    I agree to the{" "}
-                    <Link
-                      to={ROUTES.POLICY_TERMS}
-                      target="_blank"
-                      className={styles.link}
-                      onClick={(e) => e.stopPropagation()}
+                {/* Password */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="signup-password">Password</label>
+                  <div className={`${styles.field} ${errors.password ? styles.fieldInvalid : ""}`}>
+                    <input
+                      id="signup-password"
+                      name="password"
+                      type={showSignupPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Min. 6 characters"
+                      value={signupData.password}
+                      onChange={handleSignupChange}
+                      className={styles.input}
+                      aria-invalid={errors.password ? true : undefined}
+                      aria-describedby={describedBy(
+                        errors.password && "signup-password-error",
+                        signupData.password && "signup-password-strength"
+                      )}
+                    />
+                    <button
+                      type="button"
+                      className={styles.eyeBtn}
+                      onClick={() => setShowSignupPassword((v) => !v)}
+                      aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showSignupPassword}
                     >
-                      Terms &amp; Conditions
-                    </Link>{" "}
-                    and{" "}
-                    <Link
-                      to={ROUTES.POLICY_PRIVACY}
-                      target="_blank"
-                      className={styles.link}
-                      onClick={(e) => e.stopPropagation()}
+                      {showSignupPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <span id="signup-password-error" className={styles.fieldError}>{errors.password}</span>
+                  )}
+
+                  {/* Password strength — the word carries the meaning,
+                      the four rules only echo it (never colour alone) */}
+                  {signupData.password && (
+                    <div
+                      id="signup-password-strength"
+                      className={`${styles.strengthWrap} ${styles[passwordStrength.className] || ""}`}
+                      aria-live="polite"
                     >
-                      Privacy Policy
-                    </Link>
-                  </span>
-                </label>
-                {errors.terms && (
-                  <span id="signup-terms-error" className={styles.fieldError}>{errors.terms}</span>
-                )}
-              </div>
+                      <div className={styles.strengthBar} aria-hidden="true">
+                        {[1, 2, 3, 4].map((segment) => (
+                          <div
+                            key={segment}
+                            className={`${styles.strengthSegment} ${
+                              segment <= passwordStrength.score ? styles.strengthSegmentOn : ""
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className={styles.strengthLabel}>
+                        {passwordStrength.label ? `${passwordStrength.label} password` : ""}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-              {/* Submit */}
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                block
-                disabled={loading}
-                aria-busy={loading || undefined}
-                className={styles.submitBtn}
-              >
-                {loading ? (
-                  <>
-                    <SpinnerIcon />
-                    <span className="sf-visually-hidden">Creating your account, please wait</span>
-                  </>
-                ) : (
-                  "Create account"
-                )}
-              </Button>
+                {/* Confirm Password */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label} htmlFor="signup-confirm">Confirm password</label>
+                  <div className={`${styles.field} ${errors.confirmPassword ? styles.fieldInvalid : ""}`}>
+                    <input
+                      id="signup-confirm"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Re-enter password"
+                      value={signupData.confirmPassword}
+                      onChange={handleSignupChange}
+                      className={styles.input}
+                      aria-invalid={errors.confirmPassword ? true : undefined}
+                      aria-describedby={describedBy(errors.confirmPassword && "signup-confirm-error")}
+                    />
+                    <button
+                      type="button"
+                      className={styles.eyeBtn}
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showConfirmPassword}
+                    >
+                      {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <span id="signup-confirm-error" className={styles.fieldError}>{errors.confirmPassword}</span>
+                  )}
+                </div>
 
-              {/* Switch link */}
-              <p className={styles.switchText}>
-                Already have an account?{" "}
-                <button type="button" className={styles.link} onClick={() => switchTab("login")}>
-                  Sign in
-                </button>
-              </p>
-            </motion.form>
+                {/* Terms */}
+                <div className={styles.fieldGroup}>
+                  <label className={`${styles.checkLabel} ${styles.termsLabel}`}>
+                    <input
+                      type="checkbox"
+                      checked={agreeTerms}
+                      onChange={(e) => {
+                        setAgreeTerms(e.target.checked);
+                        if (errors.terms) setErrors((prev) => ({ ...prev, terms: "" }));
+                      }}
+                      className={styles.checkbox}
+                      aria-invalid={errors.terms ? true : undefined}
+                      aria-describedby={describedBy(errors.terms && "signup-terms-error")}
+                    />
+                    <span className={styles.checkMark} />
+                    <span>
+                      I agree to the{" "}
+                      <Link
+                        to={ROUTES.POLICY_TERMS}
+                        target="_blank"
+                        className={styles.link}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Terms &amp; Conditions
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        to={ROUTES.POLICY_PRIVACY}
+                        target="_blank"
+                        className={styles.link}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Privacy Policy
+                      </Link>
+                    </span>
+                  </label>
+                  {errors.terms && (
+                    <span id="signup-terms-error" className={styles.fieldError}>{errors.terms}</span>
+                  )}
+                </div>
+
+                {/* Submit */}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  block
+                  disabled={loading}
+                  aria-busy={loading || undefined}
+                  className={styles.submitBtn}
+                >
+                  {loading ? (
+                    <>
+                      <SpinnerIcon />
+                      <span className="sf-visually-hidden">Creating your account, please wait</span>
+                    </>
+                  ) : (
+                    "Create account"
+                  )}
+                </Button>
+
+                {/* Switch link */}
+                <p className={styles.switchText}>
+                  Already have an account?{" "}
+                  <button type="button" className={styles.link} onClick={() => switchTab("login")}>
+                    Sign in
+                  </button>
+                </p>
+              </form>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>

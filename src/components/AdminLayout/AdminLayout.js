@@ -35,6 +35,7 @@ import Logo from "../brand/Logo";
 import brand from "../../config/brand";
 import buildAdminTheme, {
   ADMIN_GOLD_GRADIENT,
+  ADMIN_MAIN_ID,
   ADMIN_PALETTE,
 } from "../../theme/adminTheme";
 import {
@@ -449,9 +450,17 @@ const AdminLayout = () => {
         {menuItems.map((item, index) => {
           if (item.isSection) {
             return (
+              /* A DIRECT CHILD OF THE <ul> HAS TO BE AN <li> (Prompt 38).
+                 MUI renders `variant="caption"` as a <span>, and these group
+                 labels sit straight inside <List> — so the admin's whole
+                 navigation was a <ul> with spans in it (axe `list`, serious,
+                 on every admin screen at >=1280px, where the docked drawer is
+                 shown). `component` changes the element and nothing else: the
+                 sx block below still carries every pixel of the styling. */
               <Typography
                 key={`section-${index}`}
                 variant="caption"
+                component="li"
                 sx={{
                   display: "block",
                   px: 1.5,
@@ -1056,6 +1065,12 @@ const AdminLayout = () => {
       {/* Main Content */}
       <Box
         component="main"
+        /* The tooltips' portal home (Prompt 38 — see `MuiTooltip` in
+           theme/adminTheme.js). MUI renders a popper into document.body, which
+           put an open tooltip outside every landmark on the page (axe
+           `region`); the theme points it here instead, which is both inside
+           `main` and free of the `overflow` that would clip an inline popper. */
+        id={ADMIN_MAIN_ID}
         sx={{
           flexGrow: 1,
           // Without minWidth:0 a flex item defaults to min-width:auto, so wide

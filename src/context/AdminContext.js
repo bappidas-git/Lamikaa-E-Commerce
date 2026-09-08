@@ -1,5 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import Swal from "sweetalert2";
+// AdminProvider wraps the whole app in App.js, so this module is EAGER — an
+// import of sweetalert2 here lands in the storefront's main bundle for a
+// library only the admin ever calls (Prompt 38 — see src/utils/alerts.js).
+import { fireAlert } from "../utils/alerts";
 import apiService, { getErrorMessage } from "../services/api";
 
 const AdminContext = createContext();
@@ -38,7 +41,7 @@ export const AdminProvider = ({ children }) => {
           sessionStorage.setItem("adminToken", "mock-admin-token");
         }
         setAdmin(adminData);
-        Swal.fire({
+        fireAlert({
           icon: "success",
           title: `Welcome ${adminData.firstName || "Admin"}`,
           toast: true,
@@ -49,7 +52,7 @@ export const AdminProvider = ({ children }) => {
         });
         return { success: true, admin: adminData };
       }
-      Swal.fire({
+      fireAlert({
         icon: "error",
         title: "Login Failed",
         text: "Invalid admin credentials",
@@ -64,7 +67,7 @@ export const AdminProvider = ({ children }) => {
       // reports what actually failed instead of a generic line that reads like
       // the credentials were rejected.
       const msg = getErrorMessage(error) || "An error occurred. Please try again.";
-      Swal.fire({
+      fireAlert({
         icon: "error",
         title: "Login Error",
         text: msg,
@@ -80,7 +83,7 @@ export const AdminProvider = ({ children }) => {
   const logout = () => {
     apiService.admin.logout();
     setAdmin(null);
-    Swal.fire({
+    fireAlert({
       icon: "info",
       title: "Logged Out",
       toast: true,

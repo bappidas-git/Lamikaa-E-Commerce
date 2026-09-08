@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import { fireAlert } from "../../utils/alerts";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../hooks/useAuth";
 import apiService from "../../services/api";
@@ -264,7 +264,7 @@ const OrderHistory = () => {
     const skipped = items.length - addable.length;
 
     if (addable.length === 0) {
-      Swal.fire({
+      fireAlert({
         icon: "info",
         title: "Couldn't reorder",
         text: "These items are no longer available to add to your cart.",
@@ -298,7 +298,7 @@ const OrderHistory = () => {
         );
       }
       setIsCartOpen(true);
-      Swal.fire({
+      fireAlert({
         icon: "success",
         title: "Added to cart",
         text:
@@ -313,7 +313,7 @@ const OrderHistory = () => {
       });
     } catch (err) {
       console.error("Failed to reorder:", err);
-      Swal.fire({
+      fireAlert({
         icon: "error",
         title: "Couldn't reorder",
         text: "Something went wrong adding these items. Please try again.",
@@ -357,7 +357,7 @@ const OrderHistory = () => {
     const refreshed = await apiService.reviews.getMine(user.id).catch(() => myReviews);
     setMyReviews(Array.isArray(refreshed) ? refreshed : []);
     closeReviewModal();
-    Swal.fire({
+    fireAlert({
       icon: "success",
       title: existing ? "Review updated" : "Review submitted",
       text: "Thanks! Your review will appear on the product page once it's approved.",
@@ -378,7 +378,7 @@ const OrderHistory = () => {
     const refundLine = captured
       ? ` A full refund of ${formatCurrency(order.total)} will be initiated to your ${isOnline ? "original payment method" : "bank / UPI"}.`
       : " No payment has been collected, so there's nothing to refund.";
-    const result = await Swal.fire({
+    const result = await fireAlert({
       title: "Cancel this order?",
       html: `Order <strong>${order.orderNumber || `#${order.id}`}</strong> will be cancelled.${refundLine}`,
       icon: "warning",
@@ -397,7 +397,7 @@ const OrderHistory = () => {
       );
     } catch (err) {
       console.error("Failed to cancel order:", err);
-      Swal.fire({
+      fireAlert({
         icon: "error",
         title: "Couldn't cancel order",
         text: "Something went wrong while cancelling. Please try again.",

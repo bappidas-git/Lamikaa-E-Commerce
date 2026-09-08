@@ -140,10 +140,44 @@
     -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      IT IS STILL ONE REQUEST, AND IT NO LONGER BLOCKS THE FIRST PAINT.
+
+      Prompt 38's Lighthouse pass measured this stylesheet as the single largest
+      render-blocking resource on every route (~950 ms of the ~2.2 s the audit
+      attributes to blocking CSS): the browser will not paint ANYTHING until a
+      stylesheet in the head has arrived, and this one comes from a third
+      origin, after a DNS + TLS handshake, before a single pixel of LAMIKAA is
+      on screen.
+
+      `display=swap` already says what should happen — paint in the fallback
+      stack from the tokens, re-render in Fraunces/Manrope when they land — and
+      this pair is how the STYLESHEET stops blocking too. `media="print"` makes
+      it irrelevant to the screen, so the parser downloads it without waiting;
+      `onload` promotes it to `all` the moment it arrives and the swap happens
+      exactly as before, a few hundred ms earlier. The `preload` above it keeps
+      it at the priority it had, and the browser serves both from ONE fetch.
+
+      The <noscript> copy is not decoration: with JavaScript off the `onload`
+      never fires, and the page would keep the fallback stack forever.
+    -->
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'; this.onload=null;"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap"
+      />
+    </noscript>
 
     <!--
       Cloudinary is where every product image lives, and the home hero's first

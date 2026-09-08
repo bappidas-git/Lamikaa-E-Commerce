@@ -128,7 +128,7 @@ const AdminShipping = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Shipping</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Shipping</Typography>
           <Typography variant="body2" color="text.secondary">Manage shipping methods and carrier integrations</Typography>
         </Box>
         <Button variant="contained" startIcon={<Icon icon="mdi:plus" />} onClick={openCreate}>
@@ -143,10 +143,18 @@ const AdminShipping = () => {
             <Icon icon="mdi:truck-fast" style={{ fontSize: 26 }} />
           </Box>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle1" fontWeight="bold">Shiprocket Integration</Typography>
+            <Typography variant="subtitle1" component="h2" fontWeight="bold">Shiprocket Integration</Typography>
             <Typography variant="body2" color="text.secondary">Connect Shiprocket to automate shipping label generation and tracking</Typography>
           </Box>
-          <Switch checked={shiprocketEnabled} onChange={(e) => handleShiprocketToggle(e.target.checked)} />
+          {/* The switch's visible label is the heading beside it, which is not
+              wired to the input — so the checkbox shipped unlabelled (axe
+              `label`, critical). Named here rather than moved: the row's
+              layout is the design. */}
+          <Switch
+            checked={shiprocketEnabled}
+            onChange={(e) => handleShiprocketToggle(e.target.checked)}
+            inputProps={{ "aria-label": "Shiprocket integration" }}
+          />
         </Box>
 
         {shiprocketEnabled && (
@@ -193,7 +201,7 @@ const AdminShipping = () => {
       {/* Shipping Methods Table */}
       <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
         <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
-          <Typography variant="h6" fontWeight="bold">Shipping Methods</Typography>
+          <Typography variant="h6" component="h2" fontWeight="bold">Shipping Methods</Typography>
         </Box>
         <TableContainer>
           <Table sx={{ minWidth: 900 }}>
@@ -258,8 +266,8 @@ const AdminShipping = () => {
             <TextField label="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} fullWidth size="small" />
             <TextField label="Carrier" value={form.carrier} onChange={(e) => setForm((f) => ({ ...f, carrier: e.target.value }))} fullWidth size="small" placeholder="e.g. Delhivery, Blue Dart, India Post" />
             <FormControl size="small" fullWidth>
-              <InputLabel>Rate Type</InputLabel>
-              <Select value={form.rateType} label="Rate Type" onChange={(e) => setForm((f) => ({ ...f, rateType: e.target.value }))}>
+              <InputLabel id="admin-shipping-rate-type-label">Rate Type</InputLabel>
+              <Select labelId="admin-shipping-rate-type-label" value={form.rateType} label="Rate Type" onChange={(e) => setForm((f) => ({ ...f, rateType: e.target.value }))}>
                 <MenuItem value="flat">Flat Rate</MenuItem>
                 <MenuItem value="free">Free</MenuItem>
                 <MenuItem value="calculated">Calculated (by weight)</MenuItem>

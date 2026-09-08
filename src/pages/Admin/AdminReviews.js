@@ -112,7 +112,7 @@ const AdminReviews = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Reviews</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Reviews</Typography>
           <Typography variant="body2" color="text.secondary">Moderate and manage product reviews</Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -136,8 +136,8 @@ const AdminReviews = () => {
             InputProps={{ startAdornment: <InputAdornment position="start"><Icon icon="mdi:magnify" /></InputAdornment> }}
           />
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Status</InputLabel>
-            <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
+            <InputLabel id="admin-reviews-status-label">Status</InputLabel>
+            <Select labelId="admin-reviews-status-label" value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
               <MenuItem value="all">All</MenuItem>
               {Object.entries(STATUS_CONFIG).map(([k, v]) => (<MenuItem key={k} value={k}>{v.label}</MenuItem>))}
             </Select>
@@ -319,8 +319,8 @@ const AdminReviews = () => {
                 label="Verified purchase"
               />
               <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Status</InputLabel>
-                <Select
+                <InputLabel id="admin-reviews-status-2-label">Status</InputLabel>
+                <Select labelId="admin-reviews-status-2-label"
                   label="Status"
                   value={form.status}
                   onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}

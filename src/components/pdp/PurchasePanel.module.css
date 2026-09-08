@@ -36,8 +36,18 @@
 
 /* ---- The trail ----------------------------------------------------------- */
 
+/* NO NEGATIVE PULL HERE (Prompt 38). Every other trail on the storefront is
+   followed by an eyebrow PARAGRAPH; this one is followed by an eyebrow whose
+   first item is a LINK to the category. A crumb grows to the full 44px touch
+   target on the phone layout — 12px taller than the 20px row it sits in — so
+   pulling the next row 8px closer left the crumb's target overlapping the
+   category link's by 4px: two adjacent targets a thumb cannot separate, which
+   is what SC 2.5.8 is about and what Lighthouse reports as `target-size`.
+   Dropping the pull restores the panel's own 16px gap and clears them by 4px.
+   The other four `.crumbs` rules in the storefront keep theirs: nothing under
+   them is a target. */
 .crumbs {
-  margin-bottom: calc(var(--sf-space-2) * -1);
+  margin-bottom: 0;
 }
 
 /* ---- The eyebrow: category · ritual step · the merchant's flags ---------- */

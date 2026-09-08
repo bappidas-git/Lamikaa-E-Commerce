@@ -9,7 +9,10 @@ import React, {
 import { useAuth } from "./AuthContext";
 import apiService from "../services/api";
 import { isPriceKnown } from "../utils/product";
-import Swal from "sweetalert2";
+// Loaded on first use, not at mount: these providers wrap every route and
+// sweetalert2 is 79 kB that nothing needs until a visitor acts (Prompt 38 —
+// see src/utils/alerts.js).
+import { fireAlert } from "../utils/alerts";
 
 const CartContext = createContext();
 
@@ -115,7 +118,7 @@ const mergeCarts = (primary = [], secondary = []) => {
 
 // Shared SweetAlert toast config so every cart toast is themed/positioned alike.
 const cartToast = (options) =>
-  Swal.fire({
+  fireAlert({
     toast: true,
     position: "bottom-end",
     showConfirmButton: false,

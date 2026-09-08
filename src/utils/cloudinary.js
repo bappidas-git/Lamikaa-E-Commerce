@@ -36,7 +36,17 @@ export const isCloudinary = (url) =>
 // The widths every responsive <img> in the rebuild offers. Chosen for the real
 // layout breakpoints (a 480px phone plate, a 768px tablet column, 1080/1440 for
 // desktop stages, 1920 for the full-bleed hero) rather than for round numbers.
-export const SRCSET_WIDTHS = [480, 768, 1080, 1440, 1920];
+//
+// 640 AND 900 ARE THE PHONE'S DEVICE PIXELS, added by Prompt 38's Lighthouse
+// pass. A candidate list is a set of steps, and the browser takes the first one
+// at least as wide as it needs — so a gap in the ladder is paid for in bytes.
+// The hero plate is 80vw, which on the phones this store is built for lands at
+// 576-660 device px at DPR 2 and 864-1032 at DPR 3: both fell into the 480->768
+// and 768->1080 gaps and were served the rung above. Measured on the home page
+// that was 32 KiB of over-delivery on two hero frames alone. Extra rungs cost
+// nothing but a longer attribute — a candidate the browser does not choose is
+// never fetched.
+export const SRCSET_WIDTHS = [480, 640, 768, 900, 1080, 1440, 1920];
 
 const num = (value) => {
   const n = Number(value);

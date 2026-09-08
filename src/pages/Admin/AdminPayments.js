@@ -156,7 +156,7 @@ const AdminPayments = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Payments</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Payments</Typography>
           <Typography variant="body2" color="text.secondary">Track and manage payment transactions</Typography>
         </Box>
       </Box>
@@ -179,7 +179,8 @@ const AdminPayments = () => {
                 </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="caption" color="text.secondary" noWrap>{card.label}</Typography>
-                  <Typography variant="h6" fontWeight="bold" noWrap>{card.value}</Typography>
+                  {/* A figure, not a heading — see AdminDashboard (Prompt 38). */}
+                  <Typography variant="h6" component="p" fontWeight="bold" noWrap>{card.value}</Typography>
                   {card.sub && <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>{card.sub}</Typography>}
                 </Box>
               </Box>
@@ -209,8 +210,8 @@ const AdminPayments = () => {
           />
           {view === "transactions" && (
             <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Status</InputLabel>
-              <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
+              <InputLabel id="admin-payments-status-label">Status</InputLabel>
+              <Select labelId="admin-payments-status-label" value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
                 <MenuItem value="all">All</MenuItem>
                 {Object.entries(PAYMENT_STATUS_CONFIG).map(([k, v]) => (<MenuItem key={k} value={k}>{v.label}</MenuItem>))}
               </Select>

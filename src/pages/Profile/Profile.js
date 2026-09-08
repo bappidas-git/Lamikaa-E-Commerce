@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import Swal from "sweetalert2";
+import { fireAlert } from "../../utils/alerts";
 import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../context/WishlistContext";
 import apiService from "../../services/api";
@@ -516,7 +516,7 @@ const Profile = () => {
   };
 
   const handleAddressDelete = async (index) => {
-    const result = await Swal.fire({
+    const result = await fireAlert({
       title: "Delete this address?",
       text: "This address will be removed from your account.",
       icon: "warning",
@@ -568,7 +568,7 @@ const Profile = () => {
   // ---- Logout handler ----
   const handleLogout = async () => {
     // Confirm first so logging out isn't a one-click accident.
-    const result = await Swal.fire({
+    const result = await fireAlert({
       title: "Log out?",
       text: "You'll need to sign in again to access your account.",
       icon: "question",

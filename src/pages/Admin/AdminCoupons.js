@@ -117,7 +117,7 @@ const AdminCoupons = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Coupons</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Coupons</Typography>
           <Typography variant="body2" color="text.secondary">Manage discount codes and promotions</Typography>
         </Box>
         <Button variant="contained" startIcon={<Icon icon="mdi:plus" />} onClick={openCreate}>
@@ -147,7 +147,11 @@ const AdminCoupons = () => {
                   <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
                     Usage
                     <Tooltip title="Net redemptions — automatically restored when an order is fully cancelled or returned.">
-                      <Box component="span" sx={{ display: "inline-flex", color: "text.secondary" }}><Icon icon="mdi:information-outline" width={15} /></Box>
+                      {/* Tooltip puts its title on this child as `aria-label`, which ARIA
+                          forbids on a generic element (axe `aria-prohibited-attr`).
+                          `role="img"` is what the child actually is — an icon — and
+                          the role that may carry the name. */}
+                      <Box component="span" role="img" sx={{ display: "inline-flex", color: "text.secondary" }}><Icon icon="mdi:information-outline" width={15} /></Box>
                     </Tooltip>
                   </Box>
                 </TableCell>
@@ -181,7 +185,11 @@ const AdminCoupons = () => {
                       <TableCell><Typography variant="body2">{formatPrice(coupon.minOrderAmount || 0, { decimals: 0 })}</Typography></TableCell>
                       <TableCell sx={{ minWidth: 140 }}>
                         <Typography variant="caption">{coupon.usedCount} {coupon.usageLimit ? `/ ${coupon.usageLimit}` : "uses"}</Typography>
-                        {pct !== null && <LinearProgress variant="determinate" value={pct} sx={{ mt: 0.5, height: 4, borderRadius: 1 }} color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "primary"} />}
+                        {/* MUI gives the bar `role="progressbar"` and a value but no name
+                            (axe `aria-progressbar-name`). The caption above says the
+                            same thing in words; this makes the bar say whose usage it
+                            is showing. */}
+                        {pct !== null && <LinearProgress aria-label={`Usage of coupon ${coupon.code}`} variant="determinate" value={pct} sx={{ mt: 0.5, height: 4, borderRadius: 1 }} color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "primary"} />}
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color={expired ? "error.main" : "text.primary"}>{formatDate(coupon.expiresAt)}</Typography>
@@ -229,8 +237,8 @@ const AdminCoupons = () => {
             <TextField label="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} fullWidth size="small" />
             <Box sx={{ display: "flex", gap: 2 }}>
               <FormControl size="small" sx={{ flex: 1 }}>
-                <InputLabel>Type</InputLabel>
-                <Select value={form.type} label="Type" onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
+                <InputLabel id="admin-coupons-type-label">Type</InputLabel>
+                <Select labelId="admin-coupons-type-label" value={form.type} label="Type" onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
                   <MenuItem value="percentage">Percentage (%)</MenuItem>
                   <MenuItem value="fixed">Fixed Amount ({currencySymbol})</MenuItem>
                 </Select>

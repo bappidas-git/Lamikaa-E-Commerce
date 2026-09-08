@@ -15,7 +15,10 @@ import {
 } from "../../components/ui";
 import CategoryHead from "../../components/catalogue/CategoryHead";
 import ProductChapter from "../../components/catalogue/ProductChapter";
-import ChapterIndex, { chapterId } from "../../components/catalogue/ChapterIndex";
+import ChapterIndex, {
+  ChapterIndexReserve,
+  chapterId,
+} from "../../components/catalogue/ChapterIndex";
 import BuildRitualPanel from "../../components/catalogue/BuildRitualPanel";
 import { concernLabel } from "../../components/storefront/ProductCard";
 import NotFound from "../NotFound/NotFound";
@@ -73,6 +76,35 @@ import styles from "./Shop.module.css";
 // Three, not eight: eight full-height skeletons is a page of shimmer, and the
 // five below the fold have not been scrolled to yet.
 const SKELETON_COUNT = 3;
+
+/**
+ * The concern row's SHAPE while the concerns are still on the wire (Prompt 38).
+ *
+ * The chips are admin-managed data, so the page cannot know them synchronously
+ * — and rendering nothing until they arrived meant a wrapped row of a dozen
+ * pills appeared above the listing after the fetch and pushed the whole page
+ * down. Measured on the production build at 412px that was a 0.149 layout
+ * shift, by far the largest on the route.
+ *
+ * These are not labels and they are not data: they are the label WIDTHS a row
+ * of concern pills occupies, in `em` of the pill's own type, so the slot opens
+ * at the height the real row will want. Each was MEASURED off the rendered row
+ * rather than counted off the strings. The count and the spread are the shipped
+ * collection's — "All" plus eleven concerns; if the merchant renames or adds
+ * one, the reservation is a fraction of a row out for a single paint instead of
+ * five rows out.
+ *
+ * `em` AND NOT `ch`, which is what this was first written in and why it did not
+ * work. `ch` is the advance of a ZERO, so it changes with the font FAMILY — the
+ * reservation was still rendering in the fallback when the row it reserves had
+ * already switched to Manrope, and it wrapped to three lines against the real
+ * row's four. `em` is the font SIZE, which the fallback and the webfont share,
+ * so the slot is the same width whichever face is painting it, and it still
+ * follows the type scale if the tier ever moves.
+ */
+const CONCERN_RESERVE_EM = [
+  1.23, 4.92, 5.69, 4.77, 3.85, 2.38, 3.23, 5.23, 3.77, 4.85, 4.08, 5.31,
+];
 
 // A product with no hero position sorts after every product that has one — the
 // same rule `api.js`'s `byHeroOrderThenName` and the home showcase both apply.
@@ -169,6 +201,13 @@ const useShopData = ({ concernSlug, categorySlug, skip = false }) => {
     category: null,
   });
   const [concerns, setConcerns] = useState([]);
+  // The concerns are a SECOND, independent request (below), so "the range has
+  // arrived" says nothing about whether the chip row is known yet. Tracking it
+  // separately is what lets the head reserve that row for exactly as long as it
+  // is actually unknown — reserving it against `status` instead made the head
+  // shrink the moment the products landed and grow again when the concerns did,
+  // which is two layout shifts where there had been one (Prompt 38).
+  const [concernsLoading, setConcernsLoading] = useState(true);
 
   useEffect(() => {
     if (skip) return undefined;
@@ -214,10 +253,14 @@ const useShopData = ({ concernSlug, categorySlug, skip = false }) => {
     apiService.concerns
       .getAll()
       .then((rows) => {
-        if (alive) setConcerns(Array.isArray(rows) ? rows : []);
+        if (!alive) return;
+        setConcerns(Array.isArray(rows) ? rows : []);
+        setConcernsLoading(false);
       })
       .catch(() => {
-        if (alive) setConcerns([]);
+        if (!alive) return;
+        setConcerns([]);
+        setConcernsLoading(false);
       });
     return () => {
       alive = false;
@@ -226,7 +269,7 @@ const useShopData = ({ concernSlug, categorySlug, skip = false }) => {
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
-  return { ...state, concerns, retry };
+  return { ...state, concerns, concernsLoading, retry };
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -248,6 +291,7 @@ const ShopView = ({
   concern,
   category,
   concerns,
+  concernsLoading,
   retry,
 }) => {
   const isCategory = mode === "category";
@@ -385,6 +429,24 @@ const ShopView = ({
               rule
             />
 
+            {concerns.length === 0 && concernsLoading && (
+              /* The row's slot, held at the height the chips will want. Inert
+                 and unannounced: there is nothing here to read yet. */
+              <ul className={styles.concerns} aria-hidden="true">
+                {CONCERN_RESERVE_EM.map((em, index) => (
+                  <li key={index}>
+                    <span
+                      className={`sf-chip ${styles.concernReserve}`}
+                      style={{
+                        /* the label, plus the pill's own padding and hairline */
+                        width: `calc(${em}em + var(--sf-space-4) * 2 + 2px)`,
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+
             {concerns.length > 0 && (
               /* eslint-disable-next-line jsx-a11y/no-redundant-roles */
               <ul className={styles.concerns} role="list">
@@ -426,14 +488,20 @@ const ShopView = ({
           Full-bleed and sticky under the masthead; hidden from 1025px, where
           the rail below takes over. Outside `.layout` because the band spans
           the viewport while its pills keep the container's gutter. */}
-      {showChapters && (
+      {showChapters ? (
         <ChapterIndex
           variant="strip"
           products={products}
           activeIndex={activeIndex}
           topId={TITLE_ID}
         />
-      )}
+      ) : loading ? (
+        /* The band's slot, so the listing does not jump 48px down the moment
+           the range arrives (Prompt 38 — CLS). Only while LOADING: a failed
+           fetch and an empty range both end with no band at all, and reserving
+           a strip that will never come is its own empty gap. */
+        <ChapterIndexReserve />
+      ) : null}
 
       <div className={styles.layout}>
         {/* ── The index, desktop form ───────────────────────────────────────

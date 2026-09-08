@@ -95,13 +95,27 @@ const FrequentlyBoughtTogether = ({
 
   // The plate, then a caption under it — the anchor says where you are, the
   // companions name themselves.
+  //
+  // ONE NAME PER TILE (Prompt 38). The image and the caption sit inside the
+  // SAME link, so an `alt` carrying the product name made the link read its
+  // name twice — WCAG H2's case, and axe's `image-redundant-alt`. The picture
+  // is therefore decorative (`alt=""`, the caption is the label) and the link
+  // states its own name once, in full: the caption is truncated at 26
+  // characters for the layout and the anchor's caption says "This item" rather
+  // than naming the product at all, so neither can be trusted to name the link.
   const renderTile = (p, locked) => (
-    <Link to={productPath(p)} className={styles.tile} key={p.id}>
+    <Link
+      to={productPath(p)}
+      className={styles.tile}
+      key={p.id}
+      aria-label={locked ? `${p.name} (this item)` : p.name}
+    >
       <span className={`sf-plate ${styles.plate}`}>
         <img
           src={p.images?.[0] || p.image || PLACEHOLDER_IMG}
-          alt={p.name}
+          alt=""
           loading="lazy"
+          decoding="async"
           onError={onImageError}
         />
       </span>
@@ -142,9 +156,18 @@ const FrequentlyBoughtTogether = ({
   };
 
   return (
+    // THE LABEL FOLLOWS THE HEADING, AND SO DOES THE LANDMARK (Prompt 38).
+    // A <section> is only a `region` landmark once it has an accessible name,
+    // so falling back to FBT_TITLE when the caller passed `title={null}` named
+    // this region "Complete the ritual" INSIDE the PDP chapter of that exact
+    // name — two regions, one name, which axe reports as `landmark-unique` and
+    // a screen-reader user hears as the same section twice. Where the caller
+    // heads the block itself, this one drops out of the landmark map entirely
+    // (undefined, not the fallback) and the chapter's own heading is the only
+    // name; where it heads itself, the name is its own <h2>.
     <section
       className={[styles.section, className].filter(Boolean).join(" ")}
-      aria-label={title || FBT_TITLE}
+      aria-label={title || undefined}
     >
       {(title || note) && (
         <header className={styles.head}>

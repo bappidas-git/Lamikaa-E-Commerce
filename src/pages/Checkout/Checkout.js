@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import Swal from "sweetalert2";
+import { fireAlert } from "../../utils/alerts";
 import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
 import { useOrder } from "../../context/OrderContext";
@@ -396,6 +396,21 @@ const Checkout = () => {
     setCouponError("");
   };
 
+  /**
+   * The address fields in the order they are read, so a failed validation can
+   * send the visitor to the FIRST thing that is wrong rather than to the top.
+   * The ids are the inputs' own (see the panel below).
+   */
+  const ADDRESS_FIELD_ORDER = [
+    ["firstName", "ship-first"],
+    ["lastName", "ship-last"],
+    ["phone", "ship-phone"],
+    ["addressLine1", "ship-line1"],
+    ["city", "ship-city"],
+    ["state", "ship-state"],
+    ["postalCode", "ship-postal"],
+  ];
+
   const validateAddress = () => {
     const addr = useExistingAddress || shippingAddress;
     const errs = {};
@@ -407,6 +422,23 @@ const Checkout = () => {
     if (!addr.state?.trim()) errs.state = "Required";
     if (!addr.postalCode?.trim()) errs.postalCode = "Required";
     setAddressErrors(errs);
+
+    // THE ERROR HAS TO REACH THE PERSON WHO CANNOT SEE IT (Prompt 38). Every
+    // field already carries `aria-invalid` and an `aria-describedby` pointing
+    // at its message, which satisfies 3.3.1 on paper — but with focus left on
+    // the button a screen-reader user is told nothing at all, and a keyboard
+    // visitor has to Shift+Tab back up the form hunting for whichever field
+    // failed. Moving focus to the first invalid input reads its label, its
+    // invalid state and its message in one go, and puts the caret where the
+    // work is. After the paint, so the message exists to be read.
+    const firstBad = ADDRESS_FIELD_ORDER.find(([key]) => errs[key]);
+    if (firstBad) {
+      requestAnimationFrame(() => {
+        const input = document.getElementById(firstBad[1]);
+        if (input) input.focus({ preventScroll: false });
+      });
+    }
+
     return Object.keys(errs).length === 0;
   };
 
@@ -421,7 +453,7 @@ const Checkout = () => {
     if (unpricedLines.length === 0) return false;
     const count = unpricedLines.length;
     unpricedLines.forEach((item) => removeFromCart(item.id));
-    Swal.fire({
+    fireAlert({
       toast: true,
       position: "bottom-end",
       icon: "warning",

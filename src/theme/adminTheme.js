@@ -98,6 +98,17 @@ export const ADMIN_PALETTE = {
   },
 };
 
+/**
+ * The admin shell's <main> element id (set by `components/AdminLayout`).
+ *
+ * Exported because the `MuiTooltip` default below needs it: a popper rendered
+ * into `document.body` — MUI's default — is page content sitting outside every
+ * landmark, which is what axe reports as `region` (Prompt 38). Pointing the
+ * portal at the shell's own <main> keeps it inside a landmark without making it
+ * an inline popper, which the tables' `overflow-x: auto` would clip.
+ */
+export const ADMIN_MAIN_ID = "admin-main";
+
 const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */) => {
   const palette = ADMIN_PALETTE;
 
@@ -131,6 +142,56 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
       subtitle2: { fontWeight: 600 },
     },
     components: {
+      // ------------------------------------------------------------------
+      // TYPE SIZE IS NOT DOCUMENT STRUCTURE (Prompt 38)
+      // ------------------------------------------------------------------
+      // MUI's default variantMapping renders `variant="h4"` as an <h4>
+      // element, `subtitle2` as an <h6>, and so on — so every admin screen
+      // published its stat figures ("₹1,309", "8", "2"), its accordion
+      // labels and its product names as document headings, four and five
+      // levels below the page's single <h1>. axe reported it as
+      // `heading-order` on nine of the nineteen screens; a screen-reader
+      // user navigating by heading got a list of numbers.
+      //
+      // The mapping below says: only h1/h2/h3 are headings by default.
+      // Everything else keeps its type size and becomes a paragraph, and a
+      // heading is now something a screen states on purpose —
+      // `<Typography variant="h5" component="h1">` for a page title,
+      // `component="h2"` for a panel. Visual output is unchanged: `variant`
+      // still picks the size, `component` only picks the tag.
+      // Every admin tooltip portals into the shell's <main> rather than into
+      // document.body — see ADMIN_MAIN_ID above. `container` is read at mount;
+      // a null return (the sign-in screen, which has no shell) makes MUI fall
+      // back to document.body exactly as before.
+      MuiTooltip: {
+        defaultProps: {
+          slotProps: {
+            popper: {
+              container: () =>
+                typeof document === "undefined"
+                  ? null
+                  : document.getElementById(ADMIN_MAIN_ID),
+            },
+          },
+        },
+      },
+      MuiTypography: {
+        defaultProps: {
+          variantMapping: {
+            h1: "h1",
+            h2: "h2",
+            h3: "h3",
+            h4: "p",
+            h5: "p",
+            h6: "p",
+            subtitle1: "p",
+            subtitle2: "p",
+            body1: "p",
+            body2: "p",
+            inherit: "p",
+          },
+        },
+      },
       // Every focusable control in the admin — button, icon button, nav item,
       // tab, switch — wears the same gold ring. One rule, so no screen can
       // forget it.

@@ -267,7 +267,7 @@ const AdminCategories = () => {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">Categories</Typography>
+          <Typography variant="h5" component="h1" fontWeight="bold">Categories</Typography>
           <Typography variant="body2" color="text.secondary">Manage product categories and subcategories, their imagery and what each one lists</Typography>
         </Box>
         <Button variant="contained" startIcon={<Icon icon="mdi:plus" />} onClick={openCreate}>
@@ -314,7 +314,7 @@ const AdminCategories = () => {
                   <TableRow key={cat.id} hover>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Avatar src={cat.image || undefined} variant="rounded" sx={{ width: 44, height: 44, bgcolor: "primary.light" }}>
+                        <Avatar src={cat.image || undefined} alt="" variant="rounded" sx={{ width: 44, height: 44, bgcolor: "primary.light" }}>
                           <Icon icon={cat.icon || "mdi:shape"} style={{ fontSize: 20 }} />
                         </Avatar>
                         <Box sx={{ minWidth: 0 }}>

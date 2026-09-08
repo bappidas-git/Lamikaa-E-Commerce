@@ -329,15 +329,19 @@ const RitualDetailView = ({ status, ritual, products, retry }) => {
 
       {/* ── The panel ────────────────────────────────────────────────────── */}
       {!loading && !failed && steps.length > 0 && (
-        <section className={`sf-section ${styles.ctaSection}`} aria-labelledby="ritual-cta">
+        /* THE REGION IS NAMED BY THE EYEBROW, NOT THE HEADLINE (Prompt 38).
+           The panel's headline repeats the ritual name — deliberately, it is
+           the summary of the routine you have just read — but the opening band
+           above is `aria-labelledby="ritual-title"`, so labelling this region
+           by its headline too gave the page two regions called "The Morning
+           Glow Ritual" (axe `landmark-unique`; a landmarks list that names the
+           same thing twice tells a screen-reader user nothing). "Everything you
+           need" is the panel's own visible eyebrow, so the name is still read
+           off the page — it is simply the half of the cluster that is unique. */
+        <section className={`sf-section ${styles.ctaSection}`} aria-label="Everything you need">
           <div className="sf-container">
             <GlassCard strong glow="duo" padding="lg" className={styles.cta}>
-              <SectionHeading
-                id="ritual-cta"
-                eyebrow="Everything you need"
-                title={name}
-                rule
-              />
+              <SectionHeading eyebrow="Everything you need" title={name} rule />
 
               {priced > 0 ? (
                 <p className={styles.total}>

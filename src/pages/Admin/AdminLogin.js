@@ -114,7 +114,13 @@ const AdminLogin = () => {
 
   return (
     <ThemeProvider theme={adminTheme}>
+    {/* THE DOOR IS A <main> (Prompt 38). This screen renders outside
+        AdminLayout, so it inherited none of the shell's landmarks: axe found
+        the whole sign-in card sitting in no landmark at all (`region` x9), no
+        `main` (`landmark-one-main`) and no h1. `component="main"` and the h1
+        below are the whole fix — nothing moves on screen. */}
     <Box
+      component="main"
       sx={{
         minHeight: "100vh",
         display: "flex",
@@ -171,7 +177,10 @@ const AdminLogin = () => {
                 />
               </Box>
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            {/* The page's h1. `variant` keeps the h6 type scale — the console
+                title is not meant to shout — while `component` gives the
+                document the level-one heading it was missing. */}
+            <Typography variant="h6" component="h1" sx={{ fontWeight: 700 }}>
               Admin Console
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>

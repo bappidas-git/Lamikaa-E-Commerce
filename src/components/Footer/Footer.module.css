@@ -362,7 +362,17 @@
   gap: var(--sf-space-2) var(--sf-space-6);
 }
 
+/* 24px, NOT 18 (Prompt 38). These four are a standalone row of links, not
+   phrases inside a sentence, so SC 2.5.8's inline exception does not cover
+   them: at the 12px type they set they were 18px tall targets. The box grows
+   around the same type — the row's 8px vertical gap keeps wrapped rows a clear
+   32px apart, and nothing on screen moves except six pixels of hit area. The
+   full 44px target the buttons take would break the colophon's rhythm and is
+   not what the criterion asks for. */
 .microLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   font-size: var(--sf-text-xs);
   letter-spacing: var(--sf-tracking-wide);
   color: var(--sf-color-text-muted);

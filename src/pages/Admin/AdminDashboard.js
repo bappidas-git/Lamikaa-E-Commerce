@@ -46,7 +46,12 @@ const StatCard = ({ title, value, icon, tone = "primary", subtitle, onClick }) =
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <Box>
           <Typography variant="body2" color="text.secondary" gutterBottom>{title}</Typography>
-          <Typography variant="h4">{value}</Typography>
+          {/* A FIGURE IS NOT A HEADING (Prompt 38). MUI maps `variant="h4"` to
+              an <h4> element, so every stat card published its number as a
+              level-4 heading under the page's h1 — a skipped level (axe
+              `heading-order`) and an outline made of "₹1,309". `component` puts
+              the type back on a <p> and leaves the display size untouched. */}
+          <Typography variant="h4" component="p">{value}</Typography>
           {subtitle && <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>{subtitle}</Typography>}
         </Box>
         <Box
@@ -115,7 +120,7 @@ const AdminDashboard = () => {
 
   if (loading) return (
     <Box>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>Dashboard</Typography>
+      <Typography variant="h5" component="h1" fontWeight="bold" gutterBottom>Dashboard</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Welcome back! Here's your store overview.</Typography>
       <Grid container spacing={3}>
         {[1,2,3,4].map((i) => (<Grid item xs={12} sm={6} lg={3} key={i}><Skeleton variant="rounded" height={130} sx={{}} /></Grid>))}
@@ -135,7 +140,7 @@ const AdminDashboard = () => {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>Dashboard</Typography>
+      <Typography variant="h5" component="h1" fontWeight="bold" gutterBottom>Dashboard</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Welcome back! Here's your store overview.</Typography>
 
       {/* Primary Stats */}
@@ -160,7 +165,7 @@ const AdminDashboard = () => {
           <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.warning.main } })} onClick={() => navigate("/admin/orders")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.warning.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.warning.main })}><Icon icon="mdi:clock-outline" style={{ fontSize: 20 }} /></Box>
-              <Box><Typography variant="caption" color="text.secondary">Pending Orders</Typography><Typography variant="h6" fontWeight="bold">{stats.pendingOrders}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Pending Orders</Typography><Typography variant="h6" component="p" fontWeight="bold">{stats.pendingOrders}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
@@ -168,7 +173,7 @@ const AdminDashboard = () => {
           <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.error.main } })} onClick={() => navigate("/admin/returns")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.error.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.error.main })}><Icon icon="mdi:backup-restore" style={{ fontSize: 20 }} /></Box>
-              <Box><Typography variant="caption" color="text.secondary">Pending Returns</Typography><Typography variant="h6" fontWeight="bold">{stats.pendingReturns}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Pending Returns</Typography><Typography variant="h6" component="p" fontWeight="bold">{stats.pendingReturns}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
@@ -176,7 +181,7 @@ const AdminDashboard = () => {
           <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.warning.main } })} onClick={() => navigate("/admin/products")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.warning.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.warning.main })}><Icon icon="mdi:alert-circle-outline" style={{ fontSize: 20 }} /></Box>
-              <Box><Typography variant="caption" color="text.secondary">Low Stock</Typography><Typography variant="h6" fontWeight="bold">{stats.lowStockProducts}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Low Stock</Typography><Typography variant="h6" component="p" fontWeight="bold">{stats.lowStockProducts}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
@@ -184,7 +189,7 @@ const AdminDashboard = () => {
           <Paper elevation={0} sx={(theme) => ({ p: 2, border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette.secondary.main } })} onClick={() => navigate("/admin/coupons")}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette.secondary.main, 0.12), borderRadius: 1, display: "flex", color: theme.palette.secondary.main })}><Icon icon="mdi:tag-outline" style={{ fontSize: 20 }} /></Box>
-              <Box><Typography variant="caption" color="text.secondary">Active Coupons</Typography><Typography variant="h6" fontWeight="bold">{stats.activeCoupons}</Typography></Box>
+              <Box><Typography variant="caption" color="text.secondary">Active Coupons</Typography><Typography variant="h6" component="p" fontWeight="bold">{stats.activeCoupons}</Typography></Box>
             </Box>
           </Paper>
         </Grid>
@@ -236,7 +241,7 @@ const AdminDashboard = () => {
                 </Box>
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="caption" color="text.secondary">{tile.label}</Typography>
-                  <Typography variant="h6" fontWeight="bold">{tile.value}</Typography>
+                  <Typography variant="h6" component="p" fontWeight="bold">{tile.value}</Typography>
                 </Box>
               </Box>
             </Paper>
@@ -250,10 +255,17 @@ const AdminDashboard = () => {
         <Grid item xs={12} lg={7}>
           <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
             <Box sx={{ p: 2.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography variant="h6" fontWeight="bold">Recent Orders</Typography>
+              <Typography variant="h6" component="h2" fontWeight="bold">Recent Orders</Typography>
               <Button size="small" onClick={() => navigate("/admin/orders")} sx={{ textTransform: "none" }}>View All</Button>
             </Box>
-            <TableContainer>
+            {/* A KEYBOARD USER MUST BE ABLE TO SCROLL IT (Prompt 38). At a phone
+                width this table is wider than its container, and unlike the
+                admin's other tables its cells hold nothing focusable — so
+                there was no way to reach the horizontal scroll from the
+                keyboard at all (axe `scrollable-region-focusable`, serious).
+                `tabIndex` makes the container itself a stop; the region role
+                and label are what make that stop announce what it is. */}
+            <TableContainer tabIndex={0} role="region" aria-label="Recent orders">
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -298,7 +310,7 @@ const AdminDashboard = () => {
         <Grid item xs={12} lg={5}>
           <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
             <Box sx={{ p: 2.5, borderBottom: "1px solid", borderColor: "divider", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography variant="h6" fontWeight="bold">Low Stock Alert</Typography>
+              <Typography variant="h6" component="h2" fontWeight="bold">Low Stock Alert</Typography>
               <Button size="small" onClick={() => navigate("/admin/products")} sx={{ textTransform: "none" }}>Manage</Button>
             </Box>
             <Box sx={{ p: 1 }}>
@@ -310,7 +322,7 @@ const AdminDashboard = () => {
               ) : (
                 lowStockProducts.map((p, i) => (
                   <Box key={p.id} sx={{ display: "flex", alignItems: "center", gap: 2, p: 1.5, borderBottom: i < lowStockProducts.length - 1 ? "1px solid" : "none", borderColor: "divider" }}>
-                    <Avatar src={p.images?.[0]} variant="rounded" sx={{ width: 40, height: 40, bgcolor: "action.hover" }}>
+                    <Avatar src={p.images?.[0]} alt="" variant="rounded" sx={{ width: 40, height: 40, bgcolor: "action.hover" }}>
                       <Icon icon="mdi:package-variant" />
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>

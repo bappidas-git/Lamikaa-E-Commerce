@@ -1,7 +1,10 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import apiService, { getErrorMessage } from "../services/api";
 import authStorage from "../utils/authStorage";
-import Swal from "sweetalert2";
+// Loaded on first use, not at mount: these providers wrap every route and
+// sweetalert2 is 79 kB that nothing needs until a visitor acts (Prompt 38 —
+// see src/utils/alerts.js).
+import { fireAlert } from "../utils/alerts";
 
 const AuthContext = createContext();
 
@@ -57,7 +60,7 @@ export const AuthProvider = ({ children }) => {
         authStorage.set("user", JSON.stringify(userData), !!credentials.remember);
         setUser(userData);
 
-        Swal.fire({
+        fireAlert({
           icon: "success",
           title: `Welcome ${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Welcome",
           text: "You have successfully logged in",
@@ -70,7 +73,7 @@ export const AuthProvider = ({ children }) => {
 
         return { success: true, user: userData };
       } else {
-        Swal.fire({
+        fireAlert({
           icon: "error",
           title: "Login Failed",
           text: "Invalid email or password",
@@ -87,7 +90,7 @@ export const AuthProvider = ({ children }) => {
 
       const errorMessage = getErrorMessage(error) || "An error occurred during login. Please try again.";
 
-      Swal.fire({
+      fireAlert({
         icon: "error",
         title: "Login Error",
         text: errorMessage,
@@ -105,7 +108,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const newUser = await apiService.auth.register(userData);
 
-      Swal.fire({
+      fireAlert({
         icon: "success",
         title: "Account created",
         text: "Please log in with your new credentials",
@@ -122,7 +125,7 @@ export const AuthProvider = ({ children }) => {
 
       const errorMessage = getErrorMessage(error) || "An error occurred during registration. Please try again.";
 
-      Swal.fire({
+      fireAlert({
         icon: "error",
         title: "Registration Failed",
         text: errorMessage,
@@ -143,7 +146,7 @@ export const AuthProvider = ({ children }) => {
     apiService.auth.logout().catch(() => {});
     setUser(null);
 
-    Swal.fire({
+    fireAlert({
       icon: "info",
       title: "Logged Out",
       text: "You have been successfully logged out",
