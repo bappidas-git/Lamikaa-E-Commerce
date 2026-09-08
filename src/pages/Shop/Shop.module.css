@@ -30,6 +30,14 @@
   padding-bottom: calc(var(--sf-section-y) * 0.25);
 }
 
+/* The category head (Prompt 24). It has NO top padding on purpose: the band is
+   full-bleed and begins directly under the sticky masthead, which is the whole
+   composition. The bottom figure is a little larger than `/shop`'s because the
+   glass panel has already risen into the band and needs the clearance back. */
+.categoryHead {
+  padding-bottom: calc(var(--sf-section-y) * 0.4);
+}
+
 /* The eleven concerns and "All". A wrapped row rather than a scroller: this is
    the whole set of ways to narrow the range, and a scroller would hide half of
    them behind a gesture the page gives no other reason to make. */

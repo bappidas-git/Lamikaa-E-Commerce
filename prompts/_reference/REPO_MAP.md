@@ -1310,6 +1310,106 @@ what `/shop` AND `/category/:slug` now render.
   `resolveCategory`, `categoryParam` and `getMainMenuCategories` are left for
   the Prompt 35 sweep.
 
+**Updated by Prompt 24.** The seven categories have their heads and the rituals
+have their two pages. `/rituals` and `/rituals/:slug` are real; **two**
+`ComingSoon` routes remain (`/why-lamikaa` → 28, `/cart` → 29).
+
+- `pages/Shop/Shop.js` (380 → 581) + `Shop.module.css` (220 → 228): **split in
+  two**. `Shop` now holds only `useSearchParams`/`useParams`/`useShopData` and
+  the route's two exits — `/category/rituals` (or any category with
+  `kind: "rituals"`, so renaming the slug in the admin cannot strand it) →
+  `<Navigate to="/rituals" replace/>`, and `status === "ready" && !category` →
+  `<NotFound/>`; `ShopView` holds every other hook and the JSX. **The split is
+  load-bearing**: `useSeo` borrows the head's existing tags and restores what it
+  displaced, so two of them mounted at once (the page's and `NotFound`'s)
+  restore in child-then-parent order and leave a stale description behind —
+  exactly one `useSeo` is ever mounted on this route. `useShopData` gained a
+  `skip` flag so the rituals redirect costs no round trip. In category mode the
+  page renders `CategoryHead` instead of the `SectionHeading` + concern-chip row,
+  and publishes `jsonLd: [breadcrumbJsonLd(trail), itemListJsonLd(products)]`
+  with `description` from the category record. Exports `concernsOf` alongside
+  `shopOrder` and `productCountLabel`.
+- `components/catalogue/CategoryHead.{js,module.css}` (new): a full-bleed
+  `.sf-placeholder-media` band (4:3 on a phone; 21:9 with
+  `min-height: clamp(260px, 32vw, 420px)` and `max-height: 520px` from 769px)
+  under a `GlassCard strong scrim` panel (max 640px) holding `Breadcrumb`,
+  eyebrow "Category", the `<h1>` (`--sf-text-3xl`, `4xl` from 1025px), the
+  description, the count and the concern chips. The overlap is a NEGATIVE MARGIN
+  (`clamp(-140px, -9vw, -72px)`), never `position: absolute` — the panel stays
+  in flow, so a long description grows it instead of being clipped. Below 769px
+  (and in a short landscape viewport) the panel sits BELOW the band with no
+  overlap. `scrim` is not decoration: category photography is an unchosen
+  Picsum seed, and 8% white at 20px blur over a bright one is a contrast failure
+  waiting for a reseed. Props `category, trail, countLabel, concerns, titleId`.
+- `pages/Rituals/Rituals.{js,module.css}` (new): `/rituals`. `SectionHeading
+  as="h1"` — eyebrow "Rituals", "Curated **routines**" (`gradientWord={1}`),
+  lede "Three ways to use the Black Rice range in the order it was designed
+  for." — then one full-width `GlassCard strong` per routine: a 16:10 stage on
+  the left from 900px (stacked above on a phone), and on the right the
+  "Ritual · N steps" eyebrow, the name, the tagline in gold italic, the story, a
+  strip of numbered step plates, the duration and `Button variant="primary"`
+  "See the ritual" (`aria-label` "See the ritual: {name}" — three identical link
+  names are three links to nowhere in particular). The stage's `<img>` is
+  ABSOLUTE so it contributes no intrinsic height: the seeded 1200×1500 images
+  left in flow made a 470px story into a 670px card. One `Promise.all` over
+  `rituals.getAll()` + `products.getAll()`; three states (3 skeletons · a failed
+  panel · "No routines yet").
+- `pages/Rituals/RitualDetail.{js,module.css}` (new): `/rituals/:slug`, split
+  the same way as `Shop` and for the same `useSeo` reason — `RitualDetail` reads
+  and 404s, `RitualDetailView` owns the head. Head: `Breadcrumb`, eyebrow
+  `ritualEyebrow()` ("Ritual · 4 steps · About five minutes"), `<h1>`, the
+  tagline, the story through `ContentBlocks variant="editorial"` and a 4:5
+  placeholder photograph on the right from 1025px. Then the steps as an `<ol>`
+  of `RitualStep`, then the CTA panel, then `LegalNote compact`.
+  **THE PAGE OWNS THE CHOICES**: a `{stepOrder: productId}` map, reset when the
+  ritual changes, so the panel spends whatever the visitor picked.
+  `GlassCard strong glow="duo"` — eyebrow "Everything you need", the ritual's
+  name, "From ₹X for the priced steps" (only when `priced > 0`; TBA products are
+  never summed), then **"Add the whole ritual to cart"** behind
+  `brand.flags.enableRitualBundles` **AND** `priced > 0` — a bundle button that
+  can only answer "none of these are on sale yet" is a dead control — calling
+  `useCart().addMany(chosen.filter(isPriceKnown).map(buildCartItem))`, else
+  **"Shop each step"**, which scrolls to the first row and moves focus into it.
+  Secondary "Browse all rituals". `jsonLd: [breadcrumbJsonLd, itemListJsonLd]`
+  over the CHOSEN step products. Exports `ritualEyebrow` and `ritualTotal`.
+- `components/catalogue/RitualStep.{js,module.css}` (new): one `<li>` per step —
+  grid `72px 1fr` on a phone, `96px 240px minmax(0,1fr) auto` from 769px. A 36px
+  `Chip variant="step"` numeral, a 1:1 `.sf-plate` label crop linking to the PDP
+  (`stageSrc(product,{w:480})`), the name in Fraunces 22 (also a link — the
+  plate-and-name contract `ProductCard` already follows), the product's
+  `promise`, the step's `note` in display italics, a `frequency` chip, `Price`
+  and `Button variant="addToCart" size="sm"` (disabled, "Coming soon", when
+  TBA). **The connector** is one absolutely positioned gradient hairline per row
+  running the full row height at the numerals' centre line, with the opaque
+  numeral punched over it — drawn that way rather than as a stub under each
+  numeral so it meets the next row's at the shared edge whatever either row
+  contains; `data-first`/`data-last` trim the two ends, and the row's own seam
+  is inset past the numeral column so the thread crosses it unbroken.
+  **The alternative** is a real `radiogroup` (roving tabindex, arrows, Home/End)
+  whose labels come from the catalogue's `shortName` — the seeded pair reads
+  "Goat Milk Soap / Body Wash", and a component that typed "Bar / Wash" would be
+  describing today's seed. Controlled via `selectedProductId` + `onSelect`, with
+  its own state when nobody lifts it. Exports `stepNumeral`, `stepActionLabel`,
+  `choiceLabel`.
+- `components/Breadcrumb/Breadcrumb.{js,module.css}` (rewritten; it had **no
+  consumers** — every page rolled its own `<nav>`): `items` is now the FULL
+  trail including Home, as `{label, to}`, rendered as an `<ol>` whose last crumb
+  is never a link and carries `aria-current="page"`; separators are
+  pseudo-elements. **The same array is passed to `breadcrumbJsonLd`**, so the
+  crumb a visitor reads and the crumb a crawler is told about cannot drift.
+  Targets: 24px at every width, 44px ≤768px.
+- `utils/seo.js`: adds `breadcrumbJsonLd(items)` — a `BreadcrumbList` over the
+  same `{label, to}` array, absolute URLs on `seoOrigin()`, the final crumb
+  positioned but URL-less, `null` for an empty trail. Prompt 27 adds `Product`.
+- **`App.js`**: `/rituals` → `pages/Rituals/Rituals`, `/rituals/:slug` →
+  `pages/Rituals/RitualDetail`, both lazy. The static `/category/rituals`
+  redirect route is **gone** — the page owns that rule now (by slug AND by
+  `kind`), so there is one place to keep it in step rather than two.
+- `components/catalogue/index.js`: `CategoryHead` and `RitualStep` exported.
+- **Tests**: `components/catalogue/RitualStep.test.js` (21) covers
+  `stepNumeral`, `stepActionLabel`, `choiceLabel`, `ritualEyebrow`,
+  `ritualTotal`, `concernsOf` and `breadcrumbJsonLd`.
+
 
 ## 7. Admin panel
 
@@ -1362,10 +1462,10 @@ Storefront routes live inside `StorefrontShell` (`DealsConfigProvider` →
 |---|---|---|
 | `/` | `pages/Home/Home` (**eagerly imported** — the LCP page) | 14–22 |
 | `/shop` | `pages/Shop/Shop` *(23)* | — |
-| `/category/:slug` | `<Shop mode="category" />` *(23)* | 24 (head, breadcrumb, JSON-LD, unknown-slug 404) |
-| `/category/rituals` | `<Navigate to="/rituals" replace />` | — |
+| `/category/:slug` | `<Shop mode="category" />` + `CategoryHead` *(24)* — a `kind: "rituals"` category redirects to `/rituals`, an unknown slug renders `NotFound` | — |
 | `/product/:slug` | `pages/ProductDetails/ProductDetails` (numeric id resolves, then rewrites to the slug) | 25–27 |
-| `/rituals`, `/rituals/:slug` | `ComingSoon prompt="24"` | 24 |
+| `/rituals` | `pages/Rituals/Rituals` *(24)* | — |
+| `/rituals/:slug` | `pages/Rituals/RitualDetail` *(24)* | — |
 | `/about` | `pages/AboutUs/AboutUs` | 28 → `pages/About/About` |
 | `/why-lamikaa` | `ComingSoon prompt="28"` | 28 |
 | `/faq` | `pages/HelpCenter/HelpCenter` | 28 → `pages/Faq/Faq` |
@@ -1382,7 +1482,7 @@ Storefront routes live inside `StorefrontShell` (`DealsConfigProvider` →
 | `/profile` | `pages/Profile/Profile` | 30 |
 | `/wishlist` | `pages/Wishlist/Wishlist` | 30 |
 | `/login`, `/register` | `components/routing/AuthRoute` — opens `AuthModal` on the `login`/`signup` tab, then `<Navigate to={state?.from \|\| "/"} replace />` | 30 |
-| `/search` | `ComingSoon prompt="11"` (reads `?q=`; the overlay still searches in place) | 11 |
+| `/search` | `pages/Search/Search` *(11)* | — |
 | `/_playground` | `pages/_Playground/Playground` — TEMPORARY | 35 deletes |
 | `*` | `pages/NotFound/NotFound` — a real 404, `noindex` | — |
 

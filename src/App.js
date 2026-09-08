@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
   useLocation,
 } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -51,6 +50,8 @@ import Home from "./pages/Home/Home";
 
 // Storefront Pages
 const Shop = React.lazy(() => import("./pages/Shop/Shop"));
+const Rituals = React.lazy(() => import("./pages/Rituals/Rituals"));
+const RitualDetail = React.lazy(() => import("./pages/Rituals/RitualDetail"));
 const ProductDetails = React.lazy(() => import("./pages/ProductDetails/ProductDetails"));
 const Checkout = React.lazy(() => import("./pages/Checkout/Checkout"));
 const OrderConfirmation = React.lazy(() => import("./pages/OrderConfirmation/OrderConfirmation"));
@@ -67,10 +68,11 @@ const SpecialOffers = React.lazy(() => import("./pages/SpecialOffers/SpecialOffe
 const Wishlist = React.lazy(() => import("./pages/Wishlist/Wishlist"));
 const Search = React.lazy(() => import("./pages/Search/Search"));
 const NotFound = React.lazy(() => import("./pages/NotFound/NotFound"));
-// TEMPORARY (Prompt 08, removed by Prompts 24/28/29 as each page lands): the
+// TEMPORARY (Prompt 08, removed by Prompts 28/29 as each page lands): the
 // route map is complete from today, so the pages that have not been built yet
 // say so instead of 404ing or hiding behind a redirect to the homepage.
-// /search stopped needing it in Prompt 11.
+// /search stopped needing it in Prompt 11; /rituals and /rituals/:slug in
+// Prompt 24. Two remain: /why-lamikaa (28) and /cart (29).
 const ComingSoon = React.lazy(() => import("./pages/_ComingSoon/ComingSoon"));
 // TEMPORARY (Prompt 05, removed by Prompt 35): the visual QA surface for the
 // shared UI primitives. Unlinked from the navigation and from the sitemap.
@@ -150,8 +152,10 @@ function StorefrontShell() {
             <motion.div key={location.pathname} {...pageMotion}>
               <Suspense fallback={<RouteFallback />}>
                 <Routes location={location}>
-                  {/* Every Meghali-era URL, redirected before anything else can
-                      claim it. The old paths exist ONLY inside this array. */}
+                  {/* Every pre-rebrand URL, redirected before anything else
+                      can claim it. The old paths exist ONLY inside this array
+                      (components/routing/LegacyRedirects.js), which is what
+                      Prompt 35's identifier sweep has left to clean up. */}
                   {legacyRoutes}
 
                   <Route path={ROUTES.HOME} element={<Home />} />
@@ -161,28 +165,24 @@ function StorefrontShell() {
                       pagination — `?concern=` and the category path below are
                       the only two ways it narrows, and both are routes. */}
                   <Route path={ROUTES.SHOP} element={<Shop />} />
-                  {/* The rituals "category" is an editorial index of its own,
-                      not a listing — categoryPath() sends it here too. */}
-                  <Route
-                    path="/category/rituals"
-                    element={<Navigate to={ROUTES.RITUALS} replace />}
-                  />
                   {/* The same page, constrained by the path instead of the
-                      query. Prompt 24 adds its head, its breadcrumb and its
-                      not-found branch; the chapters are already these. */}
+                      query, wearing `CategoryHead` (Prompt 24). ONE route, and
+                      the page owns both special cases: the rituals "category"
+                      is an editorial index of its own and redirects to
+                      /rituals (by slug OR by `kind`, so renaming the slug in
+                      the admin cannot strand it), and a slug nobody has renders
+                      a real 404 rather than an empty listing. A second static
+                      route here would be a second place to keep that in step. */}
                   <Route path={ROUTES.CATEGORY} element={<Shop mode="category" />} />
                   {/* Product detail resolves by human-readable slug; a legacy
                       numeric /product/:id still resolves and redirects to the
                       canonical slug URL. */}
                   <Route path={ROUTES.PRODUCT} element={<ProductDetails />} />
-                  <Route
-                    path={ROUTES.RITUALS}
-                    element={<ComingSoon prompt="24" title="Rituals" />}
-                  />
-                  <Route
-                    path={ROUTES.RITUAL}
-                    element={<ComingSoon prompt="24" title="Rituals" />}
-                  />
+                  {/* The three curated routines, and one routine step by
+                      step (Prompt 24). An unknown ritual slug 404s inside the
+                      detail page, the same way an unknown category does. */}
+                  <Route path={ROUTES.RITUALS} element={<Rituals />} />
+                  <Route path={ROUTES.RITUAL} element={<RitualDetail />} />
 
                   {/* ---- Brand and content -------------------------------- */}
                   {/* Prompt 28 replaces AboutUs with pages/About/About. */}

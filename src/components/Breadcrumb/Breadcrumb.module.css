@@ -1,13 +1,90 @@
-.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; padding: 12px 0; flex-wrap: wrap; color: var(--sf-color-text-muted); }
-.link { color: var(--sf-color-accent); text-decoration: none; }
-.link:hover { text-decoration: underline; }
-/* Touch-target sizing: grow the hit area without moving the row */
+/* =============================================================================
+ * Breadcrumb — the trail above a page's title
+ * =============================================================================
+ * Quiet by design: 13px Manrope in muted text, with the current page in the
+ * secondary tone so the eye lands on the <h1> underneath rather than here. It
+ * is rendered inside the glass panels of the category head and the ritual head,
+ * so it declares no background and no gutter of its own.
+ * ========================================================================== */
+
+.breadcrumb {
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sf-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text-muted);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* The separator is punctuation, so it is drawn rather than written: a "/" in
+   the markup is a character a screen reader reads out between every crumb. */
+.item + .item::before {
+  content: "/";
+  margin-right: var(--sf-space-2);
+  color: var(--sf-color-text-muted);
+  opacity: 0.6;
+}
+
+/* A crumb is a real target, not a word: 24px at every width (WCAG 2.5.8) and a
+   full 44px on the touch layout below, grown around the text so the row keeps
+   its 13px rhythm either way. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--sf-color-text-muted);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--sf-color-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:focus-visible {
+  outline: none;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.current {
+  color: var(--sf-color-text-secondary);
+  font-weight: var(--sf-font-medium);
+  /* A long category or ritual name must not push the trail into a second line
+     on a 360px screen — it truncates, and the <h1> underneath says it in full. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 42ch;
+}
+
+/* Touch targets: the full 44px (WCAG 2.5.5), taken out of the flow with a
+   matching negative margin so the trail does not grow 24px taller than the
+   type in it. */
 @media (max-width: 768px) {
   .link {
-    display: inline-block;
-    padding: 10px 2px;
-    margin: -10px 0;
+    min-height: var(--sf-tap-target);
+    margin-block: calc(var(--sf-space-3) * -1);
+  }
+
+  .current {
+    max-width: 24ch;
   }
 }
-.separator { color: var(--sf-color-text-muted); }
-.current { color: var(--sf-color-text-secondary); font-weight: 500; }
