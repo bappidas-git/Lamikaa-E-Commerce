@@ -210,3 +210,13 @@
     transform: none;
   }
 }
+
+/* =============================================================================
+ * PRINT
+ * A fixed tab bar prints across the foot of every sheet.
+ * ========================================================================== */
+@media print {
+  .bottomNav {
+    display: none;
+  }
+}

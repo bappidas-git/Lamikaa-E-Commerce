@@ -109,3 +109,12 @@
     transition: none;
   }
 }
+
+/* Same as the cart line: the name is the row's link and one clamped line of it
+   is 18px. It takes a real 44px box for the same reason — `-webkit-line-clamp`
+   needs `overflow: hidden`, which would clip an inert band away. */
+@media (pointer: coarse) {
+  .name {
+    min-height: var(--sf-tap-target);
+  }
+}

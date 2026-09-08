@@ -57,6 +57,11 @@
 
 .full {
   max-width: none;
+  /* The fallback pair is `%` of the fixed, inset-0 root — the viewport, in every
+     engine — never `100vw`, which is wider than the viewport wherever a classic
+     scrollbar exists. `svw`/`svh` refine it where they are supported. */
+  width: 100%;
+  height: 100%;
   width: 100svw;
   height: 100svh;
   max-height: none;

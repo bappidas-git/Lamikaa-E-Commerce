@@ -125,6 +125,15 @@
   color: var(--sf-color-text-secondary);
 }
 
+/* This sentence is the whole message of an empty state and of the 404 page —
+   the one piece of running copy on the screen — so on a phone it takes the
+   16px reading floor rather than the 15px density. */
+@media (max-width: 414px) {
+  .text {
+    font-size: var(--sf-text-base);
+  }
+}
+
 /* ---- actions -------------------------------------------------------------
    Stacked and full-width on a phone (a pill that is 60% of a 360px screen is a
    thumb-miss waiting to happen), in a wrapping centred row from 481px up. */

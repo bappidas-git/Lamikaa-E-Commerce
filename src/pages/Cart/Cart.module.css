@@ -77,6 +77,12 @@
  * ========================================================================== */
 
 .line {
+  /* The strip the absolutely positioned remove button occupies at the top right
+     of the row. It is the button's own touch size plus a hair, so the name's
+     text and its touch band both stop short of it instead of running underneath
+     — the button is 44px wide on a coarse pointer, which is wider than the
+     32px the name used to reserve. */
+  --cart-remove-gutter: calc(var(--sf-tap-target) + var(--sf-space-2));
   position: relative;
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
@@ -106,7 +112,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-width: 0;
-  padding-right: var(--sf-space-8);
+  padding-right: var(--cart-remove-gutter);
   font-size: var(--sf-text-base);
   font-weight: var(--sf-font-medium);
   line-height: var(--sf-leading-tight);
@@ -490,5 +496,28 @@
   .couponInput,
   .couponToggle {
     transition: none;
+  }
+}
+
+/* =============================================================================
+ * PRINT
+ * The phone checkout bar is fixed: on paper it lands over the summary.
+ * ========================================================================== */
+@media print {
+  .bar {
+    display: none;
+  }
+}
+
+/* The line's name is the row's main link, and one or two clamped lines of it
+   measure 20-40px — short of a thumb. It takes a real 44px BOX rather than the
+   inert band the footer's small links use: `-webkit-line-clamp` needs
+   `overflow: hidden`, and that clips a `::after` along with everything else, so
+   a band here would be invisible AND untappable. The row reserves the remove
+   button's strip through `--cart-remove-gutter`, so the two never share a
+   pixel. */
+@media (pointer: coarse) {
+  .lineName {
+    min-height: var(--sf-tap-target);
   }
 }

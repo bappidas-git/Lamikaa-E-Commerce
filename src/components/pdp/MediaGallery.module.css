@@ -102,10 +102,17 @@
     background-color var(--sf-transition-fast);
 }
 
+/* The height is stated rather than inset: `inset` resolves against the padding
+   box, and the pill's glass hairline takes 2px out of its 32px, so `-6px` grew
+   30 to 42 — two short of the 44 the comment above promises. */
 .toggle::after {
   content: "";
   position: absolute;
-  inset: -6px;
+  left: -6px;
+  right: -6px;
+  top: 50%;
+  height: var(--sf-tap-target);
+  transform: translateY(-50%);
 }
 
 .toggle:hover {

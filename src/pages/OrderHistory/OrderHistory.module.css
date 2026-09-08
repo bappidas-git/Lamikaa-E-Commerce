@@ -261,8 +261,8 @@
   min-width: 0;
 }
 
-/* Doubled so it beats `.sf-plate`'s own radius in the primitives without an
-   !important: a 56px thumbnail wants the small radius, not the card's. */
+/* Doubled so it beats `.sf-plate`'s own radius in the primitives without
+   raising importance: a 56px thumbnail wants the small radius, not the card's. */
 .plate.plate {
   width: 56px;
   flex: none;

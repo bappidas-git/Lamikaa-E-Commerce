@@ -269,6 +269,20 @@
   white-space: nowrap;
 }
 
+/* On a coarse pointer the link takes a real 44px BOX rather than the inert band
+   the footer's small links use. The band was tried first and measured short:
+   the ownership note is the panel's last row, the panel is a GlassCard, and a
+   card clips to its own radius — so the half of the band that hung below the
+   link was clipped away and the bottom of the target with it. A box cannot be
+   clipped out of existence: the row grows, and the card grows with it. */
+@media (pointer: coarse) {
+  .story {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--sf-tap-target);
+  }
+}
+
 .story:hover {
   text-decoration: underline;
 }

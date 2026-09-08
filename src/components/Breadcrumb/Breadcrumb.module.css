@@ -83,8 +83,21 @@
    type in it. */
 @media (max-width: 768px) {
   .link {
+    position: relative;
     min-height: var(--sf-tap-target);
     margin-block: calc(var(--sf-space-3) * -1);
+  }
+
+  /* …and the WIDTH half of the same target: "Home" is 32px of type and "Shop"
+     29px. This one is a real MIN-WIDTH rather than the inert band the footer's
+     links use: the trail is rendered inside the glass panels of the category
+     head, the ritual head and the purchase panel, and a card clips to its own
+     radius — a band reaching past the ink was clipped away there, measurably.
+     An element's own border box cannot be clipped out of existence, so the box
+     takes the floor and centres its label in it. */
+  .link {
+    justify-content: center;
+    min-width: var(--sf-tap-target);
   }
 
   /* A product's short name is two or three words, so on a phone the last crumb

@@ -21,6 +21,7 @@
      context, so this only orders it against the header's own children. */
   z-index: 1;
   max-height: calc(100vh - 100px);
+  max-height: calc(100svh - 100px);
   overflow-y: auto;
   overscroll-behavior: contain;
   border-top: 1px solid var(--sf-glass-border);
@@ -276,6 +277,6 @@
 
 @media print {
   .panel {
-    display: none !important;
+    display: none;
   }
 }

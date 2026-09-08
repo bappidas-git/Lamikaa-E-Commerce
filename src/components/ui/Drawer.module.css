@@ -73,6 +73,9 @@
 
 .bottom .panel {
   width: 100%;
+  /* `%` of the fixed, inset-0 root is the viewport, everywhere; `svh` refines
+     it to the SMALL viewport where the unit is supported. */
+  max-height: 85%;
   max-height: 85svh;
   margin-top: auto;
   border-radius: var(--sf-radius-xl) var(--sf-radius-xl) 0 0;

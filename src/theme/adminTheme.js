@@ -150,6 +150,10 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
           root: {
             borderRadius: 8,
             boxShadow: "none",
+            // MUI's medium button is 36-37px, which is a mouse size. A finger
+            // gets the full 44 (WCAG 2.5.5) on any coarse pointer; a mouse keeps
+            // the density the admin was designed at.
+            "@media (pointer: coarse)": { minHeight: 44 },
             "&:hover": { boxShadow: "none", transform: "none" },
             // Repeated here so the ring still wins on a focused control that is
             // also hovered (MuiButton's own rule is later in the cascade).
@@ -167,8 +171,10 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
           },
           sizeSmall: {
             padding: "4px 12px",
-            // compact on desktop, comfortably tappable on phones
-            "@media (max-width: 768px)": { minHeight: 40 },
+            // Compact for a mouse, a full 44px target for a finger. Keyed off
+            // the POINTER rather than the width: a 1024px tablet is touched
+            // too, and a narrow desktop window is not.
+            "@media (pointer: coarse)": { minHeight: 44 },
           },
         },
       },
@@ -217,7 +223,16 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
       },
       MuiChip: {
         styleOverrides: {
-          root: { borderRadius: 6, fontWeight: 600 },
+          root: {
+            borderRadius: 6,
+            fontWeight: 600,
+            // Only the chips that DO something — a status chip is a label, not
+            // a target, and growing every one of them would loosen the tables
+            // for no one's benefit.
+            "@media (pointer: coarse)": {
+              "&.MuiChip-clickable, &.MuiChip-deletable": { minHeight: 44 },
+            },
+          },
           ...chipColorOverrides,
         },
       },
@@ -251,8 +266,16 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
           },
         },
       },
+      // The shell's navigation rows and the content screen's document list are
+      // list buttons, and MUI sizes those from their own density rather than
+      // from the button theme above — so the touch floor is stated here too.
       MuiListItemButton: {
-        styleOverrides: { root: { borderRadius: 8 } },
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            "@media (pointer: coarse)": { minHeight: 44 },
+          },
+        },
       },
       MuiDrawer: {
         styleOverrides: {
@@ -279,12 +302,78 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
         },
       },
       // Small icon buttons (table row actions) keep their compact desktop
-      // density but stay tappable (≥40px) on touch-sized screens.
+      // density but clear the full 44px target on any coarse pointer. 12px of
+      // padding around a 20px icon is exactly 44.
       MuiIconButton: {
         styleOverrides: {
+          root: {
+            "@media (pointer: coarse)": {
+              minWidth: 44,
+              minHeight: 44,
+            },
+          },
           sizeSmall: {
-            "@media (max-width: 768px)": {
-              padding: 11,
+            "@media (pointer: coarse)": {
+              padding: 12,
+            },
+          },
+        },
+      },
+      // A field is a target too, and MUI's `size="small"` input and select are
+      // 40px. The ROOT is the visible control — a click anywhere on it focuses
+      // the field — so the floor goes there and MUI's own `align-items: center`
+      // keeps the field centred in it. (Stretching the field instead was tried
+      // and is worse: MUI gives it an explicit height, so it stayed 40px and
+      // merely moved to the top of the box, leaving the target off-centre.)
+      MuiInputBase: {
+        styleOverrides: {
+          root: {
+            "@media (pointer: coarse)": { minHeight: 44 },
+          },
+        },
+      },
+      // Segmented controls (Payments' Transactions/Refunds, FAQs' All/Live/…)
+      // are ToggleButtons, not Tabs, and MUI sizes them at 39px.
+      MuiToggleButton: {
+        styleOverrides: {
+          root: {
+            "@media (pointer: coarse)": { minHeight: 44 },
+          },
+        },
+      },
+      // Settings and Home & Hero are the two screens with real MUI Tabs; MUI's
+      // own minimum is 48px, but a `Tab` with no icon can come in under it.
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            "@media (pointer: coarse)": { minHeight: 44 },
+          },
+        },
+      },
+      // A switch's target is the row it is labelled by — MUI's FormControlLabel
+      // is a real <label>, so a tap anywhere on it toggles the control.
+      MuiFormControlLabel: {
+        styleOverrides: {
+          root: {
+            "@media (pointer: coarse)": { minHeight: 44 },
+          },
+        },
+      },
+      // …and a switch rendered WITHOUT a label (Shipping's row toggles) is 38px
+      // of its own. MUI's hidden input is the switch's hit area and is already
+      // absolutely positioned over it, so it is grown past the ink rather than
+      // the control being resized: nothing painted moves, and the thumb keeps
+      // its alignment with the track.
+      MuiSwitch: {
+        styleOverrides: {
+          input: {
+            // Centred at a flat 44px rather than grown by a fixed amount: the
+            // default switch is 38px of hit area and the `size="small"` one on
+            // Rituals is 24, so one figure has to cover both.
+            "@media (pointer: coarse)": {
+              top: "50%",
+              height: 44,
+              transform: "translateY(-50%)",
             },
           },
         },

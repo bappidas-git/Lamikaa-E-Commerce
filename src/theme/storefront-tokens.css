@@ -318,3 +318,116 @@
     --sf-transition-slow: 0s;
   }
 }
+
+/* =============================================================================
+ * PRINT — the same tokens, on paper
+ * =============================================================================
+ * A printer does not paint background graphics unless it is asked to, and paper
+ * is white. A single dark theme therefore prints as warm-white ink on nothing:
+ * the receipt a visitor tries to keep comes out blank. Rather than write a print
+ * rule per module, the ONE place colour is declared re-points itself — every
+ * `var(--sf-*)` consumer prints ink-on-paper without knowing that print exists,
+ * and no component gains a hardcoded colour.
+ *
+ * The literals below are PRINTER NEUTRALS, not brand colours: white paper, three
+ * grey ink tiers and one deep gold that survives on white (champagne gold is
+ * 1.5:1 there and would vanish). This is the same, documented exception the
+ * admin's invoice stylesheet already takes — ink on paper is not a palette.
+ * Effects that mean nothing on paper (glass, glow, shadow, motion) resolve away.
+ * ========================================================================== */
+@media print {
+  :root {
+    color-scheme: light;
+
+    /* ---- Grounds → paper ------------------------------------------------ */
+    --sf-color-bg: #ffffff;
+    --sf-color-surface: #ffffff;
+    --sf-color-surface-2: #ffffff;
+    --sf-color-surface-hover: #ffffff;
+    --sf-color-badge-bg: #ffffff;
+    --sf-color-primary-soft: #ffffff;
+    --sf-color-overlay: transparent;
+    --sf-glass-bg: transparent;
+    --sf-glass-bg-strong: transparent;
+    --sf-glass-fallback: #ffffff;
+    --sf-glass-blur: 0px;
+
+    /* ---- Ink: the three tiers, 16.9 / 10.9 / 8.6:1 on white ------------- */
+    --sf-color-text: #111111;
+    --sf-color-text-secondary: #333333;
+    --sf-color-text-muted: #4a4a4a;
+    --sf-color-compare: #4a4a4a;
+
+    /* ---- Accent ink ------------------------------------------------------
+       One deep gold at 7.9:1 on white carries every role the champagne gold
+       carries on the dark ground (eyebrows, prices, links, stars, rules). Pink,
+       violet and cyan have no ink of their own on paper — they are ambient
+       glows on screen — so they fold into the same two inks. */
+    --sf-color-gold: #5c4708;
+    --sf-color-gold-light: #5c4708;
+    --sf-color-gold-deep: #5c4708;
+    --sf-color-accent: #5c4708;
+    --sf-color-secondary: #5c4708;
+    --sf-color-star: #5c4708;
+    --sf-color-price: #111111;
+    --sf-color-pink: #5c4708;
+    --sf-color-violet: #5c4708;
+    --sf-color-cyan: #1c4a55;
+    --sf-color-focus-ring: #5c4708;
+
+    /* ---- Filled controls -------------------------------------------------
+       A filled button prints as a black rectangle where backgrounds ARE
+       printed, and as an invisible label where they are not — because the label
+       is the ground's contrast colour. Fill white and ink the label instead:
+       the action reads as its own words either way. */
+    --sf-color-primary: #ffffff;
+    --sf-color-primary-light: #ffffff;
+    --sf-color-primary-dark: #5c4708;
+    --sf-color-primary-contrast: #111111;
+    --sf-color-cta: #ffffff;
+    --sf-color-cta-hover: #ffffff;
+    --sf-color-cta-contrast: #111111;
+
+    /* ---- Semantic ink; their tints are screen affordances --------------- */
+    --sf-color-success: #1d5b38;
+    --sf-color-warning: #6b4a06;
+    --sf-color-danger: #8c1d18;
+    --sf-color-info: #1c4a55;
+    --sf-color-discount: #1d5b38;
+    --sf-color-success-bg: transparent;
+    --sf-color-warning-bg: transparent;
+    --sf-color-danger-bg: transparent;
+    --sf-color-info-bg: transparent;
+    --sf-color-discount-bg: transparent;
+
+    /* ---- Rules ---------------------------------------------------------- */
+    --sf-color-border: #c8c8c8;
+    --sf-color-border-strong: #8a8a8a;
+
+    /* ---- Effects that do not survive a sheet of paper -------------------- */
+    --sf-shadow-xs: none;
+    --sf-shadow-sm: none;
+    --sf-shadow-md: none;
+    --sf-shadow-lg: none;
+    --sf-shadow-1: none;
+    --sf-shadow-2: none;
+    --sf-shadow-focus: none;
+    --sf-glow-pink: none;
+    --sf-glow-violet: none;
+    --sf-glow-gold: none;
+    --sf-gradient-signature: none;
+    --sf-gradient-gold: none;
+    --sf-gradient-brand: none;
+    --sf-gradient-announce: none;
+    --sf-gradient-primary: none;
+    --sf-gradient-primary-hover: none;
+
+    /* Nothing animates on paper. */
+    --sf-duration-fast: 0s;
+    --sf-duration: 0s;
+    --sf-duration-slow: 0s;
+    --sf-transition-fast: 0s;
+    --sf-transition: 0s;
+    --sf-transition-slow: 0s;
+  }
+}

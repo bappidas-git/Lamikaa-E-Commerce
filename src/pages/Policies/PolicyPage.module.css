@@ -338,6 +338,7 @@
     position: sticky;
     top: 112px;
     max-height: calc(100vh - 132px);
+    max-height: calc(100svh - 132px);
     overflow-y: auto;
     overscroll-behavior-y: contain;
   }
@@ -390,5 +391,15 @@
 
   .colophon {
     margin-top: var(--sf-space-12);
+  }
+}
+
+/* On a coarse pointer the shorter of the two document links ("Terms", 40px of
+   type) misses the width half of the 44px target that `min-height` already
+   gives it. The floor is on the box, and the label stays centred in it. */
+@media (pointer: coarse) {
+  .sibling {
+    justify-content: center;
+    min-width: var(--sf-tap-target);
   }
 }

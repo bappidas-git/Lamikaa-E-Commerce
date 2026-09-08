@@ -852,7 +852,7 @@
   color: var(--sf-color-text-secondary);
 }
 
-/* Doubled so it beats `.formGroup input` above without an !important. */
+/* Doubled so it beats `.formGroup input` above without raising importance. */
 .creditInputRow .creditInput.creditInput {
   flex: 1 1 auto;
   min-width: 0;

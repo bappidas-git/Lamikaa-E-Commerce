@@ -156,3 +156,12 @@
     background: var(--sf-glass-fallback);
   }
 }
+
+/* A pillar's sentence is running body copy, not a caption: on a phone it takes
+   the 16px reading floor the base layer sets for the page. The 15px step is a
+   desktop density, where the measure is much shorter. */
+@media (max-width: 414px) {
+  .grid {
+    --pl-text: var(--sf-text-base);
+  }
+}

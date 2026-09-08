@@ -317,6 +317,20 @@
   }
 }
 
+/* ON PAPER THE CLIP COMES OFF. A printer that has not been asked for background
+   graphics prints no background at all, and text filled with `transparent` over
+   nothing is a blank line. The keyword falls back to the accent ink — which the
+   print block in the token layer has already turned into a gold that reads on
+   white. Same specificity as the rule above and later in the file, so it wins
+   without raising importance. */
+@media print {
+  .sf-gradient-text {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--sf-color-gold);
+  }
+}
+
 /* The gold eyebrow above a section heading — the one uppercase, tracked label
    left in the system. 12px is allowed here precisely because it is not a
    sentence: it is a two- or three-word signpost at weight 600. */

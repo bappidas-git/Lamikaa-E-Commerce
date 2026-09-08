@@ -156,6 +156,6 @@
 
 @media print {
   .strip {
-    display: none !important;
+    display: none;
   }
 }
