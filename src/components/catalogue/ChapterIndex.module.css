@@ -176,11 +176,15 @@
   border-radius: 0;
   /* 52px between 769 and 1024, 48px at <= 768 (below): the band is the pill's
      36px plus air, and it is a flex row so the pills stay centred in it
-     whichever of the two heights is in force. */
+     whichever of the two heights is in force.
+     The air is now 4px rather than 8: the pill rail below reserves the full
+     44px its touch overlay needs, and the two figures together still make 52.
+     Both are unchanged from the outside, which matters — the sticky offsets on
+     the chapter media and the two policy indexes are measured against them. */
   display: flex;
   align-items: center;
   min-height: 52px;
-  padding-block: var(--sf-space-2);
+  padding-block: var(--sf-space-1);
   transition: opacity var(--sf-duration-fast) var(--sf-ease);
 }
 
@@ -203,6 +207,12 @@
   align-items: center;
   gap: var(--sf-space-2);
   width: 100%;
+  /* THE RAIL IS 44px, not the pill's 36. `overflow-x: auto` below makes the Y
+     axis `auto` too, so the rail clips whatever leaves it — and what leaves it
+     was the pill's own 44px touch overlay, which measured 36px in the browser
+     for exactly this reason. Reserving the height here keeps the overlay
+     inside the scroller; the pill's ink is still 36px, centred. */
+  min-height: var(--sf-tap-target);
   list-style: none;
   margin: 0;
   /* The band is full-bleed; its CONTENT keeps the container's gutter, so the
@@ -247,11 +257,24 @@
 
 /* The pill is 36px tall by design (a 48px band cannot hold a 44px control), so
    the TOUCH TARGET is grown past the ink instead: an inert 44px overlay,
-   centred on the pill, that costs no layout. */
+   centred on the pill, that costs no layout.
+
+   TWO things this overlay got wrong before, both found by hit-testing rather
+   than by reading:
+     1. The height is STATED, not expressed as a negative inset. `inset`
+        resolves against the positioned ancestor's PADDING box, and the pill
+        carries a 1px border, so `inset: -4px 0` grew 34px to 42.
+     2. `.pills` is a horizontal scroller, and `overflow-x: auto` makes the Y
+        axis `auto` too — so the band was clipped back to the pill. The rail
+        below reserves the band's full height instead. */
 .pill::after {
   content: "";
   position: absolute;
-  inset: -4px 0;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--sf-tap-target);
+  transform: translateY(-50%);
 }
 
 .pill:hover {
@@ -291,7 +314,8 @@
   .strip {
     top: 56px;
     min-height: 48px;
-    padding-block: var(--sf-space-1);
+    /* 2px, so the 44px pill rail and the band's 48px still agree. */
+    padding-block: calc(var(--sf-space-1) / 2);
   }
 
   .pills {

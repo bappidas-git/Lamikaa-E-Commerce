@@ -92,6 +92,11 @@
 
 .searchInput {
   flex: 1;
+  /* The FIELD fills the row's 52px rather than sitting 24px tall in the middle
+     of it: the row is what a visitor aims at, so the row has to be what takes
+     the tap. `align-items: center` on the row keeps the text centred either
+     way. */
+  align-self: stretch;
   min-width: 0;
   border: 0;
   background: transparent;
@@ -390,6 +395,7 @@
     /* Its own scroller when the group list outgrows the viewport, so a long
        set of headings never pins the rail off-screen. */
     max-height: calc(100vh - 132px);
+    max-height: calc(100svh - 132px);
     overflow-y: auto;
     overscroll-behavior-y: contain;
   }

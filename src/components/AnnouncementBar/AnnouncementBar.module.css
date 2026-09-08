@@ -20,7 +20,21 @@
   justify-content: center;
   width: 100%;
   min-height: 36px;
-  padding: 0 var(--sf-tap-target);
+  /* THE GUTTERS ARE LONGHANDS, not a shorthand: the top one is a device inset
+     and the phone rule below re-states only the sides. A shorthand there would
+     silently zero the inset again — which is exactly what it did until this was
+     measured under an emulated notch.
+     The band is the FIRST thing in the document, so on a viewport that reaches
+     under the status bar (`viewport-fit: cover`) it is what the notch covers;
+     in landscape the same is true of the side cut-outs, hence `max()` — the
+     gutter or the inset, whichever is larger. Every inset resolves to 0 on a
+     viewport that has not opted in, so none of this costs a pixel until it is
+     needed. The pinned header takes the top inset for the rest of the scroll
+     (Header.module.css, `.pinned`). */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: 0;
+  padding-left: max(var(--sf-tap-target), env(safe-area-inset-left));
+  padding-right: max(var(--sf-tap-target), env(safe-area-inset-right));
   /* 4% warm white: the glass ground one step quieter than --sf-glass-bg, in the
      brand's own white rather than a pure one. */
   background: color-mix(in srgb, var(--sf-color-text) 4%, transparent);
@@ -154,7 +168,8 @@
    ellipsis rather than wrapping the band to two rows. */
 @media (max-width: 768px) {
   .bar {
-    padding: 0 var(--sf-space-10);
+    padding-left: max(var(--sf-space-10), env(safe-area-inset-left));
+    padding-right: max(var(--sf-space-10), env(safe-area-inset-right));
   }
   .message {
     font-size: var(--sf-text-xs);
@@ -171,6 +186,6 @@
 
 @media print {
   .bar {
-    display: none !important;
+    display: none;
   }
 }

@@ -1,5 +1,5 @@
 /* Zero-specificity defaults: any consumer class (the masthead's 44px slot, the
-   footer's 48px one) overrides these without an !important and without caring
+   footer's 48px one) overrides these without raising importance and without caring
    which stylesheet the bundler emitted first. */
 :where(.logo) {
   display: block;

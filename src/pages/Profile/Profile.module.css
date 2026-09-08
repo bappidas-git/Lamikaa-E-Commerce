@@ -428,8 +428,8 @@ button.figure:focus-visible {
   box-shadow: var(--sf-shadow-focus);
 }
 
-/* Doubled so it beats `.sf-plate`'s own radius in the primitives without an
-   !important: a 56px thumbnail wants the small radius, not the card's. */
+/* Doubled so it beats `.sf-plate`'s own radius in the primitives without
+   raising importance: a 56px thumbnail wants the small radius, not the card's. */
 .recentPlate.recentPlate {
   width: 56px;
   flex: none;

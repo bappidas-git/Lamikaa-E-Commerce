@@ -27,6 +27,7 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   max-height: 62vh;
+  max-height: 62svh;
   background: var(--sf-color-surface);
   /* `.sf-placeholder-media` supplies the desaturation and the wash. */
 }

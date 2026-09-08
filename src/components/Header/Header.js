@@ -282,6 +282,11 @@ const Header = () => {
     overHero ? styles.transparent : "sf-glass",
     !overHero && scrolled ? "sf-glass--strong" : "",
     !overHero && scrolled ? styles.strong : "",
+    // PINNED = the announcement band has scrolled away and this header is the
+    // thing at y=0. That is the only state in which it has to clear a device's
+    // top inset, and `scrolled` alone says it — `overHero` only decides how the
+    // header is PAINTED, not where it sits.
+    scrolled ? styles.pinned : "",
     overlayOpen ? styles.noBlur : "",
   ]
     .filter(Boolean)

@@ -462,6 +462,7 @@
 
 .heroBrand {
   min-height: 60vh;
+  min-height: 60svh;
   text-align: center;
 }
 

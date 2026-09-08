@@ -464,13 +464,20 @@
  * ========================================================================== */
 
 @media (pointer: coarse) {
+  /* The row gaps are what stop two 44px bands overlapping, so each is set from
+     the ink height it has to clear: a 21px directory row needs 23px of gap, a
+     12px colophon link needs 26px. The next steps up on the scale are 24px and
+     32px. */
   .linkList {
-    gap: var(--sf-space-4);
+    gap: var(--sf-space-6);
   }
 
-  .microLinks,
+  .microLinks {
+    gap: var(--sf-space-8) var(--sf-space-6);
+  }
+
   .contact {
-    gap: var(--sf-space-5) var(--sf-space-6);
+    gap: var(--sf-space-6) var(--sf-space-6);
   }
 
   .footerLink,
@@ -479,16 +486,18 @@
     position: relative;
   }
 
+  /* Centred on the ink in BOTH axes, and no narrower than a thumb: "Terms" is
+     42px of type, which cleared the height floor and missed the width one. */
   .footerLink::before,
   .microLink::before,
   .contactLink::before {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 50%;
     top: 50%;
+    width: max(100%, var(--sf-tap-target));
     height: var(--sf-tap-target);
-    transform: translateY(-50%);
+    transform: translate(-50%, -50%);
   }
 
   /* Inside a disclosure the row IS the target, so the invisible band above
@@ -499,5 +508,16 @@
 
   .disclosures .footerLink::before {
     content: none;
+  }
+}
+
+/* =============================================================================
+ * PRINT
+ * The directory, the newsletter field and the social row are all things to
+   click. On paper they are three columns of dead links.
+ * ========================================================================== */
+@media print {
+  .footer {
+    display: none;
   }
 }

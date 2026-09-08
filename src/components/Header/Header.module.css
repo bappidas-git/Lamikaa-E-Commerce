@@ -130,6 +130,10 @@
   align-items: center;
   flex: none;
   min-width: 0;
+  /* The wordmark is 40px tall at the phone width (140px at 3.5:1), which is the
+     whole of the link's box and four pixels short of a thumb. The floor grows
+     the box, not the artwork: the image is centred and does not move. */
+  min-height: var(--sf-tap-target);
   text-decoration: none;
   color: inherit;
   border-radius: var(--sf-radius-sm);
@@ -275,14 +279,19 @@
   pointer-events: none;
 }
 
-.avatar {
-  width: 28px !important;
-  height: 28px !important;
-  background: var(--sf-color-primary) !important;
-  color: var(--sf-color-primary-contrast) !important;
-  font-family: var(--sf-font-family) !important;
-  font-weight: var(--sf-font-medium) !important;
-  font-size: var(--sf-text-xs) !important;
+/* DOUBLED, rather than raising importance. MUI emits one emotion class per
+   component, so every rule this has to beat is a single-class rule;
+   `.avatar.avatar` wins on specificity and stops caring which sheet the bundler
+   happens to emit last. The same idiom is used on the `.sf-plate` overrides
+   elsewhere in this repo. */
+.avatar.avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--sf-color-primary);
+  color: var(--sf-color-primary-contrast);
+  font-family: var(--sf-font-family);
+  font-weight: var(--sf-font-medium);
+  font-size: var(--sf-text-xs);
 }
 
 /* ==========================================================================
@@ -295,25 +304,30 @@
   margin-top: var(--sf-space-2);
 }
 
-.userMenuPaper {
-  /* MUI's own .MuiPopover-paper rules land after this sheet, so the overrides
-     have to shout to be heard. */
-  min-width: 244px !important;
-  overflow: hidden;
-  background: var(--sf-glass-bg-strong) !important;
+.userMenuPaper.userMenuPaper {
+  /* MUI's own .MuiPopover-paper rules can land after this sheet — the doubled
+     class out-ranks them on specificity rather than on emission order. */
+  min-width: 244px;
+  /* Stated as the axis pair rather than the shorthand. The shorthand used to
+     lose its y-axis to MUI's own `overflow-y: auto` — which is what lets a menu
+     longer than the viewport scroll — and now that this rule out-ranks MUI, the
+     scroll has to be asked for. x stays clipped, so the 14px radius holds. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--sf-glass-bg-strong);
   -webkit-backdrop-filter: blur(var(--sf-glass-blur));
   backdrop-filter: blur(var(--sf-glass-blur));
-  color: var(--sf-color-text) !important;
+  color: var(--sf-color-text);
   border: 1px solid var(--sf-glass-border);
-  border-radius: var(--sf-radius-md) !important;
-  box-shadow: var(--sf-shadow-2) !important;
+  border-radius: var(--sf-radius-md);
+  box-shadow: var(--sf-shadow-2);
 }
 
 @supports not (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
-  .userMenuPaper {
-    background: var(--sf-glass-fallback) !important;
+  .userMenuPaper.userMenuPaper {
+    background: var(--sf-glass-fallback);
   }
 }
 
@@ -328,52 +342,65 @@
   min-width: 0;
 }
 
-.menuAvatar {
-  background: var(--sf-color-primary) !important;
-  color: var(--sf-color-primary-contrast) !important;
-  font-family: var(--sf-font-family) !important;
-  font-weight: var(--sf-font-medium) !important;
-  font-size: var(--sf-text-sm) !important;
+.menuAvatar.menuAvatar {
+  background: var(--sf-color-primary);
+  color: var(--sf-color-primary-contrast);
+  font-family: var(--sf-font-family);
+  font-weight: var(--sf-font-medium);
+  font-size: var(--sf-text-sm);
 }
 
-.menuUserName {
+.menuUserName.menuUserName {
   display: block;
-  font-weight: var(--sf-font-semibold) !important;
-  color: var(--sf-color-text) !important;
+  font-weight: var(--sf-font-semibold);
+  color: var(--sf-color-text);
 }
 
-.menuUserEmail {
+.menuUserEmail.menuUserEmail {
   display: block;
-  color: var(--sf-color-text-muted) !important;
+  color: var(--sf-color-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.menuDivider {
-  border-color: var(--sf-color-border) !important;
+.menuDivider.menuDivider {
+  border-color: var(--sf-color-border);
 }
 
-.menuItem {
-  padding: var(--sf-space-3) var(--sf-space-5) !important;
-  font-family: var(--sf-font-family) !important;
-  font-size: var(--sf-text-sm) !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: var(--sf-space-3) !important;
-  color: var(--sf-color-text) !important;
-  transition: background var(--sf-transition-fast) !important;
+.menuItem.menuItem {
+  padding: var(--sf-space-3) var(--sf-space-5);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  color: var(--sf-color-text);
+  transition: background var(--sf-transition-fast);
 }
 
-.menuItem:hover {
-  background: var(--sf-color-surface-hover) !important;
+/* Tripled: MUI's own hover is `.<emotion class>:hover`, a two-unit selector. */
+.menuItem.menuItem:hover {
+  background: var(--sf-color-surface-hover);
 }
 
 .menuItemIcon {
   color: var(--sf-color-text-muted);
 }
 
-.logoutItem {
-  color: var(--sf-color-danger) !important;
+.logoutItem.logoutItem {
+  color: var(--sf-color-danger);
+}
+
+/* PINNED — the announcement band has scrolled away and this is the element at
+   y=0. On a viewport that reaches under the status bar (`viewport-fit: cover`)
+   that is where a notch is, so the masthead takes the inset for as long as it
+   is pinned; the band above it carries the same inset for the first screenful
+   (AnnouncementBar.module.css). Every current build resolves the inset to 0, so
+   nothing here moves until the viewport opts in.
+   `padding-top`, not a sticky `top` offset: the header's GROUND has to reach
+   the top of the screen, or the page would show through above it. */
+.pinned {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* ==========================================================================
@@ -442,6 +469,6 @@
    ========================================================================== */
 @media print {
   .header {
-    display: none !important;
+    display: none;
   }
 }

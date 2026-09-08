@@ -128,6 +128,7 @@
      and the picture would resize under the finger. 92svh is the CAP; the frame
      itself is what is left after the head and the foot, and the picture never
      overflows that — a clipped edge is exactly what a lightbox exists to undo. */
+  max-height: 100%;
   max-height: min(92svh, 100%);
   object-fit: contain;
   transform-origin: center center;
@@ -141,6 +142,7 @@
 .video {
   width: min(100%, 1200px);
   aspect-ratio: 16 / 9;
+  max-height: 100%;
   max-height: min(92svh, 100%);
 }
 
@@ -237,6 +239,7 @@
   }
 
   .image {
+    max-height: 100%;
     max-height: min(78svh, 100%);
   }
 }

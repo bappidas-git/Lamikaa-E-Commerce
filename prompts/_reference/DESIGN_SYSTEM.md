@@ -208,3 +208,47 @@ Contrast: `#F7F5F0` on `#0B0B0D` 18.9:1; `#B8B5B0` on `#0B0B0D` 10.5:1; `#F5D76E
 
 - Storefront MUI usage is limited to `Header` controls (IconButton, Badge, Avatar, Menu) and `CssBaseline`. ThemeContext builds **one** `createTheme({ palette: { mode: "dark", primary: { main: "#F5D76E", contrastText: "#0B0B0D" }, secondary: { main: "#FF4FD8" }, background: { default: "#0B0B0D", paper: "#141416" }, text: { primary: "#F7F5F0", secondary: "#B8B5B0" } }, shape: { borderRadius: 14 }, typography… })` from `colors.js → DARK` (the `LIGHT` export is deleted).
 - Admin: `buildAdminTheme("dark")` only; palette in Prompt 32: `background.default #0B0B0D`, `paper #141416`, `primary #F5D76E` (contrast `#0B0B0D`), `secondary #8B5CF6`, `divider rgba(255,255,255,.08)`, text as above, chips soft-tinted; radius 8/6 kept for density; Inter → Manrope. `App.css` admin blocks collapse to a single `body.admin-area` set. The admin is visually a quieter sibling of the storefront (no glow, no glass except the login card), fully isolated — it never reads storefront tokens.
+
+---
+
+**Updated by Prompt 37.** The responsive and mobile QA pass changed four things the rest of the
+programme has to know about. The measurements behind each are in `QA_MATRIX.md`.
+
+1. **The token layer now has a PRINT half.** `storefront-tokens.css` closes with an `@media print`
+   block that re-points the whole `--sf-*` palette to ink on paper — white grounds, three grey ink
+   tiers, one deep gold at 7.9:1 on white (champagne gold is 1.5:1 there and prints as nothing),
+   semantic inks without their tints, and `none` for every shadow, glow and gradient. Every module
+   therefore prints correctly through the tokens it already reads, and **no component may add a print
+   rule that hardcodes a colour**. Two consequences are handled where they arise: `.sf-gradient-text`
+   un-clips itself in print (a `-webkit-text-fill-color: transparent` headline over an unprinted
+   background is a blank line), and `App.css` re-states the ink at `html body`, because MUI's
+   `CssBaseline` emits a bare `body` rule after that sheet carrying the palette's literal warm white.
+   Each piece of fixed chrome hides itself on paper in its own stylesheet — masthead, announcement
+   band, mega panel, trust strip, footer, tab bar, PDP purchase bar, cart bar.
+
+2. **The touch-target idiom has a rule now.** Growing a small control's hit area with an inert
+   absolutely-positioned `::before`/`::after` is still the default, but it only works where **nothing
+   between the control and the viewport clips**. Measurement found three places where it silently did
+   not: a horizontal scroller (`overflow-x: auto` makes the Y axis `auto` too), a `GlassCard` (which
+   clips to its radius) and any `-webkit-line-clamp` box (which *requires* `overflow: hidden`). In
+   those, the control takes a real `min-height`/`min-width` instead — an element's own border box
+   cannot be clipped out of existence. And state the band's `height`/`width` outright rather than
+   insetting it: `inset` resolves against the positioned ancestor's PADDING box, so a bordered control
+   gets a band two pixels short of the figure the code says.
+
+3. **`env(safe-area-inset-top)` has an owner.** The announcement band takes it (it is the first thing
+   in the document, so it is what a notch covers) and the header takes it while pinned, through a
+   `.pinned` class `Header.js` sets from the `scrolled` state it already tracks. Every gutter that has
+   to survive a device inset is written as a **longhand** — a later `padding` shorthand silently zeroes
+   it, which is exactly what the band's phone rule was doing.
+
+4. **The admin's touch floor is keyed to the pointer, not the width.** `@media (pointer: coarse)` at
+   44px across `Button`, `IconButton`, `ListItemButton`, `InputBase`, `Chip` (clickable and deletable
+   only), `ToggleButton`, `Tab`, `FormControlLabel` and `Switch`. A 1024px tablet is touched; a narrow
+   desktop window is not. The field's floor goes on the `InputBase` **root**, which is the visible
+   control and focuses the field from anywhere inside it.
+
+One structural figure moved and is worth knowing: the shop/category chapter strip keeps its 52px
+(≥769) and 48px (≤768) heights, but its inner `padding-block` drops to 4px/2px so the pill rail can
+reserve the full 44px its touch overlay needs. **The sticky offsets measured against that band — the
+chapter media's `top: 112px`, the FAQ and policy indexes' `calc(100vh - 132px)` — are unchanged.**

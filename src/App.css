@@ -134,13 +134,14 @@ body:not(.admin-area) {
 
 /* Pin the page background to the admin ground while an admin screen is
    mounted, so the storefront surface cannot show wherever the charcoal peeks
-   through (overscroll, drawer edges); !important is the intended override and
-   unwinds with .admin-area. The admin has one palette, so this is one rule.
+   through (overscroll, drawer edges). `body.admin-area` already out-ranks the
+   base layer's `body` rule on specificity, so no importance override is needed
+   and the pin unwinds with the class. The admin has one palette, so this is one rule.
    The literals in this block are the admin's own — src/theme/adminTheme.js is
    a JS module and cannot be read from CSS, and the admin never reads the
    storefront's --sf-* tokens. Keep the two in step. */
 body.admin-area {
-  background-color: #0b0b0d !important;
+  background-color: #0b0b0d;
 }
 
 /* Admin scrollbars: charcoal, one step above the ground, no gold — a scrollbar
@@ -221,14 +222,17 @@ body.admin-area *::-webkit-scrollbar-thumb:hover {
     padding: 0 var(--sf-space-4);
   }
 
-  .desktop-only {
-    display: none !important;
+  /* Doubled rather than importance-raised: a utility has to beat the component
+     class on the same element, and `.desktop-only.desktop-only` does it on
+     specificity without taking the element out of every later rule's reach. */
+  .desktop-only.desktop-only {
+    display: none;
   }
 }
 
 @media (min-width: 769px) {
-  .mobile-only {
-    display: none !important;
+  .mobile-only.mobile-only {
+    display: none;
   }
 }
 
@@ -391,6 +395,63 @@ body.admin-area .swal2-html-container {
  * whichever is greater. The token stays in the expression rather than in a
  * comment, so raising the toast tier later carries this rule with it.
  * -------------------------------------------------------------------------- */
-.swal2-container {
-  z-index: max(var(--sf-z-toast), 2000) !important;
+/* Qualified with `body` rather than shouted: SweetAlert2's own rule is
+   `.swal2-container`, a single class, so one extra element in the selector is
+   enough to out-rank it wherever the two sheets land. */
+body .swal2-container {
+  z-index: max(var(--sf-z-toast), 2000);
+}
+
+/* =============================================================================
+ * PRINT
+ * =============================================================================
+ * The colour half of this is not here: `theme/storefront-tokens.css` re-points
+ * the whole `--sf-*` palette to ink-on-paper inside its own `@media print`, so
+ * every module prints correctly through the tokens it already reads. What is
+ * left is the page box and the chrome that has no business on a sheet of paper
+ * — the masthead, the tab bar, the footer directory, the fixed purchase and
+ * checkout bars, and the skip link. `/order-confirmation/*` is the page a
+ * visitor actually prints; the admin invoice prints from its own window with
+ * its own neutral stylesheet (AdminOrders.js) and never reaches this file.
+ * ========================================================================== */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  /* The token layer has already turned the palette into ink on paper, so these
+     rules name tokens, not literals. `html body` rather than `body`: MUI's
+     CssBaseline emits its own bare `body` rule AFTER this sheet, carrying the
+     palette's literal warm white, and warm-white ink on white paper is a blank
+     receipt. One extra element in the selector is enough to out-rank it. */
+  html body {
+    background: var(--sf-color-bg);
+    color: var(--sf-color-text);
+  }
+
+  /* The page ground stops reserving a screenful and stops holding the tab bar's
+     80px of air; a printed page is as long as its content. */
+  .App,
+  .main-content {
+    min-height: 0;
+    padding-bottom: 0;
+    background: var(--sf-color-bg);
+  }
+
+  /* The one piece of chrome with no module of its own. Every other fixed or
+     sticky box — the masthead, the announcement band, the mega panel, the trust
+     strip, the footer, the tab bar, the purchase bar and the cart bar — carries
+     its own `@media print` rule in its own stylesheet, which is where a
+     component's print behaviour belongs. */
+  .skip-link {
+    display: none;
+  }
+
+  /* Superseded by `.sf-gradient-text`, which has its own print rule in the
+     primitives; this is the same fix for the legacy global class. */
+  .gradient-text {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--sf-color-gold);
+  }
 }

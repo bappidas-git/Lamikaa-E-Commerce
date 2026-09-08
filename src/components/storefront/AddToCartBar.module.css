@@ -133,3 +133,13 @@
     transition: none;
   }
 }
+
+/* =============================================================================
+ * PRINT
+ * A fixed purchase bar prints across the foot of every sheet, over the copy.
+ * ========================================================================== */
+@media print {
+  .bar {
+    display: none;
+  }
+}
