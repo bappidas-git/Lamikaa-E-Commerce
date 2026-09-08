@@ -2,6 +2,7 @@ import brand from "../config/brand";
 import {
   normalizeProduct,
   syncProductMedia,
+  validateMedia,
   primaryImage,
   productVideos,
   stageSrc,
@@ -141,6 +142,94 @@ describe("syncProductMedia", () => {
 
     expect(edited.images).toEqual([SHOT_2]);
     expect(edited.media[1].primary).toBe(true);
+  });
+});
+
+describe("validateMedia", () => {
+  const good = () => [
+    { type: "image", url: COVER, alt: "Label", primary: true },
+    { type: "image", url: SHOT_2, alt: "Lifestyle" },
+    { type: "video", url: CLIP, poster: COVER, title: "How to use" },
+  ];
+
+  it("passes a gallery with one primary, real URLs and no repeats", () => {
+    expect(validateMedia(good())).toEqual({ ok: true, errors: {}, message: "" });
+  });
+
+  it("refuses a gallery with no image at all", () => {
+    const result = validateMedia([{ type: "video", url: CLIP }]);
+    expect(result.ok).toBe(false);
+    expect(result.message).toMatch(/at least one image/i);
+    // The list is at fault, not any row in it.
+    expect(result.errors).toEqual({});
+  });
+
+  it("refuses no primary and refuses two", () => {
+    const none = good().map((row) => {
+      const { primary, ...rest } = row;
+      return rest;
+    });
+    expect(validateMedia(none).ok).toBe(false);
+    expect(validateMedia(none).message).toMatch(/primary image/i);
+
+    const two = good();
+    two[1] = { ...two[1], primary: true };
+    expect(validateMedia(two).ok).toBe(false);
+    expect(validateMedia(two).message).toMatch(/only one image/i);
+  });
+
+  it("reports a blank and a malformed URL against their own rows", () => {
+    const result = validateMedia([
+      { type: "image", url: COVER, primary: true },
+      { type: "image", url: "   " },
+      { type: "video", url: "res.cloudinary.com/demo/video/upload/x.mp4" },
+    ]);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors[1]).toMatch(/image URL/i);
+    expect(result.errors[2]).toMatch(/http/i);
+    expect(result.errors[0]).toBeUndefined();
+  });
+
+  it("catches a URL pasted twice and points at the row it repeats", () => {
+    const result = validateMedia([
+      { type: "image", url: COVER, primary: true },
+      { type: "image", url: SHOT_2 },
+      { type: "image", url: COVER.toUpperCase() },
+    ]);
+
+    expect(result.ok).toBe(false);
+    // 1-based in the message, because the manager numbers rows from one.
+    expect(result.errors[2]).toBe("Same URL as row 1 — every link must be different");
+  });
+
+  it("checks a video's poster, and lets a video with none through", () => {
+    const withBadPoster = [
+      { type: "image", url: COVER, primary: true },
+      { type: "video", url: CLIP, poster: "cover.jpg" },
+    ];
+    expect(validateMedia(withBadPoster).errors[1]).toMatch(/poster/i);
+
+    const withNoPoster = [
+      { type: "image", url: COVER, primary: true },
+      { type: "video", url: CLIP },
+    ];
+    expect(validateMedia(withNoPoster).ok).toBe(true);
+  });
+
+  it("treats an empty or missing list as a product with no picture", () => {
+    expect(validateMedia([]).ok).toBe(false);
+    expect(validateMedia(undefined).ok).toBe(false);
+    expect(validateMedia(undefined).message).toMatch(/at least one image/i);
+  });
+
+  it("agrees with syncProductMedia: what it passes is what saves unchanged", () => {
+    const media = good();
+    const saved = syncProductMedia({ name: "Black Rice Face Wash", media });
+
+    expect(validateMedia(media).ok).toBe(true);
+    expect(saved.media).toEqual(media);
+    expect(saved.images).toEqual([COVER, SHOT_2]);
   });
 });
 

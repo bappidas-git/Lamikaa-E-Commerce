@@ -1989,6 +1989,51 @@ line describes the pre-Prompt-32 admin and is kept as the historical record. Wha
   `--swal2-confirm-button-color` so a per-call destructive background still reads — white-8 % cancel, gold focus ring and
   timer, Manrope). CSS cannot read `adminTheme.js`, so the block re-states those values and names the file to keep in step.
 
+**Updated by Prompt 33 — the product form edits the whole schema and images are a media manager.** The Prompt 32 notes
+above describe the TABLE; the FORM they hand to Prompt 33 no longer exists. What is true now:
+
+- `AdminProducts.js` (603 → 683) keeps the table, the search, the category select, `slugify`, `clampNum`,
+  `makeUniqueSlug` and the variant helpers, and hands the whole dialog body to
+  **`src/pages/Admin/components/ProductFormSections.js`**. It also loads `admin.getConcerns()` alongside products and
+  categories, and adds three AND-ing filter chips — **Hero** (`Number.isFinite(heroOrder)`), **Price on launch**
+  (`priceTBA`), **Drafts** (`isActive === false`) — plus a **New** flag chip in the Flags column. The dialog is
+  `fullScreen` below `sm`.
+- `emptyProduct` now carries all 50 keys of `PRODUCTS.md` §6: `shortName`, `categoryIds[]`, `concerns[]`,
+  `ritualStep{order,label,frequency}`, `heroHeadline`, `heroSubtext`, `heroOrder`, `promise`, `benefits[]`,
+  `keyIngredients[{name,benefit}]`, `howToUse[]`, `ingredientsList`, `packClaims[]`, `fragranceNote`, `caution`,
+  `suitableFor[]`, `size`, `priceTBA`, `priceSource`, `currency`, `badges[]` (`brand.trustBadges`), `media[]`,
+  `faqs[{q,a}]`, `isNew` — on top of every key it already had. `openEdit` maps the record through **`normalizeProduct`
+  first**, so an images-only row still reaches the manager.
+- **New components under `src/pages/Admin/components/`** (the admin's first component folder):
+  - `MediaManager.js` — `{ value, onChange, productName, errors }`. Two ordered lists (image links, video links) over
+    ONE `media[]`; every commit re-emits `[...images, ...videos]`. 64px previews, `<video preload="metadata">` as the
+    only reachability check, a Cloudinary-gated "Advanced: stage crop" (`{x,y,w,h}`) disclosure, a "Placeholder" chip,
+    a `Radio` primary, native HTML5 drag by the 24px handle (list encoded as `application/x-lamikaa-media-<list>` so
+    `dragover` can refuse a cross-list drop; source index in `text/plain`), up/down buttons with focus restoration, and
+    a `N images · N videos · primary: #N` summary. No drag library, no upload, no colour of its own.
+  - `ListEditor.js` — an ordered list of one-line strings (`ordered` numbers the rows, `action` takes the badges'
+    "Reset to brand defaults").
+  - `KeyValueListEditor.js` — an ordered list of two-field rows; `keyField`/`valueField` name the record's keys and
+    have no defaults.
+  - `ProductFormSections.js` — ten MUI `Accordion`s (Basic · Story · Pricing · Inventory & shipping · Details · FAQs ·
+    Media · Variants · Visibility & flags · SEO), first open, counts in the headers, and `ERROR_SECTIONS` opens any
+    section holding a save error.
+- **`src/utils/product.js` gains `validateMedia(media)` → `{ ok, errors: {rowIndex: msg}, message }`** (≥1 image,
+  exactly one primary, http(s) URLs, no duplicate URLs, valid video posters). `message` carries the two LIST-level
+  rules. Exported named and on the default object; 8 cases in `product.test.js`.
+- `handleSave` validation is now: name · unique slug · `priceTBA || price > 0 || variants.length` ·
+  `validateMedia().ok` · `categoryIds ⊇ categoryId` · `heroOrder` unique across the loaded list ("Hero position N is
+  already used by {name}") · variant names. Video posters default to the primary image at save; a `ritualStep` with no
+  label and no frequency is stored as `null` (`CrossSell` sorts by `ritualStep.order`); `priceSource` is stored as
+  `null`, not `""`, when blank. The payload omits `images` — `syncProductMedia()` derives it here and again in the api
+  layer.
+- **`src/services/api.js` is UNCHANGED.** `admin.createProduct/updateProduct` already ran `syncProductMedia()` in both
+  modes (Prompt 07) and pass the rest of the payload through untouched, which is what lets all 25 new keys reach
+  json-server and the Laravel branch without this layer knowing about them. One consequence, verified: a seeded product
+  opened and saved unchanged gains the derived **`image`** mirror (db.json was seeded without it) alongside the new
+  `updatedAt`; every other field is byte-identical.
+- Both MUI `Select`s on the screen now pass `labelId` (the visible `<InputLabel>` alone left them unnamed).
+
 ## 8. Contexts (`src/context/*`) — state, persistence, order
 
 Provider order in `App.js`: `ErrorBoundary > ThemeContextProvider > StoreSettingsProvider > AuthProvider > AdminProvider > WishlistProvider > CartProvider > OrderProvider > Router > (admin routes | StorefrontShell > DealsConfigProvider > FaqProvider)`.

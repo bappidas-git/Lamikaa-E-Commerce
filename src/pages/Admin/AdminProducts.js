@@ -3,22 +3,41 @@ import {
   Box, Paper, Typography, Button, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, IconButton, Chip, Avatar,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  FormControlLabel, Switch, Skeleton, Tooltip, InputAdornment,
-  Select, MenuItem, FormControl, InputLabel, Grid, Divider,
+  Skeleton, Tooltip, InputAdornment, Select, MenuItem, FormControl,
+  InputLabel, useMediaQuery, useTheme,
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
 import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import brand from "../../config/brand";
+import { normalizeProduct, syncProductMedia, validateMedia } from "../../utils/product";
+import ProductFormSections from "./components/ProductFormSections";
 
+// Every key a LAMIKAA product carries (PRODUCTS.md §6). A new product starts
+// life with the whole shape rather than acquiring fields as it is edited — a
+// record that is missing `media` or `badges` reads differently on the
+// storefront from one that has them empty, and "differently" here means the
+// card falls back to brand defaults it was never meant to inherit.
 const emptyProduct = {
-  name: "", slug: "", sku: "", shortDescription: "", description: "",
-  categoryId: "", brand: "", images: [], price: 0, comparePrice: 0, costPrice: 0,
-  stock: 0, lowStockThreshold: 10, weight: 0,
+  name: "", shortName: "", slug: "", sku: "", brand: "",
+  categoryId: "", categoryIds: [], concerns: [],
+  ritualStep: { order: 1, label: "", frequency: "" },
+  heroHeadline: "", heroSubtext: "", heroOrder: null,
+  promise: "", shortDescription: "", description: "",
+  price: 0, priceTBA: false, priceSource: "",
+  comparePrice: 0, costPrice: 0, currency: "INR",
+  size: "", stock: 0, lowStockThreshold: 10, weight: 0,
   dimensions: { length: 0, width: 0, height: 0 },
   variants: [],
-  tags: [], featured: false, trending: false, hot: false, isActive: true,
+  benefits: [], keyIngredients: [], howToUse: [], ingredientsList: "",
+  packClaims: [], fragranceNote: "", caution: "", suitableFor: [],
+  // BRAND.md §3.9 rule 4: the three owner-mandated badges are configuration,
+  // never a literal in a component — and a new product inherits them.
+  badges: [...brand.trustBadges],
+  media: [], images: [], faqs: [],
+  tags: [], featured: false, trending: false, hot: false, isNew: false, isActive: true,
   metaTitle: "", metaDescription: "",
 };
 
@@ -35,12 +54,35 @@ const clampNum = (v, { int = false, fallback = 0 } = {}) => {
 
 const newVariantId = () => `v-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+/** A string list, trimmed, with the rows the merchant never filled in dropped. */
+const cleanList = (rows) =>
+  (Array.isArray(rows) ? rows : []).map((row) => String(row ?? "").trim()).filter(Boolean);
+
+/**
+ * A two-field list, trimmed, keeping every other key the row carried and the
+ * key ORDER it was seeded with. A row with both fields blank is a row the
+ * merchant added and walked away from.
+ */
+const cleanPairs = (rows, keyField, valueField) =>
+  (Array.isArray(rows) ? rows : [])
+    .map((row) => ({
+      ...row,
+      [keyField]: String(row?.[keyField] ?? "").trim(),
+      [valueField]: String(row?.[valueField] ?? "").trim(),
+    }))
+    .filter((row) => row[keyField] || row[valueField]);
+
 const AdminProducts = () => {
   // Currency comes from the admin's own Settings > General, so every figure
   // on this screen speaks the same money as the storefront.
   const { currencySymbol, formatPrice } = useStoreSettings();
+  const theme = useTheme();
+  // The form is fifty fields deep; on a phone it takes the whole screen or it
+  // takes none of it.
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [concerns, setConcerns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,7 +91,9 @@ const AdminProducts = () => {
   const [errors, setErrors] = useState({});
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [imageInput, setImageInput] = useState("");
+  // Three questions a merchant actually asks of this table: what is in the
+  // hero, what still has no price, what is not live yet. Chips AND together.
+  const [flagFilters, setFlagFilters] = useState({ hero: false, tba: false, drafts: false });
   const [tagsInput, setTagsInput] = useState("");
 
   useEffect(() => { loadData(); }, []);
@@ -57,38 +101,79 @@ const AdminProducts = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [prods, cats] = await Promise.all([
+      const [prods, cats, cons] = await Promise.all([
         apiService.admin.getProducts(),
         apiService.admin.getCategories(),
+        apiService.admin.getConcerns(),
       ]);
       setProducts(prods || []);
       setCategories(cats || []);
+      setConcerns(cons || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
 
   const openCreate = () => {
     setEditingProduct(null);
-    setForm({ ...emptyProduct, dimensions: { length: 0, width: 0, height: 0 }, variants: [] });
+    setForm({
+      ...emptyProduct,
+      ritualStep: { ...emptyProduct.ritualStep },
+      dimensions: { ...emptyProduct.dimensions },
+      categoryIds: [], concerns: [], variants: [], media: [], images: [], faqs: [],
+      benefits: [], keyIngredients: [], howToUse: [], packClaims: [], suitableFor: [],
+      badges: [...brand.trustBadges],
+      tags: [],
+    });
     setErrors({});
-    setImageInput("");
     setTagsInput("");
     setDialogOpen(true);
   };
 
-  const openEdit = (p) => {
-    setEditingProduct(p);
+  // Hydration goes through normalizeProduct FIRST. Admin reads are already
+  // normalised, but a record hand-edited in db.json (or served by a Laravel
+  // branch that has not caught up) may still be images-only — mapping it here
+  // is what puts those legacy rows in front of the media manager instead of
+  // silently dropping them on the next save.
+  const openEdit = (raw) => {
+    const p = normalizeProduct(raw);
     const dims = p.dimensions || {};
+    setEditingProduct(raw);
     setForm({
-      name: p.name, slug: p.slug, sku: p.sku || "", shortDescription: p.shortDescription || "",
-      description: p.description || "", categoryId: p.categoryId ?? "", brand: p.brand || "",
-      images: p.images || [], price: p.price || 0, comparePrice: p.comparePrice || 0,
-      costPrice: p.costPrice || 0, stock: p.stock || 0, lowStockThreshold: p.lowStockThreshold || 10,
+      name: p.name || "",
+      shortName: p.shortName || "",
+      slug: p.slug || "",
+      sku: p.sku || "",
+      brand: p.brand || "",
+      categoryId: p.categoryId ?? "",
+      categoryIds: [...(p.categoryIds || [])],
+      concerns: [...(p.concerns || [])],
+      ritualStep: {
+        order: p.ritualStep?.order ?? "",
+        label: p.ritualStep?.label ?? "",
+        frequency: p.ritualStep?.frequency ?? "",
+      },
+      heroHeadline: p.heroHeadline || "",
+      heroSubtext: p.heroSubtext || "",
+      heroOrder: p.heroOrder ?? null,
+      promise: p.promise || "",
+      shortDescription: p.shortDescription || "",
+      description: p.description || "",
+      // A TBA product carries no number to put in the field, and putting 0
+      // there would be a price the moment the switch went off by accident.
+      price: p.priceTBA ? null : (p.price ?? 0),
+      priceTBA: !!p.priceTBA,
+      priceSource: p.priceSource || "",
+      comparePrice: p.comparePrice || 0,
+      costPrice: p.costPrice || 0,
+      currency: p.currency || "INR",
+      size: p.size || "",
+      stock: p.stock || 0,
+      lowStockThreshold: p.lowStockThreshold || 10,
       weight: p.weight || 0,
       dimensions: {
         length: dims.length || 0, width: dims.width || 0, height: dims.height || 0,
       },
-      // Clone variants so row edits don't mutate the list's product object.
+      // Clone every list and row so edits don't mutate the list's product object.
       variants: Array.isArray(p.variants)
         ? p.variants.map((v) => ({
             id: v.id || newVariantId(),
@@ -98,12 +183,24 @@ const AdminProducts = () => {
             sku: v.sku || "",
           }))
         : [],
-      tags: p.tags || [], featured: !!p.featured,
-      trending: !!p.trending, hot: !!p.hot, isActive: p.isActive !== false,
+      benefits: [...(p.benefits || [])],
+      keyIngredients: (p.keyIngredients || []).map((row) => ({ ...row })),
+      howToUse: [...(p.howToUse || [])],
+      ingredientsList: p.ingredientsList || "",
+      packClaims: [...(p.packClaims || [])],
+      fragranceNote: p.fragranceNote || "",
+      caution: p.caution || "",
+      suitableFor: [...(p.suitableFor || [])],
+      badges: [...(p.badges || [])],
+      media: (p.media || []).map((row) => ({ ...row })),
+      images: [...(p.images || [])],
+      faqs: (p.faqs || []).map((row) => ({ ...row })),
+      tags: [...(p.tags || [])],
+      featured: !!p.featured, trending: !!p.trending, hot: !!p.hot,
+      isNew: !!p.isNew, isActive: p.isActive !== false,
       metaTitle: p.metaTitle || "", metaDescription: p.metaDescription || "",
     });
     setErrors({});
-    setImageInput((p.images || []).join("\n"));
     setTagsInput((p.tags || []).join(", "));
     setDialogOpen(true);
   };
@@ -117,6 +214,8 @@ const AdminProducts = () => {
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const setDimension = (key, value) =>
     setForm((f) => ({ ...f, dimensions: { ...f.dimensions, [key]: value } }));
+  const setRitualStep = (key, value) =>
+    setForm((f) => ({ ...f, ritualStep: { ...f.ritualStep, [key]: value } }));
 
   // ── Variants ───────────────────────────────────────────────────────────
   const addVariant = () =>
@@ -161,16 +260,68 @@ const AdminProducts = () => {
         sku: v.sku.trim(),
       }));
 
+    const name = form.name.trim();
+    const priceTBA = !!form.priceTBA;
+    const price = priceTBA ? null : clampNum(form.price);
+
+    // ── Media, cleaned before it is judged ──────────────────────────────
+    // The poster default is resolved HERE, where the primary image is known:
+    // "the primary image at save" is a promise the manager cannot keep on its
+    // own, because the merchant may still be moving the primary around.
+    const primaryUrl =
+      form.media.find((row) => row.type !== "video" && row.primary === true)?.url?.trim() || "";
+    const media = form.media.map((row, index) => {
+      const url = String(row.url ?? "").trim();
+      if (row.type === "video") {
+        return {
+          ...row,
+          url,
+          poster: String(row.poster ?? "").trim() || primaryUrl,
+          title: String(row.title ?? "").trim() || `Video ${index + 1}`,
+        };
+      }
+      return {
+        ...row,
+        url,
+        alt: String(row.alt ?? "").trim() || `${name} — image ${index + 1}`,
+      };
+    });
+
     // ── Validation ──────────────────────────────────────────────────────
     const nextErrors = {};
-    if (!form.name.trim()) nextErrors.name = "Product name is required";
+    if (!name) nextErrors.name = "Product name is required";
 
     const slug = makeUniqueSlug(form.slug || form.name);
     if (!slug) nextErrors.slug = "A URL-safe slug is required";
 
-    const price = clampNum(form.price);
-    if (cleanedVariants.length === 0 && !(price > 0)) {
-      nextErrors.price = "Enter a selling price greater than 0 (or add a variant)";
+    if (!priceTBA && !(price > 0) && cleanedVariants.length === 0) {
+      nextErrors.price =
+        "Enter a price above 0, add a variant, or switch on “Price to be announced”";
+    }
+
+    const mediaCheck = validateMedia(media);
+    if (!mediaCheck.ok) {
+      nextErrors.media = mediaCheck.message || "Fix the highlighted media rows";
+      if (Object.keys(mediaCheck.errors).length) nextErrors.mediaRows = mediaCheck.errors;
+    }
+
+    const categoryIds = [...(form.categoryIds || [])];
+    const hasPrimaryCategory = form.categoryId !== "" && form.categoryId != null;
+    if (hasPrimaryCategory && !categoryIds.some((id) => String(id) === String(form.categoryId))) {
+      nextErrors.categoryIds = "The primary category has to be one of the categories";
+    }
+
+    // Two products cannot hold the same slide. The hero reads the whole
+    // catalogue and sorts by this number, so a tie is a coin toss on the home
+    // page — decided here, where the other products are known.
+    const heroOrder = Number.isFinite(form.heroOrder) ? form.heroOrder : null;
+    if (heroOrder != null) {
+      const clash = products.find(
+        (p) =>
+          (!editingProduct || String(p.id) !== String(editingProduct.id)) &&
+          Number(p.heroOrder) === heroOrder
+      );
+      if (clash) nextErrors.heroOrder = `Hero position ${heroOrder} is already used by ${clash.name}`;
     }
 
     const variantRowErrors = {};
@@ -182,8 +333,8 @@ const AdminProducts = () => {
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
       Swal.fire({
-        icon: "warning", title: "Please fix the highlighted fields",
-        toast: true, position: "bottom-end", showConfirmButton: false, timer: 3000,
+        icon: "warning", title: nextErrors.media || "Please fix the highlighted fields",
+        toast: true, position: "bottom-end", showConfirmButton: false, timer: 3500,
       });
       return;
     }
@@ -198,37 +349,89 @@ const AdminProducts = () => {
     };
     const dimensions = dims.length || dims.width || dims.height ? dims : null;
 
+    // The same rule for the ritual step: a step nobody NAMED is not a step, and
+    // the order on its own is not a name. It matters beyond the empty label the
+    // PDP would skip — the cart's cross-sell sorts candidates by
+    // `ritualStep.order`, so a product left on the form's default 1 would join
+    // the routine as its first step and start suggesting what comes next.
+    const rsOrder = parseInt(form.ritualStep?.order, 10);
+    const rsLabel = String(form.ritualStep?.label ?? "").trim();
+    const rsFrequency = String(form.ritualStep?.frequency ?? "").trim();
+    const ritualStep =
+      !rsLabel && !rsFrequency
+        ? null
+        : {
+            order: Number.isNaN(rsOrder) ? 1 : Math.max(1, rsOrder),
+            label: rsLabel,
+            frequency: rsFrequency,
+          };
+
     // ── Payload ─────────────────────────────────────────────────────────
+    // `images` is deliberately absent: it is DERIVED from `media` by
+    // syncProductMedia() below (and again inside the api layer), and writing a
+    // second opinion of it here is how the two get out of step.
     const editable = {
-      name: form.name.trim(),
+      name,
+      shortName: form.shortName.trim(),
       slug,
       sku: form.sku.trim(),
+      brand: form.brand.trim(),
+      categoryId: form.categoryId === "" ? null : form.categoryId,
+      categoryIds,
+      concerns: cleanList(form.concerns),
+      ritualStep,
+      heroHeadline: form.heroHeadline.trim(),
+      heroSubtext: form.heroSubtext.trim(),
+      heroOrder,
+      promise: form.promise.trim(),
       shortDescription: form.shortDescription,
       description: form.description,
-      categoryId: form.categoryId === "" ? null : form.categoryId,
-      brand: form.brand.trim(),
-      images: imageInput.split("\n").map((s) => s.trim()).filter(Boolean),
       price,
+      priceTBA,
+      // Null, not "": the seed stores `null` for a product whose price has no
+      // source yet, and a round trip must not turn that into an empty string.
+      priceSource: form.priceSource.trim() || null,
       comparePrice: clampNum(form.comparePrice),
       costPrice: clampNum(form.costPrice),
+      currency: form.currency || "INR",
+      size: form.size.trim(),
       stock: clampNum(form.stock, { int: true }),
       lowStockThreshold: clampNum(form.lowStockThreshold, { int: true, fallback: 10 }),
       weight: clampNum(form.weight),
       dimensions,
       variants: cleanedVariants,
+      badges: cleanList(form.badges),
+      keyIngredients: cleanPairs(form.keyIngredients, "name", "benefit"),
+      benefits: cleanList(form.benefits),
+      howToUse: cleanList(form.howToUse),
+      ingredientsList: form.ingredientsList.trim(),
+      packClaims: cleanList(form.packClaims),
+      fragranceNote: form.fragranceNote.trim(),
+      caution: form.caution.trim(),
+      suitableFor: cleanList(form.suitableFor),
+      media,
+      faqs: cleanPairs(form.faqs, "q", "a"),
       tags: tagsInput.split(",").map((s) => s.trim()).filter(Boolean),
-      featured: form.featured, trending: form.trending, hot: form.hot, isActive: form.isActive,
+      featured: form.featured, trending: form.trending, hot: form.hot,
+      isNew: form.isNew, isActive: form.isActive,
       metaTitle: form.metaTitle, metaDescription: form.metaDescription,
     };
+
+    // Sync here as well as in the api layer: this is the one place that can
+    // still show the merchant what went wrong, and the record that leaves is
+    // already consistent whichever mode it leaves through.
+    const payload = syncProductMedia(
+      // updateProduct PUTs the full record (mock) — merge over the original so
+      // server-managed fields (rating, totalReviews, createdAt) survive the edit.
+      editingProduct ? { ...editingProduct, ...editable } : editable
+    );
 
     try {
       setSaving(true);
       if (editingProduct) {
-        // updateProduct PUTs the full record (mock) — merge over the original so
-        // server-managed fields (rating, totalReviews, createdAt) survive the edit.
-        await apiService.admin.updateProduct(editingProduct.id, { ...editingProduct, ...editable });
+        await apiService.admin.updateProduct(editingProduct.id, payload);
       } else {
-        await apiService.admin.createProduct(editable);
+        await apiService.admin.createProduct(payload);
       }
       setDialogOpen(false);
       Swal.fire({
@@ -258,7 +461,7 @@ const AdminProducts = () => {
 
   const getCategoryName = (id) => categories.find((c) => String(c.id) === String(id))?.name || "—";
 
-  // What the gallery holds, at a glance: "3 img \u00b7 1 vid". normalizeProduct()
+  // What the gallery holds, at a glance: "3 img · 1 vid". normalizeProduct()
   // guarantees `media[]` on every record the admin reads, so a catalogue seeded
   // before media[] existed still counts its images here.
   const mediaCounts = (p) => {
@@ -269,7 +472,7 @@ const AdminProducts = () => {
     const parts = [];
     if (images) parts.push(`${images} img`);
     if (videos) parts.push(`${videos} vid`);
-    return { label: parts.join(" \u00b7 ") };
+    return { label: parts.join(" · ") };
   };
   const fc = (n) => formatPrice(n, { decimals: 0 });
 
@@ -280,6 +483,14 @@ const AdminProducts = () => {
       ? p.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)
       : p.stock;
 
+  const toggleFlag = (key) => setFlagFilters((f) => ({ ...f, [key]: !f[key] }));
+
+  const FLAG_CHIPS = [
+    { key: "hero", label: "Hero", test: (p) => Number.isFinite(p.heroOrder) },
+    { key: "tba", label: "Price on launch", test: (p) => !!p.priceTBA },
+    { key: "drafts", label: "Drafts", test: (p) => p.isActive === false },
+  ];
+
   const filtered = products.filter((p) => {
     const q = search.toLowerCase();
     const matchSearch =
@@ -287,7 +498,8 @@ const AdminProducts = () => {
       (p.sku || "").toLowerCase().includes(q) ||
       (p.brand || "").toLowerCase().includes(q);
     const matchCat = categoryFilter === "all" || String(p.categoryId) === String(categoryFilter);
-    return matchSearch && matchCat;
+    const matchFlags = FLAG_CHIPS.every(({ key, test }) => !flagFilters[key] || test(p));
+    return matchSearch && matchCat && matchFlags;
   });
 
   return (
@@ -303,7 +515,7 @@ const AdminProducts = () => {
       </Box>
 
       <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
-        <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider", display: "flex", gap: 2, flexWrap: "wrap" }}>
+        <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider", display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
           <TextField
             placeholder="Search by name, SKU or brand..."
             value={search} onChange={(e) => setSearch(e.target.value)}
@@ -311,12 +523,31 @@ const AdminProducts = () => {
             InputProps={{ startAdornment: <InputAdornment position="start"><Icon icon="mdi:magnify" /></InputAdornment> }}
           />
           <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>Category</InputLabel>
-            <Select value={categoryFilter} label="Category" onChange={(e) => setCategoryFilter(e.target.value)}>
+            <InputLabel id="product-category-filter-label">Category</InputLabel>
+            <Select
+              labelId="product-category-filter-label"
+              value={categoryFilter}
+              label="Category"
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
               <MenuItem value="all">All Categories</MenuItem>
               {categories.map((c) => (<MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>))}
             </Select>
           </FormControl>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            {FLAG_CHIPS.map(({ key, label }) => (
+              <Chip
+                key={key}
+                label={label}
+                size="small"
+                clickable
+                onClick={() => toggleFlag(key)}
+                color={flagFilters[key] ? "primary" : "default"}
+                variant={flagFilters[key] ? "filled" : "outlined"}
+                aria-pressed={flagFilters[key]}
+              />
+            ))}
+          </Box>
         </Box>
         {/* Horizontal scroll keeps all 10 columns reachable on small screens. */}
         <TableContainer sx={{ overflowX: "auto" }}>
@@ -390,6 +621,7 @@ const AdminProducts = () => {
                       <TableCell>
                         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                           {p.featured && <Chip label="Featured" size="small" color="primary" sx={{ height: 20, fontSize: "0.65rem" }} />}
+                          {p.isNew && <Chip label="New" size="small" color="info" sx={{ height: 20, fontSize: "0.65rem" }} />}
                           {p.trending && <Chip label="Trending" size="small" color="secondary" sx={{ height: 20, fontSize: "0.65rem" }} />}
                           {p.hot && <Chip label="Hot" size="small" color="error" sx={{ height: 20, fontSize: "0.65rem" }} />}
                         </Box>
@@ -409,185 +641,33 @@ const AdminProducts = () => {
       </Paper>
 
       {/* Create / Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => !saving && setDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => !saving && setDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        fullScreen={fullScreen}
+      >
         <DialogTitle sx={{ fontWeight: "bold" }}>{editingProduct ? "Edit Product" : "New Product"}</DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2} sx={{ pt: 1 }}>
-            {/* Basic Info */}
-            <Grid item xs={12}><Typography variant="subtitle2" color="text.secondary" fontWeight={600}>Basic Information</Typography></Grid>
-            <Grid item xs={12} sm={8}>
-              <TextField
-                label="Product Name *" value={form.name} onChange={handleNameChange}
-                fullWidth size="small" error={!!errors.name} helperText={errors.name}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label="SKU" value={form.sku} onChange={(e) => setField("sku", e.target.value)} fullWidth size="small" placeholder="e.g. LK-BR-XX-000" />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Slug" value={form.slug}
-                onChange={(e) => setField("slug", e.target.value)}
-                onBlur={(e) => setField("slug", slugify(e.target.value))}
-                fullWidth size="small" error={!!errors.slug}
-                helperText={errors.slug || "URL-friendly; auto-generated from the name"}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Brand" value={form.brand} onChange={(e) => setField("brand", e.target.value)} fullWidth size="small" />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl size="small" fullWidth>
-                <InputLabel>Category</InputLabel>
-                <Select value={form.categoryId ?? ""} label="Category" onChange={(e) => setField("categoryId", e.target.value)}>
-                  <MenuItem value="">None</MenuItem>
-                  {categories.map((c) => (<MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Short Description" value={form.shortDescription} onChange={(e) => setField("shortDescription", e.target.value)} fullWidth size="small" multiline rows={2} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Full Description" value={form.description} onChange={(e) => setField("description", e.target.value)} fullWidth size="small" multiline rows={4} />
-            </Grid>
-
-            {/* Pricing */}
-            <Grid item xs={12}><Divider /><Typography variant="subtitle2" color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>Pricing</Typography></Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label={`Selling Price (${currencySymbol}) *`} type="number" value={form.price}
-                onChange={(e) => setField("price", clampNum(e.target.value))}
-                fullWidth size="small" inputProps={{ min: 0 }}
-                error={!!errors.price} helperText={errors.price}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label={`Compare-at Price (${currencySymbol})`} type="number" value={form.comparePrice} onChange={(e) => setField("comparePrice", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} helperText="Strikethrough price" />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label={`Cost Price (${currencySymbol})`} type="number" value={form.costPrice} onChange={(e) => setField("costPrice", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} helperText="For margin calculation" />
-            </Grid>
-
-            {/* Inventory */}
-            <Grid item xs={12}><Divider /><Typography variant="subtitle2" color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>Inventory & Shipping</Typography></Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label="Stock Quantity" type="number" value={form.stock} onChange={(e) => setField("stock", clampNum(e.target.value, { int: true }))} fullWidth size="small" inputProps={{ min: 0 }} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label="Low Stock Threshold" type="number" value={form.lowStockThreshold} onChange={(e) => setField("lowStockThreshold", clampNum(e.target.value, { int: true, fallback: 10 }))} fullWidth size="small" inputProps={{ min: 0 }} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label="Shipping weight (kg)" type="number" value={form.weight} onChange={(e) => setField("weight", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label="Length (cm)" type="number" value={form.dimensions.length} onChange={(e) => setDimension("length", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label="Width (cm)" type="number" value={form.dimensions.width} onChange={(e) => setDimension("width", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField label="Height (cm)" type="number" value={form.dimensions.height} onChange={(e) => setDimension("height", clampNum(e.target.value))} fullWidth size="small" inputProps={{ min: 0 }} />
-            </Grid>
-
-            {/* Variants */}
-            <Grid item xs={12}>
-              <Divider />
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>Variants (optional)</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Add options like size/colour with their own price, stock &amp; SKU. Shown on the product page.
-                  </Typography>
-                </Box>
-                <Button size="small" startIcon={<Icon icon="mdi:plus" />} onClick={addVariant} sx={{ flexShrink: 0 }}>
-                  Add Variant
-                </Button>
-              </Box>
-            </Grid>
-            {form.variants.length === 0 ? (
-              <Grid item xs={12}>
-                <Box sx={{ p: 2, border: "1px dashed", borderColor: "divider", borderRadius: 1, textAlign: "center" }}>
-                  <Typography variant="caption" color="text.secondary">No variants — this product is sold as a single option.</Typography>
-                </Box>
-              </Grid>
-            ) : (
-              form.variants.map((v, idx) => (
-                <Grid item xs={12} key={v.id}>
-                  <Box sx={{ display: "flex", gap: 1, flexWrap: { xs: "wrap", md: "nowrap" }, alignItems: "flex-start" }}>
-                    <TextField
-                      label={`Variant ${idx + 1} name`} value={v.name}
-                      onChange={(e) => updateVariant(idx, "name", e.target.value)}
-                      size="small" sx={{ flex: 2, minWidth: 150 }}
-                      error={!!errors.variantRows?.[idx]} helperText={errors.variantRows?.[idx]}
-                      placeholder="e.g. 100 ml / 200 ml"
-                    />
-                    <TextField
-                      label={`Price (${currencySymbol})`} type="number" value={v.price}
-                      onChange={(e) => updateVariant(idx, "price", clampNum(e.target.value))}
-                      size="small" sx={{ flex: 1, minWidth: 100 }} inputProps={{ min: 0 }}
-                    />
-                    <TextField
-                      label="Stock" type="number" value={v.stock}
-                      onChange={(e) => updateVariant(idx, "stock", clampNum(e.target.value, { int: true }))}
-                      size="small" sx={{ flex: 1, minWidth: 90 }} inputProps={{ min: 0 }}
-                    />
-                    <TextField
-                      label="SKU" value={v.sku}
-                      onChange={(e) => updateVariant(idx, "sku", e.target.value)}
-                      size="small" sx={{ flex: 1.5, minWidth: 120 }}
-                    />
-                    <Tooltip title="Remove variant">
-                      <IconButton color="error" onClick={() => removeVariant(idx)} sx={{ mt: 0.25 }}>
-                        <Icon icon="mdi:delete-outline" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Grid>
-              ))
-            )}
-
-            {/* Media & Tags */}
-            <Grid item xs={12}><Divider /><Typography variant="subtitle2" color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>Media & Tags</Typography></Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Image URLs (one per line)"
-                value={imageInput}
-                onChange={(e) => setImageInput(e.target.value)}
-                fullWidth size="small" multiline rows={3}
-                helperText="Enter each image URL on a new line. Invalid/blank lines are ignored."
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Tags (comma separated)"
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-                fullWidth size="small"
-                placeholder="e.g. black rice, face wash, cleanser"
-              />
-            </Grid>
-
-            {/* Visibility & Flags */}
-            <Grid item xs={12}><Divider /><Typography variant="subtitle2" color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>Visibility & Flags</Typography></Grid>
-            <Grid item xs={12}>
-              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                <FormControlLabel control={<Switch checked={form.isActive} onChange={(e) => setField("isActive", e.target.checked)} />} label="Active (visible on store)" />
-                <FormControlLabel control={<Switch checked={form.featured} onChange={(e) => setField("featured", e.target.checked)} />} label="Featured" />
-                <FormControlLabel control={<Switch checked={form.trending} onChange={(e) => setField("trending", e.target.checked)} />} label="Trending" />
-                <FormControlLabel control={<Switch checked={form.hot} onChange={(e) => setField("hot", e.target.checked)} />} label="Hot" />
-              </Box>
-            </Grid>
-
-            {/* SEO */}
-            <Grid item xs={12}><Divider /><Typography variant="subtitle2" color="text.secondary" fontWeight={600} sx={{ mt: 1 }}>SEO (Optional)</Typography></Grid>
-            <Grid item xs={12}>
-              <TextField label="Meta Title" value={form.metaTitle} onChange={(e) => setField("metaTitle", e.target.value)} fullWidth size="small" />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Meta Description" value={form.metaDescription} onChange={(e) => setField("metaDescription", e.target.value)} fullWidth size="small" multiline rows={2} />
-            </Grid>
-          </Grid>
+          <ProductFormSections
+            form={form}
+            errors={errors}
+            setField={setField}
+            setDimension={setDimension}
+            setRitualStep={setRitualStep}
+            categories={categories}
+            concerns={concerns}
+            currencySymbol={currencySymbol}
+            tagsInput={tagsInput}
+            setTagsInput={setTagsInput}
+            onNameChange={handleNameChange}
+            onSlugBlur={(e) => setField("slug", slugify(e.target.value))}
+            clampNum={clampNum}
+            addVariant={addVariant}
+            updateVariant={updateVariant}
+            removeVariant={removeVariant}
+          />
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
           <Button onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</Button>

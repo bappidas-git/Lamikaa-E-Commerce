@@ -15,8 +15,9 @@ import { getProductMinPrice } from "./helpers";
 //
 //   normalizeProduct()  READ side  — media[] built from whatever the record has
 //   syncProductMedia()  WRITE side — images[]/image rebuilt from the admin's media[]
+//   validateMedia()     GATE       — what the admin may not save in the first place
 //
-// The two are twins: whatever normalizeProduct() would derive for a record,
+// The first two are twins: whatever normalizeProduct() would derive for a record,
 // syncProductMedia() has already written into it. That is what lets the same
 // components render a current db.json product (images-only, no media[]) and a
 // seeded one (media[] with crops, posters and placeholder flags) without ever
@@ -216,6 +217,80 @@ export const syncProductMedia = (product) => {
   return { ...product, media, images, image: images[0] || "" };
 };
 
+/** An address a browser can actually fetch: http(s), with something after it. */
+const isHttpUrl = (value) => /^https?:\/\/\S+$/i.test(trimmedUrl(value));
+
+/**
+ * Is the admin's media list saveable?
+ *
+ * The gate between the media manager and the API, and the reason the storefront
+ * never has to render a gallery with no picture in it. Four rules, all of them
+ * things `buildMedia()` would otherwise paper over silently on the read side:
+ *
+ *   1. every row carries a fetchable http(s) URL (and a video's poster, if it
+ *      has one, is a URL too),
+ *   2. no URL appears twice — a duplicate is a mis-paste, never a second frame,
+ *   3. there is at least one image,
+ *   4. exactly one image is the primary.
+ *
+ * Rules 1–2 are per-row and come back keyed by the row's index in `media` so
+ * the manager can print them under the field that is wrong. Rules 3–4 belong to
+ * the LIST, not to any row, so they come back as `message` — a superset of the
+ * documented `{ ok, errors }` shape rather than a fake row error on row 0.
+ *
+ * Pure and order-independent: the same list validates the same way in the
+ * manager (live, as the merchant types) and in `handleSave` (blocking).
+ *
+ * @param {Array} media
+ * @returns {{ok: boolean, errors: Record<number, string>, message: string}}
+ */
+export const validateMedia = (media) => {
+  const rows = Array.isArray(media) ? media : [];
+  const errors = {};
+  const seen = new Map();
+
+  rows.forEach((row, index) => {
+    const isVideo = row?.type === "video";
+    const url = trimmedUrl(row?.url);
+
+    if (!url) {
+      errors[index] = isVideo ? "Enter a video URL" : "Enter an image URL";
+      return;
+    }
+    if (!isHttpUrl(url)) {
+      errors[index] = "The URL has to start with http:// or https://";
+      return;
+    }
+    // Case-insensitive: hosts are, and the same asset typed twice in two cases
+    // is still the same asset.
+    const key = url.toLowerCase();
+    if (seen.has(key)) {
+      errors[index] = `Same URL as row ${seen.get(key) + 1} — every link must be different`;
+      return;
+    }
+    seen.set(key, index);
+
+    const poster = trimmedUrl(row?.poster);
+    if (isVideo && poster && !isHttpUrl(poster)) {
+      errors[index] = "The poster URL has to start with http:// or https://";
+    }
+  });
+
+  const images = rows.filter((row) => row?.type !== "video");
+  const primaries = images.filter((row) => row?.primary === true);
+
+  let message = "";
+  if (!images.length) {
+    message = "Add at least one image link — a product cannot go out without a picture.";
+  } else if (primaries.length === 0) {
+    message = "Choose the primary image — it leads the gallery, the cards and the cart.";
+  } else if (primaries.length > 1) {
+    message = "Only one image can be the primary; clear the others.";
+  }
+
+  return { ok: !message && Object.keys(errors).length === 0, errors, message };
+};
+
 // ---- Accessors -------------------------------------------------------------
 
 /** The normalised media list for a product in any shape. */
@@ -296,6 +371,7 @@ export const resolvePrice = (product) => {
 const product = {
   normalizeProduct,
   syncProductMedia,
+  validateMedia,
   productMedia,
   primaryImage,
   productVideos,
