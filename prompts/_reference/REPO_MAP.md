@@ -194,6 +194,170 @@ The other new product fields the live API must round-trip: `shortName`, `categor
 
 **Removed:** the `banners` namespace and `admin.getBanners/createBanner/updateBanner/deleteBanner/reorderBanners`, together with `GET /banners` and `/admin/banners*`. The collection became `announcements`; the hero's slides became the products. No reference to it remains in `src/`.
 
+### 3.5 Backend hand-off — the complete endpoint sheet (Prompt 39)
+
+**Written for the Laravel team.** §3.4 above lists only the *new* routes; this is
+the whole surface `src/services/api.js` calls when `REACT_APP_USE_MOCK_API=false`
+— 137 functions across 22 namespaces, reviewed one by one in Prompt 39. Read it
+with §3.1 (transport, tokens, envelope) and §4 (`db.json` schema — the field
+names below are that schema's).
+
+**Contract review, Prompt 39 — the three things the review checked.**
+
+1. **Every function has a live branch.** 137 functions carry an api call;
+   125 branch explicitly on `IS_MOCK_API`, and the remaining 12 are *deliberately
+   mode-agnostic* because the path is identical in both modes:
+   `products.getAll`, `products.getById`, `categories.getAll`,
+   `categories.getById`, `cart.addToCart`, `cart.updateCartItem`,
+   `orders.getById`, `returns.create`, `returns.getById`, `wishlist.add`,
+   `admin.shiprocketCreateOrder`, `admin.shiprocketTrack`. None is unbranched by
+   omission.
+2. **Every envelope is unwrapped.** `extractData(response)` returns
+   `response.data.data` when the body carries a `success` key and `response.data`
+   otherwise, so the twelve shared-path functions are correct in both modes
+   without a branch. `extractMeta` reads `response.data.meta`. A live endpoint
+   may therefore return either shape; returning the envelope is preferred and is
+   what the storefront expects from Cloudways.
+3. **Nothing calls a route the sheet does not list.** The `banners` namespace and
+   `GET /banners` / `/admin/banners*` are gone — the collection became
+   `announcements` and the hero's slides became the products.
+
+**Conventions.** Base URL `https://core.lamikanaturals.com/api/v1`. Response
+envelope `{ success, data, meta }`; the "Response (`data`)" column is the
+*contents* of `data`. Admin routes require the admin bearer token
+(`sessionStorage.adminToken`); `/auth/*`, `/cart`, `/orders`, `/wallet`,
+`/reviews/mine`, `/returns` and `/wishlist` require the customer token; the rest
+are public. A 401 on any route but `/auth/login` clears the matching session
+client-side. `PATCH` means merge, `PUT` means replace — the client relies on the
+difference for settings and site content.
+
+#### Public — catalogue
+
+| Method & path | Payload / params | Response (`data`) | Notes |
+|---|---|---|---|
+| `GET /products` | `params` pass-through; also used with `concern=<slug>` and `search=<q>` | `Product[]` | Client re-filters to `isActive !== false` and normalises `media[]`/`images[]`. `search` must cover `name`, `shortName`, `tags[]`, `concerns[]`, `keyIngredients[].name`, `benefits[]`, `description`. |
+| `GET /products/{id}` | — | `Product` | A draft (`isActive: false`) must still 200 here for the admin; the storefront hides it client-side. |
+| `GET /products/slug/{slug}` | — | `Product` | 404 for an unknown slug. |
+| `GET /products/featured` | `limit` | `Product[]` | |
+| `GET /products/trending` | `limit` | `Product[]` | |
+| `GET /products/hero` | — | `Product[]` | `heroOrder != null`, ascending. Must carry `heroHeadline`, `heroSubtext`, `heroOrder`, `shortName`, `media[]`. |
+| `GET /products/category/{categoryId}` | — | `Product[]` | Numeric id. |
+| `GET /products/category/slug/{slug}` | — | `{ category: Category, products: Product[] }` | Membership = `categoryIds[]` contains the id **or** `categoryId` equals it. 404 for an unknown slug. |
+| `GET /products/{productId}/reviews` | `includeSample=0\|1` | `Review[]` | Approved only; `includeSample=0` (the storefront default) drops rows flagged `isSample`. |
+| `GET /categories` | — | `Category[]` | Includes `displayName`, `heroImage`, `kind`. |
+| `GET /categories/{id}` · `GET /categories/slug/{slug}` | — | `Category` | |
+| `GET /concerns` | — | `Concern[]` | `{ id, slug, name, order }`. |
+| `GET /rituals` | — | `Ritual[]` | Active only (the client re-filters and re-sorts regardless). |
+| `GET /rituals/slug/{slug}` | — | `Ritual` | 404 for an unknown slug. `steps[] = { order, productId, alternativeProductId?, note, frequency }`. |
+
+#### Public — content, config and capture
+
+| Method & path | Payload / params | Response (`data`) | Notes |
+|---|---|---|---|
+| `GET /content` | — | `SiteContent` | The whole keyed record: `about`, `whyLamikaa`, `impact`, `home`, `contact`, `policies`, `faqPage`. |
+| `GET /content/{key}` | — | `object` | One section. |
+| `GET /announcements` | — | `Announcement[]` | Serve the live, in-window rows; the client applies the same gate and additionally drops any row whose `text` still carries a `{{TOKEN}}`. |
+| `GET /hero/config` | — | `HeroConfig` | `{ enabled, source: "products", autoplay, intervalMs, transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, updatedAt }`. |
+| `GET /faqs` | — | `Faq[]` | `{ id, question, answer, group, placements[], productIds[], isActive, sortOrder }`. Never throws client-side: an error falls back to the built-in set. |
+| `GET /settings` | — | `Settings` | Public store settings — `store`, `shipping`, `payment` (COD rules), `seo`, `social`. **`payment.codMaxOrder: 0` means "no maximum"**, matching the admin's own field help; the checkout reads a positive value only. |
+| `GET /shipping/methods` | — | `ShippingMethod[]` | Active only. `freeAbove` drives the free-shipping meter; `null`/absent means "unknown" and the meter hides. |
+| `GET /deals/config` | — | `DealsConfig` | Master toggle for `/special-offers`. |
+| `GET /coupons` | — | `Coupon[]` | Active, non-expired. |
+| `POST /coupons/validate` | `{ code, cartTotal, userId? }` | `{ valid, coupon?, message? }` | |
+| `POST /leads/contact` | `{ name, email, phone?, subject?, category?, message, orderNumber? }` | `Lead` | Contact form. |
+| `POST /leads/newsletter` | `{ email, source? }` | `Lead` | Newsletter capture (footer and the full-page CTA). |
+
+#### Customer — auth, cart, orders, account
+
+| Method & path | Payload / params | Response (`data`) | Notes |
+|---|---|---|---|
+| `POST /auth/login` | `{ email, password }` | `{ user, token }` | Must refuse a user with `isActive: false`. |
+| `POST /auth/register` | `{ firstName, lastName, email, password, phone? }` | `{ user, token }` | |
+| `POST /auth/logout` | — | `true` | |
+| `GET /auth/user` · `PUT /auth/user` | profile fields, `addresses[]` | `User` | `PUT` replaces the profile the client holds. |
+| `GET /cart` | `userId` | `CartItem[]` | |
+| `POST /cart` · `PATCH /cart/{id}` · `DELETE /cart/{id}` · `DELETE /cart` | cart line | `CartItem` / `true` | Shared paths in both modes. |
+| `POST /orders` | the order payload (§4 `orders` shape, including `couponCode`, `storeCreditUsed`, `codFee`, `amountPayable`) | `Order` | Server must recompute totals; the client sends its own and expects agreement. |
+| `GET /orders` | `userId` | `Order[]` | |
+| `GET /orders/{id}` · `GET /orders/number/{orderNumber}` | — | `Order` | |
+| `POST /orders/{id}/cancel` | `{ reason }` | `Order` | Also creates the refund/wallet rows where the payment was captured. |
+| `GET /wallet/transactions` | `userId` | `WalletTransaction[]` | Ledger; the sum must equal `users[].storeCredit`. |
+| `GET /wishlist` · `POST /wishlist` · `DELETE /wishlist/{id}` | `{ userId, productId, … }` | `WishlistItem[]` / `WishlistItem` / `true` | |
+| `GET /reviews/mine` | `userId` | `Review[]` | |
+| `POST /reviews` · `POST /products/{productId}/reviews` | `{ productId, orderId?, rating, title, comment }` | `Review` | Created `pending`; publication is an admin action. |
+| `POST /returns` · `GET /returns` · `GET /returns/{id}` | return payload / `userId` | `Return` / `Return[]` | Statuses: `requested → approved → pickup_scheduled → in_transit → received → refunded`, plus `rejected`. |
+
+#### Admin
+
+| Method & path | Payload / params | Response (`data`) | Notes |
+|---|---|---|---|
+| `POST /admin/auth/login` · `POST /admin/auth/logout` | `{ email, password }` | `{ admin, token }` / `true` | |
+| `GET /admin/dashboard/stats` | — | `{ totalProducts, totalOrders, totalRevenue, totalUsers, pendingOrders, pendingReturns, lowStockProducts, activeCoupons, heroProducts, activeRituals, liveAnnouncements, priceOnLaunchProducts }` | The last four are Prompt 34's; `liveAnnouncements` counts only rows that would be **on the bar right now** (active, in window, no unresolved token). Every key is read with `?? 0`, so omitting the new four degrades to 0 rather than erroring. |
+| `GET /admin/products` · `GET /admin/products/{id}` | `params` | `Product[]` / `Product` | Drafts included. |
+| `POST /admin/products` · `PUT /admin/products/{id}` · `DELETE /admin/products/{id}` | the full product (see the payload note below) | `Product` / `true` | |
+| `GET/POST /admin/categories`, `PUT/DELETE /admin/categories/{id}` | category | `Category[]` / `Category` / `true` | `DELETE` must **refuse** while products or child categories still point at it (409 with a message), not cascade. |
+| `GET/POST /admin/concerns`, `PUT/DELETE /admin/concerns/{id}` | concern | `Concern[]` / `Concern` / `true` | `slug` is the key products point at — renaming a concern must not change it. |
+| `GET/POST /admin/rituals`, `PUT/DELETE /admin/rituals/{id}` | ritual | `Ritual[]` / `Ritual` / `true` | `GET` returns inactive rituals too. |
+| `PUT /admin/rituals/reorder` | `{ order: id[] }` | `true` | Full list, first first; `sortOrder` = index. |
+| `GET/POST /admin/announcements`, `PUT/DELETE /admin/announcements/{id}` | announcement | `Announcement[]` / `Announcement` / `true` | `GET` returns hidden rows too. |
+| `PUT /admin/announcements/reorder` | `{ order: id[] }` | `true` | As above. |
+| `GET/POST /admin/faqs`, `PUT/DELETE /admin/faqs/{id}` | faq | `Faq[]` / `Faq` / `true` | `group` must be one of `siteContent.faqPage.groups[].key`. |
+| `PUT /admin/faqs/reorder` | `{ order: id[] }` | `true` | As above. |
+| `GET /admin/content` | — | `SiteContent` | The whole record, for the content editor. |
+| `PATCH /admin/content/{key}` | the section | `object` | **Merge, do not replace** — the editor may hold only part of a section. |
+| `GET /admin/hero/config` · `PUT /admin/hero/config` | `HeroConfig` | `HeroConfig` | |
+| `PUT /admin/hero/order` | `{ order: productId[] }` | `true` | `heroOrder` = index + 1 for the listed products and **`null` for every product not listed** — this is what keeps the order unique. |
+| `GET /admin/orders` · `GET /admin/orders/{id}` | `params` (status, date range, search) | `Order[]` / `Order` | |
+| `PATCH /admin/orders/{id}` | any of `fulfillmentStatus`, `shippingStatus`, `paymentStatus`, `trackingNumber`, `trackingUrl`, `notes`, `shippingAddress` | `Order` | Delivery is `shippingStatus: "delivered"`; `fulfillmentStatus` stays `fulfilled`. Append a `statusHistory[]` entry per change. |
+| `POST /admin/orders/{id}/cancel` | `{ reason, restock? }` | `Order` | |
+| `POST /admin/orders/{id}/refund/initiate` | `{ amount, method, reason }` | `Order` | Creates the pending `refunds` row. |
+| `POST /admin/orders/{id}/refund/complete` | `{ reference? }` | `Order` | Settles it; a store-credit refund also writes the `walletTransactions` row and moves `users[].storeCredit`. |
+| `POST /admin/orders/{id}/refund/fail` | `{ reason }` | `Order` | Marks the attempt failed and leaves the order refundable. |
+| `GET /admin/returns` · `GET /admin/returns/{id}` · `POST /admin/returns` · `PATCH /admin/returns/{id}` | return | `Return[]` / `Return` | The status chain above; `received → refunded` optionally restocks the returned items. |
+| `GET /admin/payments` · `GET /admin/payments/{id}` · `GET /admin/refunds` | `params` | `Payment[]` / `Payment` / `Refund[]` | |
+| `POST /admin/payments/{paymentId}/refund` | `{ amount, reason, method }` | `Payment` | Appends to `payments[].refunds[]` and writes a `refunds` row. |
+| `GET/POST /admin/coupons`, `PUT/DELETE /admin/coupons/{id}` | coupon | `Coupon[]` / `Coupon` / `true` | |
+| `GET/POST /admin/shipping-methods`, `PUT/DELETE /admin/shipping-methods/{id}` | shipping method | `ShippingMethod[]` / `ShippingMethod` / `true` | Note the hyphen: the mock collection is `shipping_methods`, the live route is `/admin/shipping-methods`. |
+| `POST /admin/shipping/shiprocket/order` · `GET /admin/shipping/shiprocket/track/{trackingNumber}` | `{ orderId }` | provider payload | Optional integration; the admin degrades gracefully without it. |
+| `GET /admin/reviews` · `POST /admin/reviews` · `PATCH /admin/reviews/{id}` · `DELETE /admin/reviews/{id}` | review | `Review[]` / `Review` / `true` | `PATCH { status: "approved"\|"rejected" }` is approve/reject. Preserve `isSample`. |
+| `GET /admin/users` · `GET /admin/users/{id}` · `PATCH /admin/users/{id}` | user | `User[]` / `User` | `PATCH { isActive: false }` must make `POST /auth/login` refuse that user. |
+| `GET /admin/leads` · `GET /admin/leads/{id}` · `PATCH /admin/leads/{id}` | lead | `Lead[]` / `Lead` | |
+| `GET /admin/settings` | — | `Settings` | |
+| `PATCH /admin/settings/{section}` | the section's fields | `Settings` | Section is one of `store`, `shipping`, `payment`, `notifications`, `seo`, `social`. **Merge into the section** — mock mode has to read-merge-PUT the whole record to emulate this, and a live endpoint that replaces the section instead will silently drop the fields the form did not send. |
+| `GET /admin/deals/config` · `PUT /admin/deals/config` | `DealsConfig` | `DealsConfig` | Replace; the admin form always holds the complete config. |
+
+**Product payload, both directions.** A product carries its gallery in `media[]`:
+
+```
+media: [{ type: "image"|"video", url, alt?, primary?: true, crop?: {x,y,w,h}, poster?, title?, placeholder?: true }]
+```
+
+Exactly one **image** row is `primary`; videos never carry the flag; the authored
+order of `media[]` is preserved (the gallery is authored, not sorted). `images:
+string[]` and `image: string` are **derived mirrors** — the image URLs with the
+primary first — and must be stored and returned alongside `media[]`, because cart
+lines, wishlist snapshots and order items keep a copy of `images[0]` that cannot
+be re-derived later. The client sends all three on write (`syncProductMedia`) and
+rebuilds them on read (`normalizeProduct`), so a server that derives them itself
+will simply agree.
+
+The other new product fields the live API must round-trip: `shortName`,
+`categoryIds[]`, `concerns[]` (slugs), `ritualStep{order,label,frequency}`,
+`heroHeadline`, `heroSubtext`, `heroOrder` (int|null), `promise`, `benefits[]`,
+`keyIngredients[{name,benefit}]`, `howToUse[]`, `ingredientsList`, `packClaims[]`,
+`fragranceNote`, `caution`, `suitableFor[]`, `size`, `price` (**nullable**),
+`priceTBA`, `priceSource`, `currency`, `badges[]`, `faqs[{q,a}]`, `isNew`. A FAQ
+row additionally carries `group`; a category carries `displayName`, `heroImage`
+and `kind` (`"products"|"rituals"`).
+
+**Two behaviours worth stating explicitly, because the storefront depends on them.**
+
+- **`price: null` + `priceTBA: true` is a valid, expected product state.** Do not
+  coerce it to 0. Five of the eight seeded products ship this way.
+- **Placeholder tokens are legal data.** `{{UPPER_SNAKE}}` strings will be stored
+  in settings, announcement text and policy bodies until the owner supplies the
+  fact. Round-trip them untouched; the client hides them.
+
 ## 4. `db.json` schema (as seeded — Prompt 06)
 
 Rewritten for LAMIKAA NATURALS. **23 collections in this order**; `banners` is gone (renamed `announcements`, and its hero role is taken over by the products themselves), `concerns`, `rituals` and `siteContent` are new, every other collection name the api layer reads is unchanged (`shipping_methods` keeps its underscore). Ids are integers; timestamps are ISO `2026-09-06T00:00:00.000Z` unless a sample order needs a sequence.
@@ -2383,3 +2547,33 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `public/index.html`, `manifest.json`, favicons, `robots.txt` | R | LAMIKAA identity (Prompt 02), sitemap/robots (38). |
 | `db.json` | R | New seed (Prompt 06). |
 | `.env`, `.env.example`, `.env.production`, `package.json` | K (edited) | Name/description/comments (02, 36). |
+
+---
+
+## 12. As built — final note (Prompt 39, 2026-09-08)
+
+The programme is complete and this file is closed. Read it in this order:
+
+- **§3** is the API contract as built. §3.1 is the transport and the envelope, §3.2–3.3 the namespaces,
+  §3.4 the routes that are *new* to LAMIKAA, and **§3.5 the complete hand-off sheet for the Laravel
+  team** — every route the live branch calls, with method, payload, response and the behaviours the
+  storefront depends on. §3.5 was written in Prompt 39 after reading `api.js` function by function:
+  137 functions across 22 namespaces, all with a live branch (125 explicitly, 12 deliberately
+  mode-agnostic because the path is identical), every envelope unwrapped by `extractData`.
+- **§4** is the `db.json` schema as seeded, and is still accurate: the regression exercised every
+  collection through the admin and the storefront without changing a field name.
+- **§5–§9** describe the components, pages, admin, contexts and routing as built; §11's verdict table
+  records what happened to every file the analysis run found.
+
+**Deltas since the last update, all from Prompt 39:**
+
+1. §3.5 added (above).
+2. One behavioural fix in `src/pages/Checkout/Checkout.js`: `settings.payment.codMaxOrder` is read as
+   "no maximum" when it is not a positive number, matching the admin's own "0 = no maximum" helper text
+   and this document's §4 note that the seed ships "COD on with no cap". Nothing else changed.
+3. `scripts/placeholder-inventory.js` and the `placeholders` npm script are new; `PLACEHOLDERS.md` and
+   `PLACEHOLDER_ASSETS.md` now carry a generated "Current inventory" section under their guidance.
+4. `src/App.test.js` and `src/config/brand.test.js` are new (30 suites, 328 tests).
+
+Mock mode is complete and exercised end to end. Live mode is implemented in the client and specified in
+§3.5; the Laravel side of it is the one piece of work that remains outside this repository.

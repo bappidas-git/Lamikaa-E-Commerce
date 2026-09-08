@@ -342,8 +342,16 @@ const Checkout = () => {
   // COD availability comes from store settings, bounded by the amount actually
   // collected on delivery (the payable remainder after store credit).
   const codEnabled = paymentCfg.codEnabled !== false;
-  const codMinOrder = paymentCfg.codMinOrder ?? 0;
-  const codMaxOrder = paymentCfg.codMaxOrder ?? null;
+  const codMinOrder = Number(paymentCfg.codMinOrder) || 0;
+  // ZERO IS "NO MAXIMUM", NOT A ZERO-RUPEE CAP. Admin > Settings > Payment says
+  // so in as many words ("0 = no maximum"), it is the field's own default, and
+  // it is what db.json seeds — so `?? null` (which only falls back on null and
+  // undefined) kept a stored 0 as a real bound and made `amountPayable <=
+  // codMaxOrder` false for every order that costs anything. COD was offered in
+  // the rail ("Cash on delivery available", which reads codEnabled) and then
+  // shown disabled at the payment step under "Available for orders up to
+  // ₹0.00". Found by the Prompt 39 regression.
+  const codMaxOrder = Number(paymentCfg.codMaxOrder) > 0 ? Number(paymentCfg.codMaxOrder) : null;
   const codAvailable = codEnabled && amountPayable > 0 &&
     amountPayable >= codMinOrder && (codMaxOrder == null || amountPayable <= codMaxOrder);
 
