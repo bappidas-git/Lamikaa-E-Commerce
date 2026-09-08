@@ -287,12 +287,30 @@
 }
 
 /* ---- variant="shop" ------------------------------------------------------
-   The shop page stacks its chapters into a listing rather than a sequence of
-   spreads, so it drops the 80svh floor: eight screen-height chapters is a
-   page you scroll past, not one you shop. Prompt 23 adds the index rail on top
-   of the `data-chapter` attribute this component already writes. */
+   On the shop page a chapter is not one spread among eleven home-page bands —
+   it IS the page, and the index rail beside it jumps between chapters. That
+   changes three things and nothing else:
+
+   SCROLL MARGIN. Every arrival at a chapter is a jump (a rail click, a
+   `#chapter-…` deep link, a browser restoring the scroll position), and a jump
+   parks the section's top edge at the top of the VIEWPORT — which is underneath
+   a 64px sticky masthead. 96px is that header plus air, and `scroll-margin` is
+   what the browser subtracts for a jump WITHOUT moving the section on the page.
+
+   A TALLER FLOOR ON THE SPLIT SCREEN. 88svh rather than the home page's 80:
+   the listing is chapters and nothing else, so each one gets the screen, and
+   the extra 8svh is travel the sticky pack holds still through.
+
+   NOTHING CHANGES ON A PHONE. There is no floor below 769px — a chapter is as
+   tall as its own words — because a screen-height minimum on a 390px viewport
+   is a minimum nothing reaches and empty space nobody asked for. */
+.shop {
+  scroll-margin-top: 96px;
+}
+
 @media (min-width: 769px) {
   .shop .grid {
-    min-height: 0;
+    min-height: 88vh;
+    min-height: 88svh;
   }
 }

@@ -1236,6 +1236,81 @@ relationship and the deferral machinery.
   took the admin's MUI shell out of the bundle every storefront visitor
   downloads (main 285 → 249 kB gzipped).
 
+**Updated by Prompt 23.** The catalogue is the chaptered listing. `pages/Products/*`
+is **deleted** (`Products.js` 1 687 + `Products.module.css` 1 335) and with it
+every filter, sort and pagination control the storefront had; `pages/Shop/*` is
+what `/shop` AND `/category/:slug` now render.
+
+- `pages/Shop/Shop.js` (380) + `Shop.module.css` (220): `SectionHeading as="h1"`
+  (eyebrow "The Black Rice range" / "Shop by concern" / "Category", title "Shop"
+  / "For {concern}" / the category name, lede "{n} products · one ritual"), a
+  wrapped chip row of "All" + the eleven concerns (`Chip variant="concern"`,
+  `active` + `aria-current="page"` on the current one, each a `<Link>` to
+  `concernPath()`), then one `ProductChapter variant="shop"` per product with
+  `flip` alternating and an `.sf-hairline` between, then `BuildRitualPanel`.
+  Page grid at ≥1025px is `minmax(0,1fr) 220px` on the **wide** track with a
+  48px gap; `.layout` IS the container (the chapters' own `.sf-container` is
+  neutralised inside it, so the measure is declared once) and it must NOT carry
+  `align-items: start` — that shrink-wraps the rail's grid item and its sticky
+  `<nav>` then has nowhere to travel. The rail is written FIRST in the DOM and
+  placed with `grid-column: 2`, so a keyboard visitor meets the index before the
+  chapters. `mode="category"` reads `useParams().slug` and calls
+  `products.getByCategorySlug` (Prompt 24 adds `CategoryHead`, the breadcrumb,
+  the JSON-LD and the unknown-slug 404). Three states: 3 skeleton chapters
+  loading · a glass panel + "Try again" on a failed read (never "nothing here")
+  · "Nothing here yet" + "All products" on an empty one.
+  `useSeo({ title: "Shop" | "Shop · {concern}", description, jsonLd: itemListJsonLd(products) })`.
+  Exports `shopOrder` and `productCountLabel` for the unit test.
+- `components/catalogue/ChapterIndex.{js,module.css}` (new): the page's only
+  chrome, in two shapes. `variant="rail"` (≥1025px) is a `<nav aria-label=
+  "Products on this page">` — `position: sticky; top: 112px`, a 2px
+  `--sf-color-surface-2` track with a `--sf-gradient-signature` fill at
+  `(activeIndex + intraChapterProgress) / n`, an `<ol>` of 14px `shortName`
+  buttons (`aria-current="true"`, gold, gradient dot) and a "Back to top" ghost
+  button. `variant="strip"` (≤1024px) is a full-bleed `.sf-glass` band at
+  `top: 56px` (64px at 769–1024) of 36px numeral + name pills with `x proximity`
+  snapping, a 44px `::after` hit area, and its active pill centred by writing
+  the strip's own `scrollLeft`; it hides under `body[data-drawer-open]`. Both
+  render; the wrong one is `display: none` (out of the a11y tree too). A jump is
+  `scrollIntoView` + focus on the chapter `h2`. The progress read is
+  rAF-throttled, passive, and writes one custom property — no React state.
+  Exports `chapterId`, `chapterHeadingId`, `intraChapterProgress`,
+  `trackProgress` (16 unit tests in `ChapterIndex.test.js`).
+- `components/catalogue/BuildRitualPanel.{js,module.css}` (new): the closing
+  `GlassCard strong glow="duo"` — "Finish the ritual" / "Build your **ritual**" /
+  "Three routines that put the range in order.", three `RitualCard compact`, and
+  "See all rituals" → `/rituals`. It reads `rituals.getAll()` AND
+  `products.getAll()` itself (a step names any product, so a concern-narrowed
+  page must not resolve its strip against three rows) and renders nothing at all
+  on a rejection or an empty ritual list.
+- `components/catalogue/ProductChapter`: `variant="shop"` is now a real variant —
+  `min-height: 88svh` from 769px and **no floor at all on a phone**,
+  `scroll-margin-top: 96px`, `data-slug`, a `tabIndex={-1}` `h2` (the rail's
+  focus target) and an `onVisible(index)` prop backed by an IntersectionObserver
+  at `threshold: 0.5`, fired only on the crossing INTO view. Passing no
+  `onVisible` (the home page) builds no observer.
+- `utils/seo.js` (new): `itemListJsonLd(products)` — a schema.org `ItemList` of
+  absolute product URLs built on `seoOrigin()`, dropping any row with neither
+  slug nor id, and `null` for an empty list. `useSeo.js` keeps the two
+  site-level graphs; Prompt 24 adds `breadcrumbJsonLd` here and Prompt 27 the
+  `Product` graph.
+- **Scroll snap** is on, desktop only: `scroll-snap-type: y proximity` on
+  `<html>` behind a `data-chapter-snap` attribute `Shop` sets while mounted,
+  with `scroll-snap-align: start` on the chapters. Off below 1025px and off
+  under `prefers-reduced-motion`. Measured: mid-chapter settle delta 0, boundary
+  settle ≤ ~165px onto chapter starts, and the sticky rail unaffected.
+- **`App.js`**: `Products` → `Shop`; the Prompt 08 `CategoryRoute` wrapper is
+  gone and `/category/:slug` renders `<Shop mode="category" />`. Four
+  `ComingSoon` routes remain (`/rituals`, `/rituals/:slug`, `/why-lamikaa`,
+  `/cart`).
+- **Removed with the listing**: `getCategoryScopeIds` and
+  `orderCategoriesHierarchically` from `utils/categories.js` (the category facet
+  was their only caller) and `getDeviceType` from `utils/helpers.js`.
+  `getDescendantIds` **stays** — `pages/Admin/AdminCategories.js` reads it.
+  `resolveCategory`, `categoryParam` and `getMainMenuCategories` are left for
+  the Prompt 35 sweep.
+
+
 ## 7. Admin panel
 
 - Shell `src/components/AdminLayout/AdminLayout.js` (1015): guard `useAdmin().isAuthenticated` → `<Navigate to="/admin" />`; 260 px MUI Drawer (temporary < 900 px, permanent ≥ 900) with sections Dashboard · Catalogue (Products, Categories, Reviews) · Sales (Orders, Returns, Payments, Coupons, Special Offers) · Storefront (Hero Section, FAQs) · Operations (Shipping, Users, Leads, Settings) · "Back to Store"; AppBar with theme toggle (shared `useThemeContext`), notifications (polls orders+leads every 30 s), avatar menu; `useAdminBodyClass()` adds `body.admin-area`; MUI theme from `buildAdminTheme(mode)` (indigo/slate, `#4f46e5`, `#0b1220`…); logo constants `LOGO_LIGHT/LOGO_WHITE` (old wordmark).
@@ -1286,8 +1361,8 @@ Storefront routes live inside `StorefrontShell` (`DealsConfigProvider` →
 | Path | Element | Owner of the real page |
 |---|---|---|
 | `/` | `pages/Home/Home` (**eagerly imported** — the LCP page) | 14–22 |
-| `/shop` | `pages/Products/Products` | 23 → `pages/Shop/Shop` |
-| `/category/:slug` | `pages/Products/Products` via `CategoryRoute` (passes `categorySlug`) | 24 → `<Shop mode="category" />` |
+| `/shop` | `pages/Shop/Shop` *(23)* | — |
+| `/category/:slug` | `<Shop mode="category" />` *(23)* | 24 (head, breadcrumb, JSON-LD, unknown-slug 404) |
 | `/category/rituals` | `<Navigate to="/rituals" replace />` | — |
 | `/product/:slug` | `pages/ProductDetails/ProductDetails` (numeric id resolves, then rewrites to the slug) | 25–27 |
 | `/rituals`, `/rituals/:slug` | `ComingSoon prompt="24"` | 24 |
@@ -1437,7 +1512,7 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/components/storefront/ProductGallery.*` | R | Media gallery with videos (Prompt 26). |
 | `src/components/storefront/{AddToCartBar,PriceBlock,QuantityStepper,VariantSelector,variantUtils,TrustBadges,DeliveryReturnsInfo,ReviewsSection,RelatedProducts,FrequentlyBoughtTogether,SocialProof,StarRating}.*` | K | Restyle; PriceBlock becomes placeholder-aware (05). |
 | `src/pages/Home/*` | R | New home composition (Prompts 14–22). |
-| `src/pages/Products/*` | R → `src/pages/Shop/*` | Filter-free chaptered listing (Prompt 23); old file deleted. |
+| `src/pages/Products/*` | **DONE (23)** → `src/pages/Shop/*` | Filter-free chaptered listing; the old page and its CSS are deleted. |
 | `src/pages/ProductDetails/*` | R | New PDP (Prompts 25–27). |
 | `src/pages/Checkout/*`, `OrderConfirmation/*`, `OrderHistory/*`, `Profile/*`, `Wishlist/*`, `SpecialOffers/*` | K | Restyle, logic preserved (Prompts 29–31). |
 | `src/pages/AboutUs/*` | R | siteContent-driven story (Prompt 28). |

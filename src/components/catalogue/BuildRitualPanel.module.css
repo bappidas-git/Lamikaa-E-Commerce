@@ -1,0 +1,69 @@
+/* =============================================================================
+ * BuildRitualPanel — the glass panel a listing closes on
+ * =============================================================================
+ * `.sf-section` supplies the vertical rhythm and GlassCard the surface (the
+ * strong glass plus the duo glow); neither is restated here. The panel is the
+ * full width of the listing column it sits in — it is the page's closing
+ * statement, not a card in a row of cards.
+ *
+ * THE CARDS ARE `compact`. Three photographed ritual cards inside a glass panel
+ * inside a page that has just shown eight product spreads is three more images
+ * than the moment needs; `compact` drops the photograph and keeps the step
+ * strip, which is the part that says what a routine IS.
+ * ========================================================================== */
+
+.section {
+  position: relative;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-8);
+  border-radius: var(--sf-radius-xl);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-5);
+}
+
+.cell {
+  min-width: 0;
+  /* The reveal animates a wrapper, so the card inside still fills its row. */
+  display: flex;
+}
+
+.cell > * {
+  width: 100%;
+}
+
+.skeleton {
+  width: 100%;
+}
+
+/* ---- The way through -----------------------------------------------------
+   Centred under the triptych: the shopper who wants the whole index is the one
+   who has just read all three. */
+.close {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .close > * {
+    width: 100%;
+  }
+}
+
+/* Three routines are a triptych; two columns would leave the third alone on a
+   row of its own. The panel's own column is at most ~1130px wide on the shop
+   page (the rail takes 220 of it), which is where three compact cards stop
+   being comfortable — so the triptych waits for the width the rail leaves. */
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sf-space-6);
+  }
+}

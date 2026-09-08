@@ -3,12 +3,10 @@
 // =============================================================================
 //
 // Every storefront entry point that links into the catalogue (the header top
-// menu, the "All Categories" dropdown, the mobile sidebar, the homepage "Shop
-// by Category" cards, the hero category bar and the product breadcrumb) builds
-// its link through `categoryPath()` here, and the listing page resolves the
-// slug back to a category through `resolveCategory()`. That keeps ONE canonical
-// URL scheme across the whole app so a category expressed in one place can
-// always be understood in another.
+// menu, the mega panel, the mobile sidebar, the homepage "Shop by Category"
+// cards and the product breadcrumb) builds its link through `categoryPath()`
+// here. That keeps ONE canonical URL scheme across the whole app so a category
+// expressed in one place can always be understood in another.
 //
 // CANONICAL URL SCHEME = A PATH OF SLUGS  (Prompt 08)
 // ---------------------------------------------------
@@ -19,13 +17,16 @@
 //
 // Slugs make for readable, shareable URLs and never change when ids are
 // reseeded. The numeric id is only ever used as a defensive fallback for a
-// category that is somehow missing a slug, and the listing page still resolves
-// a legacy numeric-id deep link for backward compatibility, rewriting it to the
-// slug form in place. The Meghali-era `/products?category=<slug>` form is
-// redirected to `/category/<slug>` by components/routing/LegacyRedirects.js.
+// category that is somehow missing a slug. The Meghali-era
+// `/products?category=<slug>` form is redirected to `/category/<slug>` by
+// components/routing/LegacyRedirects.js.
 //
-// `categoryParam()` survives as the FILTER TOKEN builder (the checkbox value in
-// the listing's category facet) — it is no longer a URL builder.
+// WHAT PROMPT 23 TOOK OUT. `getCategoryScopeIds()` and
+// `orderCategoriesHierarchically()` existed for the old listing's category
+// facet — the parent-includes-children checkbox tree in its filter sidebar. The
+// shop has no filters (brief §7.3), the category constraint is a ROUTE that
+// `api.getByCategorySlug()` resolves, and neither helper had another consumer,
+// so both are gone. `getDescendantIds()` stays: the admin still needs it.
 // =============================================================================
 import { ROUTES } from "./constants";
 
@@ -86,8 +87,12 @@ export const resolveCategory = (token, categories = []) => {
 
 /**
  * Collect the ids of every descendant of a category (children, grandchildren…)
- * by walking the `parentId` links. Used to apply the parent-includes-children
- * filtering rule.
+ * by walking the `parentId` links.
+ *
+ * KEPT FOR THE ADMIN (Prompt 23). Its storefront consumers were the listing's
+ * category facet — `getCategoryScopeIds` and `orderCategoriesHierarchically`,
+ * both deleted with the filter sidebar the shop no longer has. `AdminCategories`
+ * still walks the tree to stop a category being reparented under its own child.
  */
 export const getDescendantIds = (rootId, categories = []) => {
   const ids = new Set();
@@ -102,68 +107,6 @@ export const getDescendantIds = (rootId, categories = []) => {
     });
   }
   return ids;
-};
-
-/**
- * The set of category ids whose products belong to a selected category: the
- * category itself plus all of its descendants. This is the heart of the
- * PARENT-INCLUDES-CHILDREN rule — selecting "Electronics" returns Electronics,
- * Laptops, Audio and Smartphones products; selecting "Women's Ethnic Wear"
- * (which has no products of its own) returns its Sarees and Kurtas products.
- * Ids are returned as strings so they compare cleanly against `product.categoryId`.
- */
-export const getCategoryScopeIds = (categoryId, categories = []) => {
-  const ids = getDescendantIds(categoryId, categories);
-  ids.add(categoryId);
-  return new Set([...ids].map((id) => String(id)));
-};
-
-/**
- * Order a flat category list hierarchically for display: each top-level category
- * (by sortOrder, then name) immediately followed by its children, depth-first.
- * Returns the ordered array plus a `depthOf(id)` lookup so callers can indent
- * sub-categories. Makes the parent/child structure legible in the filter list
- * and dropdowns instead of the interleaved order a flat sortOrder sort produces.
- */
-export const orderCategoriesHierarchically = (categories = []) => {
-  const byParent = new Map();
-  categories.forEach((c) => {
-    const key = c.parentId == null ? "root" : String(c.parentId);
-    if (!byParent.has(key)) byParent.set(key, []);
-    byParent.get(key).push(c);
-  });
-  byParent.forEach((list) =>
-    list.sort(
-      (a, b) =>
-        (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
-        String(a.name).localeCompare(String(b.name))
-    )
-  );
-
-  const ordered = [];
-  const depth = new Map();
-  const walk = (parentKey, level) => {
-    (byParent.get(parentKey) || []).forEach((c) => {
-      depth.set(String(c.id), level);
-      ordered.push(c);
-      walk(String(c.id), level + 1);
-    });
-  };
-  walk("root", 0);
-
-  // Safety net: append any categories whose parent isn't in the list (orphans)
-  // so nothing silently disappears from a filter list.
-  if (ordered.length < categories.length) {
-    const seen = new Set(ordered.map((c) => String(c.id)));
-    categories.forEach((c) => {
-      if (!seen.has(String(c.id))) {
-        depth.set(String(c.id), 0);
-        ordered.push(c);
-      }
-    });
-  }
-
-  return { ordered, depthOf: (id) => depth.get(String(id)) || 0 };
 };
 
 /**

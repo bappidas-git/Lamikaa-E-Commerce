@@ -419,13 +419,6 @@ export const calculateCartTotal = (items) => {
   return items.reduce((total, item) => total + item.price * item.quantity, 0);
 };
 
-export const getDeviceType = () => {
-  const width = window.innerWidth;
-  if (width < 768) return "mobile";
-  if (width < 1024) return "tablet";
-  return "desktop";
-};
-
 export const copyToClipboard = async (text) => {
   try {
     await navigator.clipboard.writeText(text);

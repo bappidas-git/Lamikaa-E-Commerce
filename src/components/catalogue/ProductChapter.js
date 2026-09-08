@@ -46,10 +46,18 @@ import styles from "./ProductChapter.module.css";
 //   product  object   the catalogue row (required)
 //   index    number   0-based position — the chapter numeral and the glow tone
 //   total    number   how many chapters there are, for "Chapter 3 of 8"
-//   variant  "home" | "shop"   "shop" drops the 80svh floor (Prompt 23 adds the
-//                              index-rail hooks on top of `data-chapter`)
+//   variant  "home" | "shop"   "shop" is the listing form — a taller floor
+//                              (88svh), a scroll margin clear of the masthead,
+//                              a `data-slug` hook and a focusable heading, so
+//                              the shop's index rail can follow it and jump to it
 //   flip     boolean  put the words on the left and the pack on the right
-//   id       string   the section's own id — `product-<slug>` on the home page
+//   id       string   the section's own id — `product-<slug>` on the home page,
+//                     `chapter-<slug>` on the shop
+//   onVisible fn      called with this chapter's `index` the moment it crosses
+//                     into being at least half on screen. THE CHAPTER IS THE
+//                     ONLY THING THAT KNOWS how much of it is visible, so the
+//                     shop's index is TOLD rather than left to guess from
+//                     scroll offsets it would have to re-measure on every frame.
 // =============================================================================
 
 // At most five, and the seeded products carry four or five. A sixth chip would
@@ -64,6 +72,11 @@ const MEDIA_FADE = DURATION.slow * 1.5;
 // The plate's real layout widths: ~44vw of a 1440 desktop, ~92vw of a phone.
 const PLATE_WIDTHS = [480, 768, 1080];
 const PLATE_SIZES = "(max-width: 768px) 92vw, 44vw";
+
+// Half the chapter on screen is what counts as "the chapter you are reading".
+// One threshold, not a ramp: the index wants the CROSSING, and a ramp would
+// wake the observer on every fraction of a percent of a very tall section.
+const VISIBLE_THRESHOLD = 0.5;
 
 /** "07" — the chapter's own numeral, independent of the ritual step's. */
 export const chapterNumeral = (index) => String(Number(index) + 1).padStart(2, "0");
@@ -93,10 +106,47 @@ const ProductChapter = ({
   variant = "home",
   flip = false,
   id,
+  onVisible,
   className = "",
 }) => {
   const reduceMotion = useReducedMotion();
   const { addToCart } = useCart();
+  const isShop = variant === "shop";
+
+  // ---- "This chapter is the one being read" -------------------------------
+  // The callback is held in a ref so a caller that passes an inline arrow does
+  // not tear down and rebuild the observer on every render of the listing.
+  const sectionRef = useRef(null);
+  const onVisibleRef = useRef(null);
+  const watched = typeof onVisible === "function";
+  useEffect(() => {
+    onVisibleRef.current = onVisible;
+  }, [onVisible]);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (
+      !watched ||
+      !node ||
+      typeof window === "undefined" ||
+      typeof window.IntersectionObserver !== "function"
+    ) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Only the crossing INTO view is an event: the chapter leaving is the
+        // next one's arrival, and reporting both would make the index flicker
+        // between two answers on a slow scroll.
+        if (entry.isIntersecting) onVisibleRef.current?.(index);
+      },
+      { threshold: VISIBLE_THRESHOLD }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [index, watched]);
 
   // A brief "Added" confirmation; the Button variant owns the label swap and
   // the live region, this only holds the flag. Same gesture as ProductCard's.
@@ -149,14 +199,16 @@ const ProductChapter = ({
 
   return (
     <section
+      ref={sectionRef}
       id={id}
       data-chapter={index}
+      data-slug={p.slug || undefined}
       aria-labelledby={headingId}
       className={[
         "sf-section",
         styles.chapter,
         flip ? styles.flip : "",
-        variant === "shop" ? styles.shop : "",
+        isShop ? styles.shop : "",
         className,
       ]
         .filter(Boolean)
@@ -210,7 +262,17 @@ const ProductChapter = ({
                 </p>
               </div>
 
-              <h2 id={headingId} className={styles.name}>
+              {/* The shop's index rail jumps here and MOVES FOCUS here, so on
+                  the listing the heading is a programmatic focus target. It is
+                  `-1`, so it never joins the tab order — a visitor tabbing
+                  through eight chapters must not collect eight headings on the
+                  way. The home page's chapters have nothing that jumps to them
+                  and stay plain headings. */}
+              <h2
+                id={headingId}
+                tabIndex={isShop ? -1 : undefined}
+                className={styles.name}
+              >
                 {p.name}
               </h2>
 

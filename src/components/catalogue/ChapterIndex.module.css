@@ -1,0 +1,311 @@
+/* =============================================================================
+ * ChapterIndex — the sticky rail and the sticky strip
+ * =============================================================================
+ * MOBILE FIRST, and here that means the STRIP is the default: below 1025px the
+ * rail is not rendered at all (`display: none` — off the screen and out of the
+ * accessibility tree, so the eight products are never offered twice), and above
+ * it the strip goes the same way.
+ *
+ * TWO STICKY OFFSETS, both measured from the masthead:
+ *   strip   56px  — the header's height at <= 768px, so the band sits on its
+ *                   bottom edge; 64px between 769 and 1024, where the header is
+ *                   64px tall.
+ *   rail   112px  — the 64px header plus air. The same offset the chapter's own
+ *                   sticky media uses, so the pack and the rail hold the same
+ *                   line.
+ *
+ * Fully token-driven: no hardcoded colour, radius, shadow or duration.
+ * ========================================================================== */
+
+/* The rail's row height. Every row is the same height, which is what lets the
+   marker be ONE dot that slides rather than eight that fade. 44px is the tap
+   target, so a rail row is a comfortable pointer target as well as a legible
+   one. */
+.rail {
+  --sf-rail-row: 44px;
+  display: none;
+}
+
+/* =============================================================================
+ * RAIL  (>= 1025px)
+ * ========================================================================== */
+
+@media (min-width: 1025px) {
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sf-space-5);
+    position: sticky;
+    top: 112px;
+    /* A rail taller than the screen would put "Back to top" out of reach. The
+       eight seeded chapters are 352px, so this only ever bites on a very short
+       window or a much longer range. */
+    max-height: calc(100svh - 112px - var(--sf-space-6));
+    overflow-y: auto;
+    /* No scrollbar gutter stealing width from a 220px column. */
+    scrollbar-width: thin;
+  }
+
+  .railBody {
+    display: grid;
+    grid-template-columns: 2px minmax(0, 1fr);
+    gap: var(--sf-space-4);
+  }
+}
+
+/* ---- The progress track -------------------------------------------------- */
+
+/* 2px of --sf-color-surface-2 with a signature-gradient fill on top. The fill's
+   height is a custom property written by the component on scroll, so a scroll
+   frame costs one style write and no React render. */
+.track {
+  position: relative;
+  width: 2px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface-2);
+  overflow: hidden;
+}
+
+.fill {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: calc(var(--sf-chapter-progress, 0) * 100%);
+  background-image: var(--sf-gradient-signature);
+  /* Not a transition on `height` for the sake of animation — the property is
+     rewritten every scroll frame anyway. It is here so a JUMP (which moves the
+     fill in one step) reads as travel rather than as a jump cut. */
+  transition: height var(--sf-duration-fast) var(--sf-ease);
+}
+
+/* ---- The list ------------------------------------------------------------ */
+
+.list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  min-width: 0;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  width: 100%;
+  min-height: var(--sf-rail-row);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sf-color-text-muted);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm); /* 14px, as the rail spec asks */
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-normal);
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.link:hover {
+  color: var(--sf-color-text);
+}
+
+.link:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.linkActive {
+  color: var(--sf-color-gold);
+  font-weight: var(--sf-font-semibold);
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The marker. One dot per row, but only the active row's is painted — which is
+   what makes the change read as a dot MOVING down the rail: every dot sits at
+   the same x, the ink simply arrives at the next one. Scaling from 0 rather
+   than fading alone keeps the movement legible at 8px. */
+.dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-image: var(--sf-gradient-signature);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity var(--sf-duration-fast) var(--sf-ease),
+    transform var(--sf-duration-fast) var(--sf-ease);
+}
+
+.linkActive .dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.top {
+  align-self: flex-start;
+}
+
+/* =============================================================================
+ * STRIP  (<= 1024px)
+ * ========================================================================== */
+
+.strip {
+  position: sticky;
+  /* Under the 64px masthead at 769-1024; the 56px override is below. */
+  top: 64px;
+  z-index: var(--sf-z-sticky);
+  /* `.sf-glass` supplies the ground, the blur and the hairline; the band wants
+     a rule under it only. */
+  border-inline: 0;
+  border-top: 0;
+  border-radius: 0;
+  /* 52px between 769 and 1024, 48px at <= 768 (below): the band is the pill's
+     36px plus air, and it is a flex row so the pills stay centred in it
+     whichever of the two heights is in force. */
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding-block: var(--sf-space-2);
+  transition: opacity var(--sf-duration-fast) var(--sf-ease);
+}
+
+/* An open drawer, modal or search overlay is the thing being read; the band
+   steps out of the way rather than floating over the scrim. `visibility`, not
+   `display`, so nothing under it moves while an overlay opens and closes. */
+:global(body[data-drawer-open]) .strip {
+  visibility: hidden;
+  opacity: 0;
+}
+
+@media (min-width: 1025px) {
+  .strip {
+    display: none;
+  }
+}
+
+.pills {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  /* The band is full-bleed; its CONTENT keeps the container's gutter, so the
+     first pill lines up with the chapter text beneath it. */
+  padding: 0 var(--sf-space-5);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.pills::-webkit-scrollbar {
+  display: none;
+}
+
+.pillItem {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  height: 36px;
+  padding-inline: var(--sf-space-4);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface);
+  color: var(--sf-color-text-secondary);
+  font-family: var(--sf-font-family);
+  font-size: 0.8125rem;
+  font-weight: var(--sf-font-medium);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast), color var(--sf-transition-fast);
+}
+
+/* The pill is 36px tall by design (a 48px band cannot hold a 44px control), so
+   the TOUCH TARGET is grown past the ink instead: an inert 44px overlay,
+   centred on the pill, that costs no layout. */
+.pill::after {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+
+.pill:hover {
+  color: var(--sf-color-text);
+  border-color: var(--sf-color-border-strong);
+  background: var(--sf-color-surface-hover);
+}
+
+.pill:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* Active = the gold fill under its near-black label — the same pair
+   `.sf-chip--active` uses, so an active pill and an active chip agree. */
+.pillActive,
+.pillActive:hover {
+  background: var(--sf-color-emerald);
+  border-color: var(--sf-color-emerald);
+  color: var(--sf-color-emerald-contrast);
+  font-weight: var(--sf-font-semibold);
+}
+
+.pillNumeral {
+  font-size: var(--sf-text-xs);
+  opacity: 0.7;
+}
+
+.pillActive .pillNumeral {
+  opacity: 0.75;
+}
+
+/* ---- <= 768: the masthead is 56px and the band is 48px ------------------- */
+
+@media (max-width: 768px) {
+  .strip {
+    top: 56px;
+    min-height: 48px;
+    padding-block: var(--sf-space-1);
+  }
+
+  .pills {
+    padding-inline: var(--sf-space-4);
+  }
+}
+
+/* ---- Reduced motion ------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fill,
+  .dot,
+  .pill,
+  .strip {
+    transition: none;
+  }
+}
