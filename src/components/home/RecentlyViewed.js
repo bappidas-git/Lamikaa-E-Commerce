@@ -17,8 +17,8 @@ import styles from "./RecentlyViewed.module.css";
 // always read it back. Removing the rail would have deleted a shipped feature
 // to make a redesign tidier, which the programme's first guardrail forbids.
 // Everything else on the old page — the collection stories, the edit grid, the
-// offers rail, the craft interlude, the trending rail — was Meghali-era
-// merchandising with no such claim, and Prompt 22 deletes all of it.
+// offers rail, the craft interlude, the trending rail — was merchandising from
+// the previous catalogue with no such claim, and Prompt 22 deletes all of it.
 //
 // WHAT WAS PORTED, unchanged in behaviour, from the old Home.js:
 //

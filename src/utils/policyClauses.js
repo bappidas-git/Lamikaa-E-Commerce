@@ -20,7 +20,7 @@ import { SUPPORTED_CURRENCIES } from "./storeSettings";
 // utils/contentBlocks.js) so they typeset exactly like the clauses above them.
 // This is the whole of the live-clause logic from the Terms page this
 // replaced — `currencyName`, the tax sentence and `codClause` — lifted out of a
-// component that also carried nine hard-coded Meghali-era clauses. The three
+// component that also carried nine hard-coded pre-rebuild clauses. The three
 // hard-coded rupee shipping rates it printed are NOT lifted: rates come from
 // `shipping.getMethods()` or they do not appear at all.
 //

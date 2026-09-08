@@ -5,7 +5,7 @@ import styles from "./SocialProof.module.css";
 // =============================================================================
 // SocialProof — ratings/reviews summary, REAL DATA ONLY
 // =============================================================================
-// Ethics guardrail (see STOREFRONT_UX_GUIDELINES.md):
+// Ethics guardrail (the programme's honest-data rule):
 //   This component is deliberately built so it CANNOT display a fabricated
 //   signal. It accepts only numbers — an aggregate `rating` and a `count` of
 //   real ratings — never free-typed claims like "Bestseller!" or "10k sold".

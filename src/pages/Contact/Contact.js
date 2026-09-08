@@ -71,7 +71,7 @@ const EMPTY_LEAD = {
  * printing a dead one.
  *
  * Ported from the page this replaces, notes and all — with the note copy
- * rewritten for a skincare range rather than a saree house.
+ * rewritten for the LAMIKAA range.
  */
 export const buildChannels = ({ phone, email, phoneHref, emailHref, whatsappUrl }) =>
   [

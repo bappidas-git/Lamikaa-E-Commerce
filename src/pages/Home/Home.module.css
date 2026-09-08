@@ -14,7 +14,7 @@
 
    Gone with the old sections: `.section` / `.sectionTight` / `.ruled` /
    `.band` / `.bandSunken`, the story grid, the edit grid, the offers rail, the
-   craft-band weave, the trending rail, the countdown, the promises row, the
+   craft band, the trending rail, the countdown, the promises row, the
    `SectionHeader` cluster (`ui/SectionHeading` replaced it) and all three rail
    treatments — the one rail left on the page is the compact recently-viewed
    track, and it is styled in RecentlyViewed.module.css beside its component.

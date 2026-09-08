@@ -19,9 +19,6 @@
 //     can produce, which is what the zero-result grep in Prompt 05 checks for
 //   • motion comes from theme/motion.js factories and stops under
 //     `prefers-reduced-motion`
-//
-// Live examples of every component in every state are at /_playground
-// (src/pages/_Playground) until Prompt 35 removes that route.
 // =============================================================================
 
 export { default as Accordion } from "./Accordion";

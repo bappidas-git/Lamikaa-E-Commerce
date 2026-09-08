@@ -70,9 +70,6 @@ const SpecialOffers = React.lazy(() => import("./pages/SpecialOffers/SpecialOffe
 const Wishlist = React.lazy(() => import("./pages/Wishlist/Wishlist"));
 const Search = React.lazy(() => import("./pages/Search/Search"));
 const NotFound = React.lazy(() => import("./pages/NotFound/NotFound"));
-// TEMPORARY (Prompt 05, removed by Prompt 35): the visual QA surface for the
-// shared UI primitives. Unlinked from the navigation and from the sitemap.
-const Playground = React.lazy(() => import("./pages/_Playground/Playground"));
 
 // Admin Pages
 // The admin SHELL, not just the admin pages. It was the one eager import left
@@ -154,8 +151,7 @@ function StorefrontShell() {
                 <Routes location={location}>
                   {/* Every pre-rebrand URL, redirected before anything else
                       can claim it. The old paths exist ONLY inside this array
-                      (components/routing/LegacyRedirects.js), which is what
-                      Prompt 35's identifier sweep has left to clean up. */}
+                      (components/routing/LegacyRedirects.js). */}
                   {legacyRoutes}
 
                   <Route path={ROUTES.HOME} element={<Home />} />
@@ -224,8 +220,6 @@ function StorefrontShell() {
                   {/* The overlay's ranking as a page: shareable, bookmarkable
                       and noindex. `/products?search=` redirects here. */}
                   <Route path={ROUTES.SEARCH} element={<Search />} />
-                  {/* TEMPORARY — primitive playground, deleted by Prompt 35. */}
-                  <Route path="/_playground" element={<Playground />} />
                   {/* A real 404 — never a redirect to the homepage. */}
                   <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
                 </Routes>

@@ -43,10 +43,10 @@
  *   B4 TYPE        .sf-gradient-text  .sf-eyebrow  .sf-eyebrow--rule
  *                  .sf-numeral  .sf-visually-hidden
  *   B5 MEDIA       .sf-placeholder-media
- *   A1 BUTTONS     .sf-btn  --emerald  --gold  --outline-gold  --ghost
+ *   A1 BUTTONS     .sf-btn  --primary  --outline-gold  --ghost
  *                          --sm  --lg  --block
  *   A2 CHIPS       .sf-chip  .sf-chip--active  .sf-badge-discount
- *                  .sf-pill-save  .sf-ribbon-premium
+ *                  .sf-pill-save
  *                  .sf-flag  .sf-flag-trending  .sf-flag-hot
  *   A3 CARD        .sf-card  .sf-card--hover
  *   A4 SKELETON    .sf-skeleton  .sf-skeleton--text  .sf-skeleton--block
@@ -429,19 +429,16 @@
   transform: translateY(-1px);
 }
 
-/* Primary — the gold button, and the only solid accent fill the palette allows.
-   Legacy class name (`--emerald`, 188 usages) kept until Prompt 35 renames it;
-   in this palette it is champagne gold under a near-black label at 13.4:1,
-   lifting to gold-light with a champagne shadow under it. */
-.sf-btn--emerald,
-.sf-btn--gold {
-  background-color: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
-  border-color: var(--sf-color-emerald);
+/* Primary — the gold button, and the only solid accent fill the palette allows:
+   champagne gold under a near-black label at 13.4:1, lifting to gold-light with
+   a champagne shadow under it. */
+.sf-btn--primary {
+  background-color: var(--sf-color-cta);
+  color: var(--sf-color-cta-contrast);
+  border-color: var(--sf-color-cta);
 }
 
-.sf-btn--emerald:hover,
-.sf-btn--gold:hover {
+.sf-btn--primary:hover {
   background-color: var(--sf-color-gold-light);
   border-color: var(--sf-color-gold-light);
   box-shadow: 0 8px 24px
@@ -571,42 +568,20 @@
   line-height: 1;
 }
 
-/* Gold "PREMIUM" mark — PDP / hero. A hairline pill over a breath of champagne;
-   the gradient fill would shout beside the product. The label is the bright
-   gold, not the deep one: on a near-black ground the deep gold is a 4.7:1
-   squeak where the champagne is 10.5:1. */
-.sf-ribbon-premium {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sf-space-1);
-  padding: var(--sf-space-1) var(--sf-space-3);
-  background: var(--sf-color-primary-soft);
-  color: var(--sf-color-gold);
-  border: 1px solid color-mix(in srgb, var(--sf-color-gold) 45%, transparent);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  line-height: 1;
-  border-radius: var(--sf-radius-pill);
-}
-
 /* Merchant flag marks — TRENDING / HOT.
-   The third kind of mark a product can carry, beside the discount badge and the
-   gold PREMIUM ribbon, and set from the merchant's own switch in
-   Admin → Products → Visibility & Flags.
+   The second kind of mark a product can carry, beside the discount badge, and
+   set from the merchant's own switch in Admin → Products → Visibility & Flags.
 
    They deliberately do NOT go on the photograph. Its corners are already spoken
-   for — discount top-left, ribbon top-right, heart under it, out-of-stock across
-   the foot — and the card already steps those around each other by container
-   query; a fifth and a sixth mark up there would print on top of one another on
-   a 166px plate. These are metadata, so they are set in the TEXT STACK beside
-   the brand line instead: quieter than a sticker, legible at every card width,
-   and unable to collide with anything.
+   for — discount top-left, heart top-right, out-of-stock across the foot — and
+   the card already steps those around each other by container query; a fourth
+   and a fifth mark up there would print on top of one another on a 166px plate.
+   These are metadata, so they are set in the TEXT STACK beside the brand line
+   instead: quieter than a sticker, legible at every card width, and unable to
+   collide with anything.
 
-   Geometry follows the ribbon (line-height 1 at --sf-text-xs) so a row of marks
-   stays optically level whatever mix of them a product carries. Colour comes
+   Geometry follows the discount badge (line-height 1 at --sf-text-xs) so a row
+   of marks stays optically level whatever mix of them a product carries. Colour comes
    from the concern accents — neon pink for trending, violet for hot — and never
    from --sf-color-danger: HOT is a merchandising note, not an error. */
 .sf-flag {
@@ -690,16 +665,16 @@ a.sf-chip {
 
 /* Active = the gold fill under its near-black label (a fill/label pair). */
 .sf-chip--active {
-  background: var(--sf-color-emerald);
-  border-color: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
+  background: var(--sf-color-cta);
+  border-color: var(--sf-color-cta);
+  color: var(--sf-color-cta-contrast);
   font-weight: var(--sf-font-semibold);
 }
 
 .sf-chip--active:hover {
-  background: var(--sf-color-emerald-hover);
-  border-color: var(--sf-color-emerald-hover);
-  color: var(--sf-color-emerald-contrast);
+  background: var(--sf-color-cta-hover);
+  border-color: var(--sf-color-cta-hover);
+  color: var(--sf-color-cta-contrast);
 }
 
 /* =============================================================================

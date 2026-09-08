@@ -17,8 +17,8 @@
 //
 //     npm run test:live
 //
-// Admin credentials come from LIVE_ADMIN_EMAIL / LIVE_ADMIN_PASSWORD and fall
-// back to the seeded admin in backend-developer-guideline/postman-api-collection.json.
+// Admin credentials come from LIVE_ADMIN_EMAIL / LIVE_ADMIN_PASSWORD; without
+// them the admin half of the run cannot authenticate and is reported as such.
 // =============================================================================
 
 const live = process.env.LIVE_API === "1" ? describe : describe.skip;
@@ -151,8 +151,10 @@ live("Live API — " + BASE_URL, () => {
   test("service is pointed at a live API, not the mock server", () => {
     expect(IS_MOCK_API).toBe(false);
     // Whatever host .env names, so this suite can be run against staging — and
-    // must be: it WRITES. The one thing it insists on is that the URL is not
-    // the mock server and carries the versioned API prefix.
+    // must be: it WRITES. Production is https://core.lamikanaturals.com/api/v1
+    // (.env.production) and is exactly what this must NOT be pointed at. The one
+    // thing the assertion insists on is that the URL is not the mock server and
+    // carries the versioned API prefix.
     expect(BASE_URL).toMatch(/^https:\/\/.+\/api\/v1$/);
     expect(api.defaults.baseURL).toBe(BASE_URL);
   });
