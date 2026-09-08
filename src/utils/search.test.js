@@ -164,7 +164,7 @@ describe("rankProducts", () => {
 
   it("returns nothing for a query the catalogue cannot answer", () => {
     expect(rank("qwertyuiop")).toEqual([]);
-    expect(rank("mekhela chador")).toEqual([]);
+    expect(rank("cordless drill")).toEqual([]);
   });
 
   it("finds a product by the display name of a category it lives in", () => {

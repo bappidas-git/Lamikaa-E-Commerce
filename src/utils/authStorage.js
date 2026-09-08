@@ -2,7 +2,7 @@
 // Customer session storage ("user" + "token")
 // =============================================================================
 //
-// Storage policy (intentional — see prompt_testing/09_authentication_and_session.md):
+// Storage policy (intentional):
 //   - Auth is SESSION-SCOPED by default (sessionStorage: per-tab, cleared when
 //     the browser closes). Checking "Remember me" at login opts the session
 //     into localStorage so it survives browser restarts.

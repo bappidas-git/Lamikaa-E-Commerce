@@ -1,10 +1,7 @@
 import { ROUTES } from "./constants";
 import { productPath } from "./helpers";
 import { categoryPath, categoryParam, concernPath, ritualPath } from "./categories";
-import {
-  LEGACY_PATH_REDIRECTS,
-  RETIRED_CATEGORY_SLUGS,
-} from "../components/routing/LegacyRedirects";
+import { LEGACY_PATH_REDIRECTS } from "../components/routing/LegacyRedirects";
 
 // =============================================================================
 // The LAMIKAA route map (Prompt 08)
@@ -12,11 +9,11 @@ import {
 // Twenty-odd files now build their links through four helpers instead of typing
 // a path. That is only an improvement while the helpers agree with the <Route>
 // table in App.js — so these pin the shapes both sides depend on, and pin that
-// the Meghali-era paths exist nowhere but the redirect table.
+// the pre-rebuild paths exist nowhere but the redirect table.
 // =============================================================================
 
 describe("ROUTES", () => {
-  it("has no Meghali-era path left in the table", () => {
+  it("has no pre-rebuild path left in the table", () => {
     const retired = ["/products", "/help", "/support", "/privacy", "/terms", "/refund", "/cookies"];
     Object.values(ROUTES).forEach((path) => {
       expect(retired).not.toContain(path);
@@ -103,7 +100,11 @@ describe("the legacy redirect table", () => {
     });
   });
 
-  it("retires the Meghali collection slugs rather than routing them at a category", () => {
-    expect(RETIRED_CATEGORY_SLUGS).toEqual(["muga-silk", "pat-silk", "eri-silk"]);
+  it("names no retired catalogue slug of its own", () => {
+    // A slug from the old catalogue is just a slug nobody has: /category/<slug>
+    // 404s it, the same as a typo. A hard-coded list here would be a second copy
+    // of a catalogue this build does not carry, drifting the moment one changes.
+    const froms = LEGACY_PATH_REDIRECTS.map((r) => r.from).join(" ");
+    expect(froms).not.toMatch(/category|\?/);
   });
 });

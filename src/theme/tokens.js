@@ -17,7 +17,7 @@ import { formatCurrency } from "../utils/helpers";
 //      component code: which trust badges to show, the returns window, and which
 //      Average-Order-Value modules are enabled.
 //
-// ETHICS BOUNDARY (read STOREFRONT_UX_GUIDELINES.md):
+// ETHICS BOUNDARY:
 //   The values here are *store-owner-attested policy* (e.g. "we offer 7-day
 //   returns", "payments are secure") — legitimately configurable copy. They are
 //   NOT live "social proof" or "urgency" signals. Anything that implies live

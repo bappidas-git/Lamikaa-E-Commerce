@@ -3,7 +3,7 @@
 // =============================================================================
 // Two things want to write `document.title`:
 //
-//   * StoreSettingsContext, which sets the store-wide default ("Meghali's Silk
+//   * StoreSettingsContext, which sets the store-wide default ("<store name>
 //     — <tagline>") from Admin → Settings > General;
 //   * a page with a title of its own — today the PDP, which uses the product's
 //     Admin → Products → SEO > Meta Title.

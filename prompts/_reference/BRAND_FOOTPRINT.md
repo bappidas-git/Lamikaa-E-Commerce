@@ -8,18 +8,25 @@ Total hits: **531** across **62** files.
 
 ## 0. Summary by group
 
-| Group | Files | Hits | Cleanup owner |
-|---|---|---|---|
-| A · Seed data (db.json) | 1 | 204 | Prompt 06 (reseed) → verified by 36 |
-| B · Public shell (index.html, manifest) | 2 | 24 | Prompt 02 (index.html/manifest/favicons) → verified by 36 |
-| C · Env / package | 3 | 4 | Prompt 02 (.env app name) + 36 (.env comments, package-lock unaffected) |
-| D · Theme tokens & global CSS | 4 | 9 | Prompt 03 (token rewrite) + 35 (token names, comments) |
-| E · Constants & utils | 4 | 31 | Prompt 02 (constants → brand config) + 36 |
-| F · API layer & live test | 2 | 3 | Prompt 07 (comments) + 36 (live test BASE_URL, address fixtures) |
-| G · Contexts | 1 | 1 | Prompt 03 |
-| H · Admin panel | 4 | 10 | Prompt 32/34 (admin) + 35/36 |
-| I · Storefront components | 20 | 45 | Prompts 09–13, 15 (rebuilds) + 35 (comments, class names) |
-| J · Storefront pages | 21 | 200 | Prompts 16–31 (rebuilds/restyles) + 35/36 |
+| Group | Files | Hits | Cleanup owner | Status |
+|---|---|---|---|---|
+| A · Seed data (db.json) | 1 | 204 | Prompt 06 (reseed) → verified by 36 | cleared — verify in 36 |
+| B · Public shell (index.html, manifest) | 2 | 24 | Prompt 02 (index.html/manifest/favicons) → verified by 36 | cleared — verify in 36 |
+| C · Env / package | 3 | 4 | Prompt 02 (.env app name) + 36 (.env comments, package-lock unaffected) | cleared — verify in 36 |
+| D · Theme tokens & global CSS | 4 | 9 | Prompt 03 (token rewrite) + 35 (token names, comments) | **done (35)** |
+| E · Constants & utils | 4 | 31 | Prompt 02 (constants → brand config) + 36 | **done (35)** |
+| F · API layer & live test | 2 | 3 | Prompt 07 (comments) + 36 (live test BASE_URL, address fixtures) | **done (35)** |
+| G · Contexts | 1 | 1 | Prompt 03 | **done (35)** |
+| H · Admin panel | 4 | 10 | Prompt 32/34 (admin) + 35/36 | **done (35)** |
+| I · Storefront components | 20 | 45 | Prompts 09–13, 15 (rebuilds) + 35 (comments, class names) | **done (35)** |
+| J · Storefront pages | 21 | 200 | Prompts 16–31 (rebuilds/restyles) + 35/36 | **done (35)** |
+
+> **Status legend.** `done (35)` — every hit in the group is cleared AND the
+> group's code identifiers (token names, class names, variables, comments, test
+> names) were swept by Prompt 35. `cleared — verify in 36` — no hit survives the
+> §3 grep, but the group is content/assets/seed data, so Prompt 36 owns the
+> confirmation. Prompt 35 re-ran §3 over the whole repository and over `build/`:
+> **both return zero**, so no group carries an outstanding hit.
 
 ## 1. Identifiers that are brand-bound but do not contain a searched term
 
@@ -42,6 +49,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 ### A · Seed data (db.json)
 
 #### `db.json` — 204 hits
+
+**Status: cleared — verify in 36** — no hit below survives the §3 grep;
+Prompt 36 owns the confirmation for content, assets and seed data.
 
 - `5` — seed value — `"title": "The Bridal Muga Edit",`
 - `6` — seed value — `"subtitle": "Heirloom Mekhela Chador woven to order in undyed Sualkuchi Muga",`
@@ -252,6 +262,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `public/index.html` — 21 hits
 
+**Status: cleared — verify in 36** — no hit below survives the §3 grep;
+Prompt 36 owns the confirmation for content, assets and seed data.
+
 - `17` — old logo asset URL — `href="https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png"`
 - `23` — code / copy — `NOTE ON THE ARTWORK: the shipped icons draw the gold Assamese silk motif on`
 - `59` — copy string — `content="Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts. Naturally golden Muga, soft mat…`
@@ -276,6 +289,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `public/manifest.json` — 3 hits
 
+**Status: cleared — verify in 36** — no hit below survives the §3 grep;
+Prompt 36 owns the confirmation for content, assets and seed data.
+
 - `2` — copy string — `"short_name": "Meghali's Silk",`
 - `3` — copy string — `"name": "Meghali's Silk",`
 - `4` — copy string — `"description": "Handwoven Assamese silk from Sualkuchi — Muga, Pat and Eri Mekhela Chador, sarees, shawls, blouses and gifts.",`
@@ -284,20 +300,32 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `.env` — 2 hits
 
+**Status: cleared — verify in 36** — no hit below survives the §3 grep;
+Prompt 36 owns the confirmation for content, assets and seed data.
+
 - `5` — URL / domain — `# Default: the live Laravel API on Cloudways (https://core.meghalisilk.in).`
 - `30` — code / copy — `REACT_APP_NAME=Meghali's Silk`
 
 #### `.env.production` — 1 hit
 
+**Status: cleared — verify in 36** — no hit below survives the §3 grep;
+Prompt 36 owns the confirmation for content, assets and seed data.
+
 - `21` — code / copy — `REACT_APP_NAME=Meghali's Silk`
 
 #### `package-lock.json` — 1 hit
+
+**Status: cleared — verify in 36** — no hit below survives the §3 grep;
+Prompt 36 owns the confirmation for content, assets and seed data.
 
 - `7733` — copy string — `"integrity": "sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==",`
 
 ### D · Theme tokens & global CSS
 
 #### `src/theme/storefront-tokens.css` — 5 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `29` — comment — `* THE MEGHALI'S SILK EDITORIAL PALETTE (source of truth — read this first)`
 - `38` — old logo asset URL — `* Light logo → …/v1787592407/meghali-silk-logo.png (gold on transparent)`
@@ -307,20 +335,32 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/theme/tokens.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `59` — comment — `// Which trust badges appear near the buy box, in order. For Meghali's Silk`
 - `60` — comment — `// this maps to: 7-Day Returns / Authentic Silk / Free Shipping / Support.`
 
 #### `src/theme/colors.js` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `9` — comment — `// the Meghali's Silk logo artwork); keep the two in sync.`
 
 #### `src/App.css` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — comment — `* GLOBAL STYLES — Meghali's Silk storefront`
 
 ### E · Constants & utils
 
 #### `src/utils/constants.js` — 26 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — constant — `export const APP_NAME = process.env.REACT_APP_NAME || "Meghali's Silk";`
 - `3` — constant — `export const APP_TAGLINE = "Heritage handloom silk, woven for you";`
@@ -351,15 +391,24 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/utils/heroConfig.js` — 3 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `144` — old placeholder image URL — `"https://placehold.co/1600x900/1D1A16/8A6118?text=Handwoven+in+Assam";`
 - `151` — copy string — `title: "Handwoven Assamese Silk",`
 - `153` — copy string — `"Muga, Pat and Eri from the looms of Sualkuchi — woven a metre a day.",`
 
 #### `src/utils/categories.js` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `69` — comment — `* (which has no products of its own) returns its Sarees and Kurtas products.`
 
 #### `src/utils/documentTitle.js` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `6` — comment — `// * StoreSettingsContext, which sets the store-wide default ("Meghali's Silk`
 
@@ -367,10 +416,16 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/services/api.live.test.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `72` — copy string — `state: "Assam",`
 - `152` — URL / domain — `expect(BASE_URL).toBe("https://core.meghalisilk.in/api/v1");`
 
 #### `src/services/baseURL.js` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `7` — comment — `// Production (default) REACT_APP_API_URL=https://core.meghalisilk.in/api/v1`
 
@@ -378,11 +433,17 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/context/ThemeContext.js` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `40` — comment — `// Meghali's Silk. With no saved choice we default to dark; only an explicit`
 
 ### H · Admin panel
 
 #### `src/pages/Admin/AdminHeroSection.js` — 4 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `91` — copy string — `{ label: "Bridal Muga", value: "linear-gradient(135deg,#1D1A16 0%,#3A2E1B 60%,#8A6118 100%)" },`
 - `92` — copy string — `{ label: "Sualkuchi", value: "linear-gradient(135deg,#322C25 0%,#6B5030 55%,#C8912A 100%)" },`
@@ -391,15 +452,24 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/components/AdminLayout/AdminLayout.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `44` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";`
 - `46` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";`
 
 #### `src/pages/Admin/AdminFaqs.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `61` — comment — `// "does this Mekhela arrive stitched?" sits ahead of the store-wide one.`
 - `814` — UI placeholder text — `placeholder="e.g. Does a Mekhela Chador arrive stitched?"`
 
 #### `src/pages/Admin/AdminLogin.js` — 2 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `26` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";`
 - `28` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";`
@@ -407,6 +477,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 ### I · Storefront components
 
 #### `src/components/SearchModal/SearchModal.js` — 13 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `20` — copy string — `"Muga Mekhela Chador",`
 - `21` — copy string — `"Pat silk saree",`
@@ -424,6 +497,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/components/Footer/Footer.js` — 8 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `15` — comment — `* Footer — Meghali's Silk editorial close.`
 - `18` — comment — `* 1. the invitation — serif "Letters from the loom" + the newsletter row`
 - `45` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";`
@@ -435,6 +511,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/components/Header/Header.js` — 4 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `57` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";`
 - `167` — comment — `// The old "Mega Silk" / "Bridal" chips bound themselves to a live category by`
 - `168` — comment — `// regex with a ?search= fallback. The reseeded Assamese catalogue promotes`
@@ -442,78 +521,132 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/components/SidebarMenu/SidebarMenu.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `40` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";`
 - `42` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";`
 
 #### `src/components/HeroSection/HeroSection.module.css` — 2 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — comment — `* HeroSection — Meghali's Silk cinematic opening`
 - `201` — CSS class name — `.weave {`
 
 #### `src/components/AuthModal/AuthModal.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `26` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592407/meghali-silk-logo.png";`
 - `28` — old logo asset URL — `"https://res.cloudinary.com/v8vrixwq/image/upload/f_auto,q_auto,w_520/v1787592405/meghali-silk-logo-white.png";`
 
 #### `src/components/SidebarMenu/SidebarMenu.module.css` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `* SidebarMenu — Meghali's Silk editorial menu (mobile primary navigation)`
 
 #### `src/components/CartDrawer/CartDrawer.js` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `340` — code / copy — `Nothing chosen yet. The looms of Sualkuchi are waiting.`
 
 #### `src/components/AnnouncementBar/AnnouncementBar.js` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `34` — copy string — `{ id: "origin", text: "Handwoven in Sualkuchi, Assam" },`
 
 #### `src/components/Header/Header.module.css` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — code / copy — `Header — Meghali's Silk editorial masthead`
 
 #### `src/components/ErrorBoundary/ErrorBoundary.js` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `42` — comment — `// Meghali's Silk brand palette mirrored here as literals on purpose: this`
 
 #### `src/components/SearchModal/SearchModal.module.css` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — comment — `* SearchModal — Meghali's Silk editorial search overlay`
 
 #### `src/components/BottomNav/BottomNav.module.css` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `* BottomNav — Meghali's Silk mobile bar`
 
 #### `src/components/TrustStrip/TrustStrip.js` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `19` — copy string — `{ id: "authentic", label: "Authentic Silk", icon: "mdi:certificate-outline" },`
 
 #### `src/components/Footer/Footer.module.css` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `* Footer — Meghali's Silk editorial close`
 
 #### `src/components/ReviewModal/ReviewModal.js` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `281` — UI placeholder text — `placeholder="How does the weave feel? How true is the colour? What would you tell a friend?"`
 
 #### `src/components/storefront/ProductCard.module.css` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `249` — copy string — `in the two-up phone listing) "MEGHALI'S SILK" and one mark cannot share a`
 
 #### `src/components/storefront/ProductCard.js` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `17` — comment — `// ProductCard — the reusable Meghali's Silk storefront product card`
 
 #### `src/components/HeroSection/HeroSection.js` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `390` — code / copy — `<div className={styles.weave} />`
 
 #### `src/components/AuthModal/AuthModal.module.css` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `12` — comment — `* Meghali's Silk"). Everything else is quiet Inter: tracked uppercase for`
 
 ### J · Storefront pages
 
 #### `src/pages/AboutUs/AboutUs.js` — 79 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — comment — `// OUR STORY — Meghali's Silk, route '/about'`
 - `15` — comment — `// 3. THE FIBRE — Muga, Pat and Eri as a hairline list, closed by the`
@@ -597,6 +730,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/ProductDetails/ProductDetails.js` — 25 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `152` — comment — `// The silk spec rows, in the order the design shows them.`
 - `153` — constant — `const SILK_SPEC_LABELS = [`
 - `157` — copy string — `"Saree Length",`
@@ -625,6 +761,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/AboutUs/AboutUs.module.css` — 17 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `15` — code / copy — `silk names, the years and the figures. Inter carries the body and the`
 - `20` — code / copy — `loom, the pull-quote) so the page breathes between chapters. They work`
 - `302` — code / copy — `3. THE FIBRE — three silks as hairline rows`
@@ -644,6 +783,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 - `821` — CSS class name — `.silkTerm {`
 
 #### `src/pages/Products/Products.js` — 17 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `130` — comment — `// The Assamese fabric vocabulary — the "Fabric" facet. Labels and match tokens`
 - `131` — comment — `// mirror 'variants[].attributes.Fabric' in the catalogue: the four silks the`
@@ -665,6 +807,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/Home/Home.js` — 9 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `70` — copy string — `"Authentic Silk": {`
 - `72` — copy string — `text: "Genuine handloom silk, woven by master artisans.",`
 - `428` — copy string — `lede="From everyday Eri to heirloom Muga — start with the drape that suits the day."`
@@ -676,6 +821,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 - `593` — code / copy — `by hand, by weavers who learned the loom from their mothers.`
 
 #### `src/pages/RefundPolicy/RefundPolicy.js` — 9 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — comment — `// RETURN & REFUND POLICY — Meghali's Silk, route '/refund'`
 - `22` — comment — `// • THE CONDITIONS SAID NOTHING ABOUT SILK. A returns policy for handwoven`
@@ -689,6 +837,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/TermsOfService/TermsOfService.js` — 9 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `// TERMS OF SERVICE — Meghali's Silk, route '/terms'`
 - `18` — comment — `// — ₹99 free above ₹999, ₹199 free above ₹4,999, ₹499 same-day in Kolkata —`
 - `96` — copy string — `'By browsing or buying from ${storeName}, operated by Galleria Producer Company Limited of Kolkata, West Bengal, you agree to the terms set out below.…`
@@ -701,6 +852,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/Support/Support.js` — 6 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `// CONTACT — Meghali's Silk, route '/support'`
 - `134` — copy string — `{ value: "2010", label: "Founded in Kolkata" },`
 - `136` — copy string — `{ value: "2023", label: "National Handloom Award" },`
@@ -710,6 +864,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/PrivacyPolicy/PrivacyPolicy.js` — 5 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `// PRIVACY POLICY — Meghali's Silk, route '/privacy'`
 - `15` — comment — `// house: the stitching measurements a made-to-measure blouse needs, the`
 - `63` — copy string — `'Galleria Producer Company Limited, the company behind ${storeName}, collects the details you give us when you open an account, place an order or writ…`
@@ -718,6 +875,9 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/CookiePolicy/CookiePolicy.js` — 4 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `// COOKIE POLICY — Meghali's Silk, route '/cookies'`
 - `64` — copy string — `"Tells us, in aggregate, which pages and which weaves are being looked at, so we know what to photograph and stock.",`
 - `115` — code / copy — `the site set, and understand which weaves are being looked at.`
@@ -725,11 +885,17 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/HelpCenter/HelpCenter.js` — 3 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — comment — `// HELP CENTRE — Meghali's Silk, route '/help'`
 - `201` — code / copy — `The questions we are asked most often, answered in full — on silk and`
 - `215` — UI placeholder text — `placeholder="Muga, delivery, returns…"`
 
 #### `src/pages/Home/Home.module.css` — 3 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — code / copy — `HOME PAGE — Meghali's Silk, read as a magazine (below the Prompt 12 hero)`
 - `487` — code / copy — `The weave is a pair of hairline gradients — the same device as the hero's —`
@@ -737,42 +903,69 @@ These do not appear in the grep above but must go in the same cleanup passes:
 
 #### `src/pages/Checkout/Checkout.js` — 3 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `210` — comment — `// Empty state — the counter with nothing on it: a hairline tray, the loom's`
 - `518` — code / copy — `Nothing has been set aside for this order yet. Choose a weave and it`
 - `855` — code / copy — `Delivered across India in insured silk packaging.`
 
 #### `src/pages/OrderHistory/OrderHistory.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `691` — code / copy — `Your ledger opens with the first piece you take home. Muga, Pat and`
 - `692` — code / copy — `Eri — woven in Assam, and waiting.`
 
 #### `src/pages/ProductDetails/ProductDetails.module.css` — 2 hits
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `19` — code / copy — `as a hairline table, the loom story as a pull-quote interlude, the`
 - `505` — code / copy — `values; the loom story as a pull-quote interlude over a ruled facts grid;`
 
 #### `src/pages/Wishlist/Wishlist.js` — 2 hits
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `91` — comment — `// Empty state — a heart drawn in hairline with the loom's gold weft laid across`
 - `354` — code / copy — `Tap the heart on any piece and it waits for you here — the weave,`
 
 #### `src/pages/Profile/Profile.module.css` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `531` — comment — `/* A plate, not a thumbnail: the silk's own proportion, hairline-bounded. An`
 
 #### `src/pages/PrivacyPolicy/PrivacyPolicy.module.css` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — copy string — `PRIVACY POLICY — Meghali's Silk, route '/privacy'`
 
 #### `src/pages/CookiePolicy/CookiePolicy.module.css` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — copy string — `COOKIE POLICY — Meghali's Silk, route '/cookies'`
 
 #### `src/pages/RefundPolicy/RefundPolicy.module.css` — 1 hit
 
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
+
 - `2` — copy string — `RETURN & REFUND POLICY — Meghali's Silk, route '/refund'`
 
 #### `src/pages/TermsOfService/TermsOfService.module.css` — 1 hit
+
+**Status: done (35)** — every hit below is cleared; the file's code
+identifiers were swept by Prompt 35.
 
 - `2` — copy string — `TERMS OF SERVICE — Meghali's Silk, route '/terms'`
 

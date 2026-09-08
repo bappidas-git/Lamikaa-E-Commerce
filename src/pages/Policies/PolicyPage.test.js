@@ -46,7 +46,7 @@ describe("clauseTitle", () => {
     // A title that legitimately opens on a number keeps it: an ordinal is two
     // digits at most, so a year leading a heading is not one.
     expect(clauseTitle("2026 and after")).toBe("2026 and after");
-    expect(clauseTitle("100 years of the weave")).toBe("100 years of the weave");
+    expect(clauseTitle("100 percent cold-pressed")).toBe("100 percent cold-pressed");
   });
 });
 

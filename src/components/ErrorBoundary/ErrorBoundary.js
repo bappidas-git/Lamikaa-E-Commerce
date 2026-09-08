@@ -16,8 +16,8 @@ const palette = {
   text: "#B8B5B0", // --sf-color-text-secondary
   detailsBg: "#1C1C20", // --sf-color-surface-2
   detailsText: "#FF8A80", // --sf-color-danger
-  primaryBg: "#F5D76E", // --sf-color-emerald (the gold CTA fill)
-  primaryText: "#0B0B0D", // --sf-color-emerald-contrast
+  primaryBg: "#F5D76E", // --sf-color-cta (the gold CTA fill)
+  primaryText: "#0B0B0D", // --sf-color-cta-contrast
   ghostBorder: "#B88924", // --sf-color-gold-deep
   ghostText: "#F7F5F0", // --sf-color-text
   shadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2

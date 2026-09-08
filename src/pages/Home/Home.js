@@ -45,7 +45,7 @@ import styles from "./Home.module.css";
 //   • The offers rail and its countdown — the deals page is still there and
 //     still linked (`/special-offers`, and the "Offers" nav item when the admin
 //     has it switched on). The home page no longer duplicates it.
-//   • The full-bleed craft interlude — Meghali-era copy about silk weaving.
+//   • The full-bleed craft interlude — copy about the previous catalogue.
 //   • The closing promises row — the trust strip states the same promises from
 //     the same config, at the top, where they are read.
 //   • The two orphaned components of the old page, deleted outright: they had

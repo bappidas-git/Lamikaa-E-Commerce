@@ -26,7 +26,7 @@ export const APP_DESCRIPTION = brand.seo.defaultDescription;
 // `productPath()` in utils/helpers.js, `categoryPath()` / `ritualPath()` /
 // `concernPath()` in utils/categories.js.
 //
-// Every Meghali-era path (/products, /products/:slug, /help, /support,
+// Every pre-rebuild path (/products, /products/:slug, /help, /support,
 // /privacy, /terms, /refund, /cookies and the collection URLs) now lives ONLY
 // in components/routing/LegacyRedirects.js, which redirects it here.
 export const ROUTES = {

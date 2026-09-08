@@ -60,15 +60,11 @@
  *   violet appear only as glows, hairlines and gradient stops; never gold text
  *   on pink or violet.
  *
- * NOTE ON LEGACY TOKEN NAMES
- *   `--sf-color-emerald*` (188 usages — the de-facto CTA token),
- *   `--sf-gradient-heritage`, `--sf-gradient-announce-1/2/3`, `--sf-cat-*`,
- *   `--sf-color-brand-green-deep` and `--brand-logo-bg` keep their NAMES for
- *   compatibility and are aliased onto the LAMIKAA values below. Prompt 35
- *   renames them (`--sf-color-cta*`, `--sf-gradient-brand`,
- *   `--sf-gradient-announce`, `--sf-concern-*`) and deletes the aliases.
- *   Until then: never remove or rename a token here — components consume them
- *   by name.
+ * TOKEN NAMES ARE ROLES, NOT COLOURS
+ *   Every name below says what the value is FOR — `--sf-color-cta` is the
+ *   primary call-to-action fill, not "the gold one" — so a re-skin changes
+ *   values here and nothing else. Components consume these by name: adding a
+ *   token is free, renaming one is a repo-wide edit.
  * ========================================================================== */
 
 :root {
@@ -129,17 +125,11 @@
   --sf-color-violet: #8B5CF6;          /* neon violet — glow, gradient stop */
   --sf-color-cyan: #5DE7FF;            /* rare accent: info, one per page */
 
-  /* Legacy name, current role: the primary CTA fill / hover / label. */
-  --sf-color-emerald: #F5D76E;
-  --sf-color-emerald-hover: #FFEFA6;
-  --sf-color-emerald-contrast: #0B0B0D;
-
-  /* Compatibility aliases — consumed by components that have not been rebuilt
-     yet. Both are deleted in Prompt 35 once their consumers are rewritten.
-     --sf-color-brand-green-deep is the pinned dark ground behind the footer and
-     the hero band, and the near-black label on the gold gradient button. */
-  --sf-color-brand-green-deep: #0B0B0D;
-  --brand-logo-bg: var(--sf-color-surface);
+  /* The primary call-to-action: fill, hover fill, and the label that sits on
+     both. The three move together, so a CTA never loses its contrast. */
+  --sf-color-cta: #F5D76E;
+  --sf-color-cta-hover: #FFEFA6;
+  --sf-color-cta-contrast: #0B0B0D;
 
   /* ---- Gradients -------------------------------------------------------- */
   /* The signature: hairlines, eyebrow underlines, active indicators, one
@@ -147,12 +137,8 @@
   --sf-gradient-signature: linear-gradient(135deg, #F5D76E, #FF4FD8, #8B5CF6);
   --sf-gradient-gold: linear-gradient(135deg, #FFEFA6, #F5D76E 50%, #B88924);
   --sf-gradient-brand: linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330);
-  --sf-gradient-heritage: var(--sf-gradient-brand); /* legacy alias */
+  /* One wash behind the announcement bar, whichever message is showing. */
   --sf-gradient-announce: linear-gradient(90deg, #141416 0%, #2A2330 100%);
-  /* The three announcement washes collapse to the single one above. */
-  --sf-gradient-announce-1: var(--sf-gradient-announce);
-  --sf-gradient-announce-2: var(--sf-gradient-announce);
-  --sf-gradient-announce-3: var(--sf-gradient-announce);
 
   /* ---- Concern accents --------------------------------------------------- */
   /* Six chip accents, used as borders and as text at ≥ 4.5:1 on the ground. */
@@ -162,13 +148,6 @@
   --sf-concern-gold: #F5D76E;
   --sf-concern-mint: #7ED9A6;
   --sf-concern-rose: #F7A8C4;
-  /* Legacy names (Prompt 35 rewrites the consumers, then deletes these). */
-  --sf-cat-pink: var(--sf-concern-pink);
-  --sf-cat-purple: var(--sf-concern-violet);
-  --sf-cat-orange: var(--sf-concern-gold);
-  --sf-cat-blue: var(--sf-concern-cyan);
-  --sf-cat-teal: var(--sf-concern-mint);
-  --sf-cat-red: var(--sf-concern-rose);
 
   /* ---- Glass ------------------------------------------------------------- */
   /* The `.sf-glass` primitive (Prompt 04) is built from these. Budget: at most

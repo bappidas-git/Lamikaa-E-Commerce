@@ -5,7 +5,7 @@
 // storefront UX defaults. They are styled entirely by the design tokens in
 // src/theme/storefront-tokens.css and driven by real API/db.json data, so every
 // client storefront built from this boilerplate inherits the same behaviour and
-// re-skins by config. See STOREFRONT_UX_GUIDELINES.md.
+// re-skins by config.
 export { default as StarRating } from "./StarRating";
 export { default as PriceBlock } from "./PriceBlock";
 export { default as SocialProof } from "./SocialProof";

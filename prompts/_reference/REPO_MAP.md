@@ -57,6 +57,33 @@
 - Admin: `AdminLayout.js` and `AdminLogin.js` both call `useMemo(() => buildAdminTheme("dark"), [])`. `buildAdminTheme(mode)` keeps its signature and its light branch (dead code until Prompt 32 recolours the palette); `useAdminBodyClass.js` is unchanged.
 - Hard-coded colours now: `ErrorBoundary.js` (12, intentional fallback) and `Footer.js` (payment-network marks) — documented exceptions. **`AuthModal.js`'s five social brand hexes went with the disabled buttons in Prompt 30**; `SearchModal.js:55-56` data-URI (`#141416` / `#B8B5B0`), `helpers.js` `PLACEHOLDER_IMG` fill `#8E8B86`, `DANGER_HEX = "#FF8A80"` ×3, `OrderConfirmation.js` `CONFETTI_COLORS = ["#F5D76E", "#FFEFA6", "#FF4FD8", "#8B5CF6"]`, `index.js` crash-screen inline styles, admin JS files (indigo/slate literals — see §7).
 
+**Updated by Prompt 35 — the legacy token names are gone.** `storefront-tokens.css`
+(300 lines) now declares only role-named tokens; nothing is an alias of anything.
+
+- `--sf-color-emerald` / `-emerald-hover` / `-emerald-contrast` → **`--sf-color-cta`
+  / `-cta-hover` / `-cta-contrast`** (the primary call-to-action fill, its hover
+  fill and the near-black label that rides on both).
+- Deleted outright, all with zero `var()` consumers at the time of the sweep:
+  `--sf-gradient-heritage` (use `--sf-gradient-brand`), `--sf-gradient-announce-1/2/3`
+  (use `--sf-gradient-announce`), `--sf-cat-pink/purple/orange/blue/teal/red`
+  (use `--sf-concern-pink/violet/gold/cyan/mint/rose`), `--sf-color-brand-green-deep`
+  (use `--sf-color-bg`) and `--brand-logo-bg` (use `--sf-color-surface`).
+  `--sf-color-brand-green` was already gone (Prompt 03).
+- Primitives: `.sf-btn--emerald` and `.sf-btn--gold` collapse into the single
+  **`.sf-btn--primary`** (`Button.js`'s `primary` variant maps to it); the alias
+  is NOT kept. `.sf-ribbon-premium` is deleted — nothing has rendered it since
+  Prompt 15.
+- **The final token set is `storefront-tokens.css` alone.** Verification:
+  `grep -rhoE "var\(--sf-[a-z0-9-]+" src | sort -u` contains no `emerald`,
+  `heritage`, `brand-green`, `announce-[123]` or `cat-` name, and every remaining
+  name resolves — declared in `storefront-tokens.css`, declared component-scoped
+  in the module that uses it (`--sf-footer-gap`, `--sf-step-pad/-anchor/-numeral`,
+  `--sf-glow-x/-y`, `--sf-drawer-header-pad-y/-b`, `--sf-drawer-body-pad`,
+  `--sf-footer-grid`, `--sf-glow-opacity`, `--sf-hero-chrome`,
+  `--sf-hero-parallax-x/-y`, `--sf-rail-row`), or set from JS and always read with
+  a fallback (`--sf-chapter-progress`, `--sf-chip-tone`, `--sf-drawer-width`,
+  `--sf-glow-inset`, `--sf-glow-offset-x/-y`, `--sf-reserve`).
+
 ## 3. `src/services/api.js` — dual-mode contract
 
 > **Final contract — rewritten by Prompt 07.** This section is the whole of it: every namespace, every function, its mock path and its live endpoint. §3.4 is the hand-off list for the backend team — the routes Laravel must implement for the live branch to work.
@@ -2133,6 +2160,31 @@ Provider order in `App.js`: `ErrorBoundary > ThemeContextProvider > StoreSetting
 
 Other storage keys: `localStorage.recentlyViewed` (PDP writes, Home reads, cap 20). `useSound` hook (unused) references `/assets/click-sound-1.wav` (file lives at `src/assets/`, so the path is wrong — dead code).
 
+**Updated by Prompt 35 — the complete storage inventory.** These are ALL the
+keys the app reads or writes. None is brand-named, so none needed migrating; the
+only key Prompt 35 checked for removal is `theme`, and it is write-only.
+
+| Key | Store | Written by | Read by | Holds |
+|---|---|---|---|---|
+| `user` | session, or **local** with "Remember me" | `utils/authStorage.js` (AuthContext) | AuthContext, `api.js` | the signed-in customer |
+| `token` | session, or **local** with "Remember me" | `utils/authStorage.js` | `api.js` request interceptor | the customer bearer token |
+| `admin` | **session only** | AdminContext | AdminContext | the signed-in admin |
+| `adminToken` | **session only** | AdminContext | `api.js` (admin calls) | the admin bearer token |
+| `cart` | local | CartContext | CartContext | guest + pre-sync cart lines |
+| `wishlist` | local | WishlistContext | WishlistContext | guest + pre-sync wishlist |
+| `recentlyViewed` | local | `ProductDetails.js` | `components/home/RecentlyViewed.js` | up to 20 product snapshots |
+| `lk-recent-searches` | **session** | `SearchModal.js` | `SearchModal.js` | up to 6 recent search terms |
+| `lk-announcement-dismissed` | **session** | `AnnouncementBar.js` | `AnnouncementBar.js` | `"1"` once the bar is dismissed |
+| ~~`theme`~~ | local | — | — | **removed on mount only.** `ThemeContext` calls `localStorage.removeItem("theme")` once as a migration for a returning visitor; nothing reads or writes it. There is one theme. |
+
+The seven user-data keys carry real state and were NOT renamed. The two `lk-`
+keys are sessionStorage on purpose: a search trail and a dismissal are the tab's
+business, not the device's — closing the tab is the clear.
+
+`src/hooks/useSound.js`, `src/assets/click-sound-1.wav` and the now-empty
+`src/assets/` are **deleted** (Prompt 35); the row above them is kept as the
+historical record.
+
 ## 9. Routing (`src/App.js`)
 
 **Rewritten by Prompt 08.** The Meghali route map is gone; every one of its URLs
@@ -2196,13 +2248,21 @@ rejects a wrapper component there). All redirects `replace`.
 | `/products` | `/shop` |
 | `/products?search=<q>` | `/search?q=<q>` (wins over `?category=`) |
 | `/products?category=<slug>` | `/category/<slug>` |
-| `/products?category=muga-silk\|pat-silk\|eri-silk` | `/shop` (retired catalogue) |
 | `/products?sort=` `?highlight=` `?page=` … | dropped → `/shop` |
 | `/products/:slug` | `/product/:slug` |
 | `/help` | `/faq` |
 | `/support` | `/contact` |
 | `/privacy` `/terms` `/refund` `/cookies` | `/policies/privacy` `/policies/terms` `/policies/shipping-returns` `/policies/cookies` |
-| `/sarees`, `/collections`, `/collections/*` | `/shop` |
+| `/collections`, `/collections/*` | `/shop` |
+
+**Updated by Prompt 35.** `RETIRED_CATEGORY_SLUGS` (`muga-silk`, `pat-silk`,
+`eri-silk`) and the `/sarees` path are deleted: they named the previous
+catalogue, which is exactly what Prompt 35 sweeps out of the code. A slug from
+that catalogue is now simply a slug nobody has, and `/category/<slug>` already
+answers those with a real 404 (Prompt 24) — the same answer a typo gets. Keeping
+the list would have been a second, drifting copy of a catalogue this build does
+not carry. `/collections` and `/collections/*` stay: those paths name no brand
+and are still plausible inbound links.
 
 ### 9.3 Link builders
 
