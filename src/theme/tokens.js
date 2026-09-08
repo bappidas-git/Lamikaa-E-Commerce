@@ -91,10 +91,14 @@ export const STOREFRONT_CONFIG = {
     maxBundle: 3, // items in a "frequently bought together" bundle incl. anchor
   },
 
-  // Product gallery behaviour (presentation only).
+  // Product media gallery behaviour (presentation only) — read by
+  // `components/pdp/MediaGallery`. The old side/below thumbnail setting is gone
+  // with the gallery that had one: the rail is a 72px column beside the stage
+  // from 1025px and a 56px strip beneath it below that, which is a breakpoint,
+  // not something an owner should have to decide.
   gallery: {
-    zoom: true,          // desktop hover-zoom on the main image
-    thumbnailPosition: "side", // "side" (desktop) gracefully stacks on mobile
+    zoom: true,     // pinch/wheel/±-button zoom inside the lightbox (1x–4x)
+    lightbox: true, // the full-screen viewer, and the "Zoom" button that opens it
   },
 };
 

@@ -1,0 +1,324 @@
+/* =============================================================================
+ * MediaGallery — the plate, its furniture and the rail
+ * =============================================================================
+ * MOBILE FIRST: one column, a 1:1 plate, the dots under it and the thumbnail
+ * strip under those. At 769px the plate becomes the 4:5 editorial format the
+ * covers are delivered into; at 1025px the strip stands up into a 72px column
+ * on the left (`grid-template-columns: 72px 1fr`, 16px gutter).
+ *
+ * Every value is a token. The one place a raw pixel appears is the thumbnail
+ * geometry (72 / 56) and the 2px selection ring, which are the sizes the design
+ * names rather than steps on the spacing scale.
+ * ========================================================================== */
+
+.gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-4);
+  /* The stage's glow bleeds past its box by design (DESIGN_SYSTEM §5); `clip`
+     rather than `hidden` so no scroll container is created and the sticky media
+     column above still sticks. */
+  overflow-x: clip;
+}
+
+.stageWrap {
+  min-width: 0;
+}
+
+.glow {
+  display: block;
+}
+
+/* ---- The stage ----------------------------------------------------------- */
+/* Two classes deep, so these beat `.sf-plate`'s own radius and 1:1 whichever
+   order the sheets land in. */
+.stageWrap .stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--sf-radius-xl);
+  border: 1px solid var(--sf-glass-border);
+  box-shadow: var(--sf-shadow-2);
+}
+
+.stage:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-2), var(--sf-shadow-focus);
+}
+
+/* One frame at a time, stacked so the outgoing one can cross-fade under the
+   incoming one without the plate ever being empty. */
+.frame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+}
+
+.media {
+  width: 100%;
+  height: 100%;
+}
+
+/* The player inside the plate is not a card: the plate already owns the
+   surface, the hairline and the radius. */
+.videoFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* ---- Furniture on the plate ---------------------------------------------- */
+.toggle,
+.zoom,
+.arrow,
+.counter {
+  position: absolute;
+  z-index: 2;
+}
+
+/* "Full label" / "Front panel" — a 32px pill whose TARGET is the full 44px.
+   The pill is the size the design asks for; the invisible ring around it is
+   what WCAG 2.5.5 asks for, and neither has to give way to the other. */
+.toggle {
+  top: var(--sf-space-4);
+  left: var(--sf-space-4);
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--sf-space-4);
+  border-radius: var(--sf-radius-pill);
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast), border-color var(--sf-transition-fast),
+    background-color var(--sf-transition-fast);
+}
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+.toggle:hover {
+  color: var(--sf-color-gold);
+  border-color: var(--sf-color-border-strong);
+  background: var(--sf-color-surface-hover);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.zoom {
+  top: var(--sf-space-4);
+  right: var(--sf-space-4);
+}
+
+.counter {
+  right: var(--sf-space-4);
+  bottom: var(--sf-space-4);
+  margin: 0;
+  padding: var(--sf-space-1) var(--sf-space-3);
+  border-radius: var(--sf-radius-pill);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The arrows arrive with the pointer. `opacity` alone — never `visibility` or
+   `display` — because a keyboard visitor has to be able to TAB to a control
+   before it can show itself, and `:focus-within` is what then reveals it. */
+.arrow {
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity var(--sf-transition-fast);
+}
+
+.arrowPrev {
+  left: var(--sf-space-3);
+}
+
+.arrowNext {
+  right: var(--sf-space-3);
+}
+
+.stage:hover .arrow,
+.stage:focus-within .arrow,
+.arrow:focus-visible {
+  opacity: 1;
+}
+
+/* A touch device has no hover to reveal anything with. */
+@media (hover: none) {
+  .arrow {
+    opacity: 1;
+  }
+}
+
+/* ---- Dots ---------------------------------------------------------------- */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--sf-space-2);
+  margin-top: var(--sf-space-4);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sf-color-text) 28%, transparent);
+  transition: background-color var(--sf-transition-fast), width var(--sf-transition-fast);
+}
+
+.dotActive {
+  width: 18px;
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-gold);
+}
+
+/* ---- The rail ------------------------------------------------------------ */
+.rail {
+  display: flex;
+  gap: var(--sf-space-2);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: var(--sf-space-1);
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.thumb {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface-2);
+  overflow: hidden;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: border-color var(--sf-transition-fast), box-shadow var(--sf-transition-fast),
+    opacity var(--sf-transition-fast);
+  opacity: 0.72;
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.thumb:hover {
+  opacity: 1;
+  border-color: var(--sf-color-border-strong);
+}
+
+.thumb:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.thumbActive {
+  opacity: 1;
+  border-color: transparent;
+  /* The 2px gold ring the design names, drawn as a shadow so it costs the
+     thumbnail no layout and the tile never moves when it is selected. */
+  box-shadow: 0 0 0 2px var(--sf-color-gold);
+}
+
+/* The gold play mark on a video thumbnail. Small enough to read as a mark
+   rather than as the 64px badge the stage's own player carries. */
+.playBadge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--sf-color-gold);
+  color: var(--sf-color-primary-contrast);
+  font-size: 1rem;
+}
+
+/* =============================================================================
+ * 769px — the plate takes the editorial 4:5 the covers are delivered into
+ * ========================================================================== */
+@media (min-width: 769px) {
+  .stageWrap .stage {
+    aspect-ratio: 4 / 5;
+  }
+
+  .dots {
+    display: none;
+  }
+}
+
+/* =============================================================================
+ * 1025px — the strip stands up beside the stage
+ * ========================================================================== */
+@media (min-width: 1025px) {
+  .gallery {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: var(--sf-space-4);
+  }
+
+  .rail {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    flex-direction: column;
+    gap: var(--sf-space-4);
+    overflow-x: visible;
+    overflow-y: auto;
+    /* A viewport cap rather than "the height of the stage": the stage's height
+       comes from its own ratio and nothing in CSS can hand that number to a
+       sibling. Ten thumbnails still stop short of the fold. */
+    max-height: 68svh;
+    scroll-snap-type: y proximity;
+    padding-bottom: 0;
+  }
+
+  .stageWrap {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .thumb {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow,
+  .dot,
+  .thumb,
+  .toggle {
+    transition: none;
+  }
+}

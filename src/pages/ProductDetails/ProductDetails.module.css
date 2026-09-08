@@ -35,11 +35,10 @@
   min-width: 0;
 }
 
-/* The plate. `.sf-plate` (the global primitive) brings the surface, the
-   hairline, the radius and `object-fit: contain`; the ratio is this page's,
-   because it is the only thing that changes between the phone and the desktop
-   composition. Two classes deep so the override beats the primitive's own 1:1
-   whichever order the sheets land in. */
+/* The LOADING silhouette's plate. The gallery itself (`pdp/MediaGallery`) owns
+   its own stage, its ratios and its rail — this is only the block the skeleton
+   draws in the shape the gallery is about to take, so the two agree on where
+   the pack will be and the page does not jump when the data lands. */
 .mediaColumn .stage {
   width: 100%;
   aspect-ratio: 1;
