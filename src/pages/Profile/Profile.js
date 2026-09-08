@@ -8,44 +8,34 @@ import apiService from "../../services/api";
 import { formatDate, formatCurrency, getInitials, generateId, isValidPhone } from "../../utils/helpers";
 import { collapse, reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
+import { Button, Chip, GlassCard } from "../../components/ui";
+import { orderStatusInfo } from "../../utils/orderStatus";
 import useSeo from "../../hooks/useSeo";
 import styles from "./Profile.module.css";
 
-// Orders carry paymentStatus / fulfillmentStatus / shippingStatus (the shape
-// checkout writes and Admin manages) — collapse those into the single display
-// status the Recent Orders list badges by, mirroring Order History so the two
-// screens never disagree. A legacy `status` field is only honoured when none of
-// the canonical fields exist.
-const deriveOrderStatus = (order) => {
-  if (order.paymentStatus || order.fulfillmentStatus || order.shippingStatus) {
-    if (order.fulfillmentStatus === "returned") return "returned";
-    if (
-      order.fulfillmentStatus === "cancelled" ||
-      order.paymentStatus === "failed" ||
-      order.paymentStatus === "refunded"
-    ) {
-      return "cancelled";
-    }
-    if (order.shippingStatus === "delivered") return "delivered";
-    if (order.shippingStatus === "shipped") return "shipped";
-    return "processing";
-  }
-  return order.status || "processing";
-};
-
-// Same words, same four tones as the Order History ledger (Prompt 21) — the
-// dashboard's mini-records must never label an order differently from the page
-// they link to.
-const STATUS_CONFIG = {
-  processing: { label: "Processing", className: "statusProcessing" },
-  shipped: { label: "Shipped", className: "statusShipped" },
-  delivered: { label: "Delivered", className: "statusDelivered" },
-  cancelled: { label: "Cancelled", className: "statusCancelled" },
-  returned: { label: "Returned", className: "statusCancelled" },
-};
-
-const getStatusInfo = (order) =>
-  STATUS_CONFIG[deriveOrderStatus(order)] || STATUS_CONFIG.processing;
+// =============================================================================
+// /profile — the account hub
+// =============================================================================
+//
+// A dashboard and six sections behind it: personal details, addresses, payment
+// methods, store credit, notifications and settings. The dashboard is two
+// columns from 1025px — an identity card and the three figures on the left, the
+// index and the recent orders on the right — and one column below that, in the
+// order a phone reads it.
+//
+// WHAT PROMPT 30 CHANGED: the look, and one fact that had been written down
+// twice. `deriveOrderStatus`/`STATUS_CONFIG` now live in `utils/orderStatus`,
+// which Order History reads too, so the mini-records here can never label an
+// order differently from the page they link to. Every handler, guard, effect
+// and payload is otherwise untouched — including the address default rules, the
+// legacy-row normalisation and the honest "—" while a figure is loading.
+//
+// HONEST FIGURES, STILL. Nothing on this page is invented: the counts are 0
+// when empty and "—" while loading, the membership badge falls back to a
+// neutral "Member" because the seeded user shape carries no tier, and the
+// payment and notification sections say plainly that there is nothing stored
+// rather than drawing controls that would not persist.
+// =============================================================================
 
 // SweetAlert2 takes a colour VALUE, not a token — it renders outside the React
 // tree, and a per-call confirmButtonColor is set as an inline variable on the
@@ -155,7 +145,7 @@ const Seal = () => (
 
 const Profile = () => {
   useSeo({
-    title: "Profile",
+    title: "Your account",
     description: "Your LAMIKAA Naturals account, addresses and preferences.",
     noindex: true,
   });
@@ -607,38 +597,31 @@ const Profile = () => {
   if (!isAuthenticated || !user) {
     return (
       <div className={styles.page}>
-        <div className={styles.container}>
-          <motion.div
-            className={styles.gate}
-            {...reveal(shouldReduceMotion)}
-          >
-            <span className={styles.gateMark}>
-              <Icon name="person" size={30} strokeWidth={1} />
-            </span>
-            <p className={styles.eyebrow}>Your account</p>
-            <h1 className={styles.gateTitle}>Sign in to your account</h1>
-            <p className={styles.gateText}>
-              Your orders, your addresses and your store credit are kept here,
-              waiting for you.
-            </p>
-            <div className={styles.gateActions}>
-              <button
-                type="button"
-                className={`sf-btn sf-btn--emerald ${styles.gateBtn}`}
-                onClick={() => openAuthModal("login")}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                className={`sf-btn sf-btn--ghost ${styles.gateBtn}`}
-                onClick={() => navigate("/")}
-              >
-                Back to Home
-              </button>
-            </div>
-          </motion.div>
-        </div>
+        <section className="sf-section">
+          <div className="sf-container">
+            <motion.div {...reveal(shouldReduceMotion)}>
+              <GlassCard padding="md" glow="gold" className={styles.gate}>
+                <span className={styles.gateMark}>
+                  <Icon name="person" size={30} strokeWidth={1} />
+                </span>
+                <p className="sf-eyebrow">Your account</p>
+                <h1 className={styles.gateTitle}>Sign in to your account</h1>
+                <p className={styles.gateText}>
+                  Your orders, your addresses and your store credit are kept here,
+                  waiting for you.
+                </p>
+                <div className={styles.gateActions}>
+                  <Button variant="primary" onClick={() => openAuthModal("login")}>
+                    Sign in
+                  </Button>
+                  <Button variant="secondary" to={ROUTES.SHOP}>
+                    Continue shopping
+                  </Button>
+                </div>
+              </GlassCard>
+            </motion.div>
+          </div>
+        </section>
       </div>
     );
   }
@@ -651,10 +634,9 @@ const Profile = () => {
   const statValue = (count) => (statsLoading ? "—" : count);
 
   const statusChip = (statusInfo) => (
-    <span className={`${styles.chip} ${styles[statusInfo.className]}`}>
-      <span className={styles.chipDot} aria-hidden="true" />
+    <Chip variant="status" tone={statusInfo.tone}>
       {statusInfo.label}
-    </span>
+    </Chip>
   );
 
   // ---- Index rows (each opens an in-page section or navigates) ------------
@@ -664,7 +646,7 @@ const Profile = () => {
     {
       id: "orders",
       icon: "orders",
-      label: "My Orders",
+      label: "Your orders",
       sub: "Track, return or buy again",
       badge: !statsLoading && orders.length > 0 ? orders.length : null,
       onClick: () => navigate("/orders"),
@@ -680,14 +662,14 @@ const Profile = () => {
     {
       id: "payment",
       icon: "card",
-      label: "Payment Methods",
+      label: "Payment methods",
       sub: "Saved cards & UPI",
       onClick: () => openSection("payment"),
     },
     {
       id: "wallet",
       icon: "wallet",
-      label: "Store Credit",
+      label: "Store credit",
       sub: "Wallet balance & history",
       onClick: () => openSection("wallet"),
     },
@@ -708,17 +690,17 @@ const Profile = () => {
   ];
 
   // =====================================================================
-  // Section renderers (reachable from the index / greeting card)
+  // Section renderers (reachable from the index / identity card)
   // =====================================================================
   const renderProfileSection = () => (
-    <div className={styles.section}>
+    <GlassCard padding="md" className={styles.section}>
       <p className={styles.sectionLead}>
         The name and number we use on your orders and deliveries.
       </p>
 
       <div className={styles.formGrid}>
         <div className={styles.field}>
-          <label htmlFor="pf-first">First Name *</label>
+          <label htmlFor="pf-first">First name *</label>
           <input
             id="pf-first"
             type="text"
@@ -726,11 +708,11 @@ const Profile = () => {
             autoComplete="given-name"
             value={profileForm.firstName}
             onChange={handleProfileChange}
-            placeholder="Enter first name"
+            placeholder="First name"
           />
         </div>
         <div className={styles.field}>
-          <label htmlFor="pf-last">Last Name *</label>
+          <label htmlFor="pf-last">Last name *</label>
           <input
             id="pf-last"
             type="text"
@@ -738,11 +720,11 @@ const Profile = () => {
             autoComplete="family-name"
             value={profileForm.lastName}
             onChange={handleProfileChange}
-            placeholder="Enter last name"
+            placeholder="Last name"
           />
         </div>
         <div className={styles.field}>
-          <label htmlFor="pf-email">Email Address</label>
+          <label htmlFor="pf-email">Email address</label>
           <input
             id="pf-email"
             type="email"
@@ -755,7 +737,7 @@ const Profile = () => {
           <span className={styles.hint}>Email cannot be changed</span>
         </div>
         <div className={styles.field}>
-          <label htmlFor="pf-phone">Phone Number</label>
+          <label htmlFor="pf-phone">Phone number</label>
           <input
             id="pf-phone"
             type="tel"
@@ -769,138 +751,137 @@ const Profile = () => {
       </div>
 
       <div className={styles.actions}>
-        <button
-          type="button"
-          className="sf-btn sf-btn--emerald"
-          onClick={handleProfileSave}
-          disabled={loading}
-        >
-          {loading ? "Saving…" : "Save Changes"}
-        </button>
+        <Button variant="primary" onClick={handleProfileSave} disabled={loading}>
+          {loading ? "Saving…" : "Save changes"}
+        </Button>
       </div>
-    </div>
+    </GlassCard>
   );
 
   const renderAddressesSection = () => (
-    <div className={styles.section}>
-      <div className={styles.sectionBar}>
-        <p className={styles.sectionLead}>
-          {addresses.length === 0
-            ? "Save an address once and checkout will know where to send it."
-            : `${addresses.length} address${addresses.length === 1 ? "" : "es"} on file. The default is offered first at checkout.`}
-        </p>
-        {!showAddressForm && (
-          <button
-            type="button"
-            className={styles.addBtn}
-            onClick={() => {
-              resetAddressForm();
-              setShowAddressForm(true);
-            }}
-          >
-            Add an address
-          </button>
-        )}
-      </div>
-
-      {showAddressForm && (
-        <div className={styles.addrForm}>
-          <h3 className={styles.addrFormTitle}>
-            {editingAddressIndex !== null ? "Edit address" : "New address"}
-          </h3>
-
-          <div className={styles.labelChips} role="group" aria-label="Address label">
-            {["Home", "Work", "Other"].map((label) => (
-              <button
-                key={label}
-                type="button"
-                className={`${styles.labelChip} ${
-                  addressForm.label === label ? styles.labelChipOn : ""
-                }`}
-                aria-pressed={addressForm.label === label}
-                onClick={() => setAddressForm((prev) => ({ ...prev, label }))}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.formGrid}>
-            <div className={styles.field}>
-              <label htmlFor="af-first">First Name *</label>
-              <input id="af-first" type="text" name="firstName" autoComplete="given-name" value={addressForm.firstName} onChange={handleAddressChange} placeholder="Enter first name" />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="af-last">Last Name *</label>
-              <input id="af-last" type="text" name="lastName" autoComplete="family-name" value={addressForm.lastName} onChange={handleAddressChange} placeholder="Enter last name" />
-            </div>
-            <div className={`${styles.field} ${styles.fieldWide}`}>
-              <label htmlFor="af-phone">Phone Number *</label>
-              <input id="af-phone" type="tel" name="phone" autoComplete="tel" value={addressForm.phone} onChange={handleAddressChange} placeholder="10-digit mobile number" />
-            </div>
-            <div className={`${styles.field} ${styles.fieldWide}`}>
-              <label htmlFor="af-line1">Address Line 1 *</label>
-              <input id="af-line1" type="text" name="addressLine1" autoComplete="address-line1" value={addressForm.addressLine1} onChange={handleAddressChange} placeholder="House/Flat No., Building, Street" />
-            </div>
-            <div className={`${styles.field} ${styles.fieldWide}`}>
-              <label htmlFor="af-line2">Address Line 2</label>
-              <input id="af-line2" type="text" name="addressLine2" autoComplete="address-line2" value={addressForm.addressLine2} onChange={handleAddressChange} placeholder="Landmark, Area (optional)" />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="af-city">City *</label>
-              <input id="af-city" type="text" name="city" autoComplete="address-level2" value={addressForm.city} onChange={handleAddressChange} placeholder="Enter city" />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="af-state">State *</label>
-              <input id="af-state" type="text" name="state" autoComplete="address-level1" value={addressForm.state} onChange={handleAddressChange} placeholder="Enter state" />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="af-postal">Postal Code *</label>
-              <input id="af-postal" type="text" name="postalCode" autoComplete="postal-code" inputMode="numeric" value={addressForm.postalCode} onChange={handleAddressChange} placeholder="Enter postal code" />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="af-country">Country</label>
-              <input id="af-country" type="text" name="country" autoComplete="country-name" value={addressForm.country} className={styles.readOnly} readOnly />
-              <span className={styles.hint}>Currently shipping within India only</span>
-            </div>
-          </div>
-
-          <label className={styles.checkRow}>
-            <input
-              type="checkbox"
-              name="isDefault"
-              checked={addressForm.isDefault}
-              onChange={handleAddressChange}
-              className={styles.checkbox}
-            />
-            <span>Set as default address</span>
-          </label>
-
-          <div className={styles.actions}>
-            <button type="button" className="sf-btn sf-btn--ghost" onClick={resetAddressForm} disabled={loading}>
-              Cancel
-            </button>
-            <button type="button" className="sf-btn sf-btn--emerald" onClick={handleAddressSave} disabled={loading}>
-              {loading
-                ? "Saving…"
-                : editingAddressIndex !== null
-                ? "Update Address"
-                : "Save Address"}
-            </button>
-          </div>
+    <div className={styles.sectionStack}>
+      <GlassCard padding="md" className={styles.section}>
+        <div className={styles.sectionBar}>
+          <p className={styles.sectionLead}>
+            {addresses.length === 0
+              ? "Save an address once and checkout will know where to send it."
+              : `${addresses.length} address${addresses.length === 1 ? "" : "es"} on file. The default is offered first at checkout.`}
+          </p>
+          {!showAddressForm && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                resetAddressForm();
+                setShowAddressForm(true);
+              }}
+            >
+              Add an address
+            </Button>
+          )}
         </div>
-      )}
+
+        {showAddressForm && (
+          <div className={styles.addrForm}>
+            <h3 className={styles.addrFormTitle}>
+              {editingAddressIndex !== null ? "Edit address" : "New address"}
+            </h3>
+
+            <div className={styles.labelChips} role="group" aria-label="Address label">
+              {["Home", "Work", "Other"].map((label) => (
+                <Chip
+                  key={label}
+                  as="button"
+                  variant="glass"
+                  active={addressForm.label === label}
+                  aria-pressed={addressForm.label === label}
+                  onClick={() => setAddressForm((prev) => ({ ...prev, label }))}
+                >
+                  {label}
+                </Chip>
+              ))}
+            </div>
+
+            <div className={styles.formGrid}>
+              <div className={styles.field}>
+                <label htmlFor="af-first">First name *</label>
+                <input id="af-first" type="text" name="firstName" autoComplete="given-name" value={addressForm.firstName} onChange={handleAddressChange} placeholder="First name" />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="af-last">Last name *</label>
+                <input id="af-last" type="text" name="lastName" autoComplete="family-name" value={addressForm.lastName} onChange={handleAddressChange} placeholder="Last name" />
+              </div>
+              <div className={`${styles.field} ${styles.fieldWide}`}>
+                <label htmlFor="af-phone">Phone number *</label>
+                <input id="af-phone" type="tel" name="phone" autoComplete="tel" value={addressForm.phone} onChange={handleAddressChange} placeholder="10-digit mobile number" />
+              </div>
+              <div className={`${styles.field} ${styles.fieldWide}`}>
+                <label htmlFor="af-line1">Address line 1 *</label>
+                <input id="af-line1" type="text" name="addressLine1" autoComplete="address-line1" value={addressForm.addressLine1} onChange={handleAddressChange} placeholder="House/Flat No., Building, Street" />
+              </div>
+              <div className={`${styles.field} ${styles.fieldWide}`}>
+                <label htmlFor="af-line2">Address line 2</label>
+                <input id="af-line2" type="text" name="addressLine2" autoComplete="address-line2" value={addressForm.addressLine2} onChange={handleAddressChange} placeholder="Landmark, Area (optional)" />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="af-city">City *</label>
+                <input id="af-city" type="text" name="city" autoComplete="address-level2" value={addressForm.city} onChange={handleAddressChange} placeholder="Enter city" />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="af-state">State *</label>
+                <input id="af-state" type="text" name="state" autoComplete="address-level1" value={addressForm.state} onChange={handleAddressChange} placeholder="Enter state" />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="af-postal">Postal code *</label>
+                <input id="af-postal" type="text" name="postalCode" autoComplete="postal-code" inputMode="numeric" value={addressForm.postalCode} onChange={handleAddressChange} placeholder="Enter postal code" />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="af-country">Country</label>
+                <input id="af-country" type="text" name="country" autoComplete="country-name" value={addressForm.country} className={styles.readOnly} readOnly />
+                <span className={styles.hint}>Currently shipping within India only</span>
+              </div>
+            </div>
+
+            <label className={styles.checkRow}>
+              <input
+                type="checkbox"
+                name="isDefault"
+                checked={addressForm.isDefault}
+                onChange={handleAddressChange}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkMark} aria-hidden="true" />
+              <span>Set as default address</span>
+            </label>
+
+            <div className={styles.actions}>
+              <Button variant="ghost" onClick={resetAddressForm} disabled={loading}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleAddressSave} disabled={loading}>
+                {loading
+                  ? "Saving…"
+                  : editingAddressIndex !== null
+                  ? "Update address"
+                  : "Save address"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </GlassCard>
 
       {addresses.length === 0 && !showAddressForm ? (
-        <div className={styles.state}>
+        <GlassCard padding="md" className={styles.state}>
           <span className={styles.stateMark}><Icon name="location" size={26} strokeWidth={1} /></span>
           <p className={styles.stateTitle}>No addresses saved yet</p>
           <p className={styles.stateText}>Add one and checkout will offer it first, every time.</p>
-        </div>
+        </GlassCard>
       ) : (
         <div className={styles.addrList}>
           {addresses.map((addr, index) => (
-            <article
+            <GlassCard
+              as="article"
+              padding="md"
               key={addr.id || index}
               className={`${styles.addrCard} ${addr.isDefault ? styles.addrCardDefault : ""}`}
             >
@@ -908,16 +889,15 @@ const Profile = () => {
                 <div className={styles.addrLabelRow}>
                   <span className={styles.addrLabel}>{addr.label || "Address"}</span>
                   {addr.isDefault && (
-                    <span className={styles.seal}>
-                      <Seal />
+                    <Chip variant="trust" icon={<Seal />} className={styles.defaultChip}>
                       Default
-                    </span>
+                    </Chip>
                   )}
                 </div>
                 <div className={styles.addrActions}>
                   {!addr.isDefault && (
                     <button type="button" className={styles.textBtn} onClick={() => handleSetDefaultAddress(index)} disabled={loading}>
-                      Set Default
+                      Set default
                     </button>
                   )}
                   <button type="button" className={styles.textBtn} onClick={() => handleAddressEdit(index)} disabled={loading}>
@@ -942,7 +922,7 @@ const Profile = () => {
                 <p className={styles.addrLine}>{addr.country}</p>
                 <p className={styles.addrPhone}>{addr.phone}</p>
               </div>
-            </article>
+            </GlassCard>
           ))}
         </div>
       )}
@@ -950,23 +930,21 @@ const Profile = () => {
   );
 
   const renderPaymentSection = () => (
-    <div className={styles.section}>
-      {/* No payment-method API exists — render an honest empty state rather than
-          fabricating saved cards. Payment is collected securely at checkout. */}
-      <div className={styles.state}>
-        <span className={styles.stateMark}><Icon name="card" size={26} strokeWidth={1} /></span>
-        <p className={styles.stateTitle}>Nothing saved here — by design</p>
-        <p className={styles.stateText}>
-          Payment details are entered fresh at checkout and are never stored on
-          your account. There is nothing kept on this page for anyone to take.
-        </p>
-      </div>
-    </div>
+    /* No payment-method API exists — render an honest empty state rather than
+       fabricating saved cards. Payment is collected securely at checkout. */
+    <GlassCard padding="md" className={styles.state}>
+      <span className={styles.stateMark}><Icon name="card" size={26} strokeWidth={1} /></span>
+      <p className={styles.stateTitle}>Nothing saved here — by design</p>
+      <p className={styles.stateText}>
+        Payment details are entered fresh at checkout and are never stored on
+        your account. There is nothing kept on this page for anyone to take.
+      </p>
+    </GlassCard>
   );
 
   const renderWalletSection = () => (
-    <div className={styles.section}>
-      <div className={styles.walletBand}>
+    <div className={styles.sectionStack}>
+      <GlassCard strong padding="md" glow="gold" className={styles.walletBand}>
         <span className={styles.walletBandLabel}>Available balance</span>
         <span className={styles.walletBandValue}>
           {walletLoading ? "—" : formatCurrency(walletBalance)}
@@ -974,102 +952,102 @@ const Profile = () => {
         <p className={styles.walletBandHint}>
           Apply your store credit at checkout, toward any order.
         </p>
-      </div>
+      </GlassCard>
 
-      <h3 className={styles.ledgerTitle}>Statement</h3>
+      <GlassCard padding="md" className={styles.section}>
+        <h3 className={styles.ledgerTitle}>Statement</h3>
 
-      {walletLoading ? (
-        <div className={styles.ledger} aria-hidden="true">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={styles.ledgerSkeleton}>
-              <span className={`sf-skeleton ${styles.skelMark}`} />
-              <span className={styles.skelLines}>
-                <span className="sf-skeleton sf-skeleton--text" />
-                <span className="sf-skeleton sf-skeleton--text" />
-              </span>
-            </div>
-          ))}
-        </div>
-      ) : walletTx.length === 0 ? (
-        <div className={styles.state}>
-          <span className={styles.stateMark}><Icon name="wallet" size={26} strokeWidth={1} /></span>
-          <p className={styles.stateTitle}>No store credit yet</p>
-          <p className={styles.stateText}>
-            Refunds issued to store credit, and credit you spend at checkout,
-            are written here — each line with the order it belongs to.
-          </p>
-        </div>
-      ) : (
-        <div className={styles.ledger}>
-          {walletTx.map((t) => {
-            const isCredit = t.type === "credit";
-            return (
-              <div key={t.id} className={styles.ledgerRow}>
-                <span
-                  className={`${styles.ledgerMark} ${
-                    isCredit ? styles.ledgerMarkCredit : styles.ledgerMarkDebit
-                  }`}
-                  aria-hidden="true"
-                >
-                  {isCredit ? "+" : "−"}
-                </span>
-                <span className={styles.ledgerBody}>
-                  <span className={styles.ledgerReason}>
-                    {t.reason || (isCredit ? "Store credit added" : "Store credit used")}
-                  </span>
-                  <span className={styles.ledgerMeta}>
-                    {formatDate(t.createdAt, "medium")}
-                    {t.orderNumber && (
-                      <>
-                        <span className={styles.metaSep} aria-hidden="true">·</span>
-                        <button
-                          type="button"
-                          className={styles.ledgerLink}
-                          onClick={() => navigate("/orders")}
-                        >
-                          {t.orderNumber}
-                        </button>
-                      </>
-                    )}
-                  </span>
-                </span>
-                <span className={styles.ledgerAmounts}>
-                  <span className={isCredit ? styles.amountCredit : styles.amountDebit}>
-                    {isCredit ? "+" : "−"}
-                    {formatCurrency(t.amount)}
-                  </span>
-                  {t.balanceAfter != null && (
-                    <span className={styles.ledgerBalance}>
-                      Balance {formatCurrency(t.balanceAfter)}
-                    </span>
-                  )}
+        {walletLoading ? (
+          <div className={styles.ledger} aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={styles.ledgerSkeleton}>
+                <span className={`sf-skeleton ${styles.skelMark}`} />
+                <span className={styles.skelLines}>
+                  <span className="sf-skeleton sf-skeleton--text" />
+                  <span className="sf-skeleton sf-skeleton--text" />
                 </span>
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : walletTx.length === 0 ? (
+          <div className={styles.state}>
+            <span className={styles.stateMark}><Icon name="wallet" size={26} strokeWidth={1} /></span>
+            <p className={styles.stateTitle}>No store credit yet</p>
+            <p className={styles.stateText}>
+              Refunds issued to store credit, and credit you spend at checkout,
+              are written here — each line with the order it belongs to.
+            </p>
+          </div>
+        ) : (
+          <div className={styles.ledger}>
+            {walletTx.map((t) => {
+              const isCredit = t.type === "credit";
+              return (
+                <div key={t.id} className={styles.ledgerRow}>
+                  <span
+                    className={`${styles.ledgerMark} ${
+                      isCredit ? styles.ledgerMarkCredit : styles.ledgerMarkDebit
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {isCredit ? "+" : "−"}
+                  </span>
+                  <span className={styles.ledgerBody}>
+                    <span className={styles.ledgerReason}>
+                      {t.reason || (isCredit ? "Store credit added" : "Store credit used")}
+                    </span>
+                    <span className={styles.ledgerMeta}>
+                      {formatDate(t.createdAt, "medium")}
+                      {t.orderNumber && (
+                        <>
+                          <span className={styles.metaSep} aria-hidden="true">·</span>
+                          <button
+                            type="button"
+                            className={styles.ledgerLink}
+                            onClick={() => navigate("/orders")}
+                          >
+                            {t.orderNumber}
+                          </button>
+                        </>
+                      )}
+                    </span>
+                  </span>
+                  <span className={styles.ledgerAmounts}>
+                    <span className={isCredit ? styles.amountCredit : styles.amountDebit}>
+                      {isCredit ? "+" : "−"}
+                      {formatCurrency(t.amount)}
+                    </span>
+                    {t.balanceAfter != null && (
+                      <span className={styles.ledgerBalance}>
+                        Balance {formatCurrency(t.balanceAfter)}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </GlassCard>
     </div>
   );
 
   const renderNotificationsSection = () => (
-    <div className={styles.section}>
-      {/* No notification-preference fields exist on the user yet — show an honest
-          "coming soon" state rather than toggles that wouldn't persist. */}
-      <div className={styles.state}>
-        <span className={styles.stateMark}><Icon name="bell" size={26} strokeWidth={1} /></span>
-        <p className={styles.stateTitle}>Preferences are coming soon</p>
-        <p className={styles.stateText}>
-          For now, order updates are always sent to <strong>{user.email}</strong>.
-          Fine-tuning offers and reminders will live here shortly.
-        </p>
-      </div>
-    </div>
+    /* No notification-preference fields exist on the user yet — show an honest
+       "coming soon" state rather than toggles that wouldn't persist. */
+    <GlassCard padding="md" className={styles.state}>
+      <span className={styles.stateMark}><Icon name="bell" size={26} strokeWidth={1} /></span>
+      <p className={styles.stateTitle}>Preferences are coming soon</p>
+      <p className={styles.stateText}>
+        For now, order updates are always sent to <strong>{user.email}</strong>.
+        Fine-tuning offers and reminders will live here shortly.
+      </p>
+    </GlassCard>
   );
 
   const renderSettingsSection = () => (
-    <div className={styles.section}>
-      {/* Change Password */}
+    <GlassCard padding="md" className={styles.section}>
+      {/* Change password — the only block in Settings. */}
       <h3 className={styles.subHead}>
         <Icon name="lock" size={16} />
         Change password
@@ -1077,7 +1055,7 @@ const Profile = () => {
 
       <div className={styles.pwForm}>
         <div className={styles.field}>
-          <label htmlFor="pw-current">Current Password *</label>
+          <label htmlFor="pw-current">Current password *</label>
           <div className={styles.pwWrap}>
             <input
               id="pw-current"
@@ -1100,7 +1078,7 @@ const Profile = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="pw-new">New Password *</label>
+          <label htmlFor="pw-new">New password *</label>
           <div className={styles.pwWrap}>
             <input
               id="pw-new"
@@ -1133,7 +1111,7 @@ const Profile = () => {
                 ))}
               </span>
               <span className={styles.meterLabel} role="status">
-                <span className={styles.srOnly}>Password strength: </span>
+                <span className="sf-visually-hidden">Password strength: </span>
                 {passwordStrength.label}
               </span>
             </div>
@@ -1141,7 +1119,7 @@ const Profile = () => {
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="pw-confirm">Confirm New Password *</label>
+          <label htmlFor="pw-confirm">Confirm new password *</label>
           <div className={styles.pwWrap}>
             <input
               id="pw-confirm"
@@ -1185,24 +1163,19 @@ const Profile = () => {
                   {req.met ? <Icon name="check" size={12} strokeWidth={2} /> : null}
                 </span>
                 {req.text}
-                <span className={styles.srOnly}>{req.met ? " — met" : " — not met yet"}</span>
+                <span className="sf-visually-hidden">{req.met ? " — met" : " — not met yet"}</span>
               </li>
             ))}
           </ul>
         </div>
 
         <div className={styles.actions}>
-          <button
-            type="button"
-            className="sf-btn sf-btn--emerald"
-            onClick={handlePasswordSubmit}
-            disabled={loading}
-          >
-            {loading ? "Updating…" : "Update Password"}
-          </button>
+          <Button variant="primary" onClick={handlePasswordSubmit} disabled={loading}>
+            {loading ? "Updating…" : "Update password"}
+          </Button>
         </div>
       </div>
-    </div>
+    </GlassCard>
   );
 
   const SECTION_META = {
@@ -1216,198 +1189,208 @@ const Profile = () => {
 
   return (
     <div className={styles.page}>
-      <div className={styles.container}>
-        {/* Feedback toast (fixed-position; see .feedback in the stylesheet) */}
-        <AnimatePresence>
-          {feedback.message && (
-            <motion.div
-              className={`${styles.feedback} ${styles[`feedback_${feedback.type}`]}`}
-              role="status"
-              aria-live="polite"
-              {...collapse(shouldReduceMotion)}
-            >
-              <span>{feedback.message}</span>
-              <button
-                type="button"
-                className={styles.feedbackClose}
-                onClick={() => setFeedback({ type: "", message: "" })}
-                aria-label="Dismiss"
+      <section className="sf-section">
+        <div className="sf-container">
+          {/* Feedback toast (fixed-position; see .feedback in the stylesheet) */}
+          <AnimatePresence>
+            {feedback.message && (
+              <motion.div
+                className={`${styles.feedback} ${styles[`feedback_${feedback.type}`]}`}
+                role="status"
+                aria-live="polite"
+                {...collapse(shouldReduceMotion)}
               >
-                ×
-              </button>
+                <span>{feedback.message}</span>
+                <button
+                  type="button"
+                  className={styles.feedbackClose}
+                  onClick={() => setFeedback({ type: "", message: "" })}
+                  aria-label="Dismiss"
+                >
+                  ×
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {activeSection ? (
+            /* ===================== Section view ===================== */
+            <motion.div key={activeSection} {...collapse(shouldReduceMotion)}>
+              <div className={styles.sectionTop}>
+                <button type="button" className={styles.backBtn} onClick={backToDashboard}>
+                  <Icon name="back" size={15} />
+                  <span>Your account</span>
+                </button>
+                <h1 className={styles.sectionTitle}>{SECTION_META[activeSection]?.title}</h1>
+              </div>
+              {SECTION_META[activeSection]?.render()}
+            </motion.div>
+          ) : (
+            /* ===================== Dashboard view =====================
+               Two columns from 1025px: the identity card and the figures on the
+               left, the index and the recent orders on the right. Below that,
+               one column in the order a phone reads it. */
+            <motion.div className={styles.dashboard} {...collapse(shouldReduceMotion)}>
+              <div className={styles.rail}>
+                {/* 1. WHO YOU ARE */}
+                <GlassCard strong padding="md" glow="gold" className={styles.identity}>
+                  <span className={styles.avatarRing}>
+                    <span className={styles.avatar}>
+                      {user.avatar ? (
+                        <img className={styles.avatarImg} src={user.avatar} alt="" loading="lazy" />
+                      ) : (
+                        <span className={styles.avatarInitials}>
+                          {getInitials(user.firstName, user.lastName)}
+                        </span>
+                      )}
+                    </span>
+                  </span>
+
+                  <p className="sf-eyebrow">Your account</p>
+                  <h1 className={styles.greetTitle}>
+                    {greetingName ? `Good to see you, ${greetingName}` : "Good to see you"}
+                  </h1>
+                  <p className={styles.greetEmail}>{user.email}</p>
+                  <p className={styles.greetMeta}>
+                    <span className={`${styles.badge} ${membership.premium ? styles.badgeGold : ""}`}>
+                      {membership.label}
+                    </span>
+                    {user.createdAt && (
+                      <>
+                        <span className={styles.metaSep} aria-hidden="true">·</span>
+                        <span>Since {formatDate(user.createdAt, "medium")}</span>
+                      </>
+                    )}
+                  </p>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    block
+                    className={styles.editLink}
+                    onClick={() => openSection("profile")}
+                  >
+                    Edit details
+                  </Button>
+                </GlassCard>
+
+                {/* 2. THE FIGURES */}
+                <section className={styles.figures} aria-label="Account summary">
+                  <button type="button" className={styles.figure} onClick={() => navigate("/orders")}>
+                    <span className={styles.figureValue}>{statValue(orders.length)}</span>
+                    <span className={styles.figureLabel}>Orders</span>
+                  </button>
+                  <button type="button" className={styles.figure} onClick={() => navigate("/wishlist")}>
+                    <span className={styles.figureValue}>{wishlistItems.length}</span>
+                    <span className={styles.figureLabel}>Wishlist</span>
+                  </button>
+                  <div className={styles.figure}>
+                    <span className={styles.figureValue}>{statValue(reviewsCount ?? 0)}</span>
+                    <span className={styles.figureLabel}>Reviews</span>
+                  </div>
+                </section>
+              </div>
+
+              <div className={styles.main}>
+                {/* 3. THE INDEX */}
+                <nav className={`sf-glass ${styles.index}`} aria-label="Account menu">
+                  {menuRows.map((row) => (
+                    <button key={row.id} type="button" className={styles.indexRow} onClick={row.onClick}>
+                      <span className={styles.indexIcon}>
+                        <Icon name={row.icon} />
+                      </span>
+                      <span className={styles.indexText}>
+                        <span className={styles.indexLabel}>
+                          {row.label}
+                          {row.badge != null && <span className={styles.indexCount}>{row.badge}</span>}
+                        </span>
+                        <span className={styles.indexSub}>{row.sub}</span>
+                      </span>
+                      <span className={styles.indexChevron}><Icon name="chevron" size={16} /></span>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* 4. RECENT ORDERS */}
+                <section className={styles.recent}>
+                  <div className={styles.recentHead}>
+                    <h2 className={styles.recentTitle}>Recent orders</h2>
+                    {orders.length > 0 && (
+                      <Button variant="ghost" size="sm" onClick={() => navigate("/orders")}>
+                        View all
+                      </Button>
+                    )}
+                  </div>
+
+                  {statsLoading ? (
+                    <div className={styles.recentList} aria-hidden="true">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className={styles.recentSkeleton}>
+                          <span className={`sf-skeleton ${styles.skelPlate}`} />
+                          <span className={styles.skelLines}>
+                            <span className="sf-skeleton sf-skeleton--text" />
+                            <span className="sf-skeleton sf-skeleton--text" />
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : recentOrders.length === 0 ? (
+                    <GlassCard padding="md" className={styles.state}>
+                      <span className={styles.stateMark}><Icon name="orders" size={26} strokeWidth={1} /></span>
+                      <p className={styles.stateTitle}>No orders yet</p>
+                      <p className={styles.stateText}>
+                        When you order, it is recorded here — and kept.
+                      </p>
+                      <Button variant="primary" to={ROUTES.SHOP} className={styles.stateBtn}>
+                        Start shopping
+                      </Button>
+                    </GlassCard>
+                  ) : (
+                    <div className={styles.recentList}>
+                      {recentOrders.map((order) => {
+                        const statusInfo = orderStatusInfo(order);
+                        const firstItem = (order.items || [])[0] || {};
+                        return (
+                          <button
+                            key={order.id || order.orderNumber}
+                            type="button"
+                            className={`sf-glass ${styles.recentRow}`}
+                            onClick={() => navigate("/orders")}
+                            aria-label={`Order ${order.orderNumber || order.id}, ${statusInfo.label}`}
+                          >
+                            <span className={`sf-plate ${styles.recentPlate}`}>
+                              {firstItem.image ? <img src={firstItem.image} alt="" loading="lazy" /> : null}
+                            </span>
+                            <span className={styles.recentBody}>
+                              <span className={styles.recentNumber}>
+                                {order.orderNumber || `#${order.id}`}
+                              </span>
+                              <span className={styles.recentMeta}>
+                                {formatDate(order.createdAt, "medium")}
+                              </span>
+                            </span>
+                            <span className={styles.recentEnd}>
+                              {statusChip(statusInfo)}
+                              <span className={styles.recentTotal}>{formatCurrency(order.total)}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+
+                {/* 5. THE DOOR */}
+                <div className={styles.logoutRow}>
+                  <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
+                    Log out
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
-        </AnimatePresence>
-
-        {activeSection ? (
-          /* ===================== Section view ===================== */
-          <motion.div key={activeSection} {...collapse(shouldReduceMotion)}>
-            <div className={styles.sectionTop}>
-              <button type="button" className={styles.backBtn} onClick={backToDashboard}>
-                <Icon name="back" size={15} />
-                <span>Account</span>
-              </button>
-              <h1 className={styles.sectionTitle}>{SECTION_META[activeSection]?.title}</h1>
-            </div>
-            {SECTION_META[activeSection]?.render()}
-          </motion.div>
-        ) : (
-          /* ===================== Dashboard view ===================== */
-          <motion.div {...collapse(shouldReduceMotion)}>
-            {/* 1. THE GREETING */}
-            <section className={styles.greet}>
-              <div className={styles.greetText}>
-                <p className={styles.eyebrow}>Your account</p>
-                <h1 className={styles.greetTitle}>
-                  {greetingName ? `Good to see you, ${greetingName}` : "Good to see you"}
-                </h1>
-                <p className={styles.greetEmail}>{user.email}</p>
-                <p className={styles.greetMeta}>
-                  <span className={`${styles.badge} ${membership.premium ? styles.badgeGold : ""}`}>
-                    {membership.label}
-                  </span>
-                  {user.createdAt && (
-                    <>
-                      <span className={styles.metaSep} aria-hidden="true">·</span>
-                      <span>Since {formatDate(user.createdAt, "medium")}</span>
-                    </>
-                  )}
-                </p>
-              </div>
-
-              <div className={styles.greetAside}>
-                <span className={styles.avatar}>
-                  {user.avatar ? (
-                    <img className={styles.avatarImg} src={user.avatar} alt="" loading="lazy" />
-                  ) : (
-                    <span className={styles.avatarInitials}>
-                      {getInitials(user.firstName, user.lastName)}
-                    </span>
-                  )}
-                </span>
-                <button type="button" className={styles.editLink} onClick={() => openSection("profile")}>
-                  Edit details
-                </button>
-              </div>
-            </section>
-
-            {/* 2. THE FIGURES */}
-            <section className={styles.figures} aria-label="Account summary">
-              <button type="button" className={styles.figure} onClick={() => navigate("/orders")}>
-                <span className={styles.figureValue}>{statValue(orders.length)}</span>
-                <span className={styles.figureLabel}>Orders</span>
-              </button>
-              <button type="button" className={styles.figure} onClick={() => navigate("/wishlist")}>
-                <span className={styles.figureValue}>{wishlistItems.length}</span>
-                <span className={styles.figureLabel}>Wishlist</span>
-              </button>
-              <div className={styles.figure}>
-                <span className={styles.figureValue}>{statValue(reviewsCount ?? 0)}</span>
-                <span className={styles.figureLabel}>Reviews</span>
-              </div>
-            </section>
-
-            {/* 3. THE INDEX */}
-            <nav className={styles.index} aria-label="Account menu">
-              {menuRows.map((row) => (
-                <button key={row.id} type="button" className={styles.indexRow} onClick={row.onClick}>
-                  <span className={styles.indexIcon}>
-                    <Icon name={row.icon} />
-                  </span>
-                  <span className={styles.indexText}>
-                    <span className={styles.indexLabel}>
-                      {row.label}
-                      {row.badge != null && <span className={styles.indexCount}>{row.badge}</span>}
-                    </span>
-                    <span className={styles.indexSub}>{row.sub}</span>
-                  </span>
-                  <span className={styles.indexChevron}><Icon name="chevron" size={16} /></span>
-                </button>
-              ))}
-            </nav>
-
-            {/* 4. RECENT ORDERS */}
-            <section className={styles.recent}>
-              <div className={styles.recentHead}>
-                <h2 className={styles.recentTitle}>Recent orders</h2>
-                {orders.length > 0 && (
-                  <button type="button" className={styles.viewAll} onClick={() => navigate("/orders")}>
-                    View all
-                  </button>
-                )}
-              </div>
-
-              {statsLoading ? (
-                <div className={styles.recentList} aria-hidden="true">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className={styles.recentSkeleton}>
-                      <span className={`sf-skeleton ${styles.skelPlate}`} />
-                      <span className={styles.skelLines}>
-                        <span className="sf-skeleton sf-skeleton--text" />
-                        <span className="sf-skeleton sf-skeleton--text" />
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : recentOrders.length === 0 ? (
-                <div className={styles.state}>
-                  <span className={styles.stateMark}><Icon name="orders" size={26} strokeWidth={1} /></span>
-                  <p className={styles.stateTitle}>No orders yet</p>
-                  <p className={styles.stateText}>
-                    When you order a piece, it is recorded here — and kept.
-                  </p>
-                  <button
-                    type="button"
-                    className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
-                    onClick={() => navigate(ROUTES.SHOP)}
-                  >
-                    Browse the collection
-                  </button>
-                </div>
-              ) : (
-                <div className={styles.recentList}>
-                  {recentOrders.map((order) => {
-                    const statusInfo = getStatusInfo(order);
-                    const firstItem = (order.items || [])[0] || {};
-                    return (
-                      <button
-                        key={order.id || order.orderNumber}
-                        type="button"
-                        className={styles.recentRow}
-                        onClick={() => navigate("/orders")}
-                        aria-label={`Order ${order.orderNumber || order.id}, ${statusInfo.label}`}
-                      >
-                        <span className={styles.recentPlate}>
-                          {firstItem.image ? <img src={firstItem.image} alt="" loading="lazy" /> : null}
-                        </span>
-                        <span className={styles.recentBody}>
-                          <span className={styles.recentNumber}>
-                            {order.orderNumber || `#${order.id}`}
-                          </span>
-                          <span className={styles.recentMeta}>
-                            {formatDate(order.createdAt, "medium")}
-                          </span>
-                        </span>
-                        <span className={styles.recentEnd}>
-                          {statusChip(statusInfo)}
-                          <span className={styles.recentTotal}>{formatCurrency(order.total)}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-
-            {/* 5. THE DOOR */}
-            <div className={styles.logoutRow}>
-              <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
-                Log out
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </div>
+        </div>
+      </section>
     </div>
   );
 };

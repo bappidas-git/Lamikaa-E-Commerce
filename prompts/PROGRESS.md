@@ -33,7 +33,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | complete | 2026-09-08 | (this commit) | The product page is finished: **nine chapters**, every one of them optional and every one of them printing DATA. `overview · benefits · ingredients · how-to-use · farmer-story · full-ingredients · faqs · reviews · complete-the-ritual`, with the chapter index and the chapter markup reading **one** set of booleans so `ChapterNav` and the document can never disagree. Four new components (`pdp/PackClaims`, `IngredientChapter`, `HowToUse`, `FarmerStory`, 487 lines + 4 modules), `utils/seo.js` 93 → 245 with **`productJsonLd`**, and the three retained blocks rewritten. **Claims discipline held**: `offers` only where `isPriceKnown`, `availability` only where `stock` is a real number, `aggregateRating` only where a real average AND count exist — so on a fresh install **no** graph carries a rating and five of eight carry no offer; the carton's "anti-ageing" line appears exactly once on the page, inside "As printed on the pack". Reviews empty state is now "No reviews yet — Reviews are written by customers from My Orders after delivery."; the flag flip was exercised and reverted. `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 276 passed / 50 skipped (26 new). Browser QA at 360/390/414/768/1024/1280/1440 — **`scrollWidth === clientWidth` at every one** after two container-vs-viewport fixes the browser found. See "Prompt 27 record" below. |
 | 28 | Content pages from siteContent | complete | 2026-09-08 | (this commit) | **Five pages, one source of copy.** `/about`, `/why-lamikaa`, `/faq`, `/contact` and `/policies/:policy` are built from `siteContent` and render **not one narrative sentence typed into JSX** — only UI furniture ("Our Story", "Contents", "Send message"). **Seven old page folders deleted** (6,844 lines of Meghali-era JSX + CSS, four of them four copies of one document stylesheet); the four policy routes collapse into **one param route** and `/policies/other` renders a real 404. New: `utils/policyClauses.js` (the tax / COD / returns / shipping-method clauses a policy cannot carry in stored prose), `hooks/useSiteContent.js`, `utils/seo.js` + `faqPageJsonLd`. **The old Terms page's three hard-coded rupee shipping rates are gone and cannot come back** — rates are live data or nothing. Browser QA in Chromium at 360/390/414/768/1024/1280/1440: **no horizontal scroll on any of the five page types**, deep links `/faq#faq-7` and `#group-orders` open and focus the right row, the contact form posts a lead with the same seven keys, and the Terms clause re-words itself when Settings change (verified against a patched settings record, then reverted). `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 313 passed / 50 skipped (**37 new**). See "Prompt 28 record" below. |
 | 29 | Cart page and checkout restyle | complete | 2026-09-08 | (this commit) | `/cart` is a real page and `ComingSoon` has no route left (`grep -n "ComingSoon" src/App.js` → **0**). `components/cart/CrossSell.{js,module.css}` is "Complete your ritual" lifted out of the drawer whole — `crossSellFor` and the row markup now have ONE home and the tray and the page cannot disagree about what comes next. `pages/Cart/Cart.{js,module.css}` (482 + 508) is the two-column page: line items at 96px→112px of plate on the left, a sticky `GlassCard strong` summary on the right (subtotal · the drawer's coupon disclosure verbatim · discount · "Shipping and taxes calculated at checkout" · Checkout · Continue shopping · `LegalNote compact`), the cross-sell under the items, and below 769px one column with a 64px glass thumb bar — **`BottomNav` now stands down on `/cart` as well as `/product/*`** (verified: BottomNav nodes = 0 on `/cart`, 1 on `/shop` and `/checkout`). `Checkout.module.css` **rewritten from scratch**, 2 107 → 1 492 lines, on the shared primitives; `Checkout.js` edited for markup, classes and copy ONLY — the money block, the `orderData` payload, `STEPS`, `couponDiscountFor`, `etaFor`, `applyCoupon`/`removeCoupon`, `validateAddress`, `PAYMENT_OPTIONS` and `assurances` were diffed byte-for-byte and are **IDENTICAL**. Two additive guards only: the step-0 TBA drop and the order-failure alert. `grep -n "silk\|weave\|loom\|&#8377;" src/pages/Checkout/Checkout.js` → **0**. Measured live: inputs 48px, option cards 64px, CTA 52px, step chips 36px, `scrollWidth === clientWidth` at 360/390/414/768/1024/1280/1440 on both pages. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Two real orders placed end to end in mock mode (COD, then coupon + store credit) — see the Prompt 29 record. **`git status db.json` clean.** |
-| 30 | Auth, account, orders and wishlist restyle | pending | | | |
+| 30 | Auth, account, orders and wishlist restyle | complete | 2026-09-08 | (this commit) | `src/utils/orderStatus.js` is the one home for `deriveOrderStatus` + `STATUS_CONFIG` — the two byte-identical copies in `OrderHistory.js:18-47` and `Profile.js:18-47` are gone and both pages read `orderStatusInfo(order)` (`grep -rn "deriveOrderStatus" src --include=*.js | grep -v utils/orderStatus.js` → **2**, both docblock references; `grep -rln "utils/orderStatus" src` → **2 importers**). The config now carries a semantic **tone** instead of a per-page CSS-module class name, so a status is coloured once: `Chip variant="status"` on both screens. **`AuthModal` (1049 → 875) and `ReviewModal` (337 → 250) are on `ui/Modal`** — four hand-rolled overlays, focus traps, Escape handlers and body locks deleted, and both gained the route-change close and the scrollbar compensation they never had; the **disabled Google/Facebook buttons and their five brand hexes are removed** (Decisions), which leaves `ErrorBoundary` and `Footer`'s payment marks as the storefront's only documented hard-coded colours. `Profile` is a `320px 1fr` dashboard from 1025px (initials in a signature-gradient ring, three figures, a 52-55px index, recent orders); `OrderHistory` records are `GlassCard`s with 56px plates, a `Chip variant="step"` passage on a gradient hairline and pill actions; `Wishlist` is "Your wishlist" on a 1/2/3/4 grid with `Button variant="secondary" block` under each card. `RETURN_WINDOW_DAYS` now reads `STOREFRONT_CONFIG.returnsWindowDays`. All five stylesheets rewritten on the tokens (5 030 → 3 345 lines, **no colour hex and no `rgba()`**, every `var(--sf-*)` resolves). Logic diffed against HEAD: **Profile's 374-line effect+handler block is byte-identical**; OrderHistory's differs only in the four `orderStatusInfo` call sites and the deleted local `getStatusInfo` wrapper. `grep -rn "Muga\|Eri\|weave\|loom\|Collection" src/pages/Profile src/pages/OrderHistory src/pages/Wishlist src/components/AuthModal src/components/ReviewModal` → **0**. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Driven end to end in Chromium against mock mode — login, register validation, strength meter, address CRUD with the default rules, wallet ledger, order cancel (COD copy), reorder, and a review written from a delivered order → pending in Admin → approved → live on the PDP → the chip flips to "Review published". No horizontal scroll at 360/390/414/768/1024/1280/1440 on any of the four surfaces; zero page errors. **`git status db.json` clean.** See the Prompt 30 record below. |
 | 31 | Order confirmation, offers, search results and state consistency | pending | | | |
 | 32 | Admin rebrand and shell | pending | | | |
 | 33 | Admin product form — media manager and new fields | pending | | | |
@@ -365,6 +365,14 @@ Record every decision a prompt had to make that the reference files did not sett
 - `29 · 2026-09-08 · `.card` / `.railCard` / `.credit` drop their backdrop filter under 769px · DESIGN_SYSTEM §4 allows two blurred layers in view; a full-height step card, a summary card and a violet credit card all blurring a live scrolling page is three. Below 769px they sit on `--sf-color-surface` with their hairline. Each selector is doubled (`.card.card`) so the ground beats GlassCard's own whichever order the two sheets land in.`
 - `29 · 2026-09-08 · `/checkout` gained `padding-bottom: 64px + safe-area` below 769px · The BottomNav does NOT stand down on `/checkout` (its CTA is in the flow, not pinned), and the old sheet cleared the bar with `--sf-space-24` on `.page`. The rewrite states the reason instead of the number.`
 
+- `30 · 2026-09-08 · The disabled Google and Facebook buttons are DELETED, not restyled · They were rendered `disabled` with a "Soon" badge and wired to nothing — no provider config, no OAuth callback, no `social` branch in `api.js`. A control that cannot be pressed is not a feature, it is a promise, and it was carrying the only five hard-coded brand hexes on the storefront (`#4285F4 #34A853 #FBBC05 #EA4335 #1877F2`, the documented exception in REPO_MAP §2). Social sign-in is a backend feature: when the provider table and the callback exist it comes back as working buttons with real marks. The dialog now offers exactly what it can do. (00_INDEX §3.19 anticipates this removal.)`
+- `30 · 2026-09-08 · The shared `STATUS_CONFIG` carries a semantic TONE, not a CSS-module class name · The two copies each mapped a status onto a class (`statusProcessing`, `statusDelivered` …) that only existed inside the page that declared it — one status, two unrelated names, two sets of colour rules. What a status actually has is a tone, and the design system already names those (`--sf-color-warning/-info/-success/-danger`), which is exactly what `Chip variant="status"` consumes. Neither page needs a status class any more and no colour is written down twice. `returned` keeps `danger`, the tone its old `statusCancelled` class already painted.`
+- `30 · 2026-09-08 · The shared module exports `orderStatusInfo(order)` and both pages use IT, not `deriveOrderStatus` directly · Every consumer needed the key AND the word (the timeline stage, the cancel guard and the filter all read one order), so returning `{ status, label, tone }` from one call is what the callers actually wanted; calling `deriveOrderStatus` and then indexing `STATUS_CONFIG` was the duplicated shape, not just the duplicated function. `deriveOrderStatus`, `STATUS_CONFIG` and `getStatusInfo(status)` are still exported for anything that needs a piece. The prompt's `grep -rn "deriveOrderStatus" src --include=*.js | grep -v utils/orderStatus.js` returns **2** as specified — both are the docblock lines in the two pages that name what moved.`
+- `30 · 2026-09-08 · "Forms via `ui` inputs" was read as "forms to the design system's field spec", because there is no input primitive · `src/components/ui/*` is the thirteen components of Prompt 05 and none of them is a field (DESIGN_SYSTEM §7 specifies inputs as a RULE — 48px, `--sf-color-surface-2`, one `--sf-glass-border` hairline, a gold focus ring, a label that is always visible — not as a component). Profile, AuthModal and ReviewModal therefore wear that rule in their own modules, written identically to `Checkout.module.css`'s `.formGroup` from Prompt 29. Extracting `ui/Input` is a real piece of work with four call sites to migrate and belongs to a prompt that says so.`
+- `30 · 2026-09-08 · `Modal`'s phone treatment is a FULL-HEIGHT sheet, not a bottom sheet · The spec asks for "bottom sheet ≤ 480px" and `ui/Modal` already turns every size into a full-screen sheet at 480px and below (Modal.module.css:118-137, Prompt 05's contract, shared with SearchModal). Measured at 390×844 the auth dialog is 390×844 at y=0. Re-deciding that inside AuthModal would give the storefront two different mobile dialog behaviours; the primitive's is the one every dialog gets.`
+- `30 · 2026-09-08 · The feedback toast stays the existing `collapse()` motion.js toast; it was not moved to the SweetAlert2 skin · The prompt allows either and asks for the simpler with no behaviour change. The existing one is four lines of JSX with a dismiss button and a 4-second timer that the page already owns; routing it through Swal would add a second toast system to a page that already raises Swal for the three CONFIRMS (delete address, log out) and make the "Profile updated successfully." line un-dismissable by the same control.`
+- `30 · 2026-09-08 · Three CSS-module classes are written doubled (`.plate.plate`, `.actionDanger.actionDanger`, `.recentPlate.recentPlate`) · Each recolours or re-radiuses an element that also carries a single global class from `storefront-primitives.css` (`.sf-plate`, `.sf-btn--outline-gold`). Both are specificity 0-1-0, so which one wins depends on the order the bundler emits two stylesheets in — not something a component should be betting on. Doubling is the same fix `Checkout.module.css` already uses (`.credit.credit`, Prompt 29) and it beats `!important`, which would take the property away from every later caller.`
+- `30 · 2026-09-08 · The Order History empty-state mark is a shopping bag, not the old bound ledger · The prompt's copy sweep asks for "a simple hairline heart / bag" in place of the loom drawing. The loom was the WISHLIST's (`EmptyIllustration`, with the gold weft and the shuttle) and is now a plain hairline heart; Order History's `LedgerMark` was a bound page — not textile, but a ledger of woven goods is not what a skincare brand records either, so it is a bag in one line with a gold handle. `SealedMark` and `AlertMark` are unchanged.`
 
 ## Open TODOs
 
@@ -3805,3 +3813,119 @@ extracted `ctaLabel`, or one of the two guards above.
 Nothing of the cart or the checkout. `pages/_ComingSoon/` is now unreferenced and is Prompt 31's to
 delete; the empty states on both pages are the `GlassCard` that Prompt 31 will formalise as
 `ui/EmptyState`.
+
+---
+
+## Prompt 30 record (2026-09-08)
+
+### What was built
+
+**`src/utils/orderStatus.js` (84 lines, new).** `deriveOrderStatus` and `STATUS_CONFIG` were byte-identical
+in `OrderHistory.js:18-47` and `Profile.js:18-47` — two homes for one truth, and the moment one of them
+learned about a new state the other quietly disagreed about the same order. They now live here once, with
+`getStatusInfo(status)` and `orderStatusInfo(order)` (which returns `{ status, label, tone }`, because every
+caller needed the key AND the word). `STATUS_CONFIG` is the union of the two old tables — the five canonical
+states plus the four legacy `status` aliases OrderHistory carried (`pending`, `completed`, `failed`,
+`refunded`) — so neither page lost a row.
+
+**`AuthModal` on `ui/Modal`** (1 049 → 875 JS, 777 → 502 CSS). Deleted: the overlay, the `FOCUSABLE_SELECTOR`
+tab-cycling trap, the Escape listener, the `document.body.style.overflow` lock, the `isMobile` resize
+listener and its desktop/mobile motion branch, the close button, and `CloseIcon`. `Modal` owns all of them
+and adds two the dialog never had (close on navigation, scrollbar-width compensation). Kept exactly:
+`{ open, onClose, defaultTab }`, the tablist with its roving tabindex and Home/End, the directional pane
+slide, the password-strength meter, the three show/hide toggles, both validators, `login`/`register`, every
+`aria-invalid`/`aria-describedby` pair, remember-me, the forgot-password note, and the three legal links.
+Name placeholders are now neutral ("First name" / "Last name"). Copy: **"Welcome back"** and
+**"Create your account"**.
+
+**`ReviewModal` on `ui/Modal`** (337 → 248 JS, 425 → 247 CSS). Same four deletions. Props, the star
+radiogroup with its words, both counters, the edit note and the moderation notice are unchanged; the product
+sits on a `.sf-plate` through `CloudinaryImage` (packaging is contained, never cropped) and Cancel/Submit
+moved into Modal's footer rail. New placeholder: *"How does it feel on your skin? How does it smell? What
+would you tell a friend?"*
+
+**`Profile`** (1 415 → 1 398 JS, 1 757 → 1 352 CSS). The dashboard is a `320px 1fr` grid from 1025px — an
+identity `GlassCard` (initials inside a signature-gradient ring, greeting, email, membership badge, "Edit
+details") over the three figures on the left; the 52px index and the recent orders on the right. Sections are
+`GlassCard`s at 24px; addresses wear a gold `Chip variant="trust"` "Default" and a gold hairline; the wallet
+is a glowing balance band over hairline ledger rows with credit/debit tones; fields are the 48px sunken input
+the checkout already wears. Settings is the password block alone.
+
+**`OrderHistory`** (1 185 → 1 159 JS, 1 439 → 908 CSS). Each record is a `GlassCard`: number + copy control +
+date + `Chip variant="status"` on the head row, a 56px `CloudinaryImage` plate strip with the total, three
+`Chip variant="step"` numerals joined by a hairline that turns into the signature gradient behind you, and
+pill `Button`s that wrap. The two disclosures keep the `grid-template-rows: 0fr → 1fr` technique (the same
+one `ui/Accordion` uses) and now read the shared `--sf-transition` instead of a local duration variable.
+
+**`Wishlist`** (499 → 496 JS, 632 → 336 CSS). "Your wishlist" through `SectionHeading`; a glass guest band
+and a glass toolbar; `Button variant="secondary" block` under every `ProductCard`; a 1/2/3/4-column grid at
+360/640/1024/1280 (measured); the empty state is the shared `GlassCard` pattern with a hairline heart.
+
+### What did NOT change, proved rather than asserted
+
+- **Profile's effects and handlers are byte-identical to HEAD.** The 374-line block from
+  `// Populate form data from user` to `// ---- Logged-out guard ----` — the two fetch effects, the feedback
+  timer, `handleProfileSave`, `getPasswordStrength`, `handlePasswordSubmit`, the whole address CRUD with its
+  default-promotion rules and legacy-row normalisation, and `handleLogout` — compares equal.
+- **OrderHistory's handler block differs in exactly five places**, all of them the deduplication: the local
+  `getStatusInfo` wrapper is gone and `isReturnEligible`, `isCancellable`, `isReviewable` and the filter now
+  call `orderStatusInfo(order)`. `fetchOrders`, `handleCopy`, `reorderableItems`, `handleReorder`,
+  `reviewFor`, `openReviewModal`, `handleSubmitReview` and `handleCancelOrder` are untouched.
+- **`RETURN_WINDOW_DAYS` is the only value that moved**: a local `7` became
+  `STOREFRONT_CONFIG.returnsWindowDays`, which is the same 7 the PDP's "Easy returns" badge and the Delivery
+  & Returns panel already print. One policy, one number.
+- **`git status db.json` clean.** Every browser run wrote to a scratchpad copy through the supported
+  `JSON_SERVER_DB` override (`server.js:47-49`).
+
+### Verification
+
+- `CI=true npm run build` → **exit 0, "Compiled successfully.", no warnings**.
+- `npm test -- --watchAll=false` → **27 suites passed, 1 skipped; 313 tests passed, 50 skipped**.
+- `grep -rn "Muga\|Eri\|weave\|loom\|Collection" src/pages/Profile src/pages/OrderHistory src/pages/Wishlist src/components/AuthModal src/components/ReviewModal` → **0**. A wider sweep
+  (`silk|muga|eri|weav|loom|textile|garment|woven|saree|fabric|drape`, case-insensitive) returns three hits,
+  all of them the word *fabricate* in a comment about not inventing data.
+- `grep -rn "deriveOrderStatus" src --include=*.js | grep -v utils/orderStatus.js | wc -l` → **2**;
+  `grep -rln "utils/orderStatus" src --include=*.js` → **2 files**.
+- Token audit: every `var(--sf-*)` in all five stylesheets resolves against
+  `storefront-tokens.css` + `storefront-primitives.css` (script, 0 missing). **No colour hex and no `rgba()`
+  in any of the five modules**; the only `#` in all 3 345 lines is the two `linear-gradient(#000 0 0)` mask
+  stencils on the avatar's gradient ring — the opacity mask `Chip.module.css` already uses for the step
+  numeral's ring, not a palette value. The two `DANGER_HEX = "#FF8A80"` constants in the JS are the
+  pre-existing, documented SweetAlert2 exception (it renders outside the React tree and takes a colour
+  value, not a token) and are unchanged.
+
+### Browser QA (Chromium 1194, mock mode, `npm run dev`, scratchpad db)
+
+- **Auth**: modal opens on "Welcome back"; **0 elements matching /Google|Facebook/**; tab click and the Home
+  key both move the tablist; strength reads "Weak password" → "Strong password"; empty submit raises both
+  field errors; login lands and closes the dialog. At 390×844 the panel measures **390×844 at y=0** (a
+  full sheet); focus starts inside it and is still inside after 25 Tabs; Escape closes it.
+- **Profile**: dashboard grid is `320px 880px` at 1280 and one column at 1024; index rows measure
+  **54–55px**; figures read 3 / 1 / 1; edit name + phone persisted (`users/1.phone` → `9876543210`); add an
+  address (1 → 2), promote it to default, edit (form pre-filled), delete with its confirm (2 → 1) and
+  **exactly one `isDefault: true` survives**; the wallet shows ₹390.00 over one credit row; the password
+  checklist reports 5 of 5 met; **0 elements matching /appearance/i**.
+- **Orders**: 3 records, five filter chips, plates measure **56×56**; the Delivered filter narrows to 1;
+  both disclosures animate open; cancelling the processing order raises *"Order ORD-20260904-0002 will be
+  cancelled. No payment has been collected, so there's nothing to refund."* (the COD branch) and the chip
+  flips to Cancelled; Reorder opens the tray with an "Added to cart" toast.
+- **The review round trip**: written from the delivered order → `reviews/3` is `pending` → the chip reads
+  "Review pending approval" → approved in Admin → Reviews → `reviews/3` is `approved` → the title and
+  "Sample C." render on `/product/black-rice-face-wash` → back in Orders the chip reads **"Review
+  published"** and the button reads **"Edit review"**.
+- **Wishlist**: hearts from `/search` persist as a guest; the band invites without gating; **columns measure
+  1 / 2 / 3 / 4 at 360 / 640 / 1024 / 1280** (and 4 at 1440); the Move-to-cart pill is exactly as wide as its
+  card; sort re-orders; move-to-cart removes one line silently; heart-remove drains 3 → 2 → 1 → 0 and lands
+  on "Your wishlist is empty"; Clear all raises the context's own confirm; signing in merges the guest list
+  and drops the band.
+- **Responsive**: `scrollWidth === clientWidth` at **360 / 390 / 414 / 768 / 1024 / 1280 / 1440** on
+  `/profile`, `/orders` and `/wishlist`, signed in and signed out. **Zero page errors** across every run.
+- **Reduced motion**: with `prefers-reduced-motion: reduce` every computed `transition-duration` on
+  `/wishlist` is `0s` and no animation runs; the two keyframe spinners (refresh, in-button) slow to 2.4s
+  rather than stopping — they are the only "something is happening" signal either control has.
+
+### Left for Prompt 31
+
+The empty states on all four surfaces are still the ad-hoc `GlassCard` that Prompt 31 formalises as
+`ui/EmptyState`; `pages/_ComingSoon/` is still unreferenced and still Prompt 31's to delete. Nothing else of
+the auth, account, orders or wishlist surfaces.
