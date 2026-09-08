@@ -29,7 +29,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 23 | Shop page — chaptered editorial listing | complete | 2026-09-08 | (this commit) | `/shop` is the chaptered listing: **eight full editorial chapters in hero order, no filter, no sort, no pagination, no sidebar** (brief §7.3 — the removal is an owner decision, recorded below). `pages/Products/*` (1 687 + 1 335 lines) is **deleted**; `pages/Shop/Shop.js` is 380. New: `catalogue/ChapterIndex.{js,module.css}` (a 220px sticky rail at ≥1025px, a sticky pill strip at ≤1024px) and `catalogue/BuildRitualPanel.{js,module.css}` (the closing `GlassCard strong glow="duo"`), plus `utils/seo.js` with `itemListJsonLd`. `ProductChapter` gained `variant="shop"` proper — 88svh floor on the split screen, no floor on a phone, `scroll-margin-top: 96px`, `data-slug`, a focusable `h2` and an `onVisible(index)` IntersectionObserver at threshold 0.5. **`/category/:slug` now routes to `<Shop mode="category" />`**, which is what kept the category listing alive when `Products` went (Prompt 24 adds its head, breadcrumb and 404). `utils/categories.js` lost `getCategoryScopeIds` and `orderCategoriesHierarchically`; `utils/helpers.js` lost `getDeviceType`; `getDescendantIds` stays for the admin. **Scroll-snap was KEPT** after measurement (see the decisions log). `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (19 suites / 197 passed, 1 suite / 50 skipped — 16 of the passing tests are new, `ChapterIndex.test.js`). Browser QA in Chromium 1194 at 360/390/414/768/1024/1280/1440 + reduced motion: **no horizontal scroll at any width, zero page errors**. See the Prompt 23 record below. |
 | 24 | Category pages and rituals pages | complete | 2026-09-08 | (this commit) | The seven categories have their heads and the rituals have their two pages. **`pages/Shop/Shop.js` is split in two**: `Shop` holds the route's two exits — a `kind: "rituals"` category (or the literal slug) → `<Navigate to="/rituals" replace/>`, an unknown slug → `<NotFound/>` — and `ShopView` holds every other hook and the JSX. The split is load-bearing, not tidy: `useSeo` BORROWS the head's existing tags and restores what it displaced, so two of them mounted at once (the page's and `NotFound`'s) restore child-then-parent and strand the child's description in the head. `RitualDetail` is split the same way for the same reason. New: **`catalogue/CategoryHead`** (full-bleed `.sf-placeholder-media` band — 4:3 phone / 21:9 + `clamp(260px,32vw,420px)` from 769px — under a `GlassCard strong scrim` panel on a NEGATIVE MARGIN, never `position:absolute`, so a long description grows the panel instead of being clipped), **`pages/Rituals/Rituals`** (three full-width rows, image left from 900px), **`pages/Rituals/RitualDetail`** (head → `RitualStep` rows → CTA panel → `LegalNote compact`) and **`catalogue/RitualStep`** (`72px 1fr` phone / `96px 240px 1fr auto` desktop, a 36px numeral, a 240px label plate, the promise, the note in display italics, a frequency chip, `Price` and one add-to-cart). `Breadcrumb` was **rewritten** — it had zero consumers — onto the FULL `{label, to}` trail, and `utils/seo.js` gained `breadcrumbJsonLd(items)` over **the same array**, so the crumb a visitor reads and the crumb a crawler is told cannot drift. Verified in Chromium 1194 at 360/390/414/768/1024/1280/1440: `/category/face-care` **6** chapters · `body-care` **2** · `cleansers` **3** · `serums` **1 PRODUCT** (singular) · `moisturizers` **2** · `masks` **2** · `rituals` → `/rituals`; `/category/nope` and `/rituals/nope` → a real 404 with the URL kept. `/rituals` lists three; `morning-glow` shows its four products in order; `black-rice-body` offers the soap/wash `radiogroup` (**one** tab stop, arrows both ways, the gold focus ring) which swaps the name, promise, plate, PDP link, price, add button AND the panel's total together. **With `enableRitualBundles: true` locally**: one press, ONE toast ("2 items added to your cart"), a cart holding exactly the two priced steps of five — the three TBA products never entered it; **reverted to `false` before the commit** (`git diff src/config/brand.js` empty). Both JSON-LD graphs valid on every page. **0 horizontal overflow at all seven widths**; reduced motion computes `opacity: 1 / transform: none` on the step rows and `scroll-snap-type: none`. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` **20 suites / 218 passed** (21 new in `RitualStep.test.js`; 1 suite / 50 skipped — the live-API suite). `grep -n "ComingSoon" src/App.js` → **only `/why-lamikaa` and `/cart`**. Reads only: no `db.json` and no `api.js` change. |
 | 25 | PDP — layout, chapters, purchase panel, mobile bar | complete | 2026-09-08 | (this commit) | The product page is the two-column composition: a **sticky media column** (`top: 96px` from 1025px) beside a scrolling column holding `PurchasePanel` and then the story as numbered **chapters**. `pages/ProductDetails/ProductDetails.js` 1143 → 693 and its stylesheet 1109 → 161: the tab strip, `SILK_SPEC_LABELS`/`deriveSilkSpecRows`/`deriveGenericSpecRows`/`deriveFabricCraft`/`deriveKeyFeatures`/`isPremiumProduct`, the promises band and the hand-rolled `setPageTitle` + `meta[name=description]` effect are all gone; `useSeo({title, description, image, type:"product"})` owns the head (JSON-LD in 27). Three new components in `components/pdp/`: **`PurchasePanel`** (trail → eyebrow → h1 → promise → rating → price → size/fragrance/SKU → trust chips → variants → quantity+stock → Add to Cart / Buy now / wishlist / share → delivery → the ownership note), **`ChapterNav`** (a glass pill bar after 320px of scroll, IntersectionObserver-tracked, `aria-current`, sticky at 72/56px) and **`Chapter`**. `AddToCartBar` rebuilt on `Button`/`Price`/`CloudinaryImage`; **`BottomNav` stands down on `/product/*`** so the two bars never stack. Everything the old page could do still works — reviews, FAQs, the bundle and the related rail are in the column, awaiting Prompt 27's chapters. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 21 suites / 233 passed (1 suite / 50 skipped), 15 of them new. |
-| 26 | PDP — media gallery with images and videos | pending | | | |
+| 26 | PDP — media gallery with images and videos | complete | 2026-09-08 | (this commit) | The media column is the real gallery. **`pdp/MediaGallery`** (441 + 324) is one list of images and videos behind one index: a 4:5 plate (1:1 ≤768px) on a gold `GlowWrap`, a crossfaded stage that mounts **only the active row** (so a five-frame product never puts five `<video>` elements on the page), the "Full label / Front panel" toggle wherever a row carries a Cloudinary crop, a "Zoom" button, a live counter, 44px glass arrows and **one** rail — `role="tablist"` with roving tabindex, a 72px column beside the stage from 1025px and a 56px snap strip below it under that. **`pdp/Lightbox`** (448 + 249) is `ui/Modal size="full"` repainted as a flat 96% scrim: the picture at `w_2000` uncropped, wheel / pinch / ± / double-tap zoom from 1× to 4× with the pan clamped to the picture's own edges, ←/→/Esc, swipe, and focus back on the Zoom button. **`hooks/useSwipe`** (108) is pointer-based, ignores vertical gestures (`touch-action: pan-y`), **cancels the browser's native image drag** (without which a mouse drag across a photograph never completes) and works with a mouse. `storefront/ProductGallery.*` **deleted** with its export; `STOREFRONT_CONFIG.gallery` is now `{zoom, lightbox}`. One shared-primitive fix on the way: `Modal`'s `.full .body` had no `flex: 1`, so a full-screen dialog's body was content-height and the lightbox's picture region collapsed to 0 (the search overlay had the same latent bug). 17 new tests. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (22 suites / 250 passed). Browser QA at 360/390/414/768/1024/1280/1440 + touch swipe + keyboard-only + reduced motion: no horizontal scroll, no page errors. |
 | 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | pending | | | |
 | 28 | Content pages from siteContent | pending | | | |
 | 29 | Cart page and checkout restyle | pending | | | |
@@ -332,6 +332,16 @@ Record every decision a prompt had to make that the reference files did not sett
 - `25 · 2026-09-08 · `ChapterNav` renders NOTHING with fewer than two chapters, and its pills are `<a href="#id">` · An index that offers only the place you are already standing in is chrome, not a shortcut. The pills are anchors so they are keyboard-reachable, middle-clickable and still work if the click handler never runs; the handler only upgrades the jump to a smooth one and moves focus into the chapter. The SECTION is the focus target (`tabIndex={-1}` on `Chapter`, labelled by its own heading) rather than the heading, so a keyboard visitor lands IN the chapter and the next Tab stays there — and `.chapter:focus{outline:none}` with a `:focus-visible` ring keeps a mouse click from drawing one.`
 - `25 · 2026-09-08 · The PDP's `metaTitle` has the site suffix taken off before it reaches `useSeo` · The seed writes `metaTitle` as a WHOLE title ("Black Rice Face Wash · LAMIKAA NATURALS") because Prompt 06 wrote it for the hand-rolled title effect this page used to run; `useSeo` applies `brand.seo.titleTemplate` on top, so the first run printed the brand twice. `productSeoTitle()` (exported, unit-tested) strips a trailing suffix if the override already carries one. Fixed in the PAGE, not the seed: the admin's field keeps meaning "the title I want", whatever an owner types into it.`
 - `25 · 2026-09-08 · Two components outside the prompt's expected-files list changed by one line each of substance · `Breadcrumb.js` no longer gives the `.current` STYLE to a linkless crumb in the middle of a trail (only the last crumb is the current page); `TrustBadges.js` gained a third `variant` ("chips") beside `grid` and `row`. Both were named for restyle by the prompt; neither changes an existing call site's rendering (`CategoryHead` and the ritual head pass full trails and no PDP-only variant).`
+- `26 · 2026-09-08 · The zoom range is 1×–4×, the double-tap step is 2×, and the buttons move in 0.5× · Four is where a 2000px delivery stops being sharp on a 1440px stage (a 500px-wide crop of a 2000px file painted at 2000px is already 1:1), so a fifth power would only magnify the JPEG. 1× is the floor because a lightbox that can shrink its own picture has invented a state with no purpose. The double-tap goes straight to 2× rather than stepping, because a tap is a decision, not a dial; the ± buttons step 0.5× because a button IS the dial. `clampScale` and `panBounds` are exported and unit-tested — the pan is clamped to half of what the picture overflows its frame by, each way, which is what makes a zoomed picture impossible to lose off screen.`
+- `26 · 2026-09-08 · "Full label" defaults OFF — every image opens on its front-panel crop, and the toggle resets on every frame change · The crop recorded per product in PRODUCTS.md is what makes the pack fill the plate; the uncropped cover is a studio frame with the bottle small in the middle of it. The front panel is therefore what the plate is FOR, and the whole shot is the thing you ask for. It resets with the index (`useEffect` on `index`) because carrying the state across would show the NEXT pack in a state nobody chose for it — and because only some rows have a crop at all, so the pill would otherwise vanish mid-gallery with the state still set.`
+- `26 · 2026-09-08 · `GlowWrap intensity={0.14}` is passed as the prompt asks and CLAMPED to 0.15 by the primitive · `GlowWrap` clamps intensity to 0.15–0.30 (Prompt 05, DESIGN_SYSTEM §5) so the lamp can never be invisible or a wash. The call site says what the design asked for; the primitive holds the floor it was given. Nothing to fix in either — recorded so the 0.01 is not read as a typo later.`
+- `26 · 2026-09-08 · The "Zoom" button and the lightbox are for IMAGE rows; a video row keeps the player's own full-screen control · "Zoom" over a film means nothing, and the player already offers `F` and a fullscreen button where the browser supports it. The lightbox still RENDERS a video (←/→ inside it can reach one) — it simply hides the zoom bar there. Focus restore follows: the Zoom button when there is one, the stage itself when the item you closed on is a film.`
+- `26 · 2026-09-08 · ONE rail element, repositioned by CSS grid — not one per breakpoint · A second `role="tablist"` would give a screen reader two galleries for one product and a keyboard visitor two copies of every thumbnail. The stage comes first in the DOM (reading order: the pack, then its other frames) and desktop places the rail into column 1 with explicit `grid-column`/`grid-row`. `aria-orientation` is deliberately NOT set: the rail is a column at 1025px and a row below it, one element cannot claim both, and the arrow handler answers ←/→ AND ↑/↓ (plus Home/End) so neither orientation is the wrong guess.`
+- `26 · 2026-09-08 · The stage answers keys only while the STAGE itself holds focus (`event.target !== event.currentTarget → return`) · `VideoPlayer` sits inside the stage and owns Space, M and ←/→ (seek ±5s) whenever IT is focused; without the guard both handlers would fire and an arrow would seek the film and change the item at once. The same rule keeps the arrows on the rail belonging to the rail.`
+- `26 · 2026-09-08 · The 32px toggle pill carries a 44px hit area rather than becoming a 44px pill · The design names a 32px pill and WCAG 2.5.5 names a 44px target; an invisible `::after { inset: -6px }` gives both, which is the technique `.sf-chip` already implies by keeping `button.sf-chip` at `--sf-tap-target` while the resting chip is shorter. The prev/next arrows and every lightbox control are 44px and 48px respectively, unextended.`
+- `26 · 2026-09-08 · `Modal`'s `.full .body` gained `flex: 1 1 auto` — a shared primitive changed outside this prompt's file list · A `size="full"` panel is a whole `100svh`, but its body had no flex grow, so it was content-height and any `flex: 1` region inside it (the lightbox's picture, `SearchModal`'s result list) had nothing to grow into and resolved to **zero**. Measured: the lightbox viewport was `1440×0` and every wheel, pan and double-click landed on the foot instead of the picture. The fix is one declaration in the component whose own comment already promised "one scrolling region beneath it"; `SearchModal` was re-checked in the browser after it (body 959 of a 960 dialog, no visual change).`
+- `26 · 2026-09-08 · `useSwipe` cancels `dragstart` on its element · A gallery stage IS a photograph, and an `<img>` is draggable by default: a mouse drag across it starts the browser's own image drag, the ghost thumbnail follows the cursor, the pointer stream stops dead and no swipe ever completes. Found by the browser QA hanging mid-drag — twice — before the cause was read correctly. The cancel lives in the hook, not in the gallery, because "works with mouse drag too" is the hook's promise to every future consumer.`
+- `26 · 2026-09-08 · The lightbox picture is capped at `min(92svh, 100%)`, not at `92svh` · 92svh is the design's cap; the FRAME is what is left after the 48px head and the zoom-bar foot, which at 960px is 79svh. Capping at the design number alone would have let the picture overflow a frame whose `overflow: hidden` then clips it — a clipped edge being the exact thing a lightbox exists to undo.`
 
 ## Open TODOs
 
@@ -3196,3 +3206,121 @@ to use, the farmer story, the full INCI list, the pack claims, `caution` and the
 27's, as is the product JSON-LD and the `BreadcrumbList` (the trail is already built as one array for
 exactly that). `FrequentlyBoughtTogether` still says "Completes the look" — its own copy, in 27's file
 list.
+
+## Prompt 26 record (2026-09-08)
+
+### What was built
+
+Two components, one hook, one suite — and the last of the old brand's storefront atoms deleted.
+
+- **`components/pdp/MediaGallery.js` (441) + `.module.css` (324)** — **new**. One list, two kinds:
+  `product.media` is an ordered mix of images and videos and the gallery gives it ONE index, one
+  counter, one rail, one set of arrows. A separate "video tab" would ask a shopper to know, before
+  they look, which of the two they wanted.
+  - **Stage** — `.sf-plate` at 4:5 (1:1 ≤768px), `--sf-radius-xl`, hairline, `--sf-shadow-2`, on a
+    `GlowWrap tone="gold" intensity={0.14}`. `role="group" aria-roledescription="carousel"
+    aria-label="{name} media"`, `tabIndex=0`, ←/→/Home/End and Enter/Space, and `useSwipe`.
+    **Only the active row is mounted**: the swap is an `AnimatePresence` crossfade over
+    `DURATION.base`, and a VIDEO leaving takes `INSTANT` instead, so the element (and its audio) is
+    gone the moment the index moves rather than a third of a second later.
+  - **Furniture** — the "Full label / Front panel" pill (top-left, 32px, `aria-pressed`, only where
+    the row carries a `crop`), the "Zoom" circle (top-right, image rows), the `aria-live="polite"`
+    counter (bottom-right) and 44px glass arrows that arrive with the pointer (`opacity`, never
+    `visibility`, so a keyboard visitor can Tab to one and `:focus-within` reveals it; always on under
+    `@media (hover: none)`).
+  - **Rail** — `role="tablist" aria-label="Product media"`, tabs with `aria-selected` +
+    `aria-controls` on the stage, roving tabindex, ←/→/↑/↓/Home/End, and the active thumb scrolled
+    into view (`block/inline: "nearest"`, and never on first paint). Image thumbs carry the row's own
+    crop at `w_144`; video thumbs take the poster (or the pack) with a gold play mark and
+    `aria-label="Video: {title}"`.
+  - **Performance** — the first image is `priority` (eager + `fetchpriority="high"`, the PDP's LCP),
+    everything else lazy; thumbnails 144px; `preload="metadata"`; `aspect-ratio` everywhere, so
+    nothing shifts.
+- **`components/pdp/Lightbox.js` (448) + `.module.css` (249)** — **new**, and **no library**:
+  `ui/Modal size="full"` already owns the portal, `aria-modal`, the focus trap and restore, Escape,
+  the scroll lock and closing on navigation. What is added is the picture — the panel repainted as a
+  flat `color-mix(--sf-color-bg 96%)` scrim with **no** backdrop filter, the image at
+  `cld(url,{w:2000})` **uncropped**, 48px controls with the counter top-left and Close top-right, the
+  ± bar and the keyboard hints on desktop. Zoom is wheel, pinch (two pointers, their distance ratio),
+  ± and double-click/double-tap, 1×–4×, with the pan clamped by `panBounds()`. `index` /
+  `onIndexChange` are the GALLERY's state, so the two can never drift apart.
+- **`hooks/useSwipe.js` (108)** — pointer events (one path for finger, mouse and stylus), `pan-y`
+  written onto the element so vertical scrolling stays the browser's, a gesture counted only when it
+  travelled further across than down and cleared 40px, the release read on `window` (a flick ends
+  past the element's edge), `dragstart` cancelled, and `enabled: false` to stand down entirely — which
+  is how the lightbox stops a swipe from fighting a pan while the picture is zoomed.
+- **`components/pdp/MediaGallery.test.js` (226)** — 17 tests: the four pure copy/URL rules
+  (`counterLabel`, `stepIndex`, `toggleLabel`, `thumbLabel`, `thumbSource`), the lightbox's
+  `clampScale`/`panBounds`, and four walks through the rendered gallery (five tabs with the clips
+  named, the stage moved from rail/arrows/keyboard, the toggle appearing only where there is a crop,
+  and a one-image no-video product rendering with no rail, arrows or counter).
+
+### What changed around them
+
+- **`pages/ProductDetails/ProductDetails.js`** — the Prompt 25 placeholder is gone; the media column
+  is `<MediaGallery key={product.id} product={product} />`. The `key` is the reset: walking from one
+  product to the next starts the gallery at frame one with the toggle off and the lightbox shut,
+  without a single reset effect.
+- **`theme/tokens.js`** — `STOREFRONT_CONFIG.gallery` is `{ zoom: true, lightbox: true }`. The old
+  side/below thumbnail setting went with the gallery that had one: the rail's position is a
+  breakpoint, not something an owner should have to decide.
+- **`components/storefront/ProductGallery.{js,module.css}`** — **deleted**, with its `index.js`
+  export. `grep -rn "ProductGallery\|thumbnailPosition" src` → **0**.
+- **`components/ui/Modal.module.css`** — `.full .body` gained `flex: 1 1 auto`. See the decision; it
+  is the one shared primitive this prompt had to touch, and `SearchModal` was re-verified after it.
+
+### Verification
+
+- `CI=true npm run build` → exit 0, **"Compiled successfully." with no warnings**.
+- `npm test -- --watchAll=false` → exit 0, 22 suites / 250 tests passed (1 suite / 50 tests skipped:
+  the live API).
+- `test ! -f src/components/storefront/ProductGallery.js` → removed;
+  `grep -rn "ProductGallery|thumbnailPosition" src | wc -l` → **0**.
+
+### Browser QA (Chromium 1194, mock mode, `npm run dev`)
+
+- **Semantics** — stage `role="group" aria-roledescription="carousel" aria-label="Black Rice Face
+  Wash media"`, rail `tablist` with 5 tabs, the two clips named "Video: How to use (placeholder
+  video)" / "Video: Brand story (placeholder video)", `aria-controls` on every tab pointing at the
+  stage id, roving tabindex `0,-1,-1,-1,-1`, counter "1 / 5", first stage image `loading="eager"
+  fetchpriority="high"`.
+- **The one video rule** — 0 `<video>` elements at rest, 1 on a video row (`muted`, `preload
+  "metadata"`, playing after a press), **0 again** after moving off it.
+- **Interaction** — rail click, arrows, ←/→/Home/End on the stage, ←/→ + Home/End on the rail (focus
+  follows selection), swipe left/right at 390px, a 20px drag ignored, a vertical drag ignored, and a
+  drag that starts on an arrow still swiping.
+- **Lightbox** — opens on Zoom and on Enter, `aria-modal="true"`, `w_2000` and no `c_crop`, ←/→ move
+  the shared index, wheel → 2.46×, ± → 1.5× → 1× with "Zoom out" disabling itself at the floor,
+  double-click toggling, the pan clamped exactly as `panBounds` predicts, `body[data-scroll-lock]`
+  raised and released, Esc closing and **focus back on the Zoom button** (on the stage when the item
+  closed on was a film).
+- **Responsive** 360 / 390 / 414 / 768 / 1024 / 1280 / 1440 — no horizontal scroll at any width;
+  stage 1.00 ratio to 768 and 0.80 from 1024; rail below the stage to 1024 (56px thumbs) and to the
+  left from 1280 (72px); toggle pill 88×32 throughout; the sticky media column still holds at
+  `top: 96px` after 900px of scroll (`overflow-x: clip` on the gallery, not `hidden`).
+- **A one-image, no-video product** — the goat milk soap was cut to a single media row through the
+  mock API, checked (no rail, no arrows, no counter, no dots, one image, Zoom and the label toggle
+  still there, no console errors), and **restored**; `git diff db.json` is empty.
+- **Reduced motion** — the stage swaps instantly and the dialog is present within a frame.
+- **Scrim** — measured off the screenshot: the headline behind the lightbox reads rgb(14,14,16)
+  against a rgb(11,11,13) ground, i.e. 3/255. The page is not visible through it.
+- Images and icons themselves still cannot be SEEN in this sandbox — `res.cloudinary.com`,
+  `picsum.photos`, `fonts.googleapis.com` and `api.iconify.design` reset Chromium's TLS tunnel
+  through the agent proxy (curl gets 200), the same limitation Prompts 19–25 recorded. Every
+  measurement above is of the real DOM, and the delivery URLs are asserted in the unit tests.
+
+### Three things the browser found
+
+1. **`Modal`'s full-size body did not fill its panel**, so the lightbox's picture region measured
+   `1440×0` and every wheel, pan and double-click landed on the foot beneath it. One declaration.
+2. **A mouse drag across the stage started the browser's native image drag** and killed the gesture
+   (it hung Playwright's input queue mid-drag, twice, which is how it was found). `useSwipe` now
+   cancels `dragstart`.
+3. **`92svh` was the wrong cap for the lightbox picture** once the head and foot were in the layout;
+   `min(92svh, 100%)` keeps the design's ceiling without letting the frame clip the picture.
+
+### Left for Prompt 27 / 33
+
+Nothing of the gallery. Prompt 27 writes the chapters around it and the product JSON-LD; Prompt 33's
+admin media manager writes the `media[]` — `crop`, `poster`, `title`, order and the primary flag —
+that everything above reads.

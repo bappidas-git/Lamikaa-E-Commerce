@@ -210,7 +210,7 @@ Highlights that shape the prompts:
 - `CartDrawer.js` (659 → 736, **rewritten by Prompt 12**): a 440px glass tray on `ui/Drawer` (its own trap, Escape handler and scroll lock deleted). 64px masthead with a count chip; body = free-shipping meter → 96px lines → "Complete your ritual" → "Have a code?" → the money; 128px pinned foot (Checkout / View cart / "Secure checkout"). The meter's bar is the lowest `freeAbove` across the ACTIVE `shipping_methods`, read live and cached in a ref, and is not rendered at all when no method sets one — `FREE_SHIPPING_THRESHOLD` and the `FLAT_SHIPPING=99` flat rate are both gone, and no delivery charge is previewed (checkout owns it). Coupon apply/remove via `apiService.coupons.validate` and the auto-drop-below-minimum rule are unchanged. Two pure exports, `freeShippingThreshold()` and `crossSellFor()`, are unit-tested in `CartDrawer.test.js`.
 - `SidebarMenu.js` (682): mobile drawer with recursive category accordion, account links, **theme switch** at 609-636, TrustStrip, legal links.
 - `Footer.js` (445): newsletter (`apiService.leads.createNewsletter`), brand+contact, four columns, promises + payment marks, colophon; old white logo at 45.
-- `storefront/*` (13 atoms exported from `index.js`): `ProductCard` (props `product, onAddToCart, onToggleWishlist, isWishlisted, showAddToCart`), `ProductGallery` (props `images, alt, discount, zoom, ribbon, inStock` — images only), `AddToCartBar` (mobile sticky), `PriceBlock`, `QuantityStepper`, `VariantSelector` (+ `variantUtils.js`), `TrustBadges` (config-driven from `tokens.js`), `DeliveryReturnsInfo`, `ReviewsSection`, `RelatedProducts`, `FrequentlyBoughtTogether`, `SocialProof`, `StarRating`.
+- `storefront/*` (13 atoms exported from `index.js` — 12 from Prompt 26, which deleted `ProductGallery`): `ProductCard` (props `product, onAddToCart, onToggleWishlist, isWishlisted, showAddToCart`), `ProductGallery` (props `images, alt, discount, zoom, ribbon, inStock` — images only; **deleted by Prompt 26**, replaced by `pdp/MediaGallery`), `AddToCartBar` (mobile sticky), `PriceBlock`, `QuantityStepper`, `VariantSelector` (+ `variantUtils.js`), `TrustBadges` (config-driven from `tokens.js`), `DeliveryReturnsInfo`, `ReviewsSection`, `RelatedProducts`, `FrequentlyBoughtTogether`, `SocialProof`, `StarRating`.
 - Unused/duplicate: `FeaturedProducts` (private card copy), `CTASection`, `Newsletter`, `BottomDrawer` — none imported by Home/Products/PDP.
 
 
@@ -1496,6 +1496,96 @@ writes the remaining chapters and the product JSON-LD.
   `ritualStepLabel`, `chapterNumeral`, `chapterHeadingId`, `hasDeliveryEstimate`,
   `productSeoTitle` and `hidesBottomNav`.
 
+**Updated by Prompt 26.** The PDP's media column is the real gallery, and the old
+brand's `ProductGallery` is gone with it. `product.media` — one ordered mix of
+images and videos — is rendered by **one** index, **one** counter, **one** rail
+and **one** set of arrows; the lightbox shares that index rather than keeping a
+second one.
+
+- `components/pdp/MediaGallery.js` (441) + `.module.css` (324): **new**. Props
+  `{ product, media = productMedia(product), initialIndex = 0 }`; state `index`,
+  `showFull`, `lightboxOpen`. Mount it with `key={product.id}` (ProductDetails
+  does) — that is the whole reset story for a walk between products. Exports the
+  four pure rules `counterLabel`, `toggleLabel`, `thumbLabel`, `thumbSource` and
+  `stepIndex`.
+  - **Stage**: `.sf-plate` at `aspect-ratio: 1` to 768px and `4 / 5` from 769px,
+    `--sf-radius-xl` + hairline + `--sf-shadow-2`, inside
+    `GlowWrap tone="gold" intensity={0.14}` (the primitive clamps to 0.15).
+    `role="group" aria-roledescription="carousel" aria-label="{name} media"`,
+    `tabIndex=0`; ←/→/Home/End and Enter/Space, and ONLY while the stage itself
+    holds focus (`event.target !== event.currentTarget → return`), because
+    `VideoPlayer` inside it owns Space/M/←/→ when IT is focused.
+  - **One row mounted at a time**: an `AnimatePresence` crossfade keyed on the
+    index, `DURATION.base` for a photograph and `INSTANT` for a film leaving, so
+    a video element (and its audio) is gone the instant the index moves. Images
+    take `CloudinaryImage` with `crop` + `ar="4:5"` + `pad` while
+    `!showFull && row.crop`, otherwise the uncropped file, `fit="contain"`,
+    `sizes="(max-width: 768px) 100vw, 48vw"`, `priority` on the first image
+    (the PDP's LCP). Videos take `VideoPlayer` with
+    `poster = row.poster || primaryImage(product).url`, `preload="metadata"`,
+    muted, with the player's own mute toggle and click-to-play.
+  - **Furniture**: the "Full label / Front panel" pill (32px, `aria-pressed`,
+    only where the row has a `crop`, reset on every index change, with a 44px
+    hit area from an inset `::after`), the "Zoom" circle (image rows only), the
+    `aria-live="polite"` counter `"{i+1} / {n}"`, and 44px `Button variant="icon"`
+    arrows revealed by `:hover` / `:focus-within` (`opacity` only, never
+    `visibility`, so they stay tabbable) and always visible under
+    `@media (hover: none)`.
+  - **Rail** (one element, placed by grid): `role="tablist" aria-label="Product
+    media"`, tabs with `aria-selected` and `aria-controls` on the stage id,
+    roving tabindex, ←/→/↑/↓/Home/End moving selection AND focus, the active
+    thumb scrolled into view with `block/inline: "nearest"` (never on first
+    paint). 56px snap strip below the stage to 1024px; 72px column in
+    `grid-template-columns: 72px minmax(0,1fr)` with a 16px gutter from 1025px.
+    Image thumbs carry the row's own crop at `w_144`; video thumbs take the
+    poster with a gold play mark and `aria-label="Video: {title}"`.
+  - **Degrades**: one image and no video → no rail, no arrows, no counter, no
+    dots. Zero videos needs nothing special.
+- `components/pdp/Lightbox.js` (448) + `.module.css` (249): **new**, no library.
+  Built on `ui/Modal size="full"` (portal, `aria-modal`, focus trap + restore,
+  Escape, scroll lock, close on navigation) with the panel repainted flat —
+  `color-mix(in srgb, var(--sf-color-bg) 96%, transparent)`, **no** backdrop
+  filter — through a doubled class (`.panel.panel`). Props
+  `{ open, onClose, media, index, onIndexChange, product, zoom }`; `index` and
+  `onIndexChange` are the gallery's own state. Images at `cld(url,{w:2000})`
+  **uncropped**, `max-height: min(92svh, 100%)`; videos take `VideoPlayer`.
+  Controls are 48px: counter top-left, Close top-right, Previous/Next at the
+  sides, the ± bar and the keyboard hints at the foot (desktop only). Zoom is
+  wheel (non-passive listener), pinch (two pointers, their distance ratio), the
+  ± buttons and double-click/double-tap, **1×–4×**, anchored on the pointer, with
+  the pan offset clamped by `panBounds()`. Exports `clampScale` and `panBounds`.
+  Focus returns to the gallery's "Zoom" button (the stage when the item closed on
+  was a film).
+- `hooks/useSwipe.js` (108): **new**.
+  `useSwipe(ref, { onLeft, onRight, threshold = 40, enabled = true })`. Pointer
+  events, so a mouse drag and a finger swipe are one path; writes
+  `touch-action: pan-y` onto the element and restores it on cleanup; cancels
+  `dragstart` (an `<img>` is draggable by default and a native image drag kills
+  the gesture); reads the release on `window` because a flick ends past the
+  element's edge; counts a gesture only when `|dx| > |dy|` and `|dx| >=
+  threshold`. `enabled: false` removes the listeners — the lightbox stands the
+  swipe down while a picture is zoomed, where the same drag means "pan".
+- `components/ui/Modal.module.css`: `.full .body` gained `flex: 1 1 auto`. A
+  `size="full"` panel is a whole `100svh` but its body was content-height, so any
+  `flex: 1` region inside it (the lightbox's picture, `SearchModal`'s result
+  list) had nothing to grow into and collapsed to zero.
+- `theme/tokens.js`: `STOREFRONT_CONFIG.gallery` is now
+  `{ zoom: true, lightbox: true }` — `zoom` gates the lightbox's zoom controls,
+  `lightbox` gates the viewer and the "Zoom" button that opens it. The old
+  `thumbnailPosition` is gone: the rail's position is a breakpoint.
+- `pages/ProductDetails/ProductDetails.js` (693 → 662): the Prompt 25
+  `MediaGalleryPlaceholder` is deleted; the media column is
+  `<MediaGallery key={product.id} product={product} />`. `.stage` in the page's
+  module is now the loading skeleton's block only.
+- **Deleted**: `components/storefront/ProductGallery.js` and
+  `ProductGallery.module.css`, and their `storefront/index.js` export.
+  `grep -rn "ProductGallery|thumbnailPosition" src` → 0.
+- **Tests**: `components/pdp/MediaGallery.test.js` (17) covers `counterLabel`,
+  `stepIndex`, `toggleLabel`, `thumbLabel`, `thumbSource`, `clampScale`,
+  `panBounds`, and four renders of the gallery itself (tablist semantics and the
+  named clips; the stage moved by rail/arrow/keyboard; the toggle appearing only
+  where a crop exists; a one-image no-video product).
+
 
 ## 7. Admin panel
 
@@ -1695,7 +1785,7 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/components/BottomDrawer/*`, `CTASection/*`, `FeaturedProducts/*`, `Newsletter/*` | X | Unused duplicates (Prompt 35 deletes; `Newsletter/` was deleted by Prompt 13, and the capture now lives in `brand/NewsletterForm` — Prompt 19). |
 | `src/components/AdminLayout/*` | K | Rebrand, single theme (Prompts 03, 32). |
 | `src/components/storefront/ProductCard.*` | R | Glass label-card (Prompt 15/16 shared card). |
-| `src/components/storefront/ProductGallery.*` | R | Media gallery with videos (Prompt 26). |
+| `src/components/storefront/ProductGallery.*` | R | **DELETED by Prompt 26** — replaced by `components/pdp/MediaGallery.*` + `Lightbox.*`. |
 | `src/components/storefront/{AddToCartBar,PriceBlock,QuantityStepper,VariantSelector,variantUtils,TrustBadges,DeliveryReturnsInfo,ReviewsSection,RelatedProducts,FrequentlyBoughtTogether,SocialProof,StarRating}.*` | K | Restyle; PriceBlock becomes placeholder-aware (05). |
 | `src/pages/Home/*` | R | New home composition (Prompts 14–22). |
 | `src/pages/Products/*` | **DONE (23)** → `src/pages/Shop/*` | Filter-free chaptered listing; the old page and its CSS are deleted. |

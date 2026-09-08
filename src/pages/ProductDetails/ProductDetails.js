@@ -7,17 +7,13 @@ import { useFaqs } from "../../context/FaqContext";
 import apiService from "../../services/api";
 import useSeo from "../../hooks/useSeo";
 import brand from "../../config/brand";
-import { isPriceKnown, primaryImage, productAlt, stageSrc } from "../../utils/product";
+import { isPriceKnown, stageSrc } from "../../utils/product";
 import { categoryPath } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
-import {
-  Accordion,
-  CloudinaryImage,
-  ContentBlocks,
-  Skeleton,
-} from "../../components/ui";
+import { Accordion, ContentBlocks, Skeleton } from "../../components/ui";
 import Chapter from "../../components/pdp/Chapter";
+import MediaGallery from "../../components/pdp/MediaGallery";
 import ChapterNav from "../../components/pdp/ChapterNav";
 import PurchasePanel from "../../components/pdp/PurchasePanel";
 import {
@@ -58,12 +54,14 @@ import styles from "./ProductDetails.module.css";
 // by the hook every other route uses, so the PDP also gets a canonical, the
 // Open Graph set and a share image. The product JSON-LD arrives in Prompt 27.
 //
-// STAGED ACROSS THREE PROMPTS. This one is the skeleton: layout, panel, nav,
-// the overview chapter and the mobile bar. Prompt 26 replaces the media
-// placeholder below with the real gallery (images, video, lightbox); Prompt 27
-// writes the benefits / ingredients / directions / farmer-story / full-INCI
-// chapters and rewrites the three retained blocks at the foot of the column
-// (FAQs, reviews, the cross-sell rails).
+// STAGED ACROSS THREE PROMPTS. Prompt 25 built the skeleton: layout, panel,
+// nav, the overview chapter and the mobile bar. Prompt 26 filled the media
+// column with `pdp/MediaGallery` — the mixed image/video gallery, its rail and
+// its lightbox — which is mounted with `key={product.id}` so a walk from one
+// product to the next resets the gallery's index and toggle the way a new page
+// should. Prompt 27 writes the benefits / ingredients / directions /
+// farmer-story / full-INCI chapters and rewrites the three retained blocks at
+// the foot of the column (FAQs, reviews, the cross-sell rails).
 // =============================================================================
 
 /** Quantity ceiling for a product whose stock nobody has recorded. */
@@ -118,35 +116,6 @@ const PageSkeleton = () => (
     </div>
   </div>
 );
-
-// ─── Media, until Prompt 26 ──────────────────────────────────────────────────
-// The primary image on a plate: 1:1 on a phone, 4:5 from 769px, and the pack
-// never cropped by CSS at either ratio.
-//
-// THE DELIVERED TILE IS 4:5, not square. The product's own source crop is
-// letterboxed by Cloudinary onto a ground sampled from the pack's own edges
-// (`c_pad,b_auto`), which fills the desktop plate exactly. The covers are tall
-// (the face wash crops to 1500x3200), so a square tile would have set the pack
-// as a narrow strip down the middle of a very wide mount at BOTH ratios; the
-// 4:5 tile only letterboxes on the phone, by 36px a side.
-//
-// Prompt 26 replaces this with the swipeable gallery.
-const MediaGalleryPlaceholder = ({ product }) => {
-  const media = primaryImage(product);
-  return (
-    <CloudinaryImage
-      src={media?.url}
-      alt={productAlt(product, media)}
-      crop={media?.crop}
-      ar="4:5"
-      pad
-      plate
-      priority
-      sizes="(min-width: 1025px) 46vw, 100vw"
-      className={styles.stage}
-    />
-  );
-};
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DATA
@@ -550,7 +519,7 @@ const ProductDetailsView = ({
       <div className={`sf-container sf-container--wide ${styles.layout}`}>
         {/* ── The pack, held in place ─────────────────────────────────── */}
         <div className={styles.mediaColumn}>
-          <MediaGalleryPlaceholder product={product} />
+          <MediaGallery key={product.id} product={product} />
         </div>
 
         {/* ── The column that scrolls ─────────────────────────────────── */}

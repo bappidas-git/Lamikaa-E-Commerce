@@ -67,11 +67,15 @@
 }
 
 /* A full modal owns its own head and one scrolling region beneath it, so the
-   body here is a bare flex column: no padding, no scrollport, no measure. */
+   body here is a bare flex column: no padding, no scrollport, no measure.
+   It also FILLS the panel — the panel is a whole 100svh and a body sized to its
+   own content would leave a `flex: 1` region inside it (a search result list, a
+   lightbox's picture) with nothing to grow into, and collapse it to zero. */
 .full .body {
   padding: 0;
   overflow: hidden;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
   color: var(--sf-color-text);
