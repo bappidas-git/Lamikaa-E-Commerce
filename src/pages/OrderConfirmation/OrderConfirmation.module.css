@@ -4,29 +4,36 @@
    The end of the flow is the quietest page on the storefront, not the loudest.
    Four moves and nothing else:
 
-     1. THE SEAL — a hairline gold stamp with a thin ink check, plus one halo
-        that expands once and is gone. No bouncing circle, no pulse ring, no
-        gold fill. Under it: the tracked eyebrow, the serif thank-you, and one
-        warm line whose wording follows the order's REAL payment state.
-     2. THE RECORD — one hairline band split in two: the order number set in
+     1. THE SEAL — a 96px gold stamp: a signature-gradient ring around a thin
+        ink check, lit by the page's one GlowWrap lamp, with a single halo that
+        expands once and is gone. Under it: the gold eyebrow, the Fraunces
+        thank-you addressed by first name, and one warm line whose wording
+        follows the order's REAL payment state.
+     2. THE RECORD — one glass card split in two: the order number set in
         tracked mono with a text Copy beside it and the placed-on date beneath,
         then the arrival cell, labelled as an estimate unless the order has
         actually been delivered.
      3. THE BLOCKS — Summary, Address, Payment. Tracked captions over hairline
-        rows on the ivory ground. No cards, no shadows, no icon furniture.
-     4. THE ACTIONS — one ink CTA, two hairline buttons, and the invoice as a
-        deliberately muted "coming soon" row, because that is all it is.
+        rows on the dark ground. The ledger is hairlines and 15px figures; the
+        payment state is a shared `Chip variant="status"`.
+     4. THE ACTIONS — three shared pill Buttons, and the invoice as a
+        deliberately muted "Coming soon" row, because that is all it is.
 
    The money ledger is presentation only: every row, its order and its value
    come straight from the placed order.
 
+   SHARED BEFORE LOCAL (Prompt 31)
+   The loading, failed and not-found branches are `Skeleton`, `ErrorState` and
+   `EmptyState` — this file no longer declares a spinner, a state card or a pair
+   of button skins, because three components in `ui/` own all three.
+
    TOKENS ONLY
    Every colour, space, radius and type value resolves through `--sf-*`,
    declared once in `:root` — one theme, one stylesheet and no hex in this
-   file. The one local variable is the monospace stack for the
-   order number: the token layer has no `--sf-font-mono`, and a font stack is
-   not a colour. (The confetti's three gold literals live in the JS, where they
-   are sync-commented against storefront-tokens.css.)
+   file. The one local variable is the monospace stack for the order number: the
+   token layer has no `--sf-font-mono`, and a font stack is not a colour. (The
+   confetti's four accent literals live in the JS, where they are sync-commented
+   against storefront-tokens.css.)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .page {
@@ -50,99 +57,64 @@
   padding: 0 var(--sf-space-6);
 }
 
-/* Visually hidden, still announced. */
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+/* A state card is 520px wide and centres itself; the frame only has to stop
+   riding against the header. */
+.containerNarrow {
+  padding-top: var(--sf-space-20);
+  padding-bottom: var(--sf-space-16);
+}
+
+.state {
+  margin-block: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   1. STATES  —  loading, fetch error, not found
-   The same centred column as the thank-you, so a failure is still the page.
+   1. LOADING  —  the page's own silhouette, never a spinner
+   Each shape claims the space its content will, so the layout settles once.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.state {
-  max-width: 46ch;
-  margin: 0 auto;
-  padding: var(--sf-space-24) 0 var(--sf-space-20);
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-10);
+  padding-top: var(--sf-space-16);
+}
+
+.skeletonHead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sf-space-5);
   text-align: center;
 }
 
-.stateMark {
-  display: flex;
-  justify-content: center;
-  margin-bottom: var(--sf-space-6);
-  color: var(--sf-color-border-strong);
+.skeletonTitle {
+  width: min(100%, 22rem);
+  border-radius: var(--sf-radius-md);
 }
 
-/* A hairline ring with one gold arc turning. Thin enough to read as a rule. */
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--sf-color-border);
-  border-top-color: var(--sf-color-gold-deep);
-  border-radius: var(--sf-radius-pill);
-  animation: spin 0.9s linear infinite;
+.skeletonLede {
+  width: min(100%, 34rem);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+/* The panels' radius. Their heights are inline (a class cannot outrank
+   `.sf-skeleton--block { height: 100% }`, and an inline style can). */
+.skeletonRounded {
+  border-radius: var(--sf-radius-lg);
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-8);
+}
+
+@media (min-width: 901px) {
+  .skeletonGrid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--sf-space-16);
+    align-items: start;
   }
-}
-
-.stateTitle {
-  margin: 0 0 var(--sf-space-3);
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-3xl);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-display);
-  letter-spacing: var(--sf-tracking-tight);
-  color: var(--sf-color-text);
-}
-
-.stateBody {
-  margin: 0 0 var(--sf-space-8);
-  font-size: var(--sf-text-sm);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
-}
-
-/* The order number said back in the same mono as the real record. */
-.stateRef {
-  font-family: var(--oc-mono);
-  letter-spacing: 0.06em;
-  color: var(--sf-color-text);
-}
-
-.stateLabel {
-  margin: 0 0 var(--sf-space-4);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wider);
-  line-height: 1;
-  color: var(--sf-color-text-muted);
-}
-
-.stateActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sf-space-4);
-  justify-content: center;
-}
-
-.stateActions .btnPrimary,
-.stateActions .btnQuiet {
-  width: auto;
-  min-width: 12rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -158,30 +130,59 @@
   text-align: center;
 }
 
-.seal {
-  position: relative;
+/* GlowWrap needs a box to light. It is inline-flex so the lamp sits behind the
+   seal and nothing else, and it takes the seal's own margin. */
+.sealGlow {
   display: inline-flex;
   margin-bottom: var(--sf-space-6);
+}
+
+.seal {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  color: var(--sf-color-gold);
   animation: sealIn var(--sf-duration-slow) var(--sf-ease) both;
 }
 
-.sealSvg {
-  display: block;
-  overflow: visible;
-}
-
+/* The signature gradient as a ring: a filled circle with its middle masked out,
+   because a border cannot take a gradient. Browsers without `mask-composite`
+   keep the gold hairline underneath — the same ring, one colour quieter. */
 .sealRing {
-  stroke: var(--sf-color-gold);
-  opacity: 0.55;
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-primary-soft);
 }
 
-.sealInner {
-  stroke: var(--sf-color-gold);
-  opacity: 0.35;
+@supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
+  .sealRing {
+    border-color: transparent;
+  }
+
+  .sealRing::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background-image: var(--sf-gradient-signature);
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
 }
 
+/* The check is ink, not gold: gold on gold is a texture, not a mark. */
 .sealCheck {
-  stroke: var(--sf-color-text);
+  position: relative;
+  display: block;
+  color: var(--sf-color-text);
 }
 
 /* One ring, out once, gone. Base opacity is 0, so this is purely additive. */
@@ -215,18 +216,16 @@
   }
 }
 
-.eyebrow {
+/* `.sf-eyebrow` carries the gold, the tracking and the weight; only the
+   centring and the flanking rules are this page's. It is promoted from the
+   primitive's inline-flex to a centred BLOCK: the seal above it is an inline
+   box too, and in a `text-align: center` column two inline boxes share a line —
+   which put the eyebrow beside the seal instead of under it. Two classes deep
+   so it outranks `.sf-eyebrow` whichever order the sheets land in. */
+.head .eyebrow {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: var(--sf-space-3);
   margin: 0 0 var(--sf-space-4);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wider);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-gold-deep);
 }
 
 .eyebrow::before,
@@ -235,13 +234,13 @@
   flex: none;
   width: var(--sf-space-8);
   height: 1px;
-  background: currentColor;
+  background-image: var(--sf-gradient-signature);
 }
 
 .title {
   margin: 0;
   font-family: var(--sf-font-display);
-  font-size: clamp(2.5rem, 5.2vw, 3.75rem);
+  font-size: var(--sf-text-3xl);
   font-weight: var(--sf-font-medium);
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
@@ -257,18 +256,16 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   3. THE RECORD
-   One hairline band, two cells: the number you might quote, and the date you
-   might wait for. Split by a rule — vertical on desktop, horizontal on phones.
+   3. THE RECORD  —  one glass card, two cells
+   The number you might quote, and the date you might wait for. Mobile first:
+   stacked with a hairline between them, side by side from 769px.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .record {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: var(--sf-space-8);
-  padding: var(--sf-space-8) 0;
-  border-top: 1px solid var(--sf-color-border);
-  border-bottom: 1px solid var(--sf-color-border);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-6);
+  padding: var(--sf-space-6);
 }
 
 .recordCell {
@@ -276,14 +273,29 @@
 }
 
 .recordCell + .recordCell {
-  padding-left: var(--sf-space-8);
-  border-left: 1px solid var(--sf-color-border);
+  padding-top: var(--sf-space-6);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+@media (min-width: 769px) {
+  .record {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sf-space-8);
+    padding: var(--sf-space-8);
+  }
+
+  .recordCell + .recordCell {
+    padding-top: 0;
+    padding-left: var(--sf-space-8);
+    border-top: none;
+    border-left: 1px solid var(--sf-color-border);
+  }
 }
 
 .recordLabel {
   margin: 0 0 var(--sf-space-3);
   font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
   text-transform: uppercase;
   letter-spacing: var(--sf-tracking-wide);
   line-height: 1;
@@ -307,7 +319,8 @@
   word-break: break-all;
 }
 
-/* Copy is a word over a hairline, not a button-shaped thing. */
+/* Copy is a word over a hairline, not a button-shaped thing — the pills on this
+   page are the three that navigate. */
 .copyBtn {
   flex: none;
   min-height: var(--sf-tap-target);
@@ -317,7 +330,7 @@
   color: var(--sf-color-text-secondary);
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
   text-transform: uppercase;
   letter-spacing: var(--sf-tracking-wide);
   line-height: 1;
@@ -347,12 +360,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sf-space-2);
-  color: var(--sf-color-gold-deep);
+  color: var(--sf-color-gold);
   text-decoration-color: transparent;
 }
 
 .copyBtnDone:hover {
-  color: var(--sf-color-gold-deep);
+  color: var(--sf-color-gold);
   text-decoration-color: transparent;
 }
 
@@ -387,10 +400,17 @@
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: var(--sf-space-16);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-12);
   align-items: start;
   padding-top: var(--sf-space-12);
+}
+
+@media (min-width: 901px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--sf-space-16);
+  }
 }
 
 .main,
@@ -415,7 +435,7 @@
   margin: 0;
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
   text-transform: uppercase;
   letter-spacing: var(--sf-tracking-wide);
   line-height: 1;
@@ -430,7 +450,9 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   5. THE LINES  —  the checkout's row, kept close so the two pages agree
+   5. THE LINES  —  the cart's row, kept close so the two pages agree
+   The thumbnail is a `.sf-plate`: packaging is the product, so a bottle is
+   centred on the plate, never cropped to fill it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .lines {
@@ -447,24 +469,12 @@
 }
 
 /* `align-self` is load-bearing: the row is a flex container, so without it the
-   default `stretch` gives the thumbnail the row's full height and the crop
-   silently stops being 3:4. */
+   default `stretch` gives the plate the row's full height and the 1:1 quietly
+   stops being 1:1. */
 .thumb {
   flex: none;
   align-self: flex-start;
-  display: block;
   width: 76px;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface-2);
-}
-
-.thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
 }
 
 .lineBody {
@@ -517,6 +527,7 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════
    6. THE LEDGER  —  money, in the order the order itself records it
+   Hairline rows at 15px; the two serif moments are Total and Amount paid.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .ledger {
@@ -529,11 +540,12 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sf-space-5);
-  padding: var(--sf-space-2) 0;
+  padding: var(--sf-space-3) 0;
+  border-bottom: 1px solid var(--sf-color-border);
 }
 
 .ledgerRow dt {
-  font-size: var(--sf-text-sm);
+  font-size: 0.9375rem;
   line-height: var(--sf-leading-normal);
   color: var(--sf-color-text-secondary);
 }
@@ -541,8 +553,8 @@
 .ledgerRow dd {
   flex: none;
   margin: 0;
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
+  font-size: 0.9375rem;
+  font-weight: var(--sf-font-semibold);
   text-align: right;
   color: var(--sf-color-text);
   font-variant-numeric: tabular-nums;
@@ -552,11 +564,11 @@
   color: var(--sf-color-discount);
 }
 
-/* The serif moments: Total, and — when credit was spent — Amount Paid. */
 .ledgerTotal {
-  margin-top: var(--sf-space-3);
+  border-bottom: none;
+  border-top: 1px solid var(--sf-color-border-strong);
+  margin-top: var(--sf-space-2);
   padding-top: var(--sf-space-4);
-  border-top: 1px solid var(--sf-color-border);
 }
 
 .ledgerTotal dt {
@@ -611,123 +623,28 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   8. PAYMENT  —  method, then an honest chip. Text always; colour never alone.
+   8. PAYMENT  —  method, then the shared status Chip. Text always; colour
+   never alone.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .payMethod {
   margin: 0 0 var(--sf-space-4);
   font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
   text-transform: uppercase;
   letter-spacing: var(--sf-tracking-wide);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text);
 }
 
-.statusChip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sf-space-2);
-  margin: 0;
-  padding: var(--sf-space-2) var(--sf-space-3);
-  border: 1px solid color-mix(in srgb, currentColor 32%, transparent);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-badge-bg);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  letter-spacing: 0.02em;
-  color: var(--sf-color-text-secondary);
-}
-
-.statusDot {
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: var(--sf-radius-pill);
-  background: currentColor;
-}
-
-.statusOk {
-  color: var(--sf-color-success);
-  background: var(--sf-color-success-bg);
-}
-
-.statusWarn {
-  color: var(--sf-color-warning);
-  background: var(--sf-color-warning-bg);
-}
-
-.statusDanger {
-  color: var(--sf-color-danger);
-  background: var(--sf-color-danger-bg);
-}
-
-.statusNeutral {
-  color: var(--sf-color-info);
-  background: var(--sf-color-info-bg);
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   9. ACTIONS  —  one ink CTA, two hairlines, one honest placeholder
+   9. ACTIONS  —  three shared pills, one honest placeholder
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .actions {
   display: flex;
   flex-direction: column;
   gap: var(--sf-space-3);
-}
-
-.btnPrimary,
-.btnQuiet {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 52px;
-  padding: var(--sf-space-4) var(--sf-space-6);
-  border-radius: var(--sf-radius-sm);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-sm);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-tight);
-  text-transform: uppercase;
-  letter-spacing: var(--sf-tracking-wide);
-  text-align: center;
-  cursor: pointer;
-  transition: background-color var(--sf-transition),
-    border-color var(--sf-transition), color var(--sf-transition);
-}
-
-/* The page's one ink fill. Warms to deep gold on hover, as everywhere else. */
-.btnPrimary {
-  border: 1px solid var(--sf-color-emerald);
-  background: var(--sf-color-emerald);
-  color: var(--sf-color-emerald-contrast);
-}
-
-.btnPrimary:hover {
-  background: var(--sf-color-gold-deep);
-  border-color: var(--sf-color-gold-deep);
-  color: var(--sf-color-primary-contrast);
-}
-
-.btnQuiet {
-  border: 1px solid var(--sf-color-border-strong);
-  background: transparent;
-  color: var(--sf-color-text);
-}
-
-.btnQuiet:hover {
-  border-color: var(--sf-color-text);
-  background: var(--sf-color-primary-soft);
-}
-
-.btnPrimary:focus-visible,
-.btnQuiet:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
 }
 
 /* The invoice is not a feature yet — it is a control that says so. Muted, no
@@ -747,7 +664,7 @@
   color: var(--sf-color-text-muted);
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-medium);
+  font-weight: var(--sf-font-semibold);
   text-transform: uppercase;
   letter-spacing: var(--sf-tracking-wide);
   line-height: 1;
@@ -771,7 +688,7 @@
   flex: none;
   padding: var(--sf-space-1) var(--sf-space-2);
   border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-sm);
+  border-radius: var(--sf-radius-pill);
   font-size: var(--sf-text-xs);
   font-weight: var(--sf-font-normal);
   text-transform: none;
@@ -780,29 +697,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   10. RESPONSIVE
+   10. NARROW VIEWPORTS
    ═══════════════════════════════════════════════════════════════════════════ */
-
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sf-space-12);
-  }
-}
-
-@media (max-width: 700px) {
-  .record {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--sf-space-6);
-  }
-
-  .recordCell + .recordCell {
-    padding-left: 0;
-    padding-top: var(--sf-space-6);
-    border-left: none;
-    border-top: 1px solid var(--sf-color-border);
-  }
-}
 
 @media (max-width: 560px) {
   .container {
@@ -836,16 +732,6 @@
     text-align: left;
     font-size: var(--sf-text-lg);
   }
-
-  .state {
-    padding: var(--sf-space-16) 0;
-  }
-
-  .stateActions .btnPrimary,
-  .stateActions .btnQuiet {
-    width: 100%;
-    min-width: 0;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -862,9 +748,5 @@
 
   .sealHalo {
     display: none;
-  }
-
-  .spinner {
-    animation-duration: 2.4s;
   }
 }

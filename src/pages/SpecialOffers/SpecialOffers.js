@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
-import StarRating from "../../components/storefront/StarRating";
+import ProductCard from "../../components/storefront/ProductCard";
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  GlassCard,
+  Skeleton,
+} from "../../components/ui";
 import apiService from "../../services/api";
 import {
   formatCurrency,
@@ -13,13 +20,11 @@ import {
   buildCartItem,
   productPath,
   copyToClipboard,
-  truncateText,
   PLACEHOLDER_IMG,
   onImageError,
-  productFlagMarks,
 } from "../../utils/helpers";
 import { resolveCountdownTarget, diffToParts } from "../../utils/dealsConfig";
-import { RISE, reveal } from "../../theme/motion";
+import { reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
 import useSeo from "../../hooks/useSeo";
 import styles from "./SpecialOffers.module.css";
@@ -28,17 +33,18 @@ import styles from "./SpecialOffers.module.css";
 // SPECIAL OFFERS  —  the season's offers, set editorially
 // =============================================================================
 // A boutique does not shout about a sale; it posts a card by the door. This page
-// is that card. Four movements on the ivory ground, and nothing between them but
+// is that card. Four movements on the dark ground, and nothing between them but
 // air and hairlines:
 //
 //   1. THE OPENING BAND — the admin's own eyebrow / headline / line, and one
 //      tracked countdown line instead of a wall of digit tiles.
-//   2. THE VOUCHERS — hairline cards, the figure set in the display serif, the
-//      honest small print underneath, the code on a dashed chip with Copy.
+//   2. THE VOUCHERS — gold-toned glass cards, the figure set in the display
+//      serif, the honest small print underneath, and the code on a dashed chip
+//      in monospace gold with Copy beside it.
 //   3. THE CHOSEN — the admin's Deal of the Day picks as large, image-led
 //      features with a real savings line derived from comparePrice.
-//   4. THE MARKDOWNS — a hairline category strip over a wall of cards drawn in
-//      the Prompt 09 language.
+//   4. THE MARKDOWNS — a hairline category strip over a wall of the shared
+//      `storefront/ProductCard`.
 //
 // EVERYTHING HERE IS ADMIN-STEERED
 //   `useDealsConfig` is the single source of truth: the master `enabled` gate,
@@ -58,12 +64,15 @@ import styles from "./SpecialOffers.module.css";
 //     Admin manages — so every code printed here actually redeems.
 //   • No stock scares, no "12 people are viewing", no invented scarcity.
 //
-// THE LOCAL CARD
-//   The grid card, the tab strip and the skeletons are all local to this page on
-//   purpose (they always have been). They are drawn to MATCH the shared Prompt 09
-//   card — 3:4 plate, tracked eyebrow, serif name, gold stars, quiet price row,
-//   hover-revealed add — without importing it. The one thing that IS imported is
-//   the shared StarRating, because a star is a star.
+// ONE CARD, NOT TWO (Prompt 31)
+//   The markdown wall used to draw its OWN card — a 110-line copy of the shared
+//   one, kept "close enough" by hand. Two cards is two rating rules, two price
+//   clusters and two answers to "is this product available", and the copy had
+//   already drifted: it cropped the packaging to a 3:4 plate and knew nothing
+//   about `priceTBA`, so five of the eight launch products would have offered an
+//   Add to Cart for a price that does not exist yet. The wall now renders the
+//   shared `storefront/ProductCard`. The tab strip and the feature stay local:
+//   they are this page's own furniture, and nothing else has them.
 // =============================================================================
 
 // ── Coupon display helpers ───────────────────────────────────────────────────
@@ -176,22 +185,6 @@ const useAddedFlash = (ms = 1400) => {
 // a single gold thread. The artwork reads its colours from the local --offer-*
 // aliases, which resolve to tokens, so it inverts with the page.
 
-const HeartMark = ({ filled }) => (
-  <svg
-    viewBox="0 0 24 24"
-    width="17"
-    height="17"
-    fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z" />
-  </svg>
-);
-
 const ChevronMark = ({ dir }) => (
   <svg
     viewBox="0 0 24 24"
@@ -205,21 +198,6 @@ const ChevronMark = ({ dir }) => (
     aria-hidden="true"
   >
     <polyline points={dir === "left" ? "15 6 9 12 15 18" : "9 6 15 12 9 18"} />
-  </svg>
-);
-
-// A hanging price tag with its thread — the page's one piece of artwork, shared
-// by the "nothing reduced" and the "offers are off" states.
-const TagMark = () => (
-  <svg className={styles.stateArt} width="152" height="116" viewBox="0 0 152 116" fill="none" aria-hidden="true">
-    <g stroke="var(--offer-line)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M58 30 L130 30 L130 90 L58 90 L24 60 Z" />
-      <circle cx="47" cy="60" r="5.5" />
-      <line x1="76" y1="50" x2="114" y2="50" />
-      <line x1="76" y1="64" x2="100" y2="64" />
-    </g>
-    {/* the thread, out of the eyelet */}
-    <path d="M44 55 C 33 36, 45 20, 66 18" stroke="var(--offer-gold)" strokeWidth="1.25" strokeLinecap="round" fill="none" />
   </svg>
 );
 
@@ -425,140 +403,11 @@ const DealFeature = ({ product, categoryName, onAddToCart, index, reduceMotion }
   );
 };
 
-// ── The grid card ────────────────────────────────────────────────────────────
-// Local to this page, drawn to the Prompt 09 card language: a 3:4 photograph on
-// the sunken panel, then air, then a quiet stack — tracked category, serif name,
-// the gold star line, the price. The plate and the name are real links (the old
-// click-anywhere div was invisible to the keyboard, and the "Quick View" button
-// that sat over the photograph only ever went to the same place), and the add
-// affordance is last in the DOM so it is the last tab stop; the stylesheet
-// decides whether it sits over the foot of the plate or in a row of its own.
-//
-// forwardRef so AnimatePresence's popLayout child can attach its measurement ref.
-const ProductCard = React.forwardRef(
-  (
-    { product, categoryName, onAddToCart, onToggleWishlist, isWishlisted, index, reduceMotion },
-    ref
-  ) => {
-    const { sellingPrice, originalPrice, discount } = getProductMinPrice(product);
-    const ratingCount = Number(product.totalReviews) || 0;
-    const rating = Number(product.rating) || 0;
-    const outOfStock = product.stock === 0;
-    const flagMarks = productFlagMarks(product);
-    const [added, flashAdded] = useAddedFlash();
-
-    const handleAdd = () => {
-      if (outOfStock) return;
-      onAddToCart(product);
-      flashAdded();
-    };
-
-    return (
-      <motion.article
-        ref={ref}
-        className={`${styles.card} ${outOfStock ? styles.isOut : ""}`}
-        {...reveal(reduceMotion, { index })}
-        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: RISE.micro }}
-        layout
-      >
-        <div className={styles.cardMedia}>
-          <Link to={productPath(product)} className={styles.plate} aria-label={product.name}>
-            <img
-              src={product.images?.[0] || product.image || PLACEHOLDER_IMG}
-              alt={product.name}
-              loading="lazy"
-              onError={onImageError}
-            />
-          </Link>
-
-          {discount > 0 && (
-            <span className={`sf-badge-discount ${styles.badge}`}>{discount}% off</span>
-          )}
-
-          {outOfStock && <span className={styles.stockTag}>Out of Stock</span>}
-
-          <button
-            type="button"
-            className={`${styles.wishlist} ${isWishlisted ? styles.wishlisted : ""}`}
-            onClick={() => onToggleWishlist(product)}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            aria-pressed={isWishlisted}
-          >
-            <HeartMark filled={isWishlisted} />
-          </button>
-        </div>
-
-        <div className={styles.cardBody}>
-          {/* Eyebrow row — the category, then the merchant's TRENDING / HOT marks,
-              read through the same shared helper as the storefront card so an
-              offer piece is marked here exactly as it is everywhere else. */}
-          {(categoryName || flagMarks.length > 0) && (
-            <div className={styles.cardMeta}>
-              {categoryName && <span className={styles.cardEyebrow}>{categoryName}</span>}
-              {flagMarks.map((flag) => (
-                <span key={flag.key} className={`sf-flag ${flag.className}`}>
-                  {flag.label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <Link to={productPath(product)} className={styles.cardName}>
-            {truncateText(product.name, 48)}
-          </Link>
-
-          {/* Stars only where there are real ratings — never a hollow "(0)". */}
-          {ratingCount > 0 ? (
-            <span className={styles.rating}>
-              <StarRating rating={rating} size={12} />
-              <span className={styles.ratingCount}>({ratingCount.toLocaleString()})</span>
-            </span>
-          ) : (
-            <span className={styles.noRating}>No ratings yet</span>
-          )}
-
-          <div className={styles.priceRow}>
-            <span className={styles.price}>{formatCurrency(sellingPrice, product.currency)}</span>
-            {discount > 0 && (
-              <>
-                <span className={styles.compare}>
-                  {formatCurrency(originalPrice, product.currency)}
-                </span>
-                <span className={styles.percentOff}>{discount}% off</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className={`${styles.addBtn} ${added ? styles.btnAdded : ""}`}
-          onClick={handleAdd}
-          disabled={outOfStock}
-        >
-          {outOfStock ? "Out of Stock" : added ? "Added ✓" : "Add to Cart"}
-        </button>
-      </motion.article>
-    );
-  }
-);
-ProductCard.displayName = "ProductCard";
-
 // ── Skeletons ────────────────────────────────────────────────────────────────
 // The silhouette of the thing that is coming, drawn on the shared `sf-skeleton`
-// primitive — the warm sand sweep, not a grey block.
-
-const CardSkeleton = () => (
-  <div className={styles.skelCard}>
-    <div className={`sf-skeleton ${styles.skelPlate}`} />
-    <div className={styles.skelBody}>
-      <div className={`sf-skeleton ${styles.skelEyebrow}`} />
-      <div className={`sf-skeleton ${styles.skelName}`} />
-      <div className={`sf-skeleton ${styles.skelStars}`} />
-      <div className={`sf-skeleton ${styles.skelPrice}`} />
-    </div>
-  </div>
-);
+// primitive — the surface breathing, not a grey block. The markdown wall's cell is
+// `Skeleton variant="card"`, the shared card's own silhouette, so the grid does
+// not shift when the products land; the voucher and the head are this page's.
 
 const VoucherSkeleton = () => (
   <div className={styles.skelVoucher}>
@@ -584,11 +433,10 @@ const HeadSkeleton = () => (
 
 const SpecialOffers = () => {
   useSeo({
-    title: "Special offers",
+    title: "Offers",
     description: "Current offers across the LAMIKAA Naturals Black Rice range.",
   });
 
-  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const reduceMotion = useReducedMotion();
@@ -601,6 +449,10 @@ const SpecialOffers = () => {
   const [categories, setCategories] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
+  // A dropped read is NOT "no offers": the page says so and offers the retry,
+  // rather than telling a shopper the offers desk is quiet when it never
+  // answered. (Prompt 31 — "a fetch error never masquerades as empty".)
+  const [failed, setFailed] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   // { code, ok } — drives the button's own label AND the polite announcement,
   // including the honest failure case where the clipboard is unavailable.
@@ -613,15 +465,20 @@ const SpecialOffers = () => {
   // Fetch products (for deals), categories (for accurate tabs) and the real
   // coupons (so advertised codes match what checkout accepts) in one pass. Only
   // when the page is actually enabled — no point fetching for a hidden page.
+  // Bumped by "Try again" to re-run the effect below with the same guards.
+  const [reloadKey, setReloadKey] = useState(0);
+  const retry = useCallback(() => setReloadKey((n) => n + 1), []);
+
   useEffect(() => {
     if (!enabled) {
       setLoading(false);
-      return;
+      return undefined;
     }
     let cancelled = false;
     const fetchData = async () => {
       try {
         setLoading(true);
+        setFailed(false);
         const [productsData, categoriesData, couponsData] = await Promise.all([
           apiService.products.getAll(),
           apiService.categories.getAll(),
@@ -637,6 +494,7 @@ const SpecialOffers = () => {
         setProducts([]);
         setCategories([]);
         setCoupons([]);
+        setFailed(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -645,7 +503,7 @@ const SpecialOffers = () => {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, reloadKey]);
 
   // Coupons to advertise: the admin's ordered selection (kept to valid ones), or
   // — when nothing is selected — every valid active coupon (automatic).
@@ -717,6 +575,13 @@ const SpecialOffers = () => {
     [addToCart]
   );
 
+  // The shared card has already called buildCartItem by the time it calls back —
+  // it hands over a finished cart line, not a product.
+  const handleAddCartItem = useCallback(
+    (cartItem) => addToCart(cartItem, 1),
+    [addToCart]
+  );
+
   const handleToggleWishlist = useCallback(
     (product) => {
       toggleWishlist(product);
@@ -744,22 +609,20 @@ const SpecialOffers = () => {
     );
   }
 
+  // The seed ships `dealsConfig.enabled: false`, so this is what /special-offers
+  // shows out of the box — and it is the page's <h1>, not a note inside one.
   if (!enabled) {
     return (
       <div className={styles.page}>
-        <div className={styles.container}>
-          <section className={styles.state}>
-            <TagMark />
-            <p className={styles.eyebrow}>Offers</p>
-            <h1 className={styles.stateTitle}>No Deals Right Now</h1>
-            <p className={styles.stateText}>
-              The offers desk is quiet for the moment. When the next markdowns are ready they
-              will be posted here — the full collection stays open in the meantime.
-            </p>
-            <Link className={`sf-btn sf-btn--emerald ${styles.stateBtn}`} to={ROUTES.SHOP}>
-              Browse the Collection
-            </Link>
-          </section>
+        <div className={`${styles.container} ${styles.stateFrame}`}>
+          <EmptyState
+            eyebrow="Offers"
+            title="No offers right now"
+            titleAs="h1"
+            text="The offers desk is quiet for the moment. When the next markdowns are ready they will be posted here — the full collection stays open in the meantime."
+            icon="mdi:tag-off-outline"
+            actions={<Button to={ROUTES.SHOP}>Browse the collection</Button>}
+          />
         </div>
       </div>
     );
@@ -767,7 +630,8 @@ const SpecialOffers = () => {
 
   const showCountdown = config.timer?.enabled !== false && countdown.show;
   const timerEnded = config.timer?.enabled !== false && countdown.ended;
-  const nothingToShow = !loading && gridProducts.length === 0 && dealOfTheDay.length === 0;
+  const nothingToShow =
+    !loading && !failed && gridProducts.length === 0 && dealOfTheDay.length === 0;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -820,12 +684,29 @@ const SpecialOffers = () => {
                 <VoucherSkeleton key={i} />
               ))}
             </div>
+          ) : failed ? (
+            <ErrorState
+              className={styles.state}
+              text="We couldn't load the offers. Nothing was changed — no code has been applied to your cart."
+              onRetry={retry}
+              actions={
+                <Button variant="ghost" to={ROUTES.SHOP}>
+                  Browse the collection
+                </Button>
+              }
+            />
           ) : featuredCoupons.length > 0 ? (
             <div className={styles.voucherGrid}>
               {featuredCoupons.map((coupon) => {
                 const isCopied = copied.code === coupon.code && copied.ok;
                 return (
-                  <article key={coupon.id ?? coupon.code} className={styles.voucher}>
+                  <GlassCard
+                    as="article"
+                    glow="gold"
+                    padding="md"
+                    key={coupon.id ?? coupon.code}
+                    className={styles.voucher}
+                  >
                     <p className={styles.voucherFigure}>
                       <span className={styles.voucherValue}>{couponHeadline(coupon)}</span>
                       <span className={styles.voucherOff}>off</span>
@@ -853,7 +734,7 @@ const SpecialOffers = () => {
                         {isCopied ? "Copied" : "Copy"}
                       </button>
                     </div>
-                  </article>
+                  </GlassCard>
                 );
               })}
             </div>
@@ -867,7 +748,7 @@ const SpecialOffers = () => {
         </section>
 
         {/* ── 3. The chosen (Deal of the Day) ────────────────────────────── */}
-        {!loading && dealOfTheDay.length > 0 && (
+        {!loading && !failed && dealOfTheDay.length > 0 && (
           <section className={styles.section} aria-labelledby="offers-chosen">
             <div className={styles.sectionHead}>
               <div className={styles.sectionHeadText}>
@@ -906,7 +787,7 @@ const SpecialOffers = () => {
         )}
 
         {/* ── 4. The markdowns ───────────────────────────────────────────── */}
-        {!loading && gridProducts.length > 0 && (
+        {!loading && !failed && gridProducts.length > 0 && (
           <section className={styles.section} aria-labelledby="offers-markdowns">
             <div className={styles.sectionHead}>
               <div className={styles.sectionHeadText}>
@@ -933,19 +814,26 @@ const SpecialOffers = () => {
               />
             )}
 
+            {/* The shared card, in a motion wrapper: the card itself is a plain
+                component, so the reveal and the exit (when a tab filters a piece
+                out) belong to the cell around it. */}
             <div className={styles.cardGrid}>
               <AnimatePresence mode="popLayout">
                 {filteredProducts.map((product, index) => (
-                  <ProductCard
+                  <motion.div
                     key={product.id}
-                    product={product}
-                    categoryName={categoryMap[product.categoryId]}
-                    index={index}
-                    reduceMotion={reduceMotion}
-                    onAddToCart={handleAddToCart}
-                    onToggleWishlist={handleToggleWishlist}
-                    isWishlisted={isInWishlist(product.id)}
-                  />
+                    className={styles.cardCell}
+                    layout
+                    {...reveal(reduceMotion, { index })}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                  >
+                    <ProductCard
+                      product={product}
+                      onAddToCart={handleAddCartItem}
+                      onToggleWishlist={handleToggleWishlist}
+                      isWishlisted={isInWishlist(product.id)}
+                    />
+                  </motion.div>
                 ))}
               </AnimatePresence>
             </div>
@@ -957,7 +845,7 @@ const SpecialOffers = () => {
           <section className={styles.section}>
             <div className={styles.cardGrid}>
               {Array.from({ length: 8 }, (_, i) => (
-                <CardSkeleton key={i} />
+                <Skeleton key={i} variant="card" />
               ))}
             </div>
           </section>
@@ -965,21 +853,15 @@ const SpecialOffers = () => {
 
         {/* ── Nothing reduced ────────────────────────────────────────────── */}
         {nothingToShow && (
-          <section className={styles.state}>
-            <TagMark />
-            <p className={styles.eyebrow}>The Markdowns</p>
-            <h2 className={styles.stateTitle}>Nothing Is Reduced Today</h2>
-            <p className={styles.stateText}>
-              No piece in the catalogue is currently marked below its original price. Rather
-              than pad this page, we would rather show you the whole collection.
-            </p>
-            <button
-              type="button"
-              className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}
-              onClick={() => navigate(ROUTES.SHOP)}
-            >
-              Browse the Collection
-            </button>
+          <section className={styles.section}>
+            <EmptyState
+              className={styles.state}
+              eyebrow="The markdowns"
+              title="Nothing is reduced today"
+              text="No piece in the catalogue is currently marked below its original price. Rather than pad this page, we would rather show you the whole collection."
+              icon="mdi:tag-off-outline"
+              actions={<Button to={ROUTES.SHOP}>Browse the collection</Button>}
+            />
           </section>
         )}
       </div>

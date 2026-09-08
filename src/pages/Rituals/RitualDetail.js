@@ -12,6 +12,7 @@ import { isPriceKnown, resolvePrice } from "../../utils/product";
 import {
   Button,
   ContentBlocks,
+  ErrorState,
   GlassCard,
   SectionHeading,
   Skeleton,
@@ -95,6 +96,10 @@ export const ritualTotal = (products = []) =>
  */
 const useRitual = (slug) => {
   const [state, setState] = useState({ status: "loading", ritual: null, products: [] });
+  // Bumped by the error state's "Try again"; the effect below re-runs with its
+  // own guards rather than a second copy of the fetch.
+  const [reloadKey, setReloadKey] = useState(0);
+  const retry = useCallback(() => setReloadKey((n) => n + 1), []);
 
   useEffect(() => {
     let alive = true;
@@ -116,16 +121,16 @@ const useRitual = (slug) => {
     return () => {
       alive = false;
     };
-  }, [slug]);
+  }, [slug, reloadKey]);
 
-  return state;
+  return { ...state, retry };
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
 // The page, once there is something to show
 // ══════════════════════════════════════════════════════════════════════════════
 
-const RitualDetailView = ({ status, ritual, products }) => {
+const RitualDetailView = ({ status, ritual, products, retry }) => {
   const reduceMotion = useReducedMotion();
   const { addMany } = useCart();
 
@@ -227,18 +232,21 @@ const RitualDetailView = ({ status, ritual, products }) => {
             {loading ? (
               <Skeleton variant="text" lines={3} />
             ) : failed ? (
-              <>
-                <h1 id="ritual-title" className={styles.title}>
-                  This ritual could not be loaded
-                </h1>
-                <p className={styles.failed}>
-                  Something went wrong on the way to it. The routines are all still
-                  there.
-                </p>
-                <Button variant="primary" to={ROUTES.RITUALS}>
-                  Browse all rituals
-                </Button>
-              </>
+              /* The shared failure card (Prompt 31). It takes the h1 because on
+                 this branch there is no ritual name to be the page's heading. */
+              <ErrorState
+                className={styles.failed}
+                title="This ritual could not be loaded"
+                titleAs="h1"
+                id="ritual-title"
+                text="Nothing was changed — the routines are all still there. Check your connection and try again."
+                onRetry={retry}
+                actions={
+                  <Button variant="ghost" to={ROUTES.RITUALS}>
+                    Browse all rituals
+                  </Button>
+                }
+              />
             ) : (
               <>
                 <p className={`sf-eyebrow sf-eyebrow--rule ${styles.eyebrow}`}>

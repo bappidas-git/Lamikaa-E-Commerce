@@ -26,15 +26,24 @@
 // pricing/discounts always derive from live data.
 // =============================================================================
 
+// The wording a record that has not been written yet falls back to. It matches
+// the seed exactly and says nothing the store cannot stand behind: the old copy
+// here ("Limited Time" / "Special Offers & Deals" / "Discover unbeatable prices
+// on top products. New deals drop daily — don't miss out!") was the previous
+// brand's promo voice and, worse, three claims nobody had made — a page that
+// failed to load its config printed all three (Prompt 31).
 export const DEFAULT_DEALS_HERO = {
-  tag: "Limited Time",
-  title: "Special Offers & Deals",
-  subtitle:
-    "Discover unbeatable prices on top products. New deals drop daily — don't miss out!",
+  tag: "Offers",
+  title: "Offers",
+  subtitle: "Launch offers will appear here.",
 };
 
 export const DEFAULT_DEALS_TIMER = {
-  enabled: true,
+  // OFF by default, for the same reason. This value is only ever reached before
+  // the config arrives or after the read fails, and a clock counting down to a
+  // window no admin has set is invented urgency — exactly what the offers page
+  // documents that it does not do.
+  enabled: false,
   // ISO string for a fixed end date-time, or "" to count down to end-of-day.
   endAt: "",
   // What happens once the window passes:

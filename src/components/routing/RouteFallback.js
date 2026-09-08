@@ -19,6 +19,12 @@ import styles from "./RouteFallback.module.css";
 // is an implicit aria-live="polite"); the shapes below it are aria-hidden by
 // Skeleton itself, so a screen reader hears the state, not the scaffolding.
 // The shimmer is switched off under prefers-reduced-motion by `.sf-skeleton`.
+//
+// It is the LOADING member of the storefront's three shared states (Prompt 31),
+// alongside `ui/EmptyState` and `ui/ErrorState`: skeletons for "not here yet",
+// EmptyState for "we looked and there is nothing", ErrorState for "we could not
+// look". No page shows a spinner as its main loading state — a spinner is only
+// ever allowed inside a button that is working.
 // =============================================================================
 
 const RouteFallback = () => (

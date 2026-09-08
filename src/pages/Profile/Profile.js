@@ -8,7 +8,7 @@ import apiService from "../../services/api";
 import { formatDate, formatCurrency, getInitials, generateId, isValidPhone } from "../../utils/helpers";
 import { collapse, reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
-import { Button, Chip, GlassCard } from "../../components/ui";
+import { Button, Chip, EmptyState, GlassCard } from "../../components/ui";
 import { orderStatusInfo } from "../../utils/orderStatus";
 import useSeo from "../../hooks/useSeo";
 import styles from "./Profile.module.css";
@@ -871,11 +871,13 @@ const Profile = () => {
       </GlassCard>
 
       {addresses.length === 0 && !showAddressForm ? (
-        <GlassCard padding="md" className={styles.state}>
-          <span className={styles.stateMark}><Icon name="location" size={26} strokeWidth={1} /></span>
-          <p className={styles.stateTitle}>No addresses saved yet</p>
-          <p className={styles.stateText}>Add one and checkout will offer it first, every time.</p>
-        </GlassCard>
+        <EmptyState
+          compact
+          className={styles.state}
+          title="No addresses saved yet"
+          text="Add one and checkout will offer it first, every time."
+          icon="mdi:map-marker-outline"
+        />
       ) : (
         <div className={styles.addrList}>
           {addresses.map((addr, index) => (
@@ -932,14 +934,13 @@ const Profile = () => {
   const renderPaymentSection = () => (
     /* No payment-method API exists — render an honest empty state rather than
        fabricating saved cards. Payment is collected securely at checkout. */
-    <GlassCard padding="md" className={styles.state}>
-      <span className={styles.stateMark}><Icon name="card" size={26} strokeWidth={1} /></span>
-      <p className={styles.stateTitle}>Nothing saved here — by design</p>
-      <p className={styles.stateText}>
-        Payment details are entered fresh at checkout and are never stored on
-        your account. There is nothing kept on this page for anyone to take.
-      </p>
-    </GlassCard>
+    <EmptyState
+      compact
+      className={styles.state}
+      title="Nothing saved here — by design"
+      text="Payment details are entered fresh at checkout and are never stored on your account. There is nothing kept on this page for anyone to take."
+      icon="mdi:credit-card-outline"
+    />
   );
 
   const renderWalletSection = () => (
@@ -970,14 +971,13 @@ const Profile = () => {
             ))}
           </div>
         ) : walletTx.length === 0 ? (
-          <div className={styles.state}>
-            <span className={styles.stateMark}><Icon name="wallet" size={26} strokeWidth={1} /></span>
-            <p className={styles.stateTitle}>No store credit yet</p>
-            <p className={styles.stateText}>
-              Refunds issued to store credit, and credit you spend at checkout,
-              are written here — each line with the order it belongs to.
-            </p>
-          </div>
+          <EmptyState
+            compact
+            className={styles.state}
+            title="No store credit yet"
+            text="Refunds issued to store credit, and credit you spend at checkout, are written here — each line with the order it belongs to."
+            icon="mdi:wallet-outline"
+          />
         ) : (
           <div className={styles.ledger}>
             {walletTx.map((t) => {
@@ -1035,14 +1035,18 @@ const Profile = () => {
   const renderNotificationsSection = () => (
     /* No notification-preference fields exist on the user yet — show an honest
        "coming soon" state rather than toggles that wouldn't persist. */
-    <GlassCard padding="md" className={styles.state}>
-      <span className={styles.stateMark}><Icon name="bell" size={26} strokeWidth={1} /></span>
-      <p className={styles.stateTitle}>Preferences are coming soon</p>
-      <p className={styles.stateText}>
-        For now, order updates are always sent to <strong>{user.email}</strong>.
-        Fine-tuning offers and reminders will live here shortly.
-      </p>
-    </GlassCard>
+    <EmptyState
+      compact
+      className={styles.state}
+      title="Preferences are coming soon"
+      text={
+        <>
+          For now, order updates are always sent to <strong>{user.email}</strong>.
+          Fine-tuning offers and reminders will live here shortly.
+        </>
+      }
+      icon="mdi:bell-outline"
+    />
   );
 
   const renderSettingsSection = () => (
@@ -1335,16 +1339,14 @@ const Profile = () => {
                       ))}
                     </div>
                   ) : recentOrders.length === 0 ? (
-                    <GlassCard padding="md" className={styles.state}>
-                      <span className={styles.stateMark}><Icon name="orders" size={26} strokeWidth={1} /></span>
-                      <p className={styles.stateTitle}>No orders yet</p>
-                      <p className={styles.stateText}>
-                        When you order, it is recorded here — and kept.
-                      </p>
-                      <Button variant="primary" to={ROUTES.SHOP} className={styles.stateBtn}>
-                        Start shopping
-                      </Button>
-                    </GlassCard>
+                    <EmptyState
+                      compact
+                      className={styles.state}
+                      title="No orders yet"
+                      text="When you order, it is recorded here — and kept."
+                      icon="mdi:shopping-outline"
+                      actions={<Button to={ROUTES.SHOP}>Start shopping</Button>}
+                    />
                   ) : (
                     <div className={styles.recentList}>
                       {recentOrders.map((order) => {

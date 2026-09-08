@@ -206,37 +206,12 @@
 }
 
 /* ---- The failed and the empty answers ------------------------------------
-   One panel, two messages. Both are a statement, a sentence of explanation and
-   exactly one way forward — never a wall of suggestions in place of the range. */
+   `ui/ErrorState` and `ui/EmptyState` (Prompt 31) draw both. A failed read and
+   an empty answer are DIFFERENT states and stay different components — telling
+   a shopper the range is empty when the network dropped is the one mistake a
+   listing must not make. All this rule does is give the card the section's
+   vertical rhythm. */
 
 .panel {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sf-space-4);
   margin-block: var(--sf-section-y);
-  border-radius: var(--sf-radius-xl);
-}
-
-.panelTitle {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-xl);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-display);
-  color: var(--sf-color-text);
-}
-
-.panelBody {
-  margin: 0;
-  max-width: 52ch;
-  font-size: var(--sf-text-base);
-  line-height: var(--sf-leading-relaxed);
-  color: var(--sf-color-text-secondary);
-}
-
-@media (max-width: 560px) {
-  .panel > :global(.sf-btn) {
-    width: 100%;
-  }
 }

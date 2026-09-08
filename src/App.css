@@ -158,17 +158,15 @@ body.admin-area *::-webkit-scrollbar-thumb:hover {
 
 /* =============================================================================
  * ANIMATIONS
- * One keyframe survives here, and it is the only one that carries state: the
- * spinner. The decorative loops that used to sit alongside it — `float` (a
- * 6s infinite bob) and `gradient-shift` (a 3s infinite background sweep) —
- * are retired. Nothing on the storefront waves, floats or pulses; attention
- * belongs to the garments, not to the chrome.
+ * None left here. The decorative loops (`float`, a 6s infinite bob, and
+ * `gradient-shift`, a 3s background sweep) were retired earlier; the `spin`
+ * keyframe and the global spinner class it drove went with Prompt 31, when the
+ * last page that showed a spinner as its main loading state
+ * (OrderConfirmation) became a `Skeleton`. The four spinners that remain are
+ * all INSIDE buttons — a control that is working — and each keeps its own
+ * keyframe next to the control it belongs to. Nothing on the storefront waves,
+ * floats or pulses; attention belongs to the products, not to the chrome.
  * ========================================================================== */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* =============================================================================
  * SHARED UTILITIES
@@ -194,27 +192,6 @@ body.admin-area *::-webkit-scrollbar-thumb:hover {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-/* Hairline ring with a gold leading edge. */
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 2px solid var(--sf-color-border);
-  border-top-color: var(--sf-color-gold-deep);
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
-}
-
-/* The one spinner in the app that was missing this: the storefront's other five
-   (AuthModal, ReviewModal, OrderConfirmation, OrderHistory ×2) all slow the
-   same 0.9s turn to 2.4s under reduced motion, because a "working" signal still
-   has to turn but need not race. This file had no reduced-motion block at all,
-   so .loading-spinner kept spinning at full speed. */
-@media (prefers-reduced-motion: reduce) {
-  .loading-spinner {
-    animation-duration: 2.4s;
-  }
 }
 
 /* The route transition is NOT here. It lives in one place — the keyed wrapper

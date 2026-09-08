@@ -105,26 +105,19 @@
   }
 }
 
-/* ---- Empty --------------------------------------------------------------- */
+/* ---- No results, and a catalogue that never arrived ----------------------
+ * Both are `ui/EmptyState` / `ui/ErrorState` (Prompt 31) — the card, the ring,
+ * the Fraunces title and the pill action are theirs. What is left here is the
+ * suggestion row this page adds INSIDE the empty card, because nothing else on
+ * the storefront offers popular terms.
+ * ------------------------------------------------------------------------- */
 
-.empty {
-  display: grid;
-  justify-items: start;
-  gap: var(--sf-space-4);
-  max-width: 52ch;
-  padding-block: var(--sf-space-6) var(--sf-space-12);
-}
-
-.emptyTitle {
-  margin: 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-xl);
-  line-height: var(--sf-leading-tight);
-  color: var(--sf-color-text);
+.state {
+  margin-block: var(--sf-space-6) var(--sf-space-12);
 }
 
 .emptyHint {
-  margin: 0;
+  margin: var(--sf-space-6) 0 var(--sf-space-3);
   color: var(--sf-color-text-secondary);
   font-size: var(--sf-text-sm);
 }
@@ -135,6 +128,7 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: var(--sf-space-2);
 }
 

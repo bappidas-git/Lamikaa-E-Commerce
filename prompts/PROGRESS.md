@@ -34,7 +34,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 28 | Content pages from siteContent | complete | 2026-09-08 | (this commit) | **Five pages, one source of copy.** `/about`, `/why-lamikaa`, `/faq`, `/contact` and `/policies/:policy` are built from `siteContent` and render **not one narrative sentence typed into JSX** — only UI furniture ("Our Story", "Contents", "Send message"). **Seven old page folders deleted** (6,844 lines of Meghali-era JSX + CSS, four of them four copies of one document stylesheet); the four policy routes collapse into **one param route** and `/policies/other` renders a real 404. New: `utils/policyClauses.js` (the tax / COD / returns / shipping-method clauses a policy cannot carry in stored prose), `hooks/useSiteContent.js`, `utils/seo.js` + `faqPageJsonLd`. **The old Terms page's three hard-coded rupee shipping rates are gone and cannot come back** — rates are live data or nothing. Browser QA in Chromium at 360/390/414/768/1024/1280/1440: **no horizontal scroll on any of the five page types**, deep links `/faq#faq-7` and `#group-orders` open and focus the right row, the contact form posts a lead with the same seven keys, and the Terms clause re-words itself when Settings change (verified against a patched settings record, then reverted). `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 313 passed / 50 skipped (**37 new**). See "Prompt 28 record" below. |
 | 29 | Cart page and checkout restyle | complete | 2026-09-08 | (this commit) | `/cart` is a real page and `ComingSoon` has no route left (`grep -n "ComingSoon" src/App.js` → **0**). `components/cart/CrossSell.{js,module.css}` is "Complete your ritual" lifted out of the drawer whole — `crossSellFor` and the row markup now have ONE home and the tray and the page cannot disagree about what comes next. `pages/Cart/Cart.{js,module.css}` (482 + 508) is the two-column page: line items at 96px→112px of plate on the left, a sticky `GlassCard strong` summary on the right (subtotal · the drawer's coupon disclosure verbatim · discount · "Shipping and taxes calculated at checkout" · Checkout · Continue shopping · `LegalNote compact`), the cross-sell under the items, and below 769px one column with a 64px glass thumb bar — **`BottomNav` now stands down on `/cart` as well as `/product/*`** (verified: BottomNav nodes = 0 on `/cart`, 1 on `/shop` and `/checkout`). `Checkout.module.css` **rewritten from scratch**, 2 107 → 1 492 lines, on the shared primitives; `Checkout.js` edited for markup, classes and copy ONLY — the money block, the `orderData` payload, `STEPS`, `couponDiscountFor`, `etaFor`, `applyCoupon`/`removeCoupon`, `validateAddress`, `PAYMENT_OPTIONS` and `assurances` were diffed byte-for-byte and are **IDENTICAL**. Two additive guards only: the step-0 TBA drop and the order-failure alert. `grep -n "silk\|weave\|loom\|&#8377;" src/pages/Checkout/Checkout.js` → **0**. Measured live: inputs 48px, option cards 64px, CTA 52px, step chips 36px, `scrollWidth === clientWidth` at 360/390/414/768/1024/1280/1440 on both pages. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Two real orders placed end to end in mock mode (COD, then coupon + store credit) — see the Prompt 29 record. **`git status db.json` clean.** |
 | 30 | Auth, account, orders and wishlist restyle | complete | 2026-09-08 | (this commit) | `src/utils/orderStatus.js` is the one home for `deriveOrderStatus` + `STATUS_CONFIG` — the two byte-identical copies in `OrderHistory.js:18-47` and `Profile.js:18-47` are gone and both pages read `orderStatusInfo(order)` (`grep -rn "deriveOrderStatus" src --include=*.js | grep -v utils/orderStatus.js` → **2**, both docblock references; `grep -rln "utils/orderStatus" src` → **2 importers**). The config now carries a semantic **tone** instead of a per-page CSS-module class name, so a status is coloured once: `Chip variant="status"` on both screens. **`AuthModal` (1049 → 875) and `ReviewModal` (337 → 250) are on `ui/Modal`** — four hand-rolled overlays, focus traps, Escape handlers and body locks deleted, and both gained the route-change close and the scrollbar compensation they never had; the **disabled Google/Facebook buttons and their five brand hexes are removed** (Decisions), which leaves `ErrorBoundary` and `Footer`'s payment marks as the storefront's only documented hard-coded colours. `Profile` is a `320px 1fr` dashboard from 1025px (initials in a signature-gradient ring, three figures, a 52-55px index, recent orders); `OrderHistory` records are `GlassCard`s with 56px plates, a `Chip variant="step"` passage on a gradient hairline and pill actions; `Wishlist` is "Your wishlist" on a 1/2/3/4 grid with `Button variant="secondary" block` under each card. `RETURN_WINDOW_DAYS` now reads `STOREFRONT_CONFIG.returnsWindowDays`. All five stylesheets rewritten on the tokens (5 030 → 3 345 lines, **no colour hex and no `rgba()`**, every `var(--sf-*)` resolves). Logic diffed against HEAD: **Profile's 374-line effect+handler block is byte-identical**; OrderHistory's differs only in the four `orderStatusInfo` call sites and the deleted local `getStatusInfo` wrapper. `grep -rn "Muga\|Eri\|weave\|loom\|Collection" src/pages/Profile src/pages/OrderHistory src/pages/Wishlist src/components/AuthModal src/components/ReviewModal` → **0**. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Driven end to end in Chromium against mock mode — login, register validation, strength meter, address CRUD with the default rules, wallet ledger, order cancel (COD copy), reorder, and a review written from a delivered order → pending in Admin → approved → live on the PDP → the chip flips to "Review published". No horizontal scroll at 360/390/414/768/1024/1280/1440 on any of the four surfaces; zero page errors. **`git status db.json` clean.** See the Prompt 30 record below. |
-| 31 | Order confirmation, offers, search results and state consistency | pending | | | |
+| 31 | Order confirmation, offers, search results and state consistency | complete | 2026-09-08 | (this commit) | **`ui/EmptyState` + `ui/ErrorState` are the storefront's two state cards** (87 + 150 + 64 lines; `ErrorState` composes `EmptyState`, so there is one stylesheet and a failure can never look like a different application). **20 `<EmptyState>` and 7 `<ErrorState>` call sites across 12 pages** replace 27 hand-rolled state blocks, five bespoke SVG marks (`EmptyMark`, `BagMark`, `SealedMark`, `AlertMark`, `TagMark`) and eight `.state*` / `.empty*` / `.panel*` class families (**−661 CSS lines net** across 13 stylesheets). Empty and failed stay DIFFERENT components everywhere, and `SpecialOffers` and `Search` gained the failed branch they never had (both `catch`es used to write `[]`, i.e. a dropped read read as "no offers" / "nothing matched"). `OrderConfirmation` keeps every behaviour — `getByOrderNumber`, the `paymentStatus`-driven chip + lede, estimated/real arrival, clipboard-verified copy, confetti, the store-credit ledger, the honest invoice placeholder — and is restyled to a 96px `GlowWrap tone="gold"` seal over a signature-gradient ring, a Fraunces "Thank you, {firstName}", a glass record card (`1fr 1fr` ≥769px), 15px hairline ledger rows, `Chip variant="status"` and three pill `Button`s (Continue shopping → **`/shop`**, was `/`). **`SpecialOffers` lost its 110-line copy of the shared card** (`grep -rn "const ProductCard" src/pages/SpecialOffers` → **0**): the markdown wall is `storefront/ProductCard`, the vouchers are `GlassCard glow="gold"` 3/2/1-up with the code in monospace gold, and the seed's disabled page is `EmptyState` "No offers right now" → `/shop`. `src/pages/_ComingSoon/` **deleted** (`grep -rn "ComingSoon" src` → **0**), and the now-unreferenced global `.loading-spinner` + `@keyframes spin` went with it (`grep -rn "loading-spinner" src/pages` → **0**; the four surviving spinners are all inside buttons). `DEFAULT_DEALS_HERO`/`DEFAULT_DEALS_TIMER` were the previous brand's promo voice and are now the seed's neutral wording with the clock off (Decisions). `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Driven in Chromium against mock mode at 390 and 1280: COD and store-credit confirmations, the not-found and failed branches, `/special-offers` disabled and enabled (SAMPLE10 voucher + auto-derived deals), no-results search, the 404, empty cart/checkout/orders/wishlist, Profile's five compact states, and every error state with JSON Server stopped. Confetti fires once with `aria-hidden`/`role=presentation` on its canvas and does not fire at all under `prefers-reduced-motion`. No horizontal scroll and no `{{` at any width. **`git status db.json` clean.** See the Prompt 31 record and its state checklist below. |
 | 32 | Admin rebrand and shell | pending | | | |
 | 33 | Admin product form — media manager and new fields | pending | | | |
 | 34 | Admin content management | pending | | | |
@@ -374,6 +374,19 @@ Record every decision a prompt had to make that the reference files did not sett
 - `30 · 2026-09-08 · Three CSS-module classes are written doubled (`.plate.plate`, `.actionDanger.actionDanger`, `.recentPlate.recentPlate`) · Each recolours or re-radiuses an element that also carries a single global class from `storefront-primitives.css` (`.sf-plate`, `.sf-btn--outline-gold`). Both are specificity 0-1-0, so which one wins depends on the order the bundler emits two stylesheets in — not something a component should be betting on. Doubling is the same fix `Checkout.module.css` already uses (`.credit.credit`, Prompt 29) and it beats `!important`, which would take the property away from every later caller.`
 - `30 · 2026-09-08 · The Order History empty-state mark is a shopping bag, not the old bound ledger · The prompt's copy sweep asks for "a simple hairline heart / bag" in place of the loom drawing. The loom was the WISHLIST's (`EmptyIllustration`, with the gold weft and the shuttle) and is now a plain hairline heart; Order History's `LedgerMark` was a bound page — not textile, but a ledger of woven goods is not what a skincare brand records either, so it is a bag in one line with a gold handle. `SealedMark` and `AlertMark` are unchanged.`
 
+- `31 · 2026-09-08 · ErrorState is a thin wrapper over EmptyState, not a second component with its own stylesheet · The prompt asks for "the same anatomy". Two stylesheets is how the two states drift apart, and a failure that looks like a different application is exactly what the sweep was for. ErrorState therefore adds only the three things a failure needs and an empty list must never have: `role="alert"`, the "Try again" that calls `onRetry` FIRST in the action row, and the honest copy ("We couldn't load this" / "Nothing was changed…"). That is also why the prompt's own file list has `ErrorState.js` with no `.module.css`.`
+- `31 · 2026-09-08 · EmptyState's title is a <p> by default, with an opt-in `titleAs` · Most of these sit inside a section that already has its heading, so a second <h2> saying "Nothing here yet" adds a phantom entry to the document outline. `titleAs` is passed only where the state IS the page and does own the level: the 404 (h1), the disabled offers page (h1), OrderConfirmation's failed and not-found branches (h1 — the first browser pass caught that the not-found page had NO h1 at all), and the three account states that replace a real <h2>.`
+- `31 · 2026-09-08 · The ring and the eyebrow are BLOCK-level inside the state card, overriding `.sf-eyebrow`'s inline-flex · Caught in Chromium, not by reading: `.sf-eyebrow` is an inline-flex pill and the ring was inline-flex too, so in a `text-align: center` column the two shared a line and every eyebrow rendered BESIDE its glyph. Both are promoted with a two-class selector (`.card .eyebrow`) so they outrank the primitive whichever order the sheets land in. The same bug, same fix, in OrderConfirmation's `.head .eyebrow` under the seal.`
+- `31 · 2026-09-08 · SpecialOffers' local ProductCard was deleted rather than kept "in step by eye" · Its own docblock said the two were to be matched by hand, and they had already drifted: the copy cropped the packaging to a 3:4 `object-fit: cover` plate (the house rule is a CONTAINED 1:1 `.sf-plate` — a bottle whose cap is sliced off is a defect) and it knew nothing about `priceTBA`, so five of the eight launch products would have offered an Add to Cart for a price that does not exist yet. The wall now renders `storefront/ProductCard` inside a `motion.div` cell that owns the reveal and the filter exit. The tab strip and the Deal-of-the-Day feature stay local — nothing else on the storefront has them.`
+- `31 · 2026-09-08 · SpecialOffers and Search gained a `failed` state; the offers page also gained a retry · Both `catch` blocks used to set `[]` and fall through to the empty branch, which is the one mistake the prompt forbids: a dropped read told a shopper "no offers are running" or "nothing matched your search". Each now sets a `failed` flag that is branched on BEFORE `length === 0`, and a `reloadKey` counter re-runs the existing effect (no second copy of the fetch). Rituals got the same retry — its failed panel previously offered only a link to the shop.`
+- `31 · 2026-09-08 · `DEFAULT_DEALS_HERO` and `DEFAULT_DEALS_TIMER` in `utils/dealsConfig.js` were rewritten, outside the prompt's file list · They are what `/special-offers` PRINTS before the config arrives and after the read fails, and they held the previous brand's promo voice plus three claims nobody has made — "Limited Time", "Special Offers & Deals" and "Discover unbeatable prices on top products. New deals drop daily — don't miss out!" — over a live countdown to end-of-day that no admin had set. Both now match the seed exactly (tag/title "Offers", subtitle "Launch offers will appear here.") and the timer defaults to `enabled: false`. `normalizeDealsConfig` is untouched, so a real admin record behaves exactly as before; only the pre-fetch and failed-fetch values change.`
+- `31 · 2026-09-08 · OrderConfirmation's "Continue shopping" now goes to `/shop`, not `/` · The prompt specifies it. It was the one action on the page that sent a shopper back to the homepage rather than to the range.`
+- `31 · 2026-09-08 · The global `.loading-spinner` and its `@keyframes spin` were removed from App.css · OrderConfirmation's loading branch was the last page-level spinner and is now a `Skeleton` silhouette, which left the class with ZERO consumers (`grep -rn "loading-spinner" src` → the rule itself and its own comments). The prompt's rule is "no page may show a spinner as its main loading state"; leaving a global class that only a future page could misuse is how that rule gets broken later. The four spinners that remain (AuthModal, ReviewModal, OrderHistory ×2) are all inside a working button and each keeps its own keyframe next to the control.`
+- `31 · 2026-09-08 · Profile's five "coming soon / nothing saved" panels were converted too, not just the three the prompt lists · The prompt names recent orders, wallet and addresses; payment methods and notifications used the SAME five `.state*` classes, so converting three of five would have left the local card family alive to be copied again. All five are `EmptyState compact` (24px padding, in-page), and `.state` is now one rule.`
+- `31 · 2026-09-08 · OrderHistory's signed-out screen is `EmptyState` as well · Not on the prompt's list, but it shared the same `.state*` family as the empty/no-match/error branches and it IS an empty state ("there is nothing to show you until you sign in"). Its two actions are unchanged. Wishlist's guest BAND is different and stays as it was, exactly as the prompt says: it sits above a populated list and invites a sign-in rather than reporting an absence.`
+- `31 · 2026-09-08 · Faq's empty card lost its `role="status"` · The page already announces the result count in a `role="status"` region directly above the results (`Faq.js:210`). Two live regions saying the same thing is two announcements for one fact. `EmptyState` is deliberately silent by default for the same reason — an empty list is ordinary content, not an event — which is why `role="alert"` belongs to `ErrorState` alone.`
+- `31 · 2026-09-08 · `EmptyState`'s default glyph is `mdi:tray-remove`, not the `mdi:leaf-off-outline` first written · Every Iconify name used here was checked against the MDI set through the API; `leaf-off-outline` does not exist (MDI has `leaf-off`), and an icon name that resolves to nothing renders an empty ring with no error. The other fifteen names were confirmed present.`
+
 ## Open TODOs
 
 Carry-overs that a later prompt (or the developer/owner) must pick up (format: `NN · item · owner · target prompt`).
@@ -489,6 +502,12 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `28 · `siteContent.faqPage.groups[3]` ("Account") has no rows in the seed, so the page renders three headings, not four. Nothing is broken — the page skips an empty heading by design — but the seed promises a section that does not exist. Either write the account answers or drop the group. · owner · 39`
 - `28 · The placeholder photographs on `/about` (heroImage, image2) and `/why-lamikaa` (heroImage, the three impact frames) still could not be SEEN in this sandbox: `picsum.photos` and `res.cloudinary.com` reset Chromium's TLS tunnel through the agent proxy (the same limitation Prompts 19, 20 and 26 recorded; `curl` gets 200). The bands were verified with the images blocked — the wash, the glass panel, the overlap and the aspect ratios all hold on the empty plate — but the composition over a real photograph wants one pass on a developer machine. · developer · 37`
 - `28 · The Terms document's live clause was verified against a PATCHED settings record (tax 18% exclusive, COD ceiling ₹5,000, resolved email/phone/address/WhatsApp) and the patch was then reverted — `git status db.json` is clean. The seeded state prints "inclusive of all taxes" with no rate and hides every contact channel, which is the correct unresolved state, but it means the COD ceiling, the exclusive-tax wording and the three channel cards are code paths **no committed fixture exercises**. · Prompt 39 · 39`
+
+- `31 · The admin's Special Offers hero editor still offers `placeholder="Limited Time"` on the eyebrow field (`pages/Admin/AdminSpecialOffers.js:466`) — the previous brand's promo voice, now the only place it survives. The storefront defaults it feeds were rewritten in this prompt; the admin file belongs to the admin phase. · Prompt 34 / 35 · 34`
+- `31 · Every Iconify glyph on the storefront — including the sixteen this prompt introduced — renders as an EMPTY ring in this sandbox: `@iconify/react` fetches its icon data from `api.iconify.design` / `api.simplesvg.com` / `api.unisvg.com` at runtime and all three reset Chromium's TLS tunnel through the agent proxy. The names were verified against the MDI set with `curl` instead (all sixteen present). This is the same runtime-fetch dependency Prompt 22 logged for the audit; bundling the collections offline would fix both the icons and the critical-path requests. · owner of 38 · 38`
+- `31 · `EmptyState` renders a `GlassCard`, so the four `compact` states inside Profile's own `GlassCard` sections are two nested blurred layers — the ceiling DESIGN_SYSTEM §4 sets, not a breach, but the a11y/perf sweep should confirm it costs nothing on a phone. The other eighteen call sites sit on a plain section. · owner of 38 · 38`
+- `31 · `SpecialOffers`' Deal-of-the-Day feature still draws its own card (plate, badge, stock tag, price cluster, add button) — deliberately, it is a 4:5 editorial feature the shared card cannot be, and nothing else on the storefront has one. If a later prompt wants a second feature surface, that is the moment to promote it rather than copy it. · owner · 39`
+- `31 · The `dealsConfig.timer` window, the voucher wall at 2- and 3-up, and the markdown grid were exercised against a SCRATCHPAD db (`JSON_SERVER_DB` override) carrying `enabled: true`, `featuredCouponIds: [1]` and three products given a `comparePrice`. The committed seed has `enabled: false` and no `comparePrice` anywhere, so on the tracked fixture `/special-offers` shows only its disabled state and those code paths have no committed coverage. `git status db.json` is clean. · Prompt 39 · 39`
 
 ## Placeholders introduced / resolved
 
@@ -3929,3 +3948,151 @@ and a glass toolbar; `Button variant="secondary" block` under every `ProductCard
 The empty states on all four surfaces are still the ad-hoc `GlassCard` that Prompt 31 formalises as
 `ui/EmptyState`; `pages/_ComingSoon/` is still unreferenced and still Prompt 31's to delete. Nothing else of
 the auth, account, orders or wishlist surfaces.
+
+---
+
+## Prompt 31 record (2026-09-08)
+
+### What was built
+
+**`src/components/ui/EmptyState.js` (87) + `.module.css` (150) + `src/components/ui/ErrorState.js` (64)**, both exported
+from `ui/index.js`.
+
+`EmptyState` is `{ eyebrow, title, titleAs, text, icon, actions, compact }` over a `GlassCard`: a 520px centred column
+(40px padding, 24px in `compact` and below 481px), a 56px ring drawn as a **signature-gradient seam** — a filled circle
+with its middle masked out, because a border cannot take a gradient — around a 24px hairline Iconify glyph, the gold
+`.sf-eyebrow`, a Fraunces 24px title and 15px secondary text held to 44ch, then pill actions that stack full-width on a
+phone and wrap centred from 481px. It is a plain `<section>` with **no live region**: an empty list is the page's
+ordinary content, not an announcement.
+
+`ErrorState` composes it — one stylesheet, so a failure can never look like a different application — and adds only the
+three things a failure needs and an empty list must never have: `role="alert"`, a **"Try again"** first in the action
+row that calls `onRetry`, and honest copy (`"We couldn't load this"` / `"Nothing was changed. Check your connection and
+try again."`). Callers append their own actions after the retry; a caller with nothing to re-run passes only `actions`
+and gets no false promise.
+
+**`OrderConfirmation`** keeps every behaviour it had — `getByOrderNumber`, the `paymentStatus`-driven chip **and** lede,
+`createdAt + 5 days` labelled an estimate unless `shippingStatus === "delivered"`, the clipboard-verified copy button
+with its `role="status"` announcement, the one-shot confetti, the money ledger with its Store credit / Amount paid pair,
+the address block, and the invoice placeholder still drawn as the muted "Coming soon" row it is. Restyled to: a 96px
+seal (`GlowWrap tone="gold"` → gradient ring → ink check → one halo that expands once), the gold eyebrow "Order
+confirmed" between two gradient hairlines, a Fraunces **"Thank you, {firstName}"**, a **glass record card** that is
+`1fr 1fr` from 769px and stacked with a hairline below it, hairline ledger rows at 15px, `Chip variant="status"` for the
+payment state, and three pill `Button`s — **"Continue shopping" now goes to `/shop`**, not `/`. Its loading branch is a
+`Skeleton` silhouette of the page (96px circle, title bar, two lines, three panels at the real heights); its failed and
+not-found branches are `ErrorState` and `EmptyState`, each taking the `h1`.
+
+**`SpecialOffers`** keeps the `enabled` gate, `dealsConfig.hero`, `resolveCountdownTarget`, the coupon vouchers with
+their honest copy failure, Deal of the Day, the category tabs derived from present categories, the discount-derived
+fallbacks, `useAddedFlash` and the `buildCartItem` adds. **Its 110-line copy of the shared card is gone** — the
+markdown wall renders `storefront/ProductCard` in a `motion.div` cell that owns the reveal and the filter exit
+(`grep -rn "const ProductCard" src/pages/SpecialOffers` → **0**). Vouchers are `GlassCard glow="gold"` at a fixed
+3/2/1-up with the code on a dashed chip in **monospace gold**; the seed's disabled page and the "nothing is reduced"
+branch are `EmptyState`; a failed read is a new `ErrorState` with a retry. `useSeo({ title: "Offers" })`.
+
+**`Search`** adopts `EmptyState` (with the popular-term chips as its children) and gains the `ErrorState` it never had.
+**`NotFound`** is `EmptyState` with the "404" eyebrow and `titleAs="h1"`. **`RouteFallback`** was already the loading
+member of the family and only gained the cross-reference.
+
+**`src/pages/_ComingSoon/` deleted** (52 lines; `grep -rn "ComingSoon" src` → **0**), and with the last page-level
+spinner gone the now-unreferenced global `.loading-spinner` + `@keyframes spin` came out of `App.css`.
+
+### The sweep, by the numbers
+
+| | |
+|---|---|
+| `<EmptyState>` call sites | **20** across 12 pages (+ 3 in the playground) |
+| `<ErrorState>` call sites | **7** across 7 pages (+ 1 in the playground) |
+| Hand-rolled state blocks replaced | **27** |
+| Bespoke state artwork deleted | `EmptyMark`, `BagMark`, `SealedMark`, `AlertMark` (OrderHistory/Wishlist), `TagMark` (SpecialOffers), `HeartMark` + the local `ProductCard` + `CardSkeleton` (SpecialOffers) |
+| `.state*` / `.empty*` / `.panel*` class families retired | 13 stylesheets, **−661 lines net** |
+| CSS lines | SpecialOffers 1330 → 1024, OrderConfirmation 870 → 752, Profile 1352 → 1319, OrderHistory 908 → 875, NotFound 40 → 15, Wishlist 336 → 308, Shop 242 → 217, App.css 396 → 373, Rituals 265 → 246, Faq 435 → 420, Cart 508 → 494, Checkout 1492 → 1478, Search 145 → 139, RitualDetail 197 → 195 |
+
+### The state-consistency checklist
+
+`—` means the state cannot occur on that surface, with the reason. Every list page branches on **failed BEFORE
+`length === 0`**, so a dropped read is never reported as an empty answer.
+
+| Page | Loading | Empty | Error | Not found |
+|---|---|---|---|---|
+| `/` Home | `Skeleton variant="block"` per lazy section (reserved heights) | — (sections self-hide when their data is absent) | — (each section renders nothing rather than a page-level failure) | — |
+| `/shop`, `/category/:slug` | 3 × `Skeleton` chapter (4:5 plate + 2 text blocks) | **`EmptyState`** "Nothing here yet" → All products | **`ErrorState`** + `onRetry={retry}` | `NotFound` for an unknown slug (`getByCategorySlug` → null) |
+| `/rituals` | 3 × `Skeleton` (16:10 + text) | **`EmptyState`** "No routines yet" | **`ErrorState`** + retry (new: the panel had no retry) | — |
+| `/rituals/:slug` | `Skeleton` head + steps | — (a ritual with no steps renders its story) | **`ErrorState`** + retry, taking the `h1` | `NotFound` (`getBySlug` → null) |
+| `/product/:slug` | `PageSkeleton` (stage + panel + chapters) | — | `NotFound` (a failed read and a missing product are both "not this page") | `NotFound` |
+| `/search` | 4 × `Skeleton variant="card"` | **`EmptyState`** + popular-term chips | **`ErrorState`** + retry (**new**) | — |
+| `/cart` | — (cart is local state) | **`EmptyState`** "Nothing here yet" + the cross-sell rail | — | — |
+| `/checkout` | — | **`EmptyState`** (the cart page's own card, one screen apart) | inline per-field + per-step errors, `role="alert"` | — |
+| `/order-confirmation/:n` | `Skeleton` page silhouette (**was a spinner**) | — | **`ErrorState`** + retry + View orders | **`EmptyState`** "We couldn't find that order" |
+| `/orders` | 3 × `GlassCard` + `Skeleton` rows | **`EmptyState`** ×3 — signed out, no orders, no match | **`ErrorState`** + `onRetry={fetchOrders}` | — |
+| `/profile` | `sf-skeleton` rows in the recent-orders and wallet panels | **`EmptyState compact`** ×5 — recent orders, wallet, addresses, payment, notifications | — (a failed stats read shows "—", never a fabricated 0) | — |
+| `/wishlist` | `SkeletonCell` grid + rail | **`EmptyState`** "Your wishlist is empty"; the guest band above it is unchanged | — (the context keeps the last-known local list; the suggestion rail simply hides) | — |
+| `/special-offers` | `HeadSkeleton`, `VoucherSkeleton` ×3, `Skeleton variant="card"` ×8 | **`EmptyState`** ×2 — offers off (the seed's state, `h1`), nothing reduced | **`ErrorState`** + retry (**new**) | — |
+| `/faq` | — (`FaqContext` seeds the built-in answers) | **`EmptyState`** "Nothing here matches …" → Write to us | — (the context falls back to the built-in set, so the page is never blank because of the network) | — |
+| `/contact` | — | — | **inline**, `role="alert"` — per-field and the submit error, as the prompt specifies | — |
+| `/about`, `/why-lamikaa` | `Skeleton variant="text"` per band | — (a band with no record renders nothing) | — (`useSiteContent` reports a bad shape as a failed read, and the band hides) | — |
+| `/policies/:slug` | `Skeleton variant="text" lines={10}` | **inline** — "This policy has not been published yet", one sentence in the prose column (a card would out-shout the document) | — | `NotFound` for an unknown slug |
+| 404 | — | **`EmptyState`** eyebrow "404", `titleAs="h1"` | — | — |
+| `RouteFallback` | `Skeleton` page shape, `role="status"` | — | — | — |
+
+**No page shows a spinner as its main loading state.** `grep -rn "loading-spinner" src/pages` → **0**; the four
+spinners left in the app (`AuthModal`, `ReviewModal`, `OrderHistory` reorder + cancel) are all inside a button that is
+working, which the prompt allows, and each keeps its own keyframe beside the control it belongs to.
+
+### Verification
+
+```
+CI=true npm run build            exit 0, no warnings
+npm test -- --watchAll=false     27 suites passed / 1 skipped · 313 passed / 50 skipped
+test ! -d src/pages/_ComingSoon  stub removed
+grep -rn "ComingSoon" src                          0
+grep -rn "const ProductCard" src/pages/SpecialOffers 0
+grep -rn "loading-spinner" src/pages               0
+grep -rn "loading-spinner\|@keyframes spin" src    0 (the global class went with it)
+```
+
+### Browser QA (Chromium 1194, mock mode, scratchpad db via `JSON_SERVER_DB`)
+
+At **390** and **1280**, with a second pass at 1280 under `prefers-reduced-motion: reduce`:
+
+- **Order confirmation** — COD (`ORD-20260904-0002`, chip "Payment pending — pay on delivery", warning tone) and a
+  **store-credit-covered** order (`paymentMethod: "store_credit"`, `storeCreditUsed === total`; the ledger prints
+  Store credit −₹570.00 and **Amount paid ₹0.00**, chip "Payment successful"). The seal, the eyebrow, the Fraunces
+  thank-you addressed by first name, the glass record card at `1fr 1fr` and stacked, and the copy button all render;
+  `h1` is "Thank you, Sample".
+- **Confetti** — fires once with `aria-hidden="true"` and `role="presentation"` set on its canvas; under
+  `prefers-reduced-motion: reduce` **no canvas is created at all** and the seal's `sealIn`/`sealHalo` are off.
+- **`/special-offers`** — the committed seed (`enabled: false`) shows the `EmptyState` "No offers right now" → Browse
+  the collection, as its `h1`. With `enabled: true` and `SAMPLE10` featured: the voucher renders (10% off, the three
+  real conditions, `SAMPLE10` on the dashed chip in monospace gold, Copy) and the deals sections are **honestly empty**
+  — no product in the seed carries a `comparePrice`, so "Nothing is reduced today" shows instead of padding. With three
+  products given a `comparePrice` in the scratchpad db, the Deal-of-the-Day features and the shared-card wall both
+  render, and the category tabs derive from the two categories actually present.
+- **Failed reads** — with JSON Server stopped, `/shop`, `/rituals`, `/search` and `/special-offers` each show
+  `ErrorState` with "Try again", not an empty list.
+- **The rest** — 404, no-results search (with the popular chips inside the card), empty cart and checkout, signed-out
+  and no-match orders, and Profile's Payment methods / Store credit / Notifications compact states.
+- No horizontal scroll and no `{{` on any page at either width.
+
+**`git status db.json` clean** — every fixture change was made in a scratchpad copy through the `JSON_SERVER_DB`
+override (`server.js:47-49`).
+
+### Two things the browser found
+
+1. **Every eyebrow rendered beside its glyph, not under it.** `.sf-eyebrow` is an inline-flex pill and the ring was
+   inline-flex too, so in a `text-align: center` column the two shared a line box. Both are now block-level, promoted
+   with a two-class selector so they outrank the primitive whichever order the sheets land in — and the same bug, with
+   the same fix, was in `OrderConfirmation`'s eyebrow under the seal.
+2. **The not-found confirmation had no `h1` at all** (`EmptyState`'s title is a `<p>` by default, which is right inside
+   a section that already has a heading and wrong when the state IS the page). `titleAs` now promotes it on the five
+   surfaces that own their heading level.
+
+A third, caught before the browser: `mdi:leaf-off-outline` — the default glyph as first written — **does not exist**
+(MDI has `leaf-off`), and Iconify renders a missing name as an empty ring with no error. All sixteen names in use were
+checked against the MDI set.
+
+### Left for Prompt 32
+
+Nothing from the storefront's state layer. The admin is untouched by this prompt and still carries the previous brand's
+`placeholder="Limited Time"` on `AdminSpecialOffers`' hero eyebrow field (Open TODOs) — the storefront defaults it feeds
+were rewritten here.

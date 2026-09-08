@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import apiService, { resolveRitualSteps } from "../../services/api";
 import useSeo from "../../hooks/useSeo";
@@ -7,7 +7,15 @@ import { ritualPath } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
 import { onImageError } from "../../utils/helpers";
 import { stageSrc } from "../../utils/product";
-import { Button, Chip, GlassCard, SectionHeading, Skeleton } from "../../components/ui";
+import {
+  Button,
+  Chip,
+  EmptyState,
+  ErrorState,
+  GlassCard,
+  SectionHeading,
+  Skeleton,
+} from "../../components/ui";
 import { stepCountLabel } from "../../components/catalogue/RitualCard";
 import { stepNumeral } from "../../components/catalogue/RitualStep";
 import styles from "./Rituals.module.css";
@@ -61,9 +69,14 @@ const THUMB_WIDTH = 96;
  */
 const useRituals = () => {
   const [state, setState] = useState({ status: "loading", rituals: [], products: [] });
+  // Bumped by the error state's "Try again", which re-runs the effect below
+  // with its own guards rather than duplicating the fetch.
+  const [reloadKey, setReloadKey] = useState(0);
+  const retry = useCallback(() => setReloadKey((n) => n + 1), []);
 
   useEffect(() => {
     let alive = true;
+    setState((prev) => ({ ...prev, status: "loading" }));
     Promise.all([apiService.rituals.getAll(), apiService.products.getAll()])
       .then(([rituals, products]) => {
         if (!alive) return;
@@ -81,9 +94,9 @@ const useRituals = () => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reloadKey]);
 
-  return state;
+  return { ...state, retry };
 };
 
 // ── One row ──────────────────────────────────────────────────────────────────
@@ -184,7 +197,7 @@ const RitualRow = ({ ritual, products, index }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const Rituals = () => {
-  const { status, rituals, products } = useRituals();
+  const { status, rituals, products, retry } = useRituals();
 
   useSeo({
     title: "Rituals",
@@ -228,29 +241,26 @@ const Rituals = () => {
         )}
 
         {failed && (
-          <GlassCard padding="lg" className={styles.panel} role="alert">
-            <p className={styles.panelTitle}>The rituals could not be loaded.</p>
-            <p className={styles.panelBody}>
-              Something went wrong on the way to them. Nothing is missing from the
-              range — only from this page.
-            </p>
-            <Button variant="primary" to={ROUTES.SHOP}>
-              Shop the range
-            </Button>
-          </GlassCard>
+          <ErrorState
+            className={styles.panel}
+            text="Nothing was changed — the routines are intact, they just didn't reach this page. Check your connection and try again."
+            onRetry={retry}
+            actions={
+              <Button variant="ghost" to={ROUTES.SHOP}>
+                Shop the range
+              </Button>
+            }
+          />
         )}
 
         {!loading && !failed && rituals.length === 0 && (
-          <GlassCard padding="lg" className={styles.panel}>
-            <p className={styles.panelTitle}>No routines yet</p>
-            <p className={styles.panelBody}>
-              The curated routines are being written. The whole range is ready in
-              the meantime.
-            </p>
-            <Button variant="primary" to={ROUTES.SHOP}>
-              Shop the range
-            </Button>
-          </GlassCard>
+          <EmptyState
+            className={styles.panel}
+            title="No routines yet"
+            text="The curated routines are being written. The whole range is ready in the meantime."
+            icon="mdi:playlist-remove"
+            actions={<Button to={ROUTES.SHOP}>Shop the range</Button>}
+          />
         )}
 
         {!loading && !failed && rituals.length > 0 && (

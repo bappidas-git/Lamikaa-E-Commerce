@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import FAQ, { faqAnswerText } from "../../components/FAQ/FAQ";
-import { Button, GlassCard } from "../../components/ui";
+import { Button, EmptyState, GlassCard } from "../../components/ui";
 import { useFaqs } from "../../context/FaqContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import useSeo from "../../hooks/useSeo";
@@ -239,20 +239,19 @@ const Faq = () => {
 
         <div className={styles.groups}>
           {results.length === 0 ? (
-            <GlassCard padding="lg" className={styles.empty} role="status">
-              <p className={styles.emptyTitle}>
-                {isSearching
+            /* The count above already announces itself; this card is the same
+               fact said visually, so it carries no second live region. */
+            <EmptyState
+              className={styles.empty}
+              title={
+                isSearching
                   ? `Nothing here matches “${query.trim()}”`
-                  : "No answers yet"}
-              </p>
-              <p className={styles.emptyBody}>
-                Write to us instead — the care desk answers questions this page
-                has not learned yet.
-              </p>
-              <Button variant="primary" to={ROUTES.CONTACT}>
-                Write to us
-              </Button>
-            </GlassCard>
+                  : "No answers yet"
+              }
+              text="Write to us instead — the care desk answers questions this page has not learned yet."
+              icon="mdi:comment-question-outline"
+              actions={<Button to={ROUTES.CONTACT}>Write to us</Button>}
+            />
           ) : (
             results.map((section) => (
               <section

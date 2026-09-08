@@ -5,7 +5,7 @@ import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
 import apiService from "../../services/api";
 import { ProductCard, RelatedProducts } from "../../components/storefront";
-import { Button, GlassCard, SectionHeading } from "../../components/ui";
+import { Button, EmptyState, GlassCard, SectionHeading } from "../../components/ui";
 import {
   getProductMinPrice,
   getDefaultCartVariant,
@@ -86,26 +86,6 @@ const CartMark = () => (
     <circle cx="9.5" cy="20" r="1.25" />
     <circle cx="18" cy="20" r="1.25" />
     <path d="M2.5 3h3l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h7.8a1.6 1.6 0 0 0 1.6-1.3L21 6.5H6" />
-  </svg>
-);
-
-// Empty state — one heart in a single hairline, with the gold picking out the
-// notch. Nothing else: the products are the picture on this page, and when
-// there are none the drawing should not pretend otherwise.
-const EmptyMark = () => (
-  <svg className={styles.stateArt} width="88" height="80" viewBox="0 0 88 80" fill="none" aria-hidden="true">
-    <path
-      d="M44 66 C 30 55 8 42 8 24 C 8 13 16 6 25 6 C 33 6 40 11 44 18 C 48 11 55 6 63 6 C 72 6 80 13 80 24 C 80 42 58 55 44 66 Z"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M44 18 C 46.5 13 50 10 54 8.6"
-      stroke="var(--sf-color-gold)"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-    />
   </svg>
 );
 
@@ -353,17 +333,14 @@ const Wishlist = () => {
           <div className="sf-container">
             {renderHead("Nothing saved yet.")}
             {guestBand}
-            <GlassCard padding="lg" glow="gold" className={styles.state}>
-              <EmptyMark />
-              <h2 className={styles.stateTitle}>Your wishlist is empty</h2>
-              <p className={styles.stateText}>
-                Tap the heart on anything and it waits for you here — the
-                formula, the size and the price, held until you are ready.
-              </p>
-              <Button variant="primary" to={ROUTES.SHOP} className={styles.stateBtn}>
-                Explore the range
-              </Button>
-            </GlassCard>
+            <EmptyState
+              className={styles.state}
+              title="Your wishlist is empty"
+              titleAs="h2"
+              text="Tap the heart on anything and it waits for you here — the formula, the size and the price, held until you are ready."
+              icon="mdi:heart-outline"
+              actions={<Button to={ROUTES.SHOP}>Explore the range</Button>}
+            />
 
             {recommendations}
           </div>
