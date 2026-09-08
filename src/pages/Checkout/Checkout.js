@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Icon } from "@iconify/react";
+import Swal from "sweetalert2";
 import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
 import { useOrder } from "../../context/OrderContext";
@@ -11,57 +13,55 @@ import {
   PLACEHOLDER_IMG,
   onImageError,
 } from "../../utils/helpers";
+import { cld } from "../../utils/cloudinary";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import { collapse } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
 import useSeo from "../../hooks/useSeo";
+import { Button, Chip, GlassCard, SectionHeading } from "../../components/ui";
+import QuantityStepper from "../../components/storefront/QuantityStepper";
 import styles from "./Checkout.module.css";
 
 // =============================================================================
-// CHECKOUT — the editorial counter
+// CHECKOUT — four steps on the LAMIKAA surfaces
 // =============================================================================
-// A focused, low-noise flow: a serif title, one hairline step line, a single
-// content column and a quiet summary rail. What used to shout — the bubbly
-// numbered stepper, the framed cards, the emoji trust badges — is gone; what is
-// left is type, hairlines and one ink button.
+// A step line of gradient-ringed numerals, one glass card per step, a sticky
+// summary rail beside it on a desktop and a collapsible glass bar above the CTA
+// on a phone. Tokens and the shared primitives only — `--sf-*`, `ui/Button`,
+// `ui/Chip`, `ui/GlassCard`, `ui/SectionHeading`.
 //
-// WHAT DID NOT CHANGE (and must not)
+// WHAT PROMPT 29 CHANGED: markup, class names and copy. Nothing else.
+//
+// WHAT IT DID NOT CHANGE, AND WHAT MUST NOT CHANGE
 //   • The 4-step state machine. `step` 0–3 over STEPS, `handleNext`'s gating
 //     (empty-cart bail → auth gate → validateAddress + selectedShipping), Back
 //     as setStep(step - 1), the scroll-to-top effect, the AnimatePresence keys
 //     ("cart" / "shipping" / "payment" / "review") and the Review step's Edit
 //     jumps (setStep(1) / setStep(2)).
 //   • Every number. subtotal from getCartTotal, couponDiscountFor, the shipping
-//     free/flat rule, taxRatePct from settings.store.taxRate ?? 5, `total`, and
-//     the storeCredit / amountPayable pair — no formula or rounding was touched.
+//     free/flat rule, taxRatePct from settings.store.taxRate, `total`, the
+//     maxApplicableCredit / storeCreditApplied / amountPayable chain, the COD
+//     bounds and the force-reset, and the whole `orderData` payload — read by
+//     the new markup, never recomputed inside it.
 //   • The API surface: shipping.getMethods (active only, first auto-selected),
-//     settings.get, wallet.getBalance, coupons.validate, createOrder.
+//     settings.get, wallet.getBalance, coupons.validate, createOrder, then
+//     clearCart({ silent: true }) and the confirmation navigation.
 //   • `useExistingAddress` keeps its null-vs-selected shape: null reveals the
 //     inline form, an object selects a saved address.
+//   • The payment forms are still mock fields — nothing here is read, validated
+//     or submitted, because there is no gateway on this branch.
 //
-// TWO PROMPTS, ONE FILE
-//   Prompt 18 built the SHELL (head, step line, layout, nav row, summary rail,
-//   empty state) plus step 0 (Cart) and step 1 (Shipping). Prompt 19 rebuilt
-//   the internals of step 2 (Payment) and step 3 (Review) on top of it, reusing
-//   the shell atoms rather than forking them: .sectionTitle / .sectionNote /
-//   .blockTitle for type, .control + .box / .boxRound for every radio and
-//   checkbox, .formRow / .formGroup for every field. The step-3 CTA is the
-//   shell's one ink button in the nav row — the page has a single Place Order
-//   control, not one per region.
-//
-// WHAT PROMPT 19 DID NOT TOUCH
-//   The money. couponDiscountFor, the tax/total formulas, maxApplicableCredit,
-//   the storeCreditApplied clamp and its shrink-effect, amountPayable, the COD
-//   availability rule and its force-reset, and the whole placeOrder payload are
-//   read by the new markup and never recomputed inside it. The COD *hint* is
-//   copy and was reworded (it used to print "₹0" when the store set no upper
-//   bound); the rule that decides availability is untouched.
-//
-// THEMING
-//   Tokens only — every colour resolves through `--sf-*`, declared once in
-//   `:root`. One theme, one stylesheet, and nothing to read from
-//   ThemeContext: the `color-scheme` hint that themes native number spinners,
-//   selects and scrollbars is global.
+// TWO GUARDS WERE ADDED, both additive
+//   1. THE TBA GUARD at step 0. Nothing in the UI can put an uncommitted price
+//      into the cart (`buildCartItem` throws PRICE_TBA and every Add button is
+//      disabled before it), but a cart is restored from localStorage and merged
+//      from the API, so a line whose price is not a finite number above zero
+//      can still arrive here. It is dropped with a toast rather than charged
+//      at zero.
+//   2. THE FAILURE PANEL. A thrown `createOrder` used to be logged and nothing
+//      else — the button simply un-busied itself and the shopper was left
+//      guessing whether they had been charged. It now raises a role="alert"
+//      panel that says nothing was charged, with one Try again.
 // =============================================================================
 
 const STEPS = ["Cart", "Shipping", "Payment", "Review"];
@@ -91,38 +91,26 @@ const etaFor = (method) => {
   return String(days) === "0" ? "Same day" : `${days} business days`;
 };
 
+/** The plate image for a cart LINE, which stores a bare URL and nothing else. */
+const lineThumb = (item, w) =>
+  item?.image ? cld(item.image, { w, ar: "1:1", pad: true }) : PLACEHOLDER_IMG;
+
+/** The stepper's ceiling: real stock when the line carries it, else none. */
+const stockCap = (item) =>
+  typeof item?.stock === "number" && item.stock > 0 ? item.stock : Infinity;
+
+/** Is this line something the store can actually charge for? */
+const isChargeable = (item) => {
+  const price = Number(item?.price);
+  return Number.isFinite(price) && price > 0;
+};
+
 // ---------------------------------------------------------------------------
 // Marks — hairline line art in the house drawing style
 // ---------------------------------------------------------------------------
 const CheckMark = () => (
-  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <polyline points="4 12.5 9.5 18.5 20 6" />
-  </svg>
-);
-
-const MinusMark = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-const PlusMark = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-const BackMark = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <line x1="20" y1="12" x2="4" y2="12" />
-    <polyline points="10 6 4 12 10 18" />
-  </svg>
-);
-
-const ChevronMark = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="6 9.5 12 15.5 18 9.5" />
   </svg>
 );
 
@@ -130,10 +118,10 @@ const ChevronMark = () => (
 // Payment marks — the same hairline drawing, one per method
 // ---------------------------------------------------------------------------
 // Line art at 22px on a 24-unit grid, stroked in currentColor so a single
-// definition serves the muted row, the ink selected row and the Review recap.
+// definition serves the muted row, the selected row and the Review recap.
 // Nothing here is a brand logo and nothing is an emoji: a card, a phone with a
 // transfer arrow, a bank facade, a wallet and a banknote, all drawn in the same
-// weight as the shell's marks above.
+// weight as the mark above.
 const markProps = {
   width: 22,
   height: 22,
@@ -208,33 +196,12 @@ const PAYMENT_OPTIONS = [
   { id: "cod", label: "Cash on Delivery", Mark: CashMark, desc: "Pay when you receive" },
 ];
 
-// Empty state — the counter with nothing on it: a hairline tray, the loom's
-// gold weft laid across it and the shuttle resting. The same drawing language
-// as the Wishlist and Products empty states, coloured through the local
-// --empty-* aliases so it inverts with the page.
-const QuietCartIllustration = () => (
-  <svg className={styles.stateArt} width="188" height="132" viewBox="0 0 188 132" fill="none" aria-hidden="true">
-    <path
-      d="M46 50 H142 L133 100 A5 5 0 0 1 128 104 H60 A5 5 0 0 1 55 100 Z"
-      stroke="var(--empty-line)"
-      strokeWidth="1"
-      strokeLinejoin="round"
-    />
-    <path d="M74 50 L86 24" stroke="var(--empty-line)" strokeWidth="1" strokeLinecap="round" />
-    <path d="M114 50 L102 24" stroke="var(--empty-line)" strokeWidth="1" strokeLinecap="round" />
-    <path
-      d="M18 116 C 46 108 70 124 96 116 S 140 108 156 118"
-      stroke="var(--empty-gold)"
-      strokeWidth="1.25"
-      strokeLinecap="round"
-    />
-    <path
-      d="M140 124 L156 118 L172 124 L156 130 Z"
-      stroke="var(--empty-gold)"
-      strokeWidth="1"
-      strokeLinejoin="round"
-    />
-  </svg>
+/** The field error, said in words with a mark beside them — never colour alone. */
+const FieldError = ({ id, children }) => (
+  <span id={id} className={styles.fieldError}>
+    <Icon icon="mdi:alert-circle-outline" aria-hidden="true" />
+    {children}
+  </span>
 );
 
 const Checkout = () => {
@@ -249,13 +216,16 @@ const Checkout = () => {
   const { cartItems, getCartTotal, getCartItemCount, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const { createOrder } = useOrder();
-  // Tax rate, tax treatment, COD rules and the care address the rail quotes all
-  // come from the admin's Settings > General — one shared read, live.
+  // Tax rate, tax treatment, COD rules, the currency symbol and the care
+  // address the rail quotes all come from the admin's Settings > General — one
+  // shared read, live.
   const {
     payment: paymentCfg,
     taxRate: taxRatePct,
     taxIncluded,
     email: storeEmail,
+    currencySymbol,
+    fillCopy,
   } = useStoreSettings();
 
   const [step, setStep] = useState(0);
@@ -268,6 +238,9 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(null);
+  // Additive (Prompt 29): the order could not be created. Nothing was charged —
+  // `createOrder` threw before any of it happened — and the panel says so.
+  const [orderFailed, setOrderFailed] = useState(false);
   // Mobile only: the summary rail is a collapsible band above the CTA. On
   // desktop the stylesheet hides the toggle and shows the body unconditionally,
   // so this flag never reaches the two-column layout.
@@ -437,9 +410,34 @@ const Checkout = () => {
     return Object.keys(errs).length === 0;
   };
 
+  // ── The TBA guard (additive, Prompt 29) ───────────────────────────────────
+  // A line the store cannot charge for must never reach `createOrder`: a zero
+  // or non-numeric price would check out as a free order. The UI cannot create
+  // one, but a cart restored from localStorage or merged from the API can carry
+  // one, so step 0 drops it and says so instead of continuing.
+  const unpricedLines = cartItems.filter((item) => !isChargeable(item));
+
+  const dropUnpricedLines = () => {
+    if (unpricedLines.length === 0) return false;
+    const count = unpricedLines.length;
+    unpricedLines.forEach((item) => removeFromCart(item.id));
+    Swal.fire({
+      toast: true,
+      position: "bottom-end",
+      icon: "warning",
+      title: "Removed from your order",
+      text: `${count === 1 ? "One item has" : `${count} items have`} no price yet and cannot be checked out.`,
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+    });
+    return true;
+  };
+
   const handleNext = () => {
     if (step === 0) {
       if (cartItems.length === 0) return;
+      if (dropUnpricedLines()) return;
       if (!isAuthenticated) { openAuthModal("login"); return; }
       setStep(1);
     } else if (step === 1) {
@@ -456,6 +454,7 @@ const Checkout = () => {
 
   const placeOrder = async () => {
     setIsProcessing(true);
+    setOrderFailed(false);
     try {
       const addr = useExistingAddress || shippingAddress;
       const orderData = {
@@ -493,9 +492,12 @@ const Checkout = () => {
         clearCart({ silent: true });
         const orderNum = result.order.orderNumber || result.order.id;
         navigate(`/order-confirmation/${orderNum}`);
+      } else {
+        setOrderFailed(true);
       }
     } catch (e) {
       console.error("Order error:", e);
+      setOrderFailed(true);
     } finally {
       setIsProcessing(false);
     }
@@ -508,28 +510,29 @@ const Checkout = () => {
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // EMPTY STATE — the counter with nothing on it
+  // EMPTY STATE
   // ═══════════════════════════════════════════════════════════════════════════
   if (cartItems.length === 0 && !orderPlaced) {
     return (
       <div className={styles.page}>
-        <div className={styles.container}>
-          <header className={styles.head}>
-            <p className={styles.eyebrow}>Checkout</p>
-            <h1 className={styles.title}>Your cart is quiet</h1>
-          </header>
-          <div className={styles.state}>
-            <QuietCartIllustration />
-            <p className={styles.stateText}>
-              Nothing has been set aside for this order yet. Choose a weave and it
-              waits here — the colour, the length and the price, held until you are
-              ready.
-            </p>
-            <Link to={ROUTES.SHOP} className={`sf-btn sf-btn--emerald ${styles.stateBtn}`}>
-              Continue Shopping
-            </Link>
+        <section className={`sf-section ${styles.container}`}>
+          <div className="sf-container">
+            <SectionHeading
+              as="h1"
+              eyebrow="Checkout"
+              title="Your cart is empty"
+              lede="There is nothing to check out yet."
+            />
+            <GlassCard padding="lg" glow="gold" className={styles.state}>
+              <p className={styles.stateLine}>
+                Add something to your cart and it will be waiting here.
+              </p>
+              <Button variant="primary" to={ROUTES.SHOP} className={styles.stateCta}>
+                Continue shopping
+              </Button>
+            </GlassCard>
           </div>
-        </div>
+        </section>
       </div>
     );
   }
@@ -539,6 +542,7 @@ const Checkout = () => {
   const SelectedPaymentMark = selectedPaymentOption?.Mark;
   const reviewEta = etaFor(selectedShipping);
   const itemCount = getCartItemCount();
+  const itemWord = itemCount === 1 ? "item" : "items";
 
   // The inline form a method opens beneath itself. Mock fields only — there is
   // no gateway on this branch, so nothing here is read, validated or submitted;
@@ -653,1008 +657,1057 @@ const Checkout = () => {
     storeEmail ? `Questions? ${storeEmail}` : null,
   ].filter(Boolean);
 
+  // The store's own words for how tax sits in its prices — "inclusive of all
+  // taxes" for the LAMIKAA packs, "exclusive of 18% tax, which is calculated at
+  // checkout" for a store that prices the other way. One source, so the rail,
+  // the PDP and the policies can never phrase it differently.
+  const taxSentence = fillCopy("Prices are {taxNote}.");
+
+  const ctaLabel = isProcessing
+    ? "Placing your order…"
+    : step === 0
+    ? isAuthenticated
+      ? "Continue to shipping"
+      : "Sign in to continue"
+    : step === 1
+    ? "Continue to payment"
+    : step === 2
+    ? "Review order"
+    : "Place order";
+
   return (
     <div className={styles.page}>
-      <div className={styles.container}>
-        {/* ═══════════════════════════════════════════════════════════════════
-            SHELL — head, step line, layout, nav row, summary rail (Prompt 18)
-            ═══════════════════════════════════════════════════════════════ */}
-        <header className={styles.head}>
-          <p className={styles.eyebrow}>
-            Step {step + 1} of {STEPS.length}
-          </p>
-          <h1 className={styles.title}>Checkout</h1>
-        </header>
+      <section className={`sf-section ${styles.container}`}>
+        <div className="sf-container">
+          <SectionHeading
+            as="h1"
+            eyebrow={`Step ${step + 1} of ${STEPS.length}`}
+            title="Checkout"
+          />
 
-        {/* The step line: four tracked labels joined by hairlines. Gold and a
-            check behind you, ink where you stand, a hairline ahead. */}
-        <nav className={styles.stepline} aria-label="Checkout progress">
-          <ol className={styles.steplineList}>
-            {STEPS.map((s, i) => {
-              const done = i < step;
-              const current = i === step;
-              return (
-                <li
-                  key={s}
-                  className={`${styles.stepItem} ${done ? styles.stepDone : ""} ${current ? styles.stepCurrent : ""}`}
-                  aria-current={current ? "step" : undefined}
-                >
-                  <span className={styles.stepMark} aria-hidden="true">
-                    {done && <CheckMark />}
-                  </span>
-                  <span className={styles.stepName}>{s}</span>
-                  <span className={styles.srOnly}>
-                    {done ? " — completed" : current ? " — current step" : " — not started"}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
+          {/* The step line: four gradient-ringed numerals joined by hairlines.
+              A gold check behind you, the ring where you stand. */}
+          <nav className={styles.stepline} aria-label="Checkout progress">
+            <ol className={styles.steplineList}>
+              {STEPS.map((s, i) => {
+                const done = i < step;
+                const current = i === step;
+                return (
+                  <li
+                    key={s}
+                    className={`${styles.stepItem} ${done ? styles.stepDone : ""} ${current ? styles.stepCurrent : ""}`}
+                    aria-current={current ? "step" : undefined}
+                  >
+                    <Chip variant="step" className={styles.stepChip}>
+                      {done ? <CheckMark /> : i + 1}
+                    </Chip>
+                    <span className={styles.stepName}>{s}</span>
+                    <span className="sf-visually-hidden">
+                      {done ? " — completed" : current ? " — current step" : " — not started"}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
 
-        <div className={styles.layout}>
-          {/* ── The content column ─────────────────────────────────────── */}
-          <div className={styles.steps}>
-            <AnimatePresence mode="wait">
-              {/* ═════════════════════════════════════════════════════════════
-                  STEP 0 — CART REVIEW (Prompt 18)
-                  ═════════════════════════════════════════════════════════ */}
-              {step === 0 && (
-                <motion.div key="cart" {...stepMotion}>
-                  <h2 className={styles.sectionTitle}>Your selection</h2>
-                  <p className={styles.sectionNote}>
-                    {itemCount} {itemCount === 1 ? "piece" : "pieces"} set aside for this order.
+          <div className={styles.layout}>
+            {/* ── The content column ───────────────────────────────────── */}
+            <div className={styles.steps}>
+              <AnimatePresence mode="wait">
+                {/* ═════════════════════════════════════════════════════════
+                    STEP 0 — CART
+                    ═════════════════════════════════════════════════════ */}
+                {step === 0 && (
+                  <motion.div key="cart" {...stepMotion}>
+                    <GlassCard padding="lg" className={styles.card}>
+                      <h2 className={styles.sectionTitle}>Your cart</h2>
+                      <p className={styles.sectionNote}>
+                        {itemCount} {itemWord} ready to check out.
+                      </p>
+
+                      <ul className={styles.lines}>
+                        {cartItems.map((item) => (
+                          <li key={item.id} className={styles.line}>
+                            <div className={`sf-plate ${styles.plate}`}>
+                              <img
+                                src={lineThumb(item, 240)}
+                                alt=""
+                                loading="lazy"
+                                onError={onImageError}
+                              />
+                            </div>
+
+                            <div className={styles.lineBody}>
+                              <h3 className={styles.lineName}>{item.name}</h3>
+                              {item.variantName && (
+                                <span className={styles.lineVariant}>{item.variantName}</span>
+                              )}
+                              <span className={styles.lineUnit}>
+                                {formatCurrency(item.price)} each
+                              </span>
+
+                              <div className={styles.lineFoot}>
+                                <QuantityStepper
+                                  value={item.quantity}
+                                  min={1}
+                                  max={stockCap(item)}
+                                  onChange={(next) => updateQuantity(item.id, next)}
+                                />
+                                <span className={styles.lineTotal}>
+                                  {formatCurrency(item.price * item.quantity)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <Button
+                              variant="icon"
+                              size="sm"
+                              icon="mdi:close"
+                              srLabel={`Remove ${item.name} from cart`}
+                              className={styles.remove}
+                              onClick={() => removeFromCart(item.id)}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* Promo code */}
+                      <div className={styles.promo}>
+                        <h3 className={styles.blockTitle}>Have a code?</h3>
+                        {couponApplied ? (
+                          <div className={styles.couponChip}>
+                            <Icon icon="mdi:ticket-confirmation-outline" aria-hidden="true" />
+                            <span className={styles.couponCode}>{couponApplied.code}</span>
+                            <span className={styles.couponValue}>
+                              &minus;{formatCurrency(couponDiscount)}
+                            </span>
+                            <Button
+                              variant="icon"
+                              size="sm"
+                              icon="mdi:close"
+                              srLabel={`Remove coupon ${couponApplied.code}`}
+                              className={styles.couponRemove}
+                              onClick={removeCoupon}
+                            />
+                          </div>
+                        ) : (
+                          <div className={styles.promoField}>
+                            <label className="sf-visually-hidden" htmlFor="checkout-coupon">
+                              Coupon code
+                            </label>
+                            <input
+                              id="checkout-coupon"
+                              type="text"
+                              className={styles.promoInput}
+                              placeholder="Enter code"
+                              value={couponCode}
+                              autoComplete="off"
+                              autoCapitalize="characters"
+                              spellCheck="false"
+                              onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
+                              aria-invalid={couponError ? true : undefined}
+                              aria-describedby={describedBy(couponError && "checkout-coupon-msg")}
+                            />
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className={styles.promoApply}
+                              onClick={applyCoupon}
+                            >
+                              Apply
+                            </Button>
+                          </div>
+                        )}
+                        {/* Both notes arrive without the customer asking — a cap
+                            applied silently, or a coupon dropped because the cart
+                            fell under its minimum — so the region announces them
+                            politely rather than leaving them for the eye alone. */}
+                        <div aria-live="polite">
+                          {couponApplied && couponCapped && (
+                            <p className={styles.promoMsg}>
+                              Capped at this coupon&rsquo;s maximum discount of{" "}
+                              {formatCurrency(couponApplied.maxDiscount)}.
+                            </p>
+                          )}
+                          {couponError && (
+                            <p
+                              id="checkout-coupon-msg"
+                              className={`${styles.promoMsg} ${styles.promoError}`}
+                            >
+                              <Icon icon="mdi:alert-circle-outline" aria-hidden="true" />
+                              {couponError}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* The gate, said kindly. Continue opens the same AuthModal;
+                          the cart survives the login and merges into the account. */}
+                      {!isAuthenticated && (
+                        <div className={styles.gate}>
+                          <p className={styles.gateText}>
+                            <span className={styles.gateLead}>Sign in to continue.</span>
+                            <span className={styles.gateNote}>
+                              Your cart stays exactly as it is. Signing in keeps it
+                              with your account, alongside your saved addresses and
+                              past orders.
+                            </span>
+                          </p>
+                          <Button
+                            variant="secondary"
+                            className={styles.gateBtn}
+                            onClick={() => openAuthModal("login")}
+                          >
+                            Sign in
+                          </Button>
+                        </div>
+                      )}
+                    </GlassCard>
+                  </motion.div>
+                )}
+
+                {/* ═════════════════════════════════════════════════════════
+                    STEP 1 — SHIPPING
+                    ═════════════════════════════════════════════════════ */}
+                {step === 1 && (
+                  <motion.div key="shipping" {...stepMotion}>
+                    <GlassCard padding="lg" className={styles.card}>
+                      <h2 className={styles.sectionTitle}>Shipping</h2>
+                      <p className={styles.sectionNote}>Where should we send it?</p>
+
+                      {user?.addresses?.length > 0 && (
+                        <div className={styles.block}>
+                          <h3 className={styles.blockTitle}>Saved addresses</h3>
+                          <div className={styles.options}>
+                            {user.addresses.map((addr, i) => (
+                              <label
+                                key={addr.id ?? i}
+                                className={`${styles.option} ${useExistingAddress?.id === addr.id ? styles.optionSelected : ""}`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="savedAddress"
+                                  className={styles.control}
+                                  checked={useExistingAddress?.id === addr.id}
+                                  onChange={() => { setUseExistingAddress(addr); setAddressErrors({}); }}
+                                />
+                                <span className={`${styles.box} ${styles.boxRound}`} aria-hidden="true" />
+                                <span className={styles.optionCopy}>
+                                  <span className={styles.addrHead}>
+                                    <span className={styles.optionName}>{addr.label || "Address"}</span>
+                                    {addr.isDefault && (
+                                      <span className={styles.addrDefault}>Default</span>
+                                    )}
+                                  </span>
+                                  <span className={styles.optionDesc}>
+                                    {addr.firstName} {addr.lastName}
+                                  </span>
+                                  <span className={styles.optionMeta}>
+                                    {addr.addressLine1}, {addr.city}, {addr.state} - {addr.postalCode}
+                                  </span>
+                                  <span className={styles.optionMeta}>{addr.phone}</span>
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon="mdi:plus"
+                            className={styles.newAddressBtn}
+                            onClick={() => setUseExistingAddress(null)}
+                            aria-expanded={!useExistingAddress}
+                            aria-controls="checkout-address-form"
+                          >
+                            Add new address
+                          </Button>
+                        </div>
+                      )}
+
+                      {!useExistingAddress && (
+                        <div id="checkout-address-form" className={styles.block}>
+                          {user?.addresses?.length > 0 && (
+                            <h3 className={styles.blockTitle}>New address</h3>
+                          )}
+                          <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="ship-first">First name *</label>
+                              <input
+                                id="ship-first"
+                                type="text"
+                                name="firstName"
+                                autoComplete="given-name"
+                                value={shippingAddress.firstName}
+                                onChange={handleAddressChange}
+                                className={addressErrors.firstName ? styles.inputError : ""}
+                                aria-invalid={addressErrors.firstName ? true : undefined}
+                                aria-describedby={describedBy(addressErrors.firstName && "ship-first-error")}
+                              />
+                              {addressErrors.firstName && (
+                                <FieldError id="ship-first-error">{addressErrors.firstName}</FieldError>
+                              )}
+                            </div>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="ship-last">Last name *</label>
+                              <input
+                                id="ship-last"
+                                type="text"
+                                name="lastName"
+                                autoComplete="family-name"
+                                value={shippingAddress.lastName}
+                                onChange={handleAddressChange}
+                                className={addressErrors.lastName ? styles.inputError : ""}
+                                aria-invalid={addressErrors.lastName ? true : undefined}
+                                aria-describedby={describedBy(addressErrors.lastName && "ship-last-error")}
+                              />
+                              {addressErrors.lastName && (
+                                <FieldError id="ship-last-error">{addressErrors.lastName}</FieldError>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className={styles.formGroup}>
+                            <label htmlFor="ship-phone">Phone *</label>
+                            <input
+                              id="ship-phone"
+                              type="tel"
+                              name="phone"
+                              autoComplete="tel"
+                              value={shippingAddress.phone}
+                              onChange={handleAddressChange}
+                              placeholder="+91 …"
+                              className={addressErrors.phone ? styles.inputError : ""}
+                              aria-invalid={addressErrors.phone ? true : undefined}
+                              aria-describedby={describedBy(addressErrors.phone && "ship-phone-error")}
+                            />
+                            {addressErrors.phone && (
+                              <FieldError id="ship-phone-error">{addressErrors.phone}</FieldError>
+                            )}
+                          </div>
+
+                          <div className={styles.formGroup}>
+                            <label htmlFor="ship-line1">Address line 1 *</label>
+                            <input
+                              id="ship-line1"
+                              type="text"
+                              name="addressLine1"
+                              autoComplete="address-line1"
+                              value={shippingAddress.addressLine1}
+                              onChange={handleAddressChange}
+                              placeholder="House/Flat No., Building, Street"
+                              className={addressErrors.addressLine1 ? styles.inputError : ""}
+                              aria-invalid={addressErrors.addressLine1 ? true : undefined}
+                              aria-describedby={describedBy(addressErrors.addressLine1 && "ship-line1-error")}
+                            />
+                            {addressErrors.addressLine1 && (
+                              <FieldError id="ship-line1-error">{addressErrors.addressLine1}</FieldError>
+                            )}
+                          </div>
+
+                          <div className={styles.formGroup}>
+                            <label htmlFor="ship-line2">Address line 2</label>
+                            <input
+                              id="ship-line2"
+                              type="text"
+                              name="addressLine2"
+                              autoComplete="address-line2"
+                              value={shippingAddress.addressLine2}
+                              onChange={handleAddressChange}
+                              placeholder="Landmark, Area (optional)"
+                            />
+                          </div>
+
+                          <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="ship-city">City *</label>
+                              <input
+                                id="ship-city"
+                                type="text"
+                                name="city"
+                                autoComplete="address-level2"
+                                value={shippingAddress.city}
+                                onChange={handleAddressChange}
+                                className={addressErrors.city ? styles.inputError : ""}
+                                aria-invalid={addressErrors.city ? true : undefined}
+                                aria-describedby={describedBy(addressErrors.city && "ship-city-error")}
+                              />
+                              {addressErrors.city && (
+                                <FieldError id="ship-city-error">{addressErrors.city}</FieldError>
+                              )}
+                            </div>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="ship-state">State *</label>
+                              <input
+                                id="ship-state"
+                                type="text"
+                                name="state"
+                                autoComplete="address-level1"
+                                value={shippingAddress.state}
+                                onChange={handleAddressChange}
+                                className={addressErrors.state ? styles.inputError : ""}
+                                aria-invalid={addressErrors.state ? true : undefined}
+                                aria-describedby={describedBy(addressErrors.state && "ship-state-error")}
+                              />
+                              {addressErrors.state && (
+                                <FieldError id="ship-state-error">{addressErrors.state}</FieldError>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="ship-postal">Postal code *</label>
+                              <input
+                                id="ship-postal"
+                                type="text"
+                                name="postalCode"
+                                autoComplete="postal-code"
+                                inputMode="numeric"
+                                value={shippingAddress.postalCode}
+                                onChange={handleAddressChange}
+                                className={addressErrors.postalCode ? styles.inputError : ""}
+                                aria-invalid={addressErrors.postalCode ? true : undefined}
+                                aria-describedby={describedBy(addressErrors.postalCode && "ship-postal-error")}
+                              />
+                              {addressErrors.postalCode && (
+                                <FieldError id="ship-postal-error">{addressErrors.postalCode}</FieldError>
+                              )}
+                            </div>
+                            <div className={styles.formGroup}>
+                              {/* Read-only: the store ships within India only.
+                                  An owner decision to revisit before shipping
+                                  abroad — see PROGRESS.md, Prompt 29. */}
+                              <label htmlFor="ship-country">Country</label>
+                              <input
+                                id="ship-country"
+                                type="text"
+                                autoComplete="country-name"
+                                value={shippingAddress.country}
+                                readOnly
+                                className={styles.readOnly}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Shipping method — the store's own methods, rates and ETAs. */}
+                      <div className={styles.block}>
+                        <h3 className={styles.blockTitle}>Shipping method</h3>
+                        <div className={styles.options}>
+                          {shippingMethods.map((method) => {
+                            const isFree = method.rateType === "free" || (method.freeAbove && subtotal >= method.freeAbove);
+                            const eta = etaFor(method);
+                            const freeNote =
+                              !isFree && Number(method.freeAbove) > 0
+                                ? `Complimentary above ${formatCurrency(method.freeAbove)}`
+                                : null;
+                            return (
+                              <label
+                                key={method.id}
+                                className={`${styles.option} ${selectedShipping?.id === method.id ? styles.optionSelected : ""}`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="shipping"
+                                  className={styles.control}
+                                  checked={selectedShipping?.id === method.id}
+                                  onChange={() => { setSelectedShipping(method); setShippingError(""); }}
+                                />
+                                <span className={`${styles.box} ${styles.boxRound}`} aria-hidden="true" />
+                                <span className={styles.optionCopy}>
+                                  <span className={styles.optionName}>{method.name}</span>
+                                  {method.description && (
+                                    <span className={styles.optionDesc}>{method.description}</span>
+                                  )}
+                                  {(eta || freeNote) && (
+                                    <span className={styles.optionMeta}>
+                                      {eta}
+                                      {eta && freeNote && <span aria-hidden="true"> &middot; </span>}
+                                      {freeNote}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className={`${styles.optionCost} ${isFree ? styles.optionFree : ""}`}>
+                                  {isFree ? "Complimentary" : formatCurrency(method.flatRate)}
+                                </span>
+                              </label>
+                            );
+                          })}
+                          {shippingMethods.length === 0 && (
+                            <p className={styles.optionsEmpty}>
+                              No shipping methods are available right now. Please try again later.
+                            </p>
+                          )}
+                        </div>
+                        {shippingError && (
+                          <p className={styles.blockError} role="alert">
+                            <Icon icon="mdi:alert-circle-outline" aria-hidden="true" />
+                            {shippingError}
+                          </p>
+                        )}
+                      </div>
+                    </GlassCard>
+                  </motion.div>
+                )}
+
+                {/* ═════════════════════════════════════════════════════════
+                    STEP 2 — PAYMENT
+                    Store credit first (it can settle the whole order and remove
+                    the question), then the method list. Every rule above this
+                    line — the clamps, the COD bounds, `fullyCovered` — is read
+                    here, never re-derived.
+                    ═════════════════════════════════════════════════════ */}
+                {step === 2 && (
+                  <motion.div key="payment" {...stepMotion}>
+                    <GlassCard padding="lg" className={styles.card}>
+                      <h2 className={styles.sectionTitle}>Payment</h2>
+                      <p className={styles.sectionNote}>
+                        {fullyCovered
+                          ? "Nothing further is due on this order."
+                          : `${formatCurrency(amountDue)} due on this order.`}
+                      </p>
+
+                      {/* ── Store credit ───────────────────────────────────
+                          Shown only when there is a balance to spend. The
+                          checkbox pre-fills the maximum; the field lets it be
+                          trimmed, and the two rows below read straight off the
+                          live figures. */}
+                      {walletBalance > 0 && (
+                        <GlassCard
+                          as="section"
+                          padding="md"
+                          glow="violet"
+                          className={styles.credit}
+                          aria-labelledby="checkout-credit-title"
+                        >
+                          <div className={styles.creditHead}>
+                            <span className={styles.creditMark} aria-hidden="true">
+                              <WalletMark />
+                            </span>
+                            <div className={styles.creditIntro}>
+                              <h3 id="checkout-credit-title" className={styles.creditTitle}>
+                                Store credit
+                              </h3>
+                              <p className={styles.creditBalance}>
+                                {formatCurrency(walletBalance)} available
+                              </p>
+                            </div>
+                          </div>
+
+                          <label className={styles.creditToggle}>
+                            <input
+                              type="checkbox"
+                              className={styles.control}
+                              checked={applyStoreCredit}
+                              onChange={(e) => {
+                                const on = e.target.checked;
+                                setApplyStoreCredit(on);
+                                setCreditAmount(on ? maxApplicableCredit : 0);
+                              }}
+                            />
+                            <span className={styles.box} aria-hidden="true">
+                              <CheckMark />
+                            </span>
+                            <span className={styles.creditToggleLabel}>Apply to this order</span>
+                          </label>
+
+                          {applyStoreCredit && (
+                            <div className={styles.creditApply}>
+                              <div className={styles.formGroup}>
+                                <label htmlFor="checkout-credit-amount">Amount to apply</label>
+                                <div className={styles.creditInputRow}>
+                                  <span className={styles.creditCurrency} aria-hidden="true">
+                                    {currencySymbol}
+                                  </span>
+                                  <input
+                                    id="checkout-credit-amount"
+                                    type="number"
+                                    inputMode="numeric"
+                                    autoComplete="off"
+                                    min="0"
+                                    max={maxApplicableCredit}
+                                    step="1"
+                                    className={styles.creditInput}
+                                    value={creditAmount}
+                                    onChange={(e) => {
+                                      const n = Number(e.target.value);
+                                      setCreditAmount(Number.isFinite(n) ? Math.max(0, n) : 0);
+                                    }}
+                                    aria-describedby="checkout-credit-max"
+                                  />
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className={styles.creditMax}
+                                    onClick={() => setCreditAmount(maxApplicableCredit)}
+                                  >
+                                    Use max
+                                  </Button>
+                                </div>
+                                <span id="checkout-credit-max" className={styles.creditHint}>
+                                  Up to {formatCurrency(maxApplicableCredit)} on this order.
+                                </span>
+                              </div>
+
+                              <dl className={styles.creditRows}>
+                                <div className={styles.creditRow}>
+                                  <dt>Store credit applied</dt>
+                                  <dd className={styles.creditRowCredit}>
+                                    &minus;{formatCurrency(storeCreditApplied)}
+                                  </dd>
+                                </div>
+                                <div className={styles.creditRow}>
+                                  <dt>Remaining to pay</dt>
+                                  <dd className={styles.creditRowPayable}>
+                                    {formatCurrency(amountPayable)}
+                                  </dd>
+                                </div>
+                              </dl>
+                            </div>
+                          )}
+                        </GlassCard>
+                      )}
+
+                      {/* The credit settles the whole order: the method list has
+                          nothing left to ask, so it does not appear at all. */}
+                      {fullyCovered && (
+                        <p className={styles.covered}>
+                          <span className={styles.coveredLead}>
+                            Fully covered by your store credit.
+                          </span>
+                          <span className={styles.coveredNote}>
+                            {formatCurrency(storeCreditApplied)} will be drawn from your
+                            balance when the order is placed. Nothing further is due, so no
+                            payment method is needed.
+                          </span>
+                        </p>
+                      )}
+
+                      {!fullyCovered && (
+                        <div className={styles.block}>
+                          <h3 className={styles.blockTitle}>Payment method</h3>
+                          <div className={styles.options}>
+                            {PAYMENT_OPTIONS.map((pm) => {
+                              const isCod = pm.id === "cod";
+                              const isDisabled = isCod && !codAvailable;
+                              // Copy only — the bounds themselves are decided by
+                              // `codAvailable` above and are never restated as logic.
+                              const codHint = !codEnabled
+                                ? "Currently unavailable"
+                                : codMaxOrder == null
+                                ? `Available for orders from ${formatCurrency(codMinOrder)}`
+                                : codMinOrder > 0
+                                ? `Available for orders between ${formatCurrency(codMinOrder)} and ${formatCurrency(codMaxOrder)}`
+                                : `Available for orders up to ${formatCurrency(codMaxOrder)}`;
+                              const selected = paymentMethod === pm.id;
+                              const Mark = pm.Mark;
+                              const formId = `pay-form-${pm.id}`;
+                              const form = payFormFor(pm.id);
+                              return (
+                                <div
+                                  key={pm.id}
+                                  className={`${styles.payRow} ${selected ? styles.payRowSelected : ""} ${isDisabled ? styles.payRowDisabled : ""}`}
+                                >
+                                  <label className={`${styles.option} ${styles.payHead}`}>
+                                    <input
+                                      type="radio"
+                                      name="payment"
+                                      className={styles.control}
+                                      value={pm.id}
+                                      checked={selected}
+                                      disabled={isDisabled}
+                                      onChange={() => setPaymentMethod(pm.id)}
+                                      aria-describedby={describedBy(selected && form && formId)}
+                                    />
+                                    <span
+                                      className={`${styles.box} ${styles.boxRound}`}
+                                      aria-hidden="true"
+                                    />
+                                    <span className={styles.payMark} aria-hidden="true">
+                                      <Mark />
+                                    </span>
+                                    <span className={styles.optionCopy}>
+                                      <span className={styles.optionName}>{pm.label}</span>
+                                      <span className={styles.optionDesc}>
+                                        {isDisabled
+                                          ? codHint
+                                          : isCod && paymentCfg.codFee > 0
+                                          ? `${pm.desc} — ${formatCurrency(
+                                              paymentCfg.codFee
+                                            )} handling fee`
+                                          : pm.desc}
+                                      </span>
+                                    </span>
+                                  </label>
+
+                                  {selected && !isDisabled && form && (
+                                    <div id={formId} className={styles.payForm}>
+                                      {form}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* The one assurance this store attests to (the catalogue
+                              calls it securePayment). Nothing about demand, timing
+                              or stock is claimed anywhere on this step. */}
+                          <p className={styles.secure}>
+                            <span className={styles.secureMark} aria-hidden="true">
+                              <LockMark />
+                            </span>
+                            Secure checkout
+                          </p>
+                        </div>
+                      )}
+                    </GlassCard>
+                  </motion.div>
+                )}
+
+                {/* ═════════════════════════════════════════════════════════
+                    STEP 3 — REVIEW & CONFIRM
+                    Three blocks, each with the Edit that jumps back to the step
+                    that owns it, then the items themselves. The order is placed
+                    by the one primary CTA in the nav row below — one Place order
+                    control on the page, not two.
+                    ═════════════════════════════════════════════════════ */}
+                {step === 3 && (
+                  <motion.div key="review" {...stepMotion}>
+                    <GlassCard padding="lg" className={styles.card}>
+                      <h2 className={styles.sectionTitle}>Review</h2>
+                      <p className={styles.sectionNote}>
+                        {itemCount} {itemWord}
+                        <span aria-hidden="true"> &middot; </span>
+                        {fullyCovered
+                          ? "settled with store credit."
+                          : `${formatCurrency(amountDue)} to pay.`}
+                      </p>
+
+                      <div className={styles.recap}>
+                        <section className={styles.recapBlock}>
+                          <div className={styles.recapHead}>
+                            <h3 className={styles.recapTitle}>Ship to</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={styles.recapEdit}
+                              onClick={() => setStep(1)}
+                            >
+                              Edit
+                              <span className="sf-visually-hidden"> shipping address</span>
+                            </Button>
+                          </div>
+                          <p className={styles.recapLead}>
+                            {reviewAddress.firstName} {reviewAddress.lastName}
+                          </p>
+                          <p className={styles.recapLine}>
+                            {reviewAddress.addressLine1}
+                            {reviewAddress.addressLine2 ? `, ${reviewAddress.addressLine2}` : ""}
+                          </p>
+                          <p className={styles.recapLine}>
+                            {reviewAddress.city}, {reviewAddress.state} &ndash;{" "}
+                            {reviewAddress.postalCode}
+                          </p>
+                          <p className={styles.recapLine}>{reviewAddress.country}</p>
+                          <p className={styles.recapLine}>{reviewAddress.phone}</p>
+                        </section>
+
+                        <section className={styles.recapBlock}>
+                          <div className={styles.recapHead}>
+                            <h3 className={styles.recapTitle}>Delivery method</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={styles.recapEdit}
+                              onClick={() => setStep(1)}
+                            >
+                              Edit
+                              <span className="sf-visually-hidden"> delivery method</span>
+                            </Button>
+                          </div>
+                          <p className={styles.recapLead}>{selectedShipping?.name}</p>
+                          {selectedShipping?.description && (
+                            <p className={styles.recapLine}>{selectedShipping.description}</p>
+                          )}
+                          {reviewEta && <p className={styles.recapLine}>{reviewEta}</p>}
+                          <p
+                            className={`${styles.recapLine} ${shippingCost === 0 ? styles.recapFree : ""}`}
+                          >
+                            {shippingCost === 0 ? "Complimentary" : formatCurrency(shippingCost)}
+                          </p>
+                        </section>
+
+                        <section className={styles.recapBlock}>
+                          <div className={styles.recapHead}>
+                            <h3 className={styles.recapTitle}>Payment</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={styles.recapEdit}
+                              onClick={() => setStep(2)}
+                            >
+                              Edit
+                              <span className="sf-visually-hidden"> payment method</span>
+                            </Button>
+                          </div>
+                          {fullyCovered ? (
+                            <>
+                              <p className={styles.recapLead}>
+                                <span className={styles.recapMark} aria-hidden="true">
+                                  <WalletMark />
+                                </span>
+                                Store credit
+                              </p>
+                              <p className={styles.recapLine}>
+                                Paid in full with store credit ({formatCurrency(storeCreditApplied)}).
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <p className={styles.recapLead}>
+                                {SelectedPaymentMark && (
+                                  <span className={styles.recapMark} aria-hidden="true">
+                                    <SelectedPaymentMark />
+                                  </span>
+                                )}
+                                {selectedPaymentOption?.label}
+                              </p>
+                              {storeCreditApplied > 0 && (
+                                <p className={styles.recapLine}>
+                                  Store credit &minus;{formatCurrency(storeCreditApplied)}
+                                </p>
+                              )}
+                              <p className={styles.recapLine}>
+                                {paymentMethod === "cod"
+                                  ? `${formatCurrency(amountDue)} collected on delivery.`
+                                  : `${formatCurrency(amountDue)} charged when you place the order.`}
+                              </p>
+                            </>
+                          )}
+                        </section>
+                      </div>
+
+                      <div className={styles.block}>
+                        <h3 className={styles.blockTitle}>
+                          {itemCount} {itemWord}
+                        </h3>
+                        <ul className={styles.recapList}>
+                          {cartItems.map((item) => (
+                            <li key={item.id} className={styles.recapItem}>
+                              <div className={`sf-plate ${styles.recapThumb}`}>
+                                <img
+                                  src={lineThumb(item, 160)}
+                                  alt=""
+                                  loading="lazy"
+                                  onError={onImageError}
+                                />
+                              </div>
+                              <div className={styles.recapItemBody}>
+                                <h4 className={styles.recapItemName}>{item.name}</h4>
+                                {item.variantName && (
+                                  <span className={styles.recapItemVariant}>{item.variantName}</span>
+                                )}
+                                <span className={styles.recapItemQty}>
+                                  {item.quantity} &times; {formatCurrency(item.price)}
+                                </span>
+                              </div>
+                              <p className={styles.recapItemTotal}>
+                                {formatCurrency(item.price * item.quantity)}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </GlassCard>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Additive (Prompt 29). `createOrder` threw or reported failure —
+                  which happens BEFORE anything is charged, so the panel says so
+                  rather than leaving the shopper to guess. */}
+              {orderFailed && (
+                <GlassCard padding="md" className={styles.failure} role="alert">
+                  <p className={styles.failureTitle}>
+                    <Icon icon="mdi:alert-circle-outline" aria-hidden="true" />
+                    We couldn&rsquo;t place your order. Nothing was charged. Please try again.
                   </p>
+                  <Button
+                    variant="secondary"
+                    onClick={placeOrder}
+                    disabled={isProcessing}
+                    className={styles.failureCta}
+                  >
+                    Try again
+                  </Button>
+                </GlassCard>
+              )}
+            </div>
 
-                  <ul className={styles.lines}>
-                    {cartItems.map((item) => (
-                      <li key={item.id} className={styles.line}>
-                        <div className={styles.thumb}>
+            {/* ── The summary rail ─────────────────────────────────────────
+                Sticky beside the content on desktop; a collapsible band sitting
+                directly above the CTA on phones. */}
+            <aside className={styles.rail} aria-label="Order summary">
+              <GlassCard strong padding="lg" className={styles.railCard}>
+                <button
+                  type="button"
+                  className={styles.railToggle}
+                  onClick={() => setSummaryOpen((open) => !open)}
+                  aria-expanded={summaryOpen}
+                  aria-controls="checkout-summary-body"
+                >
+                  <span className={styles.railToggleLabel}>Order summary</span>
+                  <span className={styles.railToggleValue}>
+                    {formatCurrency(storeCreditApplied > 0 || codFee > 0 ? amountDue : total)}
+                  </span>
+                  <Icon
+                    icon="mdi:chevron-down"
+                    className={`${styles.railChevron} ${summaryOpen ? styles.railChevronOpen : ""}`}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                <h2 className={styles.railTitle}>Order summary</h2>
+
+                <div
+                  id="checkout-summary-body"
+                  className={`${styles.railBody} ${summaryOpen ? "" : styles.railBodyCollapsed}`}
+                >
+                  <ul className={styles.railItems}>
+                    {cartItems.slice(0, 3).map((item) => (
+                      <li key={item.id} className={styles.railItem}>
+                        <span className={`sf-plate ${styles.railThumb}`} aria-hidden="true">
                           <img
-                            src={item.image || PLACEHOLDER_IMG}
+                            src={lineThumb(item, 96)}
                             alt=""
                             loading="lazy"
                             onError={onImageError}
                           />
-                        </div>
-
-                        <div className={styles.lineBody}>
-                          <h3 className={styles.lineName}>{item.name}</h3>
-                          {item.variantName && (
-                            <span className={styles.lineVariant}>{item.variantName}</span>
-                          )}
-                          <p className={styles.linePrice}>{formatCurrency(item.price)}</p>
-
-                          <div className={styles.lineFoot}>
-                            <div className={styles.stepper}>
-                              <button
-                                type="button"
-                                className={styles.stepperBtn}
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                aria-label={`Decrease quantity of ${item.name}`}
-                              >
-                                <MinusMark />
-                              </button>
-                              <span className={styles.stepperValue} aria-live="polite" aria-atomic="true">
-                                {item.quantity}
-                              </span>
-                              <button
-                                type="button"
-                                className={styles.stepperBtn}
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                aria-label={`Increase quantity of ${item.name}`}
-                              >
-                                <PlusMark />
-                              </button>
-                            </div>
-
-                            <button
-                              type="button"
-                              className={styles.removeBtn}
-                              onClick={() => removeFromCart(item.id)}
-                              aria-label={`Remove ${item.name} from cart`}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-
-                        <p className={styles.lineTotal}>
+                        </span>
+                        <span className={styles.railItemName}>
+                          {item.name}
+                          <span className={styles.railItemQty}> &times;{item.quantity}</span>
+                        </span>
+                        <span className={styles.railItemValue}>
                           {formatCurrency(item.price * item.quantity)}
-                        </p>
+                        </span>
                       </li>
                     ))}
                   </ul>
-
-                  {/* Promo code — the drawer's underline field, verbatim. */}
-                  <div className={styles.promo}>
-                    <h3 className={styles.blockTitle}>Promo code</h3>
-                    {couponApplied ? (
-                      <div className={styles.couponChip}>
-                        <span className={styles.couponCode}>{couponApplied.code}</span>
-                        <span className={styles.couponValue}>
-                          &minus;{formatCurrency(couponDiscount)}
-                        </span>
-                        <button
-                          type="button"
-                          className={styles.couponRemove}
-                          onClick={removeCoupon}
-                          aria-label={`Remove coupon ${couponApplied.code}`}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <div className={styles.promoField}>
-                        <label className={styles.srOnly} htmlFor="checkout-coupon">
-                          Coupon code
-                        </label>
-                        <input
-                          id="checkout-coupon"
-                          type="text"
-                          className={styles.promoInput}
-                          placeholder="Enter coupon code"
-                          value={couponCode}
-                          autoComplete="off"
-                          onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
-                          aria-invalid={couponError ? true : undefined}
-                          aria-describedby={describedBy(couponError && "checkout-coupon-msg")}
-                        />
-                        <button type="button" className={styles.promoApply} onClick={applyCoupon}>
-                          Apply
-                        </button>
-                      </div>
-                    )}
-                    {/* Both notes arrive without the customer asking — a cap
-                        applied silently, or a coupon dropped because the cart
-                        fell under its minimum — so the region announces them
-                        politely rather than leaving them for the eye alone. */}
-                    <div aria-live="polite">
-                      {couponApplied && couponCapped && (
-                        <p className={styles.promoMsg}>
-                          Capped at this coupon&rsquo;s maximum discount of{" "}
-                          {formatCurrency(couponApplied.maxDiscount)}.
-                        </p>
-                      )}
-                      {couponError && (
-                        <p
-                          id="checkout-coupon-msg"
-                          className={`${styles.promoMsg} ${styles.promoError}`}
-                        >
-                          {couponError}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* The gate, said kindly. Continue opens the same AuthModal;
-                      the cart survives the login and merges into the account. */}
-                  {!isAuthenticated && (
-                    <div className={styles.gate}>
-                      <p className={styles.gateText}>
-                        <span className={styles.gateLead}>Sign in to continue.</span>
-                        <span className={styles.gateNote}>
-                          Your selection stays exactly as it is. Signing in keeps it
-                          with your account, alongside your saved addresses and past
-                          orders.
-                        </span>
-                      </p>
-                      <button
-                        type="button"
-                        className={styles.gateBtn}
-                        onClick={() => openAuthModal("login")}
-                      >
-                        Sign In
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
-              {/* ═════════════════════════════════════════════════════════════
-                  STEP 1 — SHIPPING (Prompt 18)
-                  ═════════════════════════════════════════════════════════ */}
-              {step === 1 && (
-                <motion.div key="shipping" {...stepMotion}>
-                  <h2 className={styles.sectionTitle}>Where it travels</h2>
-                  <p className={styles.sectionNote}>
-                    Delivered across India in insured silk packaging.
-                  </p>
-
-                  {user?.addresses?.length > 0 && (
-                    <div className={styles.addrBlock}>
-                      <h3 className={styles.blockTitle}>Saved addresses</h3>
-                      <div className={styles.addrList}>
-                        {user.addresses.map((addr, i) => (
-                          <label
-                            key={addr.id ?? i}
-                            className={`${styles.addrCard} ${useExistingAddress?.id === addr.id ? styles.addrCardSelected : ""}`}
-                          >
-                            <input
-                              type="radio"
-                              name="savedAddress"
-                              className={styles.control}
-                              checked={useExistingAddress?.id === addr.id}
-                              onChange={() => { setUseExistingAddress(addr); setAddressErrors({}); }}
-                            />
-                            <span className={`${styles.box} ${styles.boxRound}`} aria-hidden="true" />
-                            <span className={styles.addrCopy}>
-                              <span className={styles.addrHead}>
-                                <span className={styles.addrLabel}>{addr.label || "Address"}</span>
-                                {addr.isDefault && (
-                                  <span className={styles.addrDefault}>Default</span>
-                                )}
-                              </span>
-                              <span className={styles.addrName}>
-                                {addr.firstName} {addr.lastName}
-                              </span>
-                              <span className={styles.addrLines}>
-                                {addr.addressLine1}, {addr.city}, {addr.state} - {addr.postalCode}
-                              </span>
-                              <span className={styles.addrPhone}>{addr.phone}</span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      <button
-                        type="button"
-                        className={styles.newAddressBtn}
-                        onClick={() => setUseExistingAddress(null)}
-                        aria-expanded={!useExistingAddress}
-                        aria-controls="checkout-address-form"
-                      >
-                        + Add new address
-                      </button>
-                    </div>
-                  )}
-
-                  {!useExistingAddress && (
-                    <div id="checkout-address-form" className={styles.addressForm}>
-                      {user?.addresses?.length > 0 && (
-                        <h3 className={styles.blockTitle}>New address</h3>
-                      )}
-                      <div className={styles.formRow}>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="ship-first">First name *</label>
-                          <input
-                            id="ship-first"
-                            type="text"
-                            name="firstName"
-                            autoComplete="given-name"
-                            value={shippingAddress.firstName}
-                            onChange={handleAddressChange}
-                            className={addressErrors.firstName ? styles.inputError : ""}
-                            aria-invalid={addressErrors.firstName ? true : undefined}
-                            aria-describedby={describedBy(addressErrors.firstName && "ship-first-error")}
-                          />
-                          {addressErrors.firstName && (
-                            <span id="ship-first-error" className={styles.fieldError}>{addressErrors.firstName}</span>
-                          )}
-                        </div>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="ship-last">Last name *</label>
-                          <input
-                            id="ship-last"
-                            type="text"
-                            name="lastName"
-                            autoComplete="family-name"
-                            value={shippingAddress.lastName}
-                            onChange={handleAddressChange}
-                            className={addressErrors.lastName ? styles.inputError : ""}
-                            aria-invalid={addressErrors.lastName ? true : undefined}
-                            aria-describedby={describedBy(addressErrors.lastName && "ship-last-error")}
-                          />
-                          {addressErrors.lastName && (
-                            <span id="ship-last-error" className={styles.fieldError}>{addressErrors.lastName}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label htmlFor="ship-phone">Phone *</label>
-                        <input
-                          id="ship-phone"
-                          type="tel"
-                          name="phone"
-                          autoComplete="tel"
-                          value={shippingAddress.phone}
-                          onChange={handleAddressChange}
-                          placeholder="+91 9876543210"
-                          className={addressErrors.phone ? styles.inputError : ""}
-                          aria-invalid={addressErrors.phone ? true : undefined}
-                          aria-describedby={describedBy(addressErrors.phone && "ship-phone-error")}
-                        />
-                        {addressErrors.phone && (
-                          <span id="ship-phone-error" className={styles.fieldError}>{addressErrors.phone}</span>
-                        )}
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label htmlFor="ship-line1">Address line 1 *</label>
-                        <input
-                          id="ship-line1"
-                          type="text"
-                          name="addressLine1"
-                          autoComplete="address-line1"
-                          value={shippingAddress.addressLine1}
-                          onChange={handleAddressChange}
-                          placeholder="House/Flat No., Building, Street"
-                          className={addressErrors.addressLine1 ? styles.inputError : ""}
-                          aria-invalid={addressErrors.addressLine1 ? true : undefined}
-                          aria-describedby={describedBy(addressErrors.addressLine1 && "ship-line1-error")}
-                        />
-                        {addressErrors.addressLine1 && (
-                          <span id="ship-line1-error" className={styles.fieldError}>{addressErrors.addressLine1}</span>
-                        )}
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label htmlFor="ship-line2">Address line 2</label>
-                        <input
-                          id="ship-line2"
-                          type="text"
-                          name="addressLine2"
-                          autoComplete="address-line2"
-                          value={shippingAddress.addressLine2}
-                          onChange={handleAddressChange}
-                          placeholder="Landmark, Area (optional)"
-                        />
-                      </div>
-
-                      <div className={styles.formRow}>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="ship-city">City *</label>
-                          <input
-                            id="ship-city"
-                            type="text"
-                            name="city"
-                            autoComplete="address-level2"
-                            value={shippingAddress.city}
-                            onChange={handleAddressChange}
-                            className={addressErrors.city ? styles.inputError : ""}
-                            aria-invalid={addressErrors.city ? true : undefined}
-                            aria-describedby={describedBy(addressErrors.city && "ship-city-error")}
-                          />
-                          {addressErrors.city && (
-                            <span id="ship-city-error" className={styles.fieldError}>{addressErrors.city}</span>
-                          )}
-                        </div>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="ship-state">State *</label>
-                          <input
-                            id="ship-state"
-                            type="text"
-                            name="state"
-                            autoComplete="address-level1"
-                            value={shippingAddress.state}
-                            onChange={handleAddressChange}
-                            className={addressErrors.state ? styles.inputError : ""}
-                            aria-invalid={addressErrors.state ? true : undefined}
-                            aria-describedby={describedBy(addressErrors.state && "ship-state-error")}
-                          />
-                          {addressErrors.state && (
-                            <span id="ship-state-error" className={styles.fieldError}>{addressErrors.state}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className={styles.formRow}>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="ship-postal">Postal code *</label>
-                          <input
-                            id="ship-postal"
-                            type="text"
-                            name="postalCode"
-                            autoComplete="postal-code"
-                            inputMode="numeric"
-                            value={shippingAddress.postalCode}
-                            onChange={handleAddressChange}
-                            className={addressErrors.postalCode ? styles.inputError : ""}
-                            aria-invalid={addressErrors.postalCode ? true : undefined}
-                            aria-describedby={describedBy(addressErrors.postalCode && "ship-postal-error")}
-                          />
-                          {addressErrors.postalCode && (
-                            <span id="ship-postal-error" className={styles.fieldError}>{addressErrors.postalCode}</span>
-                          )}
-                        </div>
-                        <div className={styles.formGroup}>
-                          <label htmlFor="ship-country">Country</label>
-                          <input
-                            id="ship-country"
-                            type="text"
-                            autoComplete="country-name"
-                            value={shippingAddress.country}
-                            readOnly
-                            className={styles.readOnly}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Shipping method — the store's own methods, rates and ETAs. */}
-                  <div className={styles.methodsBlock}>
-                    <h3 className={styles.blockTitle}>Shipping method</h3>
-                    <div className={styles.methods}>
-                      {shippingMethods.map((method) => {
-                        const isFree = method.rateType === "free" || (method.freeAbove && subtotal >= method.freeAbove);
-                        const eta = etaFor(method);
-                        const freeNote =
-                          !isFree && Number(method.freeAbove) > 0
-                            ? `Complimentary above ${formatCurrency(method.freeAbove)}`
-                            : null;
-                        return (
-                          <label
-                            key={method.id}
-                            className={`${styles.method} ${selectedShipping?.id === method.id ? styles.methodSelected : ""}`}
-                          >
-                            <input
-                              type="radio"
-                              name="shipping"
-                              className={styles.control}
-                              checked={selectedShipping?.id === method.id}
-                              onChange={() => { setSelectedShipping(method); setShippingError(""); }}
-                            />
-                            <span className={`${styles.box} ${styles.boxRound}`} aria-hidden="true" />
-                            <span className={styles.methodCopy}>
-                              <span className={styles.methodName}>{method.name}</span>
-                              {method.description && (
-                                <span className={styles.methodDesc}>{method.description}</span>
-                              )}
-                              {(eta || freeNote) && (
-                                <span className={styles.methodMeta}>
-                                  {eta}
-                                  {eta && freeNote && <span aria-hidden="true"> &middot; </span>}
-                                  {freeNote}
-                                </span>
-                              )}
-                            </span>
-                            <span className={`${styles.methodCost} ${isFree ? styles.methodFree : ""}`}>
-                              {isFree ? "Complimentary" : formatCurrency(method.flatRate)}
-                            </span>
-                          </label>
-                        );
-                      })}
-                      {shippingMethods.length === 0 && (
-                        <p className={styles.methodsEmpty}>
-                          No shipping methods are available right now. Please try again later.
-                        </p>
-                      )}
-                    </div>
-                    {shippingError && (
-                      <p className={styles.shippingError} role="alert">{shippingError}</p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ═════════════════════════════════════════════════════════════
-                  STEP 2 — PAYMENT
-                  Store credit first (it can settle the whole order and remove
-                  the question), then the method list: hairline rows that open
-                  their own form beneath the selection. Every rule above this
-                  line — the clamps, the COD bounds, `fullyCovered` — is read
-                  here, never re-derived.
-                  ═════════════════════════════════════════════════════════ */}
-              {step === 2 && (
-                <motion.div key="payment" {...stepMotion}>
-                  <h2 className={styles.sectionTitle}>How you&rsquo;d like to pay</h2>
-                  <p className={styles.sectionNote}>
-                    {fullyCovered
-                      ? "Nothing further is due on this order."
-                      : `${formatCurrency(amountDue)} due on this order.`}
-                  </p>
-
-                  {/* ── Store credit ─────────────────────────────────────────
-                      Shown only when there is a balance to spend. The checkbox
-                      pre-fills the maximum; the field lets it be trimmed, and
-                      the two rows below read straight off the live figures. */}
-                  {walletBalance > 0 && (
-                    <section className={styles.credit} aria-labelledby="checkout-credit-title">
-                      <div className={styles.creditHead}>
-                        <span className={styles.creditMark} aria-hidden="true">
-                          <WalletMark />
-                        </span>
-                        <div className={styles.creditIntro}>
-                          <h3 id="checkout-credit-title" className={styles.creditTitle}>
-                            Store credit
-                          </h3>
-                          <p className={styles.creditBalance}>
-                            {formatCurrency(walletBalance)} available
-                          </p>
-                        </div>
-                      </div>
-
-                      <label className={styles.creditToggle}>
-                        <input
-                          type="checkbox"
-                          className={styles.control}
-                          checked={applyStoreCredit}
-                          onChange={(e) => {
-                            const on = e.target.checked;
-                            setApplyStoreCredit(on);
-                            setCreditAmount(on ? maxApplicableCredit : 0);
-                          }}
-                        />
-                        <span className={styles.box} aria-hidden="true">
-                          <CheckMark />
-                        </span>
-                        <span className={styles.creditToggleLabel}>Apply to this order</span>
-                      </label>
-
-                      {applyStoreCredit && (
-                        <div className={styles.creditApply}>
-                          <div className={styles.creditField}>
-                            <label
-                              htmlFor="checkout-credit-amount"
-                              className={styles.creditFieldLabel}
-                            >
-                              Amount to apply
-                            </label>
-                            <div className={styles.creditInputRow}>
-                              <span className={styles.creditCurrency} aria-hidden="true">
-                                &#8377;
-                              </span>
-                              <input
-                                id="checkout-credit-amount"
-                                type="number"
-                                inputMode="numeric"
-                                autoComplete="off"
-                                min="0"
-                                max={maxApplicableCredit}
-                                step="1"
-                                className={styles.creditInput}
-                                value={creditAmount}
-                                onChange={(e) => {
-                                  const n = Number(e.target.value);
-                                  setCreditAmount(Number.isFinite(n) ? Math.max(0, n) : 0);
-                                }}
-                                aria-describedby="checkout-credit-max"
-                              />
-                              <button
-                                type="button"
-                                className={styles.creditMax}
-                                onClick={() => setCreditAmount(maxApplicableCredit)}
-                              >
-                                Use Max
-                              </button>
-                            </div>
-                            <span id="checkout-credit-max" className={styles.creditHint}>
-                              Up to {formatCurrency(maxApplicableCredit)} on this order.
-                            </span>
-                          </div>
-
-                          <dl className={styles.creditRows}>
-                            <div className={styles.creditRow}>
-                              <dt>Store credit applied</dt>
-                              <dd className={styles.creditRowCredit}>
-                                &minus;{formatCurrency(storeCreditApplied)}
-                              </dd>
-                            </div>
-                            <div className={styles.creditRow}>
-                              <dt>Remaining to pay</dt>
-                              <dd className={styles.creditRowPayable}>
-                                {formatCurrency(amountPayable)}
-                              </dd>
-                            </div>
-                          </dl>
-                        </div>
-                      )}
-                    </section>
-                  )}
-
-                  {/* The credit settles the whole order: the method list has
-                      nothing left to ask, so it does not appear at all. */}
-                  {fullyCovered && (
-                    <p className={styles.covered}>
-                      <span className={styles.coveredLead}>
-                        Fully covered by your store credit.
-                      </span>
-                      <span className={styles.coveredNote}>
-                        {formatCurrency(storeCreditApplied)} will be drawn from your
-                        balance when the order is placed. Nothing further is due, so no
-                        payment method is needed.
-                      </span>
+                  {cartItems.length > 3 && (
+                    <p className={styles.railMore}>
+                      +{cartItems.length - 3} more{" "}
+                      {cartItems.length - 3 === 1 ? "item" : "items"}
                     </p>
                   )}
 
-                  {!fullyCovered && (
-                    <>
-                      <h3 className={styles.blockTitle}>Payment method</h3>
-                      <div className={styles.payGroup}>
-                        {PAYMENT_OPTIONS.map((pm) => {
-                          const isCod = pm.id === "cod";
-                          const isDisabled = isCod && !codAvailable;
-                          // Copy only — the bounds themselves are decided by
-                          // `codAvailable` above and are never restated as logic.
-                          const codHint = !codEnabled
-                            ? "Currently unavailable"
-                            : codMaxOrder == null
-                            ? `Available for orders from ${formatCurrency(codMinOrder)}`
-                            : codMinOrder > 0
-                            ? `Available for orders between ${formatCurrency(codMinOrder)} and ${formatCurrency(codMaxOrder)}`
-                            : `Available for orders up to ${formatCurrency(codMaxOrder)}`;
-                          const selected = paymentMethod === pm.id;
-                          const Mark = pm.Mark;
-                          const formId = `pay-form-${pm.id}`;
-                          const form = payFormFor(pm.id);
-                          return (
-                            <div
-                              key={pm.id}
-                              className={`${styles.payRow} ${selected ? styles.payRowSelected : ""} ${isDisabled ? styles.payRowDisabled : ""}`}
-                            >
-                              <label className={styles.payHead}>
-                                <input
-                                  type="radio"
-                                  name="payment"
-                                  className={styles.control}
-                                  value={pm.id}
-                                  checked={selected}
-                                  disabled={isDisabled}
-                                  onChange={() => setPaymentMethod(pm.id)}
-                                  aria-describedby={describedBy(selected && form && formId)}
-                                />
-                                <span
-                                  className={`${styles.box} ${styles.boxRound}`}
-                                  aria-hidden="true"
-                                />
-                                <span className={styles.payMark} aria-hidden="true">
-                                  <Mark />
-                                </span>
-                                <span className={styles.payCopy}>
-                                  <span className={styles.payName}>{pm.label}</span>
-                                  <span className={styles.payDesc}>
-                                    {isDisabled
-                                      ? codHint
-                                      : isCod && paymentCfg.codFee > 0
-                                      ? `${pm.desc} — ${formatCurrency(
-                                          paymentCfg.codFee
-                                        )} handling fee`
-                                      : pm.desc}
-                                  </span>
-                                </span>
-                              </label>
+                  <hr className={`sf-hairline ${styles.railRule}`} />
 
-                              {selected && !isDisabled && form && (
-                                <div id={formId} className={styles.payForm}>
-                                  {form}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* The one assurance this store attests to (the catalogue
-                          calls it securePayment). Nothing about demand, timing
-                          or stock is claimed anywhere on this step. */}
-                      <p className={styles.secure}>
-                        <span className={styles.secureMark} aria-hidden="true">
-                          <LockMark />
-                        </span>
-                        Secure checkout
-                      </p>
-                    </>
-                  )}
-                </motion.div>
-              )}
-
-              {/* ═════════════════════════════════════════════════════════════
-                  STEP 3 — REVIEW & CONFIRM
-                  Three hairline blocks, each with the Edit that jumps back to
-                  the step that owns it, then the pieces themselves. The order
-                  is placed by the shell single ink CTA in the nav row below —
-                  one Place Order button on the page, not two.
-                  ═════════════════════════════════════════════════════════ */}
-              {step === 3 && (
-                <motion.div key="review" {...stepMotion}>
-                  <h2 className={styles.sectionTitle}>Before it leaves the counter</h2>
-                  <p className={styles.sectionNote}>
-                    {itemCount} {itemCount === 1 ? "piece" : "pieces"}
-                    <span aria-hidden="true"> &middot; </span>
-                    {fullyCovered
-                      ? "settled with store credit."
-                      : `${formatCurrency(amountDue)} to pay.`}
-                  </p>
-
-                  <div className={styles.recap}>
-                    <section className={styles.recapBlock}>
-                      <div className={styles.recapHead}>
-                        <h3 className={styles.recapTitle}>Ship to</h3>
-                        <button
-                          type="button"
-                          className={styles.recapEdit}
-                          onClick={() => setStep(1)}
-                        >
-                          Edit
-                          <span className={styles.srOnly}> shipping address</span>
-                        </button>
-                      </div>
-                      <p className={styles.recapLead}>
-                        {reviewAddress.firstName} {reviewAddress.lastName}
-                      </p>
-                      <p className={styles.recapLine}>
-                        {reviewAddress.addressLine1}
-                        {reviewAddress.addressLine2 ? `, ${reviewAddress.addressLine2}` : ""}
-                      </p>
-                      <p className={styles.recapLine}>
-                        {reviewAddress.city}, {reviewAddress.state} &ndash;{" "}
-                        {reviewAddress.postalCode}
-                      </p>
-                      <p className={styles.recapLine}>{reviewAddress.country}</p>
-                      <p className={styles.recapLine}>{reviewAddress.phone}</p>
-                    </section>
-
-                    <section className={styles.recapBlock}>
-                      <div className={styles.recapHead}>
-                        <h3 className={styles.recapTitle}>Delivery method</h3>
-                        <button
-                          type="button"
-                          className={styles.recapEdit}
-                          onClick={() => setStep(1)}
-                        >
-                          Edit
-                          <span className={styles.srOnly}> delivery method</span>
-                        </button>
-                      </div>
-                      <p className={styles.recapLead}>{selectedShipping?.name}</p>
-                      {selectedShipping?.description && (
-                        <p className={styles.recapLine}>{selectedShipping.description}</p>
-                      )}
-                      {reviewEta && <p className={styles.recapLine}>{reviewEta}</p>}
-                      <p
-                        className={`${styles.recapLine} ${shippingCost === 0 ? styles.recapFree : ""}`}
-                      >
-                        {shippingCost === 0 ? "Complimentary" : formatCurrency(shippingCost)}
-                      </p>
-                    </section>
-
-                    <section className={styles.recapBlock}>
-                      <div className={styles.recapHead}>
-                        <h3 className={styles.recapTitle}>Payment</h3>
-                        <button
-                          type="button"
-                          className={styles.recapEdit}
-                          onClick={() => setStep(2)}
-                        >
-                          Edit
-                          <span className={styles.srOnly}> payment method</span>
-                        </button>
-                      </div>
-                      {fullyCovered ? (
-                        <>
-                          <p className={styles.recapLead}>
-                            <span className={styles.recapMark} aria-hidden="true">
-                              <WalletMark />
-                            </span>
-                            Store credit
-                          </p>
-                          <p className={styles.recapLine}>
-                            Paid in full with store credit ({formatCurrency(storeCreditApplied)}).
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className={styles.recapLead}>
-                            {SelectedPaymentMark && (
-                              <span className={styles.recapMark} aria-hidden="true">
-                                <SelectedPaymentMark />
-                              </span>
-                            )}
-                            {selectedPaymentOption?.label}
-                          </p>
-                          {storeCreditApplied > 0 && (
-                            <p className={styles.recapLine}>
-                              Store credit &minus;{formatCurrency(storeCreditApplied)}
-                            </p>
-                          )}
-                          <p className={styles.recapLine}>
-                            {paymentMethod === "cod"
-                              ? `${formatCurrency(amountDue)} collected on delivery.`
-                              : `${formatCurrency(amountDue)} charged when you place the order.`}
-                          </p>
-                        </>
-                      )}
-                    </section>
-                  </div>
-
-                  <div className={styles.recapItems}>
-                    <h3 className={styles.blockTitle}>
-                      {itemCount} {itemCount === 1 ? "piece" : "pieces"}
-                    </h3>
-                    <ul className={styles.recapList}>
-                      {cartItems.map((item) => (
-                        <li key={item.id} className={styles.recapItem}>
-                          <div className={styles.recapThumb}>
-                            <img
-                              src={item.image || PLACEHOLDER_IMG}
-                              alt=""
-                              loading="lazy"
-                              onError={onImageError}
-                            />
-                          </div>
-                          <div className={styles.recapItemBody}>
-                            <h4 className={styles.recapItemName}>{item.name}</h4>
-                            {item.variantName && (
-                              <span className={styles.recapItemVariant}>{item.variantName}</span>
-                            )}
-                            <span className={styles.recapItemQty}>
-                              {item.quantity} &times; {formatCurrency(item.price)}
-                            </span>
-                          </div>
-                          <p className={styles.recapItemTotal}>
-                            {formatCurrency(item.price * item.quantity)}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* ── The summary rail ───────────────────────────────────────────
-              Sticky beside the content on desktop; a collapsible band sitting
-              directly above the CTA on phones. */}
-          <aside className={styles.rail} aria-label="Order summary">
-            <div className={styles.railCard}>
-              <button
-                type="button"
-                className={styles.railToggle}
-                onClick={() => setSummaryOpen((open) => !open)}
-                aria-expanded={summaryOpen}
-                aria-controls="checkout-summary-body"
-              >
-                <span className={styles.railToggleLabel}>Order summary</span>
-                <span className={styles.railToggleValue}>
-                  {formatCurrency(storeCreditApplied > 0 || codFee > 0 ? amountDue : total)}
-                </span>
-                <span
-                  className={`${styles.railChevron} ${summaryOpen ? styles.railChevronOpen : ""}`}
-                  aria-hidden="true"
-                >
-                  <ChevronMark />
-                </span>
-              </button>
-
-              <h2 className={styles.railTitle}>Order summary</h2>
-
-              <div
-                id="checkout-summary-body"
-                className={`${styles.railBody} ${summaryOpen ? "" : styles.railBodyCollapsed}`}
-              >
-                <ul className={styles.railItems}>
-                  {cartItems.slice(0, 3).map((item) => (
-                    <li key={item.id} className={styles.railItem}>
-                      <span className={styles.railItemName}>
-                        {item.name}
-                        <span className={styles.railItemQty}> &times;{item.quantity}</span>
-                      </span>
-                      <span className={styles.railItemValue}>
-                        {formatCurrency(item.price * item.quantity)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                {cartItems.length > 3 && (
-                  <p className={styles.railMore}>
-                    +{cartItems.length - 3} more{" "}
-                    {cartItems.length - 3 === 1 ? "piece" : "pieces"}
-                  </p>
-                )}
-
-                <div className={styles.railRule} />
-
-                <div className={styles.railRow}>
-                  <span className={styles.railLabel}>Subtotal</span>
-                  <span className={styles.railValue}>{formatCurrency(subtotal)}</span>
-                </div>
-                {couponDiscount > 0 && (
                   <div className={styles.railRow}>
-                    <span className={styles.railLabel}>Discount ({couponApplied.code})</span>
-                    <span className={`${styles.railValue} ${styles.railDiscount}`}>
-                      &minus;{formatCurrency(couponDiscount)}
+                    <span className={styles.railLabel}>Subtotal</span>
+                    <span className={styles.railValue}>{formatCurrency(subtotal)}</span>
+                  </div>
+                  {couponDiscount > 0 && (
+                    <div className={styles.railRow}>
+                      <span className={styles.railLabel}>Discount ({couponApplied.code})</span>
+                      <span className={`${styles.railValue} ${styles.railDiscount}`}>
+                        &minus;{formatCurrency(couponDiscount)}
+                      </span>
+                    </div>
+                  )}
+                  <div className={styles.railRow}>
+                    <span className={styles.railLabel}>Shipping</span>
+                    <span className={`${styles.railValue} ${shippingCost === 0 ? styles.railDiscount : ""}`}>
+                      {shippingCost === 0 ? "Complimentary" : formatCurrency(shippingCost)}
                     </span>
                   </div>
-                )}
-                <div className={styles.railRow}>
-                  <span className={styles.railLabel}>Shipping</span>
-                  <span className={`${styles.railValue} ${shippingCost === 0 ? styles.railDiscount : ""}`}>
-                    {shippingCost === 0 ? "Complimentary" : formatCurrency(shippingCost)}
-                  </span>
-                </div>
-                <div className={styles.railRow}>
-                  <span className={styles.railLabel}>
-                    Tax ({taxRatePct}%{taxIncluded ? ", included" : ""})
-                  </span>
-                  <span className={styles.railValue}>{formatCurrency(taxAmount)}</span>
-                </div>
-
-                {codFee > 0 && (
                   <div className={styles.railRow}>
-                    <span className={styles.railLabel}>Cash on delivery fee</span>
-                    <span className={styles.railValue}>{formatCurrency(codFee)}</span>
+                    <span className={styles.railLabel}>Tax</span>
+                    <span className={styles.railValue}>{formatCurrency(taxAmount)}</span>
                   </div>
-                )}
 
-                <div className={styles.railRule} />
-
-                <div className={styles.railTotalRow}>
-                  <span className={styles.railTotalLabel}>Total</span>
-                  <span className={styles.railTotalValue}>
-                    {formatCurrency(total + codFee)}
-                  </span>
-                </div>
-
-                {storeCreditApplied > 0 && (
-                  <>
+                  {codFee > 0 && (
                     <div className={styles.railRow}>
-                      <span className={styles.railLabel}>Store credit</span>
-                      <span className={`${styles.railValue} ${styles.railDiscount}`}>
-                        &minus;{formatCurrency(storeCreditApplied)}
-                      </span>
+                      <span className={styles.railLabel}>Cash on delivery fee</span>
+                      <span className={styles.railValue}>{formatCurrency(codFee)}</span>
                     </div>
-                    <div className={styles.railRule} />
-                    <div className={styles.railTotalRow}>
-                      <span className={styles.railTotalLabel}>Amount payable</span>
-                      <span className={styles.railTotalValue}>{formatCurrency(amountDue)}</span>
-                    </div>
-                  </>
-                )}
+                  )}
 
-                {assurances.length > 0 && (
-                  <p className={styles.assurance}>
-                    {assurances.map((line, i) => (
-                      <React.Fragment key={line}>
-                        {i > 0 && <span className={styles.assuranceSep} aria-hidden="true"> · </span>}
-                        {line}
-                      </React.Fragment>
-                    ))}
-                  </p>
-                )}
-              </div>
-            </div>
-          </aside>
+                  <hr className={`sf-hairline ${styles.railRule}`} />
 
-          {/* ── The nav row ────────────────────────────────────────────── */}
-          <div className={styles.nav}>
-            {step > 0 && (
-              <button
-                type="button"
-                className={styles.backBtn}
-                onClick={() => setStep(step - 1)}
-                disabled={isProcessing}
+                  <div className={styles.railTotalRow}>
+                    <span className={styles.railTotalLabel}>Total</span>
+                    <span className={styles.railTotalValue}>
+                      {formatCurrency(total + codFee)}
+                    </span>
+                  </div>
+
+                  {taxSentence && <p className={styles.railNote}>{taxSentence}</p>}
+
+                  {storeCreditApplied > 0 && (
+                    <>
+                      <div className={styles.railRow}>
+                        <span className={styles.railLabel}>Store credit</span>
+                        <span className={`${styles.railValue} ${styles.railDiscount}`}>
+                          &minus;{formatCurrency(storeCreditApplied)}
+                        </span>
+                      </div>
+                      <hr className={`sf-hairline ${styles.railRule}`} />
+                      <div className={styles.railTotalRow}>
+                        <span className={styles.railTotalLabel}>Amount payable</span>
+                        <span className={styles.railTotalValue}>{formatCurrency(amountDue)}</span>
+                      </div>
+                    </>
+                  )}
+
+                  {assurances.length > 0 && (
+                    <p className={styles.assurance}>
+                      {assurances.map((line, i) => (
+                        <React.Fragment key={line}>
+                          {i > 0 && <span className={styles.assuranceSep} aria-hidden="true"> · </span>}
+                          {line}
+                        </React.Fragment>
+                      ))}
+                    </p>
+                  )}
+                </div>
+              </GlassCard>
+            </aside>
+
+            {/* ── The nav row ──────────────────────────────────────────── */}
+            <div className={styles.nav}>
+              {step > 0 && (
+                <Button
+                  variant="ghost"
+                  icon="mdi:arrow-left"
+                  className={styles.backBtn}
+                  onClick={() => setStep(step - 1)}
+                  disabled={isProcessing}
+                >
+                  Back
+                </Button>
+              )}
+              <Button
+                variant="primary"
+                className={styles.primaryBtn}
+                onClick={handleNext}
+                disabled={isProcessing || cartItems.length === 0}
+                aria-busy={isProcessing || undefined}
               >
-                <BackMark />
-                Back
-              </button>
-            )}
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={handleNext}
-              disabled={isProcessing || cartItems.length === 0}
-              aria-busy={isProcessing || undefined}
-            >
-              {isProcessing
-                ? "Placing your order…"
-                : step === 3
-                ? fullyCovered
-                  ? "Place Order"
-                  : `Place Order — ${formatCurrency(amountDue)}`
-                : step === 0 && !isAuthenticated
-                ? "Login to Continue"
-                : "Continue"}
-            </button>
-            {/* The button goes disabled while the order is created, which takes
-                it out of the focus order — so the state is also spoken here. */}
-            <span role="status" className={styles.srOnly}>
-              {isProcessing ? "Placing your order, please wait." : ""}
-            </span>
+                {ctaLabel}
+              </Button>
+              {/* The button goes disabled while the order is created, which takes
+                  it out of the focus order — so the state is also spoken here. */}
+              <span role="status" className="sf-visually-hidden">
+                {isProcessing ? "Placing your order, please wait." : ""}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

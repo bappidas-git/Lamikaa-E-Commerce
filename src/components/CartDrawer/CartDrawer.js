@@ -12,17 +12,12 @@ import { Icon } from "@iconify/react";
 import { useCart } from "../../hooks/useCart";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
-import {
-  buildCartItem,
-  onImageError,
-  PLACEHOLDER_IMG,
-  productPath,
-} from "../../utils/helpers";
-import { isPriceKnown, resolvePrice, stageSrc } from "../../utils/product";
+import { onImageError, PLACEHOLDER_IMG, productPath } from "../../utils/helpers";
 import { cld } from "../../utils/cloudinary";
 import { ROUTES } from "../../utils/constants";
 import { DURATION, INSTANT, t, tween } from "../../theme/motion";
 import { Button, Drawer, GlassCard } from "../ui";
+import CrossSell from "../cart/CrossSell";
 import QuantityStepper from "../storefront/QuantityStepper";
 import styles from "./CartDrawer.module.css";
 
@@ -33,6 +28,13 @@ import styles from "./CartDrawer.module.css";
 // A 440px tray on `ui/Drawer`: a 64px masthead with the count, a scrolling body
 // (free-shipping meter → lines → "Complete your ritual" → a code → the money)
 // and a pinned foot carrying the two ways out.
+//
+// "COMPLETE YOUR RITUAL" LIVES IN `components/cart/CrossSell` (Prompt 29). The
+// /cart page makes the same suggestion, and one ranking rule in one file is the
+// only way the tray and the page can never disagree about what comes next. The
+// tray still owns the FRAME around it — `.crossSlot` supplies the padding and
+// the seam, because a footnote in a 440px tray wants different air than the
+// same footnote under a two-column page.
 //
 // IT IS `ui/Drawer` NOW (Prompt 12). The hand-rolled focus trap, the Escape
 // handler, the `document.body.style.overflow` lock and the tab-cycling
@@ -86,79 +88,6 @@ export const freeShippingThreshold = (methods) => {
   return bars.length ? Math.min(...bars) : null;
 };
 
-/** The house's own running order, with unranked products last. */
-const heroRank = (product) => {
-  const order = Number(product?.heroOrder);
-  return Number.isFinite(order) && order > 0 ? order : Number.MAX_SAFE_INTEGER;
-};
-
-/**
- * "Complete your ritual" — up to `limit` products worth suggesting next.
- *
- * THE ORDER OF PREFERENCE, best answer first:
- *   1. `frequentlyBoughtTogetherIds` of what is already in the cart — the
- *      merchant's own pairing, walked in cart order.
- *   2. The NEXT step of the ritual in the same category: a cleanse suggests the
- *      polish, the polish suggests the treatment. Nearest step first.
- *   3. Hero order — the house's running order, for a cart that has exhausted
- *      both, and for an EMPTY cart ("Start with"), which reaches this function
- *      with no lines and therefore falls straight through to here.
- *
- * NEVER SUGGESTED: anything already in the cart, and anything whose price is
- * not committed yet. A "Price on launch" product cannot be added, so offering
- * an Add button beside it is an invitation to a dead end.
- */
-export const crossSellFor = (products, cartItems, limit = 2) => {
-  const all = Array.isArray(products) ? products : [];
-  const byId = new Map(all.map((product) => [String(product.id), product]));
-  const inCart = new Set(
-    (cartItems || []).map((line) => String(line.productId))
-  );
-  const lines = (cartItems || [])
-    .map((line) => byId.get(String(line.productId)))
-    .filter(Boolean);
-
-  const picked = [];
-  const seen = new Set();
-  const take = (product) => {
-    if (picked.length >= limit || !product) return;
-    const key = String(product.id);
-    if (seen.has(key) || inCart.has(key) || !isPriceKnown(product)) return;
-    seen.add(key);
-    picked.push(product);
-  };
-
-  // 1. Bought together with what is already there.
-  lines.forEach((product) =>
-    (product.frequentlyBoughtTogetherIds || []).forEach((id) =>
-      take(byId.get(String(id)))
-    )
-  );
-
-  // 2. The next step of the same ritual.
-  lines.forEach((product) => {
-    const step = Number(product.ritualStep?.order);
-    if (!Number.isFinite(step)) return;
-    all
-      .filter(
-        (candidate) =>
-          candidate.categoryId === product.categoryId &&
-          Number(candidate.ritualStep?.order) > step
-      )
-      .sort(
-        (a, b) => Number(a.ritualStep.order) - Number(b.ritualStep.order)
-      )
-      .forEach((candidate) => take(candidate));
-  });
-
-  // 3. The house's running order.
-  [...all]
-    .sort((a, b) => heroRank(a) - heroRank(b))
-    .forEach((candidate) => take(candidate));
-
-  return picked;
-};
-
 /** The plate image for a cart LINE, which stores a bare URL and nothing else. */
 const lineThumb = (item) =>
   item?.image
@@ -174,7 +103,6 @@ const CartDrawer = ({ open, onClose }) => {
   const { formatPrice } = useStoreSettings();
   const {
     cartItems,
-    addToCart,
     updateQuantity,
     removeFromCart,
     getCartTotal,
@@ -189,7 +117,6 @@ const CartDrawer = ({ open, onClose }) => {
   const close = useCallback(() => onClose?.(), [onClose]);
 
   const couponPanelId = useId();
-  const crossSellId = useId();
 
   // ---- Coupon state --------------------------------------------------------
   const [couponCode, setCouponCode] = useState("");
@@ -272,12 +199,6 @@ const CartDrawer = ({ open, onClose }) => {
   const meterValue = hasMeter ? Math.min(subtotal, freeAbove) : 0;
   const meterPercent = hasMeter ? (meterValue / freeAbove) * 100 : 0;
 
-  // ---- Cross-sell ----------------------------------------------------------
-  const crossSell = useMemo(
-    () => crossSellFor(catalogue, cart, 2),
-    [catalogue, cart]
-  );
-
   // A coupon only stays applied while the cart still meets its minimum — drop
   // it (with a note) if the subtotal falls below, mirroring Checkout.
   useEffect(() => {
@@ -331,22 +252,6 @@ const CartDrawer = ({ open, onClose }) => {
     }
   }, [couponPanelOpen]);
 
-  // Adding from the cross-sell must not close the tray or re-open it — the
-  // shopper is already looking at the thing they just changed.
-  const addSuggestion = useCallback(
-    (product) => {
-      try {
-        addToCart(buildCartItem(product), 1, { openDrawer: false });
-      } catch (error) {
-        // buildCartItem throws PRICE_TBA for an uncommitted price — which
-        // crossSellFor has already excluded, so reaching here is a bug in the
-        // filter, not something to surface to the shopper.
-        console.error("Cross-sell add failed:", error);
-      }
-    },
-    [addToCart]
-  );
-
   // ---------------------------------------------------------------------------
   // MOTION — the tray is the primitive's `panel(reduce, "right")`. Rows arrive
   // quietly and leave by collapsing their own height over the base tier, so the
@@ -372,54 +277,15 @@ const CartDrawer = ({ open, onClose }) => {
         },
       };
 
-  const suggestions = crossSell.length ? (
-    <section className={styles.cross} aria-labelledby={crossSellId}>
-      <h3 id={crossSellId} className={`sf-eyebrow ${styles.eyebrow}`}>
-        {isEmpty ? "Start with" : "Complete your ritual"}
-      </h3>
-      <ul className={styles.crossList}>
-        {crossSell.map((product) => {
-          const href = productPath(product);
-          const { price } = resolvePrice(product);
-          return (
-            <li key={product.id} className={styles.crossRow}>
-              {/* The plate repeats the destination of the name beside it, so it
-                  is taken out of the tab ring rather than doubling every stop. */}
-              <Link
-                to={href}
-                className={`sf-plate ${styles.crossPlate}`}
-                onClick={close}
-                tabIndex={-1}
-                aria-hidden="true"
-              >
-                <img
-                  src={stageSrc(product, { w: 160 }) || PLACEHOLDER_IMG}
-                  alt=""
-                  loading="lazy"
-                  onError={onImageError}
-                />
-              </Link>
-              <span className={styles.crossBody}>
-                <Link to={href} className={styles.crossName} onClick={close}>
-                  {product.name}
-                </Link>
-                <span className={styles.crossPrice}>{formatPrice(price)}</span>
-              </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                className={styles.crossAdd}
-                aria-label={`Add ${product.name} to cart`}
-                onClick={() => addSuggestion(product)}
-              >
-                Add
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  ) : null;
+  const suggestions = (
+    <CrossSell
+      products={catalogue}
+      items={cart}
+      limit={2}
+      onNavigate={close}
+      className={styles.crossSlot}
+    />
+  );
 
   return (
     <Drawer

@@ -32,7 +32,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 26 | PDP — media gallery with images and videos | complete | 2026-09-08 | (this commit) | The media column is the real gallery. **`pdp/MediaGallery`** (441 + 324) is one list of images and videos behind one index: a 4:5 plate (1:1 ≤768px) on a gold `GlowWrap`, a crossfaded stage that mounts **only the active row** (so a five-frame product never puts five `<video>` elements on the page), the "Full label / Front panel" toggle wherever a row carries a Cloudinary crop, a "Zoom" button, a live counter, 44px glass arrows and **one** rail — `role="tablist"` with roving tabindex, a 72px column beside the stage from 1025px and a 56px snap strip below it under that. **`pdp/Lightbox`** (448 + 249) is `ui/Modal size="full"` repainted as a flat 96% scrim: the picture at `w_2000` uncropped, wheel / pinch / ± / double-tap zoom from 1× to 4× with the pan clamped to the picture's own edges, ←/→/Esc, swipe, and focus back on the Zoom button. **`hooks/useSwipe`** (108) is pointer-based, ignores vertical gestures (`touch-action: pan-y`), **cancels the browser's native image drag** (without which a mouse drag across a photograph never completes) and works with a mouse. `storefront/ProductGallery.*` **deleted** with its export; `STOREFRONT_CONFIG.gallery` is now `{zoom, lightbox}`. One shared-primitive fix on the way: `Modal`'s `.full .body` had no `flex: 1`, so a full-screen dialog's body was content-height and the lightbox's picture region collapsed to 0 (the search overlay had the same latent bug). 17 new tests. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (22 suites / 250 passed). Browser QA at 360/390/414/768/1024/1280/1440 + touch swipe + keyboard-only + reduced motion: no horizontal scroll, no page errors. |
 | 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | complete | 2026-09-08 | (this commit) | The product page is finished: **nine chapters**, every one of them optional and every one of them printing DATA. `overview · benefits · ingredients · how-to-use · farmer-story · full-ingredients · faqs · reviews · complete-the-ritual`, with the chapter index and the chapter markup reading **one** set of booleans so `ChapterNav` and the document can never disagree. Four new components (`pdp/PackClaims`, `IngredientChapter`, `HowToUse`, `FarmerStory`, 487 lines + 4 modules), `utils/seo.js` 93 → 245 with **`productJsonLd`**, and the three retained blocks rewritten. **Claims discipline held**: `offers` only where `isPriceKnown`, `availability` only where `stock` is a real number, `aggregateRating` only where a real average AND count exist — so on a fresh install **no** graph carries a rating and five of eight carry no offer; the carton's "anti-ageing" line appears exactly once on the page, inside "As printed on the pack". Reviews empty state is now "No reviews yet — Reviews are written by customers from My Orders after delivery."; the flag flip was exercised and reverted. `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 276 passed / 50 skipped (26 new). Browser QA at 360/390/414/768/1024/1280/1440 — **`scrollWidth === clientWidth` at every one** after two container-vs-viewport fixes the browser found. See "Prompt 27 record" below. |
 | 28 | Content pages from siteContent | complete | 2026-09-08 | (this commit) | **Five pages, one source of copy.** `/about`, `/why-lamikaa`, `/faq`, `/contact` and `/policies/:policy` are built from `siteContent` and render **not one narrative sentence typed into JSX** — only UI furniture ("Our Story", "Contents", "Send message"). **Seven old page folders deleted** (6,844 lines of Meghali-era JSX + CSS, four of them four copies of one document stylesheet); the four policy routes collapse into **one param route** and `/policies/other` renders a real 404. New: `utils/policyClauses.js` (the tax / COD / returns / shipping-method clauses a policy cannot carry in stored prose), `hooks/useSiteContent.js`, `utils/seo.js` + `faqPageJsonLd`. **The old Terms page's three hard-coded rupee shipping rates are gone and cannot come back** — rates are live data or nothing. Browser QA in Chromium at 360/390/414/768/1024/1280/1440: **no horizontal scroll on any of the five page types**, deep links `/faq#faq-7` and `#group-orders` open and focus the right row, the contact form posts a lead with the same seven keys, and the Terms clause re-words itself when Settings change (verified against a patched settings record, then reverted). `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 313 passed / 50 skipped (**37 new**). See "Prompt 28 record" below. |
-| 29 | Cart page and checkout restyle | pending | | | |
+| 29 | Cart page and checkout restyle | complete | 2026-09-08 | (this commit) | `/cart` is a real page and `ComingSoon` has no route left (`grep -n "ComingSoon" src/App.js` → **0**). `components/cart/CrossSell.{js,module.css}` is "Complete your ritual" lifted out of the drawer whole — `crossSellFor` and the row markup now have ONE home and the tray and the page cannot disagree about what comes next. `pages/Cart/Cart.{js,module.css}` (482 + 508) is the two-column page: line items at 96px→112px of plate on the left, a sticky `GlassCard strong` summary on the right (subtotal · the drawer's coupon disclosure verbatim · discount · "Shipping and taxes calculated at checkout" · Checkout · Continue shopping · `LegalNote compact`), the cross-sell under the items, and below 769px one column with a 64px glass thumb bar — **`BottomNav` now stands down on `/cart` as well as `/product/*`** (verified: BottomNav nodes = 0 on `/cart`, 1 on `/shop` and `/checkout`). `Checkout.module.css` **rewritten from scratch**, 2 107 → 1 492 lines, on the shared primitives; `Checkout.js` edited for markup, classes and copy ONLY — the money block, the `orderData` payload, `STEPS`, `couponDiscountFor`, `etaFor`, `applyCoupon`/`removeCoupon`, `validateAddress`, `PAYMENT_OPTIONS` and `assurances` were diffed byte-for-byte and are **IDENTICAL**. Two additive guards only: the step-0 TBA drop and the order-failure alert. `grep -n "silk\|weave\|loom\|&#8377;" src/pages/Checkout/Checkout.js` → **0**. Measured live: inputs 48px, option cards 64px, CTA 52px, step chips 36px, `scrollWidth === clientWidth` at 360/390/414/768/1024/1280/1440 on both pages. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` **27 suites passed / 1 skipped (313 passed)**. Two real orders placed end to end in mock mode (COD, then coupon + store credit) — see the Prompt 29 record. **`git status db.json` clean.** |
 | 30 | Auth, account, orders and wishlist restyle | pending | | | |
 | 31 | Order confirmation, offers, search results and state consistency | pending | | | |
 | 32 | Admin rebrand and shell | pending | | | |
@@ -352,6 +352,19 @@ Record every decision a prompt had to make that the reference files did not sett
 - `28 · 2026-09-08 · `WHY_CHOOSE_US` and `POLICY_LAST_UPDATED` were deleted from `utils/constants.js` · Both had exactly one consumer each among the seven deleted pages. `WHY_CHOOSE_US` re-shaped `brand.pillars` for the Contact rail, which now mounts `<Pillars compact/>` reading the same config and owning its own glyphs; `POLICY_LAST_UPDATED` was one hard-coded date shared by four hard-coded documents, replaced by each record's own `updatedAt`. Comments left in place of both, per the file's own habit.`
 - `28 · 2026-09-08 · `ROUTES.POLICY` (`/policies/:policy`) was ADDED and the four explicit policy constants KEPT · App.js mounts one route; every link still names its document (`ROUTES.POLICY_TERMS`) rather than building a path, and `LegacyRedirects` still maps `/privacy`, `/terms`, `/refund`, `/cookies` onto those same four constants. One route, four names, no path typed at a call site.`
 - `28 · 2026-09-08 · `PolicyPage` splits into a route component and a document component · The unknown-slug case has to return `NotFound` BEFORE anything reads a record or claims the document head; a guard inside one component would have to run after every hook, so `/policies/other` would publish the policy page's `<title>` and canonical for a frame and then let `NotFound`'s own `useSeo` overwrite them.`
+- `29 · 2026-09-08 · The mobile cart carries a 64px sticky glass bar and the BottomNav STANDS DOWN on /cart — the summary CTA is not duplicated · The prompt allowed either a hidden tab bar (as the PDP does) or stacking with the CTA duplicated "only if the page is taller than 2 viewports". Measured at 390x844 with the seeded catalogue: a two-line cart plus the summary card plus the cross-sell is 2 848px = 3.4 viewports, so the duplication clause was live — but stacking is what it buys, and two 64px bars take 128px off a 640px screen, leave the tab labels reading as part of the Checkout control, and put the same word twice within 60px of itself. `hidesBottomNav()` (components/BottomNav/BottomNav.js) therefore gained `pathname === ROUTES.CART` beside `/product/*`, and the summary card's own Checkout button is the SECOND appearance the clause asked for — it sits in the flow, not in a second bar. Navigation stays a tap away in the masthead at every width, exactly as on a product page. Unit-tested in PurchasePanel.test.js.`
+- `29 · 2026-09-08 · Country stays a read-only "India" on the checkout address form — recorded as an OWNER decision to revisit before shipping abroad · Pre-existing behaviour, preserved verbatim (`#ship-country` is `readOnly` with `value={shippingAddress.country}` seeded "India"). It is honest today: the only seeded shipping method quotes no international rate, `settings.payment` describes COD "across most pin codes in India", and `validateAddress` has no country rule to enforce. The field is annotated in `Checkout.js` at the input. Turning it into a select is a data change (shipping methods per country, tax treatment per country), not a markup change, so it is out of this prompt's scope.`
+- `29 · 2026-09-08 · `crossSellFor` moved to `components/cart/CrossSell.js` and the drawer's test import moved with it · `CartDrawer.test.js` imported both pure functions from `./CartDrawer`; `freeShippingThreshold` is still the tray's own (the meter is a drawer feature), but the ranking now belongs to the shared component. Re-exporting it from the drawer would have left two import paths for one function and no reason to prefer either.`
+- `29 · 2026-09-08 · `CrossSell` takes `products` as a PROP and never fetches · The drawer reads the catalogue once per mount into a ref (Header keeps the tray mounted for the whole session, so forty opens cost one request); the page reads it with its own mount lifecycle. A fetch inside the shared component would have replaced one cached read with two uncoordinated ones and made the function untestable without mocking axios.`
+- `29 · 2026-09-08 · The cart page's line row is NOT the drawer's row extracted · The two share an anatomy, not a layout: 72px of plate inside 440px of tray versus 96–112px inside a 1.4fr column, a name that clamps at two lines in both but at `--sf-text-sm` in one and `--sf-text-base` in the other. One component parameterised over both would be two layouts wearing one name. What genuinely IS one thing — the ranking, the plate/name/price/Add row, the coupon disclosure's gestures — is shared.`
+- `29 · 2026-09-08 · The step-0 CTA reads "Sign in to continue" for a guest, not one of the four step labels · The prompt's copy list names "Continue to shipping" for step 0, but the auth gate is a PRESERVED behaviour: pressing the button opens `openAuthModal("login")` and does not advance. A button that says where it is going and then does not go there is the one copy change worth making against the list. The four step labels are exact everywhere they are honest.`
+- `29 · 2026-09-08 · The order-failure alert also covers `result.success === false`, not only a thrown error · `OrderContext.createOrder` catches its own failures and returns `{ success: false }` — it does not throw — so an alert wired only to the `catch` would never have fired, and the acceptance criterion ("shows when JSON Server is stopped at the last step") would have failed. Verified by killing the API between the review step and Place order: the panel appears, the CTA stays put, and the page never navigates. `createOrder`'s own SweetAlert modal is untouched; the panel is the part that persists after it is dismissed.`
+- `29 · 2026-09-08 · The TBA guard drops the line and BLOCKS the step rather than dropping it silently and continuing · A cart that changes under the shopper between one press and the next screen is worse than a press that does nothing. It fires one toast naming what left and why, and the second press then advances. Nothing in the UI can create such a line (`buildCartItem` throws PRICE_TBA and every Add is disabled before it) — a cart restored from localStorage or merged from the API can.`
+- `29 · 2026-09-08 · The rail's tax line is "Tax" + the amount with `fillCopy("Prices are {taxNote}.")` under the total, replacing "Tax (0%, included)" · The seeded store is tax-inclusive at rate 0, and "Tax (0%, included)" is a receipt line that states a rate the packs deliberately do not state. `{taxNote}` is the store's own sentence and already reads "inclusive of all taxes" for that pair, "inclusive of 18% tax" or "exclusive of 18% tax, which is calculated at checkout" for the others — the same words the PDP and the policies use. The `taxAmount` row itself is unchanged and still always rendered.`
+- `29 · 2026-09-08 · Every radio and checkbox keeps a REAL control, visually hidden inside its own label · The option cards are `<label>`s carrying a clipped `<input>` plus a drawn `.box`; the card shows the focus ring through `:focus-within`, the selection through a gold ring AND a filled indicator (never colour alone). Verified with the keyboard: 16 tabs to the step-0 CTA with a visible ring, Enter advances the step, ArrowDown moves the payment selection card to card.`
+- `29 · 2026-09-08 · `.card` / `.railCard` / `.credit` drop their backdrop filter under 769px · DESIGN_SYSTEM §4 allows two blurred layers in view; a full-height step card, a summary card and a violet credit card all blurring a live scrolling page is three. Below 769px they sit on `--sf-color-surface` with their hairline. Each selector is doubled (`.card.card`) so the ground beats GlassCard's own whichever order the two sheets land in.`
+- `29 · 2026-09-08 · `/checkout` gained `padding-bottom: 64px + safe-area` below 769px · The BottomNav does NOT stand down on `/checkout` (its CTA is in the flow, not pinned), and the old sheet cleared the bar with `--sf-space-24` on `.page`. The rewrite states the reason instead of the number.`
+
 
 ## Open TODOs
 
@@ -3661,3 +3674,134 @@ expected `ERR_CONNECTION_RESET` on the external placeholder images:
 
 Nothing of the content pages. `/cart` is the last `ComingSoon` stub, and the cart drawer's
 "View cart" is already pointing at it.
+
+
+## Prompt 29 record (2026-09-08)
+
+### What was built
+
+**`src/components/cart/CrossSell.{js,module.css}` (216 + 111) — new.** "Complete your ritual" /
+"Start with", lifted out of `CartDrawer` whole: `crossSellFor` (the three-tier ranking — the
+merchant's own `frequentlyBoughtTogetherIds` first, then the next step of the same ritual, then
+hero order; never a line already in the cart and never an uncommitted price) plus the row markup
+(56px plate → name → price → one compact Add). Props: `products`, `items`, `limit`, `title`,
+`headingLevel`, `variant: "drawer" | "page"`, `onNavigate`, `className`. The caller owns the
+CATALOGUE (`products` is a prop — the tray's ref cache and the page's mount lifecycle both survive)
+and the FRAME (`.cross` sets no padding and draws no seam; `CartDrawer.module.css .crossSlot` and
+`Cart.module.css .cross` supply those). `addToCart(buildCartItem(p), 1, { openDrawer: false })`
+moved in with it, so neither surface pops a drawer over the thing the shopper is already reading.
+
+**`src/pages/Cart/Cart.{js,module.css}` (482 + 508) — new, replacing the last `ComingSoon` stub.**
+`useSeo({ title: "Your cart", noindex: true })`; `SectionHeading as="h1"` with eyebrow "Cart",
+title "Your cart" and the live "{n} items" lede. From 1025px the layout is `1.4fr 1fr`: on the left
+the line items (96px plate → 112px at 1025px, name as a link to the PDP, variant, unit price,
+`QuantityStepper` capped by real stock, line total, one remove mark taken out of the flow so the
+plate sets the row height, `AnimatePresence` collapse on removal), then the cross-sell; on the right
+a sticky `GlassCard strong` at `top: 96px` carrying subtotal, the drawer's coupon disclosure
+GESTURE FOR GESTURE (collapsed until asked for, held open while it has something unread to say,
+auto-dropped with a note when the cart falls under the coupon's minimum), the discount row,
+"Shipping and taxes calculated at checkout", `Button primary block` Checkout, `Button ghost block`
+Continue shopping and `LegalNote compact`. **There is no Total** — the same refusal the tray makes,
+for the same reason. Below 769px: one column, the summary card after the items, and a 64px
+`sf-glass sf-glass--strong` thumb bar (Subtotal + Checkout) at `--sf-z-stickybar`. Empty state:
+eyebrow "Your cart is empty", a `GlassCard` (Prompt 31 formalises `ui/EmptyState`), "Continue
+shopping" to `/shop`, and the cross-sell's "Start with".
+
+**`src/pages/Checkout/Checkout.module.css` — rewritten from scratch, 2 107 → 1 492 lines.** The old
+sheet dressed a hand-rolled stepper, hand-rolled buttons and hand-rolled cards; this one dresses
+`ui/Button`, `ui/Chip`, `ui/GlassCard`, `ui/SectionHeading`, `.sf-plate` and `.sf-hairline` and adds
+only what a shared class cannot know. `grid-template-areas` states once that the nav row sits under
+the CONTENT column and never under the rail: `"steps rail" / "nav rail"` at
+`minmax(0,1fr) 320px` from 769px and `minmax(0,1fr) 380px` (48px column gap) from 1025px, one
+column with the collapsible summary band below.
+
+**`src/pages/Checkout/Checkout.js` — markup, classes and copy only.** Step line: four
+`Chip variant="step"` numerals at 36px joined by hairlines that carry the signature gradient behind
+you, a gold check on a completed step, `aria-current="step"` on the current one. Each step is a
+`GlassCard padding="lg"`. Inputs are 48px on `--sf-color-surface-2` with a gold focus ring and an
+error said in words beside `mdi:alert-circle-outline` (`aria-invalid` unchanged). Every radio and
+checkbox is a real control clipped inside a `<label>` option card of at least 64px, which shows the
+focus ring through `:focus-within` and the selection through a gold ring AND a filled indicator.
+Store credit is the page's one violet-glow card; payment methods are cards that open their own mock
+form. The rail is a sticky `GlassCard strong` on a desktop and the same markup as a collapsible
+glass bar below 769px, showing item plates, subtotal, discount, shipping, tax, the COD fee, the
+total, store credit and the amount payable. Nav row: `Button ghost` Back + one primary 52px CTA
+("Continue to shipping" / "Continue to payment" / "Review order" / "Place order"), `aria-busy` and
+a `role="status"` line while processing.
+
+**Copy fixes.** "Delivered across India in insured silk packaging.", "Choose a weave and it waits
+here" and the loom illustration (and its `--empty-*` aliases) are gone; "pieces" is "items";
+`currencySymbol` from settings replaces the hard-coded `&#8377;` on the store-credit field; the
+phone placeholder is "+91 …"; the tax line is "Tax" + `fillCopy("Prices are {taxNote}.")`.
+`grep -n "silk\|weave\|loom\|&#8377;" src/pages/Checkout/Checkout.js` → **0**.
+
+**Routes.** `/cart` → `Cart` (lazy). `ComingSoon` has no route left —
+`grep -n "ComingSoon" src/App.js | wc -l` → **0** (Prompt 31 deletes the folder).
+
+### The two additive guards (the only logic added)
+
+1. **The TBA guard, step 0.** `isChargeable(item)` is `Number.isFinite(price) && price > 0`;
+   `dropUnpricedLines()` removes every failing line, fires one toast naming what left and why, and
+   returns `true`, which stops `handleNext` advancing. Nothing in the UI can create such a line
+   (`buildCartItem` throws `PRICE_TBA`, every Add is disabled before it), but a cart restored from
+   localStorage or merged from the API can — and a zero-price line would check out free.
+   **Verified**: a seeded cart of one priced line and one at `price: 0` shows 2 rows, the first
+   press drops the bad one and stays on step 0 with the toast "Removed from your order — One item
+   has no price yet and cannot be checked out.", the second press advances.
+2. **The order-failure alert.** `orderFailed` state → a `role="alert"` `GlassCard` reading "We
+   couldn't place your order. Nothing was charged. Please try again." with a Try again button that
+   re-runs `placeOrder`. Wired to BOTH the `catch` and `result.success === false`, because
+   `OrderContext.createOrder` catches its own failures and returns rather than throwing.
+
+### What did NOT change, proved rather than asserted
+
+Diffed byte-for-byte against `HEAD:src/pages/Checkout/Checkout.js`, all **IDENTICAL**: the money
+block (`subtotal` → `couponDiscount` → `shippingCost` → `taxableBase` → `taxAmount` → `total` →
+`maxApplicableCredit` → `storeCreditApplied` → `amountPayable` → `fullyCovered` → the COD bounds →
+`codFee` → `amountDue`), the whole `orderData` payload, `STEPS`, `couponDiscountFor`, `describedBy`,
+`etaFor`, `applyCoupon`/`removeCoupon`, `validateAddress` (all seven required fields),
+`PAYMENT_OPTIONS` and `assurances`. Every remaining hunk in the file is an import, a presentational
+helper (`lineThumb`, `stockCap`, `isChargeable`, `FieldError`), markup, a class name, copy, the
+extracted `ctaLabel`, or one of the two guards above.
+
+### Verification (mock mode, JSON Server on :3001, Chromium)
+
+- **Two real orders placed end to end**, both landing on `/order-confirmation/<orderNumber>`:
+  - COD: `subtotal 739 · discount 0 · shipping 0 · tax 0 · codFee 0 · total 739 · storeCreditUsed 0
+    · amountPayable 739 · cod / pending / unfulfilled / pending`, with the matching `payments` row.
+  - Coupon + store credit: `SAMPLE10` → `discountAmount 74`, `total 665`, `storeCreditUsed 390`,
+    `amountPayable 275`, `card / paid`. **`coupons[0].usedCount` 0 → 1**, `users[0].storeCredit`
+    390 → 0, and a `walletTransactions` debit of 390 quoting the order number.
+- **COD rules.** With the seeded `codMaxOrder: 0` (normalised to "no maximum") COD is selectable and
+  its form reads "collected at the door". Setting `codMaxOrder: 100` in settings put a 665 order out
+  of range: the COD row went disabled with "Available for orders up to ₹100.00" and the selection
+  **reset itself to card**.
+- **Address validation.** Clearing the three prefilled fields and pressing Continue produced
+  **7 `aria-invalid="true"` controls and 7 "Required" messages**; `#ship-country` is `readOnly` and
+  reads "India"; `#ship-phone` placeholder is "+91 …". Saved-address radios and "Add new address"
+  behave as before (the seeded customer's Home address is preselected and carries the Default chip).
+- **Tax wording.** With the seed (`taxIncluded: true`, `taxRate: 0`) the rail prints "Prices are
+  inclusive of all taxes."
+- **The failure alert.** JSON Server killed between the review step and Place order: the panel
+  appears with its Try again button, the URL stays `/checkout`, nothing navigates.
+- **`/cart`.** Empty state, line editing, `SAMPLE10` (chip + "Discount (SAMPLE10)" row, both
+  surviving a quantity change), the cross-sell, and the link to `/checkout`.
+- **BottomNav.** Nodes on the page: `/shop` 1, `/checkout` 1, `/cart` **0**, `/product/*` **0**.
+- **Measured live**: inputs `48px`, option cards `min-height 64px`, CTA `min-height 52px`, step chips
+  `36px`. `scrollWidth === clientWidth` at **360 / 390 / 414 / 768 / 1024 / 1280 / 1440** on both
+  `/cart` and `/checkout`.
+- **Keyboard only**: 16 tabs reach the step-0 CTA with a visible ring, Enter advances to Shipping,
+  a focused shipping radio lights its option card's ring, ArrowDown moves the payment selection.
+- **`prefers-reduced-motion: reduce`**: both pages render and swap steps instantly.
+- `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false`
+  **27 suites passed / 1 skipped — 313 passed, 50 skipped**. `CartDrawer.test.js` now imports
+  `crossSellFor` from `../cart/CrossSell` and `PurchasePanel.test.js` asserts `hidesBottomNav`
+  covers `/cart`.
+- **`git status db.json` clean** — the QA orders, payments, wallet rows and the `codMaxOrder` change
+  were all reverted.
+
+### Left for Prompt 30
+
+Nothing of the cart or the checkout. `pages/_ComingSoon/` is now unreferenced and is Prompt 31's to
+delete; the empty states on both pages are the `GlassCard` that Prompt 31 will formalise as
+`ui/EmptyState`.

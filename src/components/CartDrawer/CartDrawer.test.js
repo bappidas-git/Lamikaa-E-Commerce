@@ -1,4 +1,4 @@
-// The two decisions the cart tray makes on its own — which bar the free-shipping
+// The two decisions the cart makes on its own — which bar the free-shipping
 // meter races towards, and what "Complete your ritual" offers next — are pure
 // functions so they can be pinned down here rather than by clicking.
 //
@@ -6,7 +6,11 @@
 // a real axios client; nothing in this file calls it.
 jest.mock("../../services/api", () => ({ __esModule: true, default: {} }));
 
-import { crossSellFor, freeShippingThreshold } from "./CartDrawer";
+import { freeShippingThreshold } from "./CartDrawer";
+// The ranking moved to components/cart/CrossSell in Prompt 29 (the /cart page
+// renders the same list); the tests for it move with it rather than reaching
+// back through the drawer that no longer owns it.
+import { crossSellFor } from "../cart/CrossSell";
 
 // A miniature of the seeded catalogue: two priced products, one still on
 // "Price on launch", and a ritual that runs cleanse → polish → treat.

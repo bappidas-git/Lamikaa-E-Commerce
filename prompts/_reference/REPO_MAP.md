@@ -207,7 +207,7 @@ Highlights that shape the prompts:
 - `Header.js` (709): sticky masthead + measured **priority nav** (category links from `getMainMenuCategories`, editorial links `?sort=newest|popular|discount`, "Today's Deals"), hover/focus **collection panels**, MUI user menu, hosts `AnnouncementBar`, `TrustStrip`, `CartDrawer`, `SidebarMenu`, `AuthModal`, `SearchModal`, `CategoriesDrawer`. Theme toggle at 466-477. Logo constant `LOGO_SRC` (old wordmark).
 - `HeroSection.js` (Prompt 07: ~575): the pre-rebuild carousel (gradient/image/video backgrounds, banked-time autoplay, ←/→ keys, `aria-roledescription="carousel"`, reduced-motion aware, "openers" category row). **Its slides now come from `products.getHeroProducts()`** through a temporary `productSlide()` adapter — headline `heroHeadline`, subtitle `heroSubtext`, CTA "Explore the {shortName}" → `productPath(p)`, background `stageSrc(p, { w: 1600, ar: "16:9" })`. Prompt 14 deletes the file.
 - `SearchModal.js` (848): module-level catalogue cache, `scoreProduct()` relevance, category chips, recent searches (localStorage-free? it uses its own storage helpers), trending rail; hard-coded silk terms at 20-34, 633, 688.
-- `CartDrawer.js` (659 → 736, **rewritten by Prompt 12**): a 440px glass tray on `ui/Drawer` (its own trap, Escape handler and scroll lock deleted). 64px masthead with a count chip; body = free-shipping meter → 96px lines → "Complete your ritual" → "Have a code?" → the money; 128px pinned foot (Checkout / View cart / "Secure checkout"). The meter's bar is the lowest `freeAbove` across the ACTIVE `shipping_methods`, read live and cached in a ref, and is not rendered at all when no method sets one — `FREE_SHIPPING_THRESHOLD` and the `FLAT_SHIPPING=99` flat rate are both gone, and no delivery charge is previewed (checkout owns it). Coupon apply/remove via `apiService.coupons.validate` and the auto-drop-below-minimum rule are unchanged. Two pure exports, `freeShippingThreshold()` and `crossSellFor()`, are unit-tested in `CartDrawer.test.js`.
+- `CartDrawer.js` (659 → 736, **rewritten by Prompt 12**): a 440px glass tray on `ui/Drawer` (its own trap, Escape handler and scroll lock deleted). 64px masthead with a count chip; body = free-shipping meter → 96px lines → "Complete your ritual" → "Have a code?" → the money; 128px pinned foot (Checkout / View cart / "Secure checkout"). The meter's bar is the lowest `freeAbove` across the ACTIVE `shipping_methods`, read live and cached in a ref, and is not rendered at all when no method sets one — `FREE_SHIPPING_THRESHOLD` and the `FLAT_SHIPPING=99` flat rate are both gone, and no delivery charge is previewed (checkout owns it). Coupon apply/remove via `apiService.coupons.validate` and the auto-drop-below-minimum rule are unchanged. Two pure exports, `freeShippingThreshold()` and `crossSellFor()`, are unit-tested in `CartDrawer.test.js`. **Updated by Prompt 29**: the cross-sell (markup and `crossSellFor` both) moved to `components/cart/CrossSell` and is now shared with the `/cart` page — the tray renders `<CrossSell products={catalogue} items={cart} limit={2} onNavigate={close} className={styles.crossSlot}/>` and keeps only the padding and the seam around it. 736 → 600 lines, its sheet 569 → 514; `freeShippingThreshold()` stays here (the meter is a tray feature) and the test file imports each function from its own home.
 - `SidebarMenu.js` (682): mobile drawer with recursive category accordion, account links, **theme switch** at 609-636, TrustStrip, legal links.
 - `Footer.js` (445): newsletter (`apiService.leads.createNewsletter`), brand+contact, four columns, promises + payment marks, colophon; old white logo at 45.
 - `storefront/*` (13 atoms exported from `index.js` — 12 from Prompt 26, which deleted `ProductGallery`): `ProductCard` (props `product, onAddToCart, onToggleWishlist, isWishlisted, showAddToCart`), `ProductGallery` (props `images, alt, discount, zoom, ribbon, inStock` — images only; **deleted by Prompt 26**, replaced by `pdp/MediaGallery`), `AddToCartBar` (mobile sticky), `PriceBlock`, `QuantityStepper`, `VariantSelector` (+ `variantUtils.js`), `TrustBadges` (config-driven from `tokens.js`), `DeliveryReturnsInfo`, `ReviewsSection`, `RelatedProducts`, `FrequentlyBoughtTogether`, `SocialProof`, `StarRating`.
@@ -1152,7 +1152,7 @@ home page's band around it.
 - `Home.js` (710): hero + collection stories + featured grid + offers rail (with admin countdown) + heritage band + trending rail + recently-viewed rail (localStorage `recentlyViewed`, reconciled against the live catalogue) + promises row.
 - `Products.js` (1661): URL-backed catalogue — params `category` (slug or legacy id, parent-includes-children via `getCategoryScopeIds`), `search`, `sort` (`relevance|price-low|price-high|newest|rating|popularity` + 12 aliases), `page`, `per_page`, `min_price`, `max_price`, `highlight` (featured/trending/hot); session-only facets rating/discount/in-stock/brand/**fabric** (`FABRIC_FAMILIES` Muga/Pat/Eri/Toss/Cotton); filter drawer with focus trap; skeleton/error/empty states; heading default "All Silk".
 - `ProductDetails.js` (1146): slug + legacy numeric-id resolution with canonical redirect; `ProductGallery` from `product.images`; buy box (SocialProof, PriceBlock, key features, VariantSelector, QuantityStepper, Buy Now/Add to Cart/wishlist, TrustBadges, DeliveryReturnsInfo); promises band; tabs Description / Specifications (`SILK_SPEC_LABELS`) / Fabric & Craft (conditional) / Reviews / FAQs (`useFaqs().forProduct`); FBT + Related rails; `AddToCartBar`; writes `recentlyViewed`; owns the tab title via `setPageTitle` and hand-writes `meta[name=description]`.
-- `Checkout.js` (1656): 4 steps Cart → Shipping → Payment → Review; address book + inline form (required: firstName, lastName, phone, addressLine1, city, state, postalCode; country fixed "India"); shipping methods from API (free above `freeAbove`); coupon; tax inclusive/exclusive; store credit (`wallet.getBalance`); COD rules from settings (`codEnabled/codMinOrder/codMaxOrder/codFee`); payment methods `card|upi|net_banking|wallet|cod` (mock forms, no gateway); `createOrder()` from OrderContext then `navigate('/order-confirmation/'+orderNumber)`.
+- `Checkout.js` (1656; **restyled by Prompt 29 — see the block below; every rule listed here still holds**): 4 steps Cart → Shipping → Payment → Review; address book + inline form (required: firstName, lastName, phone, addressLine1, city, state, postalCode; country fixed "India"); shipping methods from API (free above `freeAbove`); coupon; tax inclusive/exclusive; store credit (`wallet.getBalance`); COD rules from settings (`codEnabled/codMinOrder/codMaxOrder/codFee`); payment methods `card|upi|net_banking|wallet|cod` (mock forms, no gateway); `createOrder()` from OrderContext then `navigate('/order-confirmation/'+orderNumber)`.
 - `OrderConfirmation.js` (548): `/order-confirmation/:orderNumber`, payment-status-aware, confetti (reduced-motion aware), loading/error/not-found branches.
 - `OrderHistory.js` (1179): search/filter/paginate (5/page), 3-stage timeline, tracking drawer, details drawer, cancel (`orders.cancel`), return (→ `/support` within 7 days), reorder, **review submission** via `ReviewModal` (`reviews.submit`), refund states.
 - `Profile.js` (1429): dashboard + sections Profile (edit; email read-only), Addresses (CRUD via `updateUser({addresses})`), Payment (empty state), Wallet (`wallet.getBalance/getTransactions`), Notifications (coming soon), Settings (**Appearance theme switch** at 1064-1080 + password change with strength meter). Duplicates `deriveOrderStatus` from OrderHistory.
@@ -1778,6 +1778,89 @@ deleted** (6,844 lines).
   renamed".
 
 
+**Updated by Prompt 29.** The cart has a page, and the checkout wears the design
+system without a single number moving.
+
+- `pages/Cart/Cart.{js,module.css}` (482 + 508, **new** — it replaces the last
+  `ComingSoon` stub, so `grep -n "ComingSoon" src/App.js` is now **0** and the
+  folder is Prompt 31's to delete). `useSeo({ title: "Your cart", noindex: true })`;
+  `SectionHeading as="h1"` — eyebrow "Cart", title "Your cart", lede "{n} items".
+  From 1025px a `1.4fr 1fr` grid: the lines on the left (a 96px plate, 112px from
+  1025px; the name links to the PDP; variant, unit price, `QuantityStepper` capped
+  by real stock, line total, and a remove mark taken OUT of the flow so the plate
+  sets the row height; `AnimatePresence` collapses a removed row rather than
+  letting the list jump), then the cross-sell; on the right a sticky
+  `GlassCard strong` at `top: 96px` carrying subtotal, the drawer's coupon
+  disclosure gesture for gesture (collapsed until asked for, held open while it
+  has something unread to say, auto-dropped with a note below the coupon's
+  minimum), the discount row, "Shipping and taxes calculated at checkout",
+  `Button primary block` Checkout → `/checkout`, `Button ghost block` Continue
+  shopping → `/shop`, and `LegalNote compact`. **No Total** — the page does not
+  know the delivery address, and the tray already refuses for the same reason.
+  Below 769px: one column, the summary card after the items, and a 64px
+  `sf-glass sf-glass--strong` thumb bar (Subtotal + Checkout) at
+  `--sf-z-stickybar`. Empty: eyebrow "Your cart is empty", a `GlassCard` (Prompt
+  31 formalises `ui/EmptyState`), "Continue shopping", and the cross-sell's
+  "Start with".
+- `components/cart/CrossSell.{js,module.css}` (216 + 111, **new**): "Complete
+  your ritual" extracted from `CartDrawer` — `crossSellFor` (the three-tier
+  ranking, still unit-tested, now imported by `CartDrawer.test.js` from here) and
+  the 56px-plate row, plus the `addToCart(…, { openDrawer: false })` that keeps a
+  drawer from popping over the surface the shopper is already reading. The caller
+  owns the CATALOGUE (`products` is a prop, so the tray keeps its ref cache) and
+  the FRAME (`.cross` sets no padding and draws no seam; the tray's `.crossSlot`
+  and the page's `.cross` supply those). `variant: "drawer" | "page"` picks a
+  column or an `auto-fit` 260px grid. `CartDrawer.js` 736 → 600 and its sheet
+  569 → 514; **its public props, its motion and its money are untouched.**
+- `pages/Checkout/Checkout.module.css` **rewritten from scratch**, 2 107 → 1 492.
+  It dresses `ui/Button`, `ui/Chip`, `ui/GlassCard`, `ui/SectionHeading`,
+  `.sf-plate` and `.sf-hairline` and adds only what a shared class cannot know.
+  `grid-template-areas` says once that the nav row is under the CONTENT column
+  and never under the rail: `"steps rail" / "nav rail"` at `minmax(0,1fr) 320px`
+  from 769px, `minmax(0,1fr) 380px` with a 48px column gap from 1025px, one
+  column with the collapsible summary band below. Step chips 36px, option cards
+  64px, inputs 48px, CTAs 52px pills. `.card` / `.railCard` / `.credit` drop
+  their backdrop filter under 769px (three blurred cards over a scrolling page is
+  one more than DESIGN_SYSTEM §4 allows).
+- `pages/Checkout/Checkout.js` (1 662 → 1 715): **markup, class names and copy
+  only.** Four `Chip variant="step"` numerals joined by gradient hairlines with a
+  gold check behind you and `aria-current="step"`; one `GlassCard padding="lg"`
+  per step; every radio and checkbox a real control clipped inside a `<label>`
+  option card that shows focus through `:focus-within` and selection through a
+  gold ring AND a filled indicator; store credit as the page's one violet-glow
+  card; payment methods as cards that open their own mock form; the rail as a
+  sticky `GlassCard strong` / collapsible glass bar with item plates, subtotal,
+  discount, shipping, tax, COD fee, total, store credit and amount payable; a
+  `Button ghost` Back beside one primary CTA ("Continue to shipping" /
+  "Continue to payment" / "Review order" / "Place order"). Copy: the silk-
+  packaging line, the "choose a weave" empty state and the loom illustration are
+  gone, "pieces" is "items", `currencySymbol` from settings replaces the
+  hard-coded `&#8377;`, the phone placeholder is "+91 …", and the tax line is
+  "Tax" + `fillCopy("Prices are {taxNote}.")`.
+- **PRESERVED, and diffed byte-for-byte to prove it**: the money block (subtotal
+  → coupon → shipping → taxable base → tax inclusive/exclusive → total →
+  `maxApplicableCredit` → `storeCreditApplied` → `amountPayable` → `fullyCovered`
+  → the COD bounds and force-reset → `codFee` → `amountDue`), the whole
+  `orderData` payload, `STEPS`, `couponDiscountFor`, `describedBy`, `etaFor`,
+  `applyCoupon`/`removeCoupon`, `validateAddress` (all seven required fields),
+  `PAYMENT_OPTIONS` and `assurances` — all **IDENTICAL**. Country is still a
+  read-only "India" (an owner decision logged in `PROGRESS.md` to revisit before
+  shipping abroad).
+- **Two additive guards, the only logic added.** (1) A TBA guard at step 0 —
+  `isChargeable()` is `Number.isFinite(price) && price > 0`; a failing line is
+  removed with a toast and the step does not advance. The UI cannot create one
+  (`buildCartItem` throws `PRICE_TBA`), a cart restored from localStorage or
+  merged from the API can, and a zero-price line would check out free. (2) A
+  `role="alert"` failure panel — "We couldn't place your order. Nothing was
+  charged. Please try again." with a Try again button, wired to BOTH the `catch`
+  and `result.success === false`, because `OrderContext.createOrder` catches its
+  own failures and returns rather than throwing.
+- `components/BottomNav/BottomNav.js`: `hidesBottomNav()` now covers
+  `pathname === ROUTES.CART` as well as `/product/*` — `/cart` grows its own
+  64px bar below 769px and two stacked bars take 128px off a 640px screen.
+  Asserted in `PurchasePanel.test.js`.
+
+
 ## 7. Admin panel
 
 - Shell `src/components/AdminLayout/AdminLayout.js` (1015): guard `useAdmin().isAuthenticated` → `<Navigate to="/admin" />`; 260 px MUI Drawer (temporary < 900 px, permanent ≥ 900) with sections Dashboard · Catalogue (Products, Categories, Reviews) · Sales (Orders, Returns, Payments, Coupons, Special Offers) · Storefront (Hero Section, FAQs) · Operations (Shipping, Users, Leads, Settings) · "Back to Store"; AppBar with theme toggle (shared `useThemeContext`), notifications (polls orders+leads every 30 s), avatar menu; `useAdminBodyClass()` adds `body.admin-area`; MUI theme from `buildAdminTheme(mode)` (indigo/slate, `#4f46e5`, `#0b1220`…); logo constants `LOGO_LIGHT/LOGO_WHITE` (old wordmark).
@@ -1841,7 +1924,7 @@ Storefront routes live inside `StorefrontShell` (`DealsConfigProvider` →
 | `/policies/terms` | `pages/TermsOfService/TermsOfService` | 28 |
 | `/policies/shipping-returns` | `pages/RefundPolicy/RefundPolicy` | 28 |
 | `/policies/cookies` | `pages/CookiePolicy/CookiePolicy` | 28 |
-| `/cart` | `ComingSoon prompt="29"` (the drawer is still the cart) | 29 |
+| `/cart` | `pages/Cart/Cart` *(29)* | — |
 | `/checkout` | `pages/Checkout/Checkout` | 29 |
 | `/order-confirmation/:orderNumber` | `pages/OrderConfirmation/OrderConfirmation` | 31 |
 | `/special-offers` | `pages/SpecialOffers/SpecialOffers` | 31 |
@@ -1888,8 +1971,10 @@ rejects a wrapper component there). All redirects `replace`.
 
 ### 9.4 Code splitting and the fallback
 
-`React.lazy` on every page except `Home` — 34 dynamic imports (18 storefront +
-16 admin) producing 51 JS chunks. Both `<Routes>` blocks sit inside
+`React.lazy` on every page except `Home` — **36** dynamic imports (19 storefront
++ 17 admin, the admin shell included) producing **68** JS chunks. (Prompt 28
+added `PolicyPage` and removed six; Prompt 29 added `Cart` and left `ComingSoon`
+unrouted — it is still lazily imported nowhere and Prompt 31 deletes it.) Both `<Routes>` blocks sit inside
 `<Suspense fallback={<RouteFallback />}>`; the storefront's is INSIDE the keyed
 `motion.div`, so the skeleton fades exactly like a page.
 `components/routing/RouteFallback.js` is a `role="status" aria-label="Loading"`
@@ -1926,7 +2011,7 @@ Applied by Prompt 08 to: Home (site defaults), Products (`Shop`, or the category
 name under `/category/:slug`), Wishlist, Orders, Profile, Checkout,
 OrderConfirmation, HelpCenter (`FAQ`), Support (`Contact`), AboutUs,
 SpecialOffers, the four policy pages, NotFound and ComingSoon. Orders, Profile,
-Wishlist, Checkout, OrderConfirmation, NotFound and ComingSoon carry `noindex`.
+Wishlist, Cart, Checkout, OrderConfirmation and NotFound carry `noindex` (`ComingSoon` no longer has a route — Prompt 29).
 The PDP still runs its own hand-rolled title/description effect — Prompt 25
 moves it onto this hook.
 
@@ -1981,7 +2066,9 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/pages/Home/*` | R | New home composition (Prompts 14–22). |
 | `src/pages/Products/*` | **DONE (23)** → `src/pages/Shop/*` | Filter-free chaptered listing; the old page and its CSS are deleted. |
 | `src/pages/ProductDetails/*` | R | New PDP (Prompts 25–27). |
-| `src/pages/Checkout/*`, `OrderConfirmation/*`, `OrderHistory/*`, `Profile/*`, `Wishlist/*`, `SpecialOffers/*` | K | Restyle, logic preserved (Prompts 29–31). |
+| `src/pages/Checkout/*` | **DONE (29)** | Restyled onto the primitives; `Checkout.module.css` rewritten from scratch (2 107 → 1 492) and `Checkout.js` edited for markup, classes and copy only — the money block and the `orderData` payload are byte-identical. Two additive guards (the step-0 TBA drop, the order-failure alert). |
+| `src/pages/Cart/*` | **DONE (29)** — new | The full cart page `/cart` replaces the `ComingSoon` stub; `components/cart/CrossSell` is shared with the drawer. |
+| `src/pages/OrderConfirmation/*`, `OrderHistory/*`, `Profile/*`, `Wishlist/*`, `SpecialOffers/*` | K | Restyle, logic preserved (Prompts 30–31). |
 | `src/pages/AboutUs/*` | **DONE (28)** → `src/pages/About/*` | siteContent-driven story; the old folder and its 861-line stylesheet are deleted. |
 | `src/pages/HelpCenter/*` → `src/pages/Faq/*`, `Support/*` → `Contact/*`, the four policies → `src/pages/Policies/PolicyPage` | **DONE (28)** | siteContent-driven; the four policy routes collapse into one param route, `/policies/other` is a real 404, and `/help` `/support` `/privacy` `/terms` `/refund` `/cookies` still redirect. Six folders deleted. |
 | `src/pages/Admin/*` | K | Rebrand + new fields/screens (Prompts 32–34). |

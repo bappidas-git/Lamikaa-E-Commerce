@@ -40,14 +40,15 @@ import styles from "./BottomNav.module.css";
 // at --sf-z-stickybar (60), which is ABOVE it — the buy action wins the bottom
 // of a product page.
 //
-// NOT ON A PRODUCT PAGE AT ALL (Prompt 25). Below 769px the PDP grows its own
-// sticky bar — the pack, the price and Add to Cart — and two stacked bars take
+// NOT ON A PRODUCT PAGE, AND NOT ON THE CART (Prompts 25, 29). Below 769px both
+// of those routes grow their own sticky bar — the pack, the price and Add to
+// Cart on a PDP; the subtotal and Checkout on /cart — and two stacked bars take
 // 128px off a 640px screen, leave the tab labels reading as part of the buy
 // control, and push the page's own content behind both. The bar therefore
-// stands down on /product/*, which is the ONE route where the thing a visitor
-// came to do lives at the bottom of the screen. Navigation is still a tap away
-// in the masthead (menu, search, cart) at every width. The bar exists only
-// below 769px anyway, so this is a decision about phones and large phones.
+// stands down on exactly the two routes where the thing a visitor came to do
+// lives at the bottom of the screen. Navigation is still a tap away in the
+// masthead (menu, search, cart) at every width. The bar exists only below 769px
+// anyway, so this is a decision about phones and large phones.
 // =============================================================================
 
 const NAV_ITEMS = [
@@ -79,9 +80,10 @@ const overlayIsOpen = () => {
   return Boolean(body?.dataset.drawerOpen || body?.dataset.scrollLock);
 };
 
-/** The one route the bar stands down on — see the note above. */
+/** The two routes the bar stands down on — see the note above. */
 export const hidesBottomNav = (pathname) =>
-  typeof pathname === "string" && pathname.startsWith("/product/");
+  typeof pathname === "string" &&
+  (pathname.startsWith("/product/") || pathname === ROUTES.CART);
 
 const BottomNav = () => {
   const { getWishlistCount } = useWishlist();
