@@ -73,6 +73,10 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalProducts: 0, totalOrders: 0, totalRevenue: 0, totalUsers: 0,
     pendingOrders: 0, pendingReturns: 0, lowStockProducts: 0, activeCoupons: 0,
+    // Prompt 34 — the content counts. Every one is read with `?? 0` below, so a
+    // live backend that has not added them to /admin/dashboard/stats yet leaves
+    // the four tiles at zero rather than printing "undefined".
+    heroProducts: 0, activeRituals: 0, liveAnnouncements: 0, priceOnLaunchProducts: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
@@ -118,6 +122,9 @@ const AdminDashboard = () => {
       </Grid>
       <Grid container spacing={3} sx={{ mt: 0 }}>
         {[1,2,3,4].map((i) => (<Grid item xs={6} sm={3} key={i}><Skeleton variant="rounded" height={72} sx={{}} /></Grid>))}
+      </Grid>
+      <Grid container spacing={3} sx={{ mt: 0 }}>
+        {[1,2,3,4].map((i) => (<Grid item xs={6} sm={3} key={`content-${i}`}><Skeleton variant="rounded" height={72} sx={{}} /></Grid>))}
       </Grid>
       <Grid container spacing={3} sx={{ mt: 0 }}>
         <Grid item xs={12} lg={7}><Skeleton variant="rounded" height={320} sx={{}} /></Grid>
@@ -181,6 +188,60 @@ const AdminDashboard = () => {
             </Box>
           </Paper>
         </Grid>
+      </Grid>
+
+      {/* Storefront content — the collections Prompt 34 made editable. Each tile
+          opens the screen that owns the number, so a zero is one click from the
+          place it is fixed. */}
+      <Grid container spacing={3} sx={{ mt: 0 }}>
+        {[
+          {
+            label: "Hero products",
+            value: stats.heroProducts ?? 0,
+            icon: "mdi:view-carousel-outline",
+            tone: "primary",
+            path: "/admin/hero-section",
+          },
+          {
+            label: "Rituals",
+            value: stats.activeRituals ?? 0,
+            icon: "mdi:spa-outline",
+            tone: "success",
+            path: "/admin/rituals",
+          },
+          {
+            label: "Announcements live",
+            value: stats.liveAnnouncements ?? 0,
+            icon: "mdi:bullhorn-outline",
+            tone: "info",
+            path: "/admin/announcements",
+          },
+          {
+            label: "Price on launch",
+            value: stats.priceOnLaunchProducts ?? 0,
+            icon: "mdi:tag-off-outline",
+            tone: "warning",
+            path: "/admin/products",
+          },
+        ].map((tile) => (
+          <Grid item xs={6} sm={3} key={tile.label}>
+            <Paper
+              elevation={0}
+              sx={(theme) => ({ p: 2, height: "100%", border: "1px solid", borderColor: "divider", cursor: "pointer", "&:hover": { borderColor: theme.palette[tile.tone].main } })}
+              onClick={() => navigate(tile.path)}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Box sx={(theme) => ({ p: 1, bgcolor: alpha(theme.palette[tile.tone].main, 0.12), borderRadius: 1, display: "flex", color: theme.palette[tile.tone].main })}>
+                  <Icon icon={tile.icon} style={{ fontSize: 20 }} />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="caption" color="text.secondary">{tile.label}</Typography>
+                  <Typography variant="h6" fontWeight="bold">{tile.value}</Typography>
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Tables */}
@@ -281,6 +342,8 @@ const AdminDashboard = () => {
             { label: "Add Category", icon: "mdi:shape-plus", path: "/admin/categories" },
             { label: "Shipping Setup", icon: "mdi:truck-outline", path: "/admin/shipping" },
             { label: "View Returns", icon: "mdi:backup-restore", path: "/admin/returns" },
+            { label: "Edit Home Hero", icon: "mdi:view-carousel-outline", path: "/admin/hero-section" },
+            { label: "Manage Content", icon: "mdi:text-box-edit-outline", path: "/admin/content" },
           ].map((qa) => (
             <Button
               key={qa.label} variant="outlined" size="small"

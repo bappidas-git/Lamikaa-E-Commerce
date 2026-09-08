@@ -8,11 +8,11 @@
 //   PRODUCT PAGES  the "FAQs" tab on the PDP. A row with no product targeting
 //                  appears on every product; a row targeted at specific
 //                  products appears only on those, above the general ones.
-//   HELP CENTRE    /faq — the searchable list of answers.
-//   SHARED BLOCK   the reusable "Frequently Asked Questions" section.
+//   FAQ PAGE       /faq — the searchable list of answers, under its headings.
+//   HOME FAQ BLOCK the Frequently Asked Questions section on the home page.
 //
 // A row carries its own placements, so an answer written for one product page
-// need not turn up in the Help Centre, and a policy answer need not be repeated
+// need not turn up on the FAQ page, and a policy answer need not be repeated
 // on every listing.
 //
 // PLACEMENT IS WHERE, GROUP IS WHICH HEADING
@@ -20,7 +20,7 @@
 //   which HEADING it sits under once it is there, on the FAQ page that renders
 //   the collection in sections ("The farmer-owned brand", "Products &
 //   ingredients", "Orders, shipping & returns", "Account"). The two are
-//   independent: a row can be on the help centre and the shared block and still
+//   independent: a row can be on the FAQ page and the home block and still
 //   belong to exactly one group. The vocabulary is data, not code — it lives in
 //   `siteContent.faqPage.groups[].key` so the owner can rename or reorder the
 //   headings without a deploy — so `group` is normalised as a free string with
@@ -52,18 +52,23 @@ export const FAQ_PLACEMENTS = [
     hint: "The FAQs tab on a product page",
   },
   {
+    // Renamed in Prompt 34 to match what the admin can actually click through
+    // to: the page is /faq, and calling it "Help centre" sent owners looking
+    // for a screen that is not in the navigation.
     value: "help",
-    label: "Help centre",
-    short: "Help",
+    label: "FAQ page (/faq)",
+    short: "FAQ page",
     icon: "mdi:lifebuoy",
-    hint: "The searchable answers at /faq",
+    hint: "The searchable answers at /faq, grouped under its headings",
   },
   {
+    // The value stays `home` — it is stored on every seeded row — but the label
+    // says where the block is read rather than that it is "shared".
     value: "home",
-    label: "Shared FAQ block",
-    short: "Shared",
+    label: "Home FAQ block",
+    short: "Home",
     icon: "mdi:frequently-asked-questions",
-    hint: "The reusable Frequently Asked Questions section",
+    hint: "The Frequently Asked Questions section on the home page",
   },
 ];
 
@@ -203,7 +208,7 @@ export const faqLimit = (rows, limit) => {
   return rows.slice(0, Math.floor(cap));
 };
 
-// The Help Centre and the shared block: live rows carrying that placement, and
+// The FAQ page and the home block: live rows carrying that placement, and
 // never a row written for one product in particular.
 //
 // `{ limit }` caps the result AFTER the filtering and the de-dupe, which is the

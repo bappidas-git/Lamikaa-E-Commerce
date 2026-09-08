@@ -96,7 +96,11 @@ const AdminShipping = React.lazy(() => import("./pages/Admin/AdminShipping"));
 const AdminCoupons = React.lazy(() => import("./pages/Admin/AdminCoupons"));
 const AdminSpecialOffers = React.lazy(() => import("./pages/Admin/AdminSpecialOffers"));
 const AdminHeroSection = React.lazy(() => import("./pages/Admin/AdminHeroSection"));
+const AdminAnnouncements = React.lazy(() => import("./pages/Admin/AdminAnnouncements"));
+const AdminContent = React.lazy(() => import("./pages/Admin/AdminContent"));
 const AdminFaqs = React.lazy(() => import("./pages/Admin/AdminFaqs"));
+const AdminConcerns = React.lazy(() => import("./pages/Admin/AdminConcerns"));
+const AdminRituals = React.lazy(() => import("./pages/Admin/AdminRituals"));
 const AdminReviews = React.lazy(() => import("./pages/Admin/AdminReviews"));
 const AdminLeads = React.lazy(() => import("./pages/Admin/AdminLeads"));
 const AdminSettings = React.lazy(() => import("./pages/Admin/AdminSettings"));
@@ -254,13 +258,21 @@ function App() {
                   <CssBaseline />
                   <Suspense fallback={<RouteFallback />}>
                     <Routes>
-                      {/* Admin Routes — paths unchanged by the Prompt 08 IA. */}
+                      {/* Admin Routes — paths unchanged by the Prompt 08 IA.
+                          Child paths are RELATIVE to /admin, so the four screens
+                          Prompt 34 adds mount at /admin/concerns, /admin/rituals,
+                          /admin/announcements and /admin/content. Home & Hero was
+                          rebuilt in place and keeps its historical
+                          /admin/hero-section path — Settings and any bookmark
+                          point at it, and renaming it buys nothing visible. */}
                       <Route path="/admin">
                         <Route index element={<AdminLogin />} />
                         <Route element={<AdminLayout />}>
                           <Route path="dashboard" element={<AdminDashboard />} />
                           <Route path="products" element={<AdminProducts />} />
                           <Route path="categories" element={<AdminCategories />} />
+                          <Route path="concerns" element={<AdminConcerns />} />
+                          <Route path="rituals" element={<AdminRituals />} />
                           <Route path="orders" element={<AdminOrders />} />
                           <Route path="returns" element={<AdminReturns />} />
                           <Route path="payments" element={<AdminPayments />} />
@@ -269,6 +281,8 @@ function App() {
                           <Route path="coupons" element={<AdminCoupons />} />
                           <Route path="special-offers" element={<AdminSpecialOffers />} />
                           <Route path="hero-section" element={<AdminHeroSection />} />
+                          <Route path="announcements" element={<AdminAnnouncements />} />
+                          <Route path="content" element={<AdminContent />} />
                           <Route path="faqs" element={<AdminFaqs />} />
                           <Route path="reviews" element={<AdminReviews />} />
                           <Route path="leads" element={<AdminLeads />} />
