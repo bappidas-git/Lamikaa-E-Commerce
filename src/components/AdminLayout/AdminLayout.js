@@ -76,6 +76,19 @@ const menuItems = [
     path: "/admin/categories",
   },
   {
+    // Prompt 34. The "shop by concern" vocabulary — small, flat and ordered,
+    // and pointed at by slug from every product.
+    title: "Concerns",
+    icon: "mdi:leaf-circle-outline",
+    path: "/admin/concerns",
+  },
+  {
+    // Prompt 34. Routines built from the catalogue: /rituals and /rituals/:slug.
+    title: "Rituals",
+    icon: "mdi:spa-outline",
+    path: "/admin/rituals",
+  },
+  {
     title: "Reviews",
     icon: "mdi:star-outline",
     path: "/admin/reviews",
@@ -118,11 +131,27 @@ const menuItems = [
     isSection: true,
   },
   {
-    // Renamed in Prompt 32; the route stays /admin/hero-section until Prompt 34
-    // rebuilds the screen itself.
+    // Renamed in Prompt 32 and rebuilt in Prompt 34 (hero product ordering +
+    // section settings). The ROUTE keeps its historical `/admin/hero-section`
+    // path: it is the one admin screen with links pointing at it from Settings
+    // and from bookmarks, and renaming a path buys nothing an admin can see.
     title: "Home & Hero",
     icon: "mdi:view-carousel-outline",
     path: "/admin/hero-section",
+  },
+  {
+    // Prompt 34. The line above the masthead — it used to be edited from a
+    // temporary tab on the hero screen.
+    title: "Announcements",
+    icon: "mdi:bullhorn-outline",
+    path: "/admin/announcements",
+  },
+  {
+    // Prompt 34. The editorial copy behind /about, /why-lamikaa, /contact, the
+    // policies and the home page's own sections.
+    title: "Content",
+    icon: "mdi:text-box-edit-outline",
+    path: "/admin/content",
   },
   {
     title: "FAQs",

@@ -3,7 +3,8 @@ import BASE_URL, { IS_MOCK_API } from "./baseURL";
 import brand from "../config/brand";
 import authStorage from "../utils/authStorage";
 import { formatCurrency } from "../utils/helpers";
-import { normalizeProduct, syncProductMedia } from "../utils/product";
+import { isPriceKnown, normalizeProduct, syncProductMedia } from "../utils/product";
+import { isPlaceholder } from "../utils/placeholders";
 
 // Money inside a timeline entry or an error message, in whole units and in the
 // store's own currency (Settings > General) rather than a baked-in rupee sign.
@@ -2083,16 +2084,35 @@ const apiService = {
     },
 
     // --- Dashboard ---
+    /**
+     * The dashboard's counts.
+     *
+     * EXTENDED BY PROMPT 34 with four content counts, so the dashboard reaches
+     * parity with the collections the admin can now edit: how many products are
+     * in the home hero, how many rituals are published, how many announcements
+     * are on the bar RIGHT NOW (active AND inside their schedule window — the
+     * same gate `announcements.getAll()` applies), and how many products still
+     * ship without a price.
+     *
+     * Mock mode derives all four from the collections; the live branch reads
+     * them off the documented `/admin/dashboard/stats` response
+     * (`REPO_MAP.md` §3.4 #21). A live backend that has not added them yet
+     * leaves the four tiles at 0 rather than breaking the screen, because the
+     * dashboard reads each key with `?? 0`.
+     */
     getDashboardStats: async () => {
       try {
         if (IS_MOCK_API) {
-          const [products, orders, users, returns, coupons] = await Promise.all([
-            api.get("/products"),
-            api.get("/orders"),
-            api.get("/users"),
-            api.get("/returns").catch(() => ({ data: [] })),
-            api.get("/coupons").catch(() => ({ data: [] })),
-          ]);
+          const [products, orders, users, returns, coupons, rituals, announcements] =
+            await Promise.all([
+              api.get("/products"),
+              api.get("/orders"),
+              api.get("/users"),
+              api.get("/returns").catch(() => ({ data: [] })),
+              api.get("/coupons").catch(() => ({ data: [] })),
+              api.get("/rituals").catch(() => ({ data: [] })),
+              api.get("/announcements").catch(() => ({ data: [] })),
+            ]);
           const totalRevenue = orders.data.reduce((sum, o) => sum + (o.total || 0), 0);
           const pendingOrders = orders.data.filter((o) => o.fulfillmentStatus === "unfulfilled" || o.paymentStatus === "pending").length;
           // "Pending" = open returns still awaiting admin action: not yet closed
@@ -2101,6 +2121,9 @@ const apiService = {
             (r) => !["rejected", "refunded"].includes(r.status) && !["processed", "completed"].includes(r.refundStatus || "")
           ).length;
           const lowStockProducts = products.data.filter((p) => p.stock <= (p.lowStockThreshold || 10)).length;
+          const rows = Array.isArray(products.data) ? products.data : [];
+          const ritualRows = Array.isArray(rituals.data) ? rituals.data : [];
+          const announcementRows = Array.isArray(announcements.data) ? announcements.data : [];
           return {
             totalProducts: products.data.length,
             totalOrders: orders.data.length,
@@ -2110,6 +2133,25 @@ const apiService = {
             pendingReturns,
             lowStockProducts,
             activeCoupons: coupons.data.filter((c) => c.isActive).length,
+            // --- Prompt 34: the content counts ---
+            heroProducts: rows.filter((p) => p.heroOrder != null).length,
+            activeRituals: ritualRows.filter((r) => r.isActive !== false).length,
+            // Exactly the bar's own gate, so the figure agrees with what a
+            // shopper is reading at this moment rather than with what is merely
+            // switched on: active, inside its window AND printable — a row whose
+            // text is still an unresolved `{{TOKEN}}` is dropped by
+            // AnnouncementBar, so counting it here would overstate the bar.
+            liveAnnouncements: announcementRows.filter(
+              (row) =>
+                isLiveAnnouncement(row) &&
+                typeof row.text === "string" &&
+                row.text.trim() !== "" &&
+                !isPlaceholder(row.text)
+            ).length,
+            // `priceTBA` is normalised from a missing price on read, but this
+            // branch reads the RAW rows (no normalizeProducts) — so the same
+            // rule is applied here rather than trusting a stored flag.
+            priceOnLaunchProducts: rows.filter((p) => !isPriceKnown(p)).length,
           };
         }
         const response = await api.get("/admin/dashboard/stats");
@@ -2233,14 +2275,27 @@ const apiService = {
           // this category, so nothing is left orphaned. (The mock server
           // intentionally does NOT cascade-delete dependents — that would
           // silently destroy real catalogue data.)
+          //
+          // UPDATED BY PROMPT 34 — MEMBERSHIP IS `categoryIds[]` TOO. A product
+          // belongs to a category through its primary `categoryId` OR through
+          // membership of `categoryIds[]` (Prompt 06's multi-category field, and
+          // the same rule `products.getByCategorySlug` reads). Filtering on
+          // `categoryId` alone let a category be deleted out from under every
+          // product that merely listed it, so the whole catalogue is fetched and
+          // both fields are tested here.
           const [catsRes, prodsRes] = await Promise.all([
             api.get("/categories"),
-            api.get("/products", { params: { categoryId: id } }),
+            api.get("/products"),
           ]);
           const children = (Array.isArray(catsRes.data) ? catsRes.data : []).filter(
             (c) => String(c.parentId) === String(id)
           );
-          const products = Array.isArray(prodsRes.data) ? prodsRes.data : [];
+          const products = (Array.isArray(prodsRes.data) ? prodsRes.data : []).filter(
+            (p) =>
+              String(p?.categoryId) === String(id) ||
+              (Array.isArray(p?.categoryIds) &&
+                p.categoryIds.some((cid) => String(cid) === String(id)))
+          );
           if (children.length || products.length) {
             const parts = [];
             if (children.length) parts.push(`${children.length} subcategor${children.length === 1 ? "y" : "ies"}`);

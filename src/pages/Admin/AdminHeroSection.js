@@ -1,92 +1,90 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
+  Alert,
+  Autocomplete,
   Box,
-  Paper,
-  Typography,
   Button,
-  TextField,
-  Grid,
-  Switch,
-  FormControlLabel,
-  Divider,
-  MenuItem,
-  InputAdornment,
   Card,
   CardContent,
   Chip,
-  IconButton,
-  Tooltip,
-  Slider,
-  Skeleton,
-  Tabs,
-  Tab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  ToggleButton,
-  ToggleButtonGroup,
-  Snackbar,
-  Alert,
   CircularProgress,
-  useMediaQuery,
+  Divider,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+  Paper,
+  Skeleton,
+  Switch,
+  Tab,
+  Tabs,
+  TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
-import {
-  ADMIN_BRAND_WASH,
-  ADMIN_GOLD_GRADIENT,
-  ADMIN_PALETTE,
-} from "../../theme/adminTheme";
+import { ADMIN_GOLD_GRADIENT, ADMIN_PALETTE } from "../../theme/adminTheme";
+import { useStoreSettings } from "../../context/StoreSettingsContext";
+import { primaryImage, resolvePrice, stageSrc } from "../../utils/product";
 import {
   DEFAULT_HERO_CONFIG,
-  DEFAULT_HERO_SLIDE,
-  HERO_BACKGROUND_TYPES,
-  HERO_DEVICES,
-  HERO_IMAGE_POSITIONS,
   HERO_INTERVAL_MAX_MS,
   HERO_INTERVAL_MIN_MS,
-  HERO_MAX_DURATION_MS,
-  HERO_MIN_DURATION_MS,
-  HERO_TEXT_ALIGNMENTS,
   HERO_TRANSITIONS,
   clampInt,
-  heroSlideDuration,
-  heroSlideOverlay,
   normalizeHeroConfig,
-  normalizeHeroSlide,
-  normalizeHeroSlides,
 } from "../../utils/heroConfig";
-import { ROUTES } from "../../utils/constants";
 
 // =============================================================================
 // Admin → Storefront → Home & Hero
 // =============================================================================
-// SECTION SETTINGS — the `heroConfig` singleton: the master toggle, autoplay
-// and the default timer, the transition and which chrome shows. This half is
-// live and correct; the storefront reads exactly what is saved here.
 //
-// TEMPORARY, PROMPT 34 REPLACES THIS SCREEN
-//   The hero is PRODUCT-DRIVEN now. Its slides are the products carrying a
-//   `heroOrder` (apiService.products.getHeroProducts()), and their order is
-//   written with apiService.admin.setHeroOrder() — neither has an editor yet.
-//   The old slide store became the `announcements` collection (the line above
-//   the masthead), so the first tab is wired to that collection to keep this
-//   screen open and its data intact until Prompt 34 builds the real editors:
-//   a hero product-ordering screen and an announcements manager.
+// REBUILT BY PROMPT 34. The screen this replaces was scaffolding: the hero
+// became product-driven in Prompt 14 but had no editor, so Prompt 07 pointed the
+// old slide list at the `announcements` collection to keep the screen open and
+// its data intact. Both halves of that arrangement are now gone — announcements
+// have their own manager at /admin/announcements, and the slides are edited here
+// as what they actually are: PRODUCTS.
 //
-//   The row adapters below are what make that safe. A row is read as a slide
-//   (its `text` shown in the headline field) and written back as an
-//   announcement (headline → `text`, schedule window preserved), because
-//   updateAnnouncement PUTs the whole row: anything this screen does not send
-//   is destroyed. The slide-only fields it also writes (subtitle, CTAs,
-//   background, alignment…) are inert on an announcement — they are carried
-//   rather than used, and Prompt 34 drops them.
+// TWO TABS, TWO KINDS OF DECISION
 //
-// The live preview renders from the same normalizers the storefront uses.
+//   HERO PRODUCTS   which products open the home page, in which order, and the
+//                   two lines each of them prints. A product is a slide when it
+//                   carries a `heroOrder`; its copy is its own `heroHeadline`
+//                   and `heroSubtext`. Order is written with
+//                   `admin.setHeroOrder(ids)` — one call that renumbers the list
+//                   from 1 AND clears `heroOrder` on every product left out of
+//                   it, so adding, reordering and removing are the same gesture
+//                   and none of them can leave a stale position behind. The copy
+//                   is saved per row with `admin.updateProduct`, spread over the
+//                   product the way AdminProducts does, because the mock PUT
+//                   replaces the whole record.
+//
+//   SECTION SETTINGS  the `heroConfig` singleton: the master toggle, autoplay
+//                   and its timer, the transition and which chrome is drawn.
+//                   Exactly the ten keys `HeroCarousel` reads.
+//
+// THE PREVIEW IS THE REAL COMPOSITION, PAINTED IN THE ADMIN'S OWN PALETTE. It
+// shows the label plate on its glow (the recorded crop, through `stageSrc`, so
+// the pack is pulled out of the studio frame exactly as the storefront pulls
+// it), then the eyebrow, headline, price, subtext, badges and the two CTAs. It
+// imports NOTHING from the storefront's component tree — the admin has its own
+// theme and must not read `--sf-*` tokens — so the two copy fallbacks below are
+// restated here; `components/home/HeroCarousel` exports the originals and is the
+// source of truth if they ever change.
+//
+// WHAT THE SCREEN REFUSES TO LET AN ADMIN SHIP QUIETLY
+//   • a hero product with no primary image — `HeroCarousel` skips such a slide,
+//     so the carousel would silently be one shorter than this list;
+//   • an empty hero while the section is switched on — the storefront then opens
+//     on its brand-only fallback slide;
+//   • a headline or subtext left blank, which falls back to the product's
+//     `promise` / `shortDescription` rather than to nothing.
 // =============================================================================
 
 const toast = (icon, title, text) =>
@@ -100,137 +98,92 @@ const toast = (icon, title, text) =>
     timer: icon === "error" ? 4000 : 2500,
   });
 
-// On-brand grounds an admin can pick without writing CSS. Every one is a design
-// token, so they follow the palette rather than freezing today's hex values
-// into a database row — the design system is the only styling source.
-const GRADIENT_PRESETS = [
-  { label: "Brand", value: "var(--sf-gradient-brand)" },
-  { label: "Announce", value: "var(--sf-gradient-announce)" },
-  { label: "Signature", value: "var(--sf-gradient-signature)" },
-  { label: "Gold", value: "var(--sf-gradient-gold)" },
-];
-
-const typeMeta = (value) =>
-  HERO_BACKGROUND_TYPES.find((t) => t.value === value) || HERO_BACKGROUND_TYPES[0];
-
-// ─── Temporary announcement ⇄ slide adapters (Prompt 07 → Prompt 34) ─────────
-
-// An announcement row as this screen's slide shape. Its copy lives in `text`;
-// showing it in the headline field is what makes the seeded rows recognisable
-// instead of a list of "Untitled slide".
-const rowToSlide = (row) => ({ ...row, title: row?.title || row?.text || "" });
-
-// …and back. `text` is the field the storefront's announcement bar reads, and
-// the schedule window has no control on this screen, so both are written
-// explicitly: the API PUTs the whole row, and an edit made here must not empty
-// what it never showed.
-const slideToRow = (slide) => {
-  const { id, createdAt, updatedAt, imageUrl, ...rest } = normalizeHeroSlide(slide);
-  return {
-    ...rest,
-    text: String(slide?.title || "").trim(),
-    startsAt: slide?.startsAt ?? null,
-    endsAt: slide?.endsAt ?? null,
-  };
-};
-
-// Seconds in the inputs, milliseconds in the record — one place to convert.
+// Seconds in the input, milliseconds in the record — one place to convert.
 const msToSeconds = (ms) => Math.round((Number(ms) || 0) / 100) / 10;
 const secondsToMs = (s) => Math.round((Number(s) || 0) * 1000);
 
-// ─── Live slide preview ──────────────────────────────────────────────────────
-// A miniature of the real stage: same layer order (ground → media → scrim →
-// copy), same alignment rules, painted from the admin palette. Used both as the row
-// thumbnail (compact) and as the editor preview (full).
-const SlidePreview = ({ slide, config, compact = false }) => {
-  const align = slide.textAlign || "left";
-  const scrim = heroSlideOverlay(slide, config) / 100;
-  const items =
-    align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
+/** "3" -> "03". Mirrors HeroCarousel's `padIndex`. */
+const padIndex = (value) => String(value).padStart(2, "0");
 
-  // The scrim leans towards the copy, exactly as the stylesheet does. Mixed
-  // here from the admin palette's own ground so the preview needs no colour of
-  // its own (the admin never reads storefront tokens).
-  const ink = ADMIN_PALETTE.background.default;
-  const scrimImage =
-    align === "center"
-      ? `linear-gradient(0deg, ${alpha(ink, 0.88)} 0%, ${alpha(ink, 0.55)} 55%, ${alpha(ink, 0.3)} 100%)`
-      : align === "right"
-      ? `linear-gradient(270deg, ${alpha(ink, 0.88)} 0%, ${alpha(ink, 0.62)} 42%, transparent 80%)`
-      : `linear-gradient(90deg, ${alpha(ink, 0.88)} 0%, ${alpha(ink, 0.62)} 42%, transparent 80%)`;
+/** The slide's headline: the product's hero line, else its promise. */
+const previewHeadline = (product) => product?.heroHeadline || product?.promise || "";
+
+/** The slide's subtext: the product's hero line, else its short description. */
+const previewSubtext = (product) =>
+  product?.heroSubtext || product?.shortDescription || "";
+
+/** "Explore the Face Wash" — the short name, because every product in the range
+    opens on the same two words and repeating them is noise. */
+const exploreLabel = (product) =>
+  `Explore the ${product?.shortName || product?.name || "range"}`.trim();
+
+const byHeroOrder = (a, b) => (a.heroOrder ?? 0) - (b.heroOrder ?? 0);
+
+const draftOf = (product) => ({
+  heroHeadline: product?.heroHeadline || "",
+  heroSubtext: product?.heroSubtext || "",
+});
+
+// ─── Live slide preview ──────────────────────────────────────────────────────
+// A miniature of the real stage, in the admin's palette: the plate on its glow,
+// then the copy column. Everything it prints is what the storefront will print,
+// fallbacks included, so an empty headline shows the `promise` here too.
+const SlidePreview = ({ product, index, total, formatPrice }) => {
+  const media = primaryImage(product);
+  const src = stageSrc(product, { w: 520, ar: "4:5" });
+  const { known, price } = resolvePrice(product);
+  const badges = Array.isArray(product?.badges) ? product.badges : [];
+  const headline = previewHeadline(product);
+  const subtext = previewSubtext(product);
 
   return (
     <Box
       sx={{
-        position: "relative",
-        width: "100%",
-        aspectRatio: compact ? "16 / 9" : "16 / 7",
-        minHeight: compact ? 72 : 160,
         borderRadius: 1,
         overflow: "hidden",
         border: "1px solid",
         borderColor: "divider",
         bgcolor: "background.default",
+        p: { xs: 2, sm: 2.5 },
       }}
     >
-      {/* Ground — always painted, so it backs a loading image or a letterboxed video. */}
-      <Box
-        sx={{ position: "absolute", inset: 0 }}
-        style={{ background: slide.gradient || ADMIN_BRAND_WASH }}
-      />
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={5} sm={4}>
+          {/* The plate: the label crop on a soft gold wash, contained rather
+              than cropped — a bottle is never sliced to fill a frame. */}
+          <Box
+            sx={{
+              position: "relative",
+              aspectRatio: "4 / 5",
+              borderRadius: 1,
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: (t) => alpha(t.palette.primary.main, 0.06),
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            {src ? (
+              <Box
+                component="img"
+                src={src}
+                alt=""
+                sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            ) : (
+              <Box sx={{ textAlign: "center", p: 1, color: "text.disabled" }}>
+                <Icon icon="mdi:image-off-outline" style={{ fontSize: 28 }} />
+                <Typography variant="caption" sx={{ display: "block" }}>
+                  No image
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Grid>
 
-      {slide.backgroundType === "image" && slide.image && (
-        <Box
-          component="img"
-          src={slide.image}
-          alt=""
-          sx={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          style={{ objectPosition: slide.imagePosition }}
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
-      )}
-
-      {slide.backgroundType === "video" && (slide.videoUrl || slide.videoPoster) && (
-        <Box
-          component="video"
-          src={slide.videoUrl || undefined}
-          poster={slide.videoPoster || undefined}
-          muted
-          loop
-          autoPlay
-          playsInline
-          sx={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
-          style={{ objectPosition: slide.imagePosition }}
-        />
-      )}
-
-      <Box sx={{ position: "absolute", inset: 0, opacity: scrim }} style={{ backgroundImage: scrimImage }} />
-
-      {/* Copy */}
-      <Box
-        sx={{
-          position: "relative",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          alignItems: items,
-          textAlign: align === "center" ? "center" : align === "right" ? "right" : "left",
-          p: compact ? 1 : { xs: 2, sm: 3 },
-          gap: compact ? 0.25 : 0.75,
-          color: "text.primary",
-        }}
-      >
-        {!compact && (slide.eyebrow || "") !== "" && (
+        <Grid item xs={7} sm={8}>
           <Typography
             sx={{
               fontSize: 11,
@@ -238,93 +191,114 @@ const SlidePreview = ({ slide, config, compact = false }) => {
               textTransform: "uppercase",
               color: "primary.main",
               fontWeight: 600,
+              mb: 0.5,
             }}
           >
-            {slide.eyebrow}
+            Black Rice Ritual · {padIndex(index + 1)} / {padIndex(total)}
           </Typography>
-        )}
-        <Typography
-          sx={{
-            fontWeight: 500,
-            lineHeight: 1.1,
-            fontSize: compact ? 13 : { xs: 20, sm: 28 },
-            // The real headline is capped at 18ch; keep the preview honest.
-            maxWidth: "18ch",
-          }}
-          noWrap={compact}
-        >
-          {slide.title || "Untitled slide"}
-        </Typography>
-        {!compact && slide.subtitle && (
-          <Typography sx={{ fontSize: { xs: 12, sm: 13 }, opacity: 0.82, maxWidth: "46ch" }}>
-            {slide.subtitle}
+          <Typography
+            sx={{
+              fontWeight: 500,
+              lineHeight: 1.15,
+              fontSize: { xs: 18, sm: 22 },
+              // The real headline is capped at a short measure; keep the
+              // preview honest about how much text fits.
+              maxWidth: "18ch",
+              mb: 0.75,
+            }}
+          >
+            {headline || product?.name || "Untitled product"}
           </Typography>
-        )}
-        {!compact && (slide.cta || slide.secondaryCtaLabel) && (
-          <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap", justifyContent: items }}>
-            {slide.cta && (
-              <Box
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  borderRadius: 0.5,
-                  color: "primary.contrastText",
-                  backgroundImage: ADMIN_GOLD_GRADIENT,
-                }}
-              >
-                {slide.cta}
-              </Box>
-            )}
-            {(slide.secondaryCtaLabel || config?.secondaryCta?.label) &&
-              config?.secondaryCta?.enabled !== false && (
-                <Box
-                  sx={{
-                    px: 1.5,
-                    py: 0.5,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    borderRadius: 0.5,
-                    border: "1px solid",
-                    borderColor: "divider",
-                  }}
-                >
-                  {slide.secondaryCtaLabel || config.secondaryCta.label}
-                </Box>
-              )}
+          {known ? (
+            <Typography variant="subtitle2" color="primary.main" fontWeight={700}>
+              {formatPrice(price)}
+            </Typography>
+          ) : (
+            <Chip size="small" variant="outlined" label="Price on launch" />
+          )}
+          {subtext && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 0.75, maxWidth: "46ch" }}
+            >
+              {subtext}
+            </Typography>
+          )}
+          {badges.length > 0 && (
+            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 1.25 }}>
+              {badges.map((badge) => (
+                <Chip key={badge} size="small" variant="outlined" label={badge} />
+              ))}
+            </Box>
+          )}
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1.5 }}>
+            <Box
+              sx={{
+                px: 1.5,
+                py: 0.5,
+                fontSize: 11,
+                fontWeight: 700,
+                borderRadius: 0.5,
+                color: "primary.contrastText",
+                backgroundImage: ADMIN_GOLD_GRADIENT,
+              }}
+            >
+              {exploreLabel(product)}
+            </Box>
+            <Box
+              sx={{
+                px: 1.5,
+                py: 0.5,
+                fontSize: 11,
+                fontWeight: 700,
+                borderRadius: 0.5,
+                border: "1px solid",
+                borderColor: "divider",
+                color: known ? "text.primary" : "text.disabled",
+              }}
+            >
+              {known ? "Add to Cart" : "Coming soon"}
+            </Box>
           </Box>
-        )}
-      </Box>
+        </Grid>
+      </Grid>
+
+      {!media && (
+        <Alert severity="warning" icon={<Icon icon="mdi:image-off-outline" />} sx={{ mt: 2 }}>
+          This product has no primary image, so the carousel will skip it. Add one in
+          Products → Media.
+        </Alert>
+      )}
     </Box>
   );
 };
 
-// ─── One slide row in the list ───────────────────────────────────────────────
-const SlideRow = ({
-  slide,
-  config,
+// ─── One hero product in the list ────────────────────────────────────────────
+const HeroProductRow = ({
+  product,
   index,
   total,
+  draft,
+  dirty,
   busy,
-  onEdit,
-  onDuplicate,
-  onDelete,
-  onToggleActive,
+  saving,
+  expanded,
+  onToggle,
+  onDraftChange,
+  onSave,
+  onRevert,
   onMove,
+  onRemove,
 }) => {
-  const meta = typeMeta(slide.backgroundType);
-  const duration = heroSlideDuration(slide, config);
+  const media = primaryImage(product);
+  const thumb = stageSrc(product, { w: 200, ar: "1:1" });
+  const label = product.name || `Product #${product.id}`;
+
   return (
-    <Card
-      sx={{
-        opacity: slide.isActive ? 1 : 0.62,
-        borderLeft: "3px solid",
-        borderLeftColor: slide.isActive ? "success.main" : "divider",
-      }}
-    >
+    <Card sx={{ borderLeft: "3px solid", borderLeftColor: media ? "primary.main" : "warning.main" }}>
       <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
-        <Grid container spacing={2} alignItems="center">
+        <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
           {/* Order controls */}
           <Grid item xs="auto">
             <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -332,18 +306,18 @@ const SlideRow = ({
                 size="small"
                 disabled={index === 0 || busy}
                 onClick={() => onMove(index, -1)}
-                aria-label="Move slide up"
+                aria-label={`Move up: ${label}`}
               >
                 <Icon icon="mdi:chevron-up" />
               </IconButton>
-              <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                {String(index + 1).padStart(2, "0")}
+              <Typography variant="caption" color="primary.main" fontWeight={700}>
+                {padIndex(index + 1)}
               </Typography>
               <IconButton
                 size="small"
                 disabled={index === total - 1 || busy}
                 onClick={() => onMove(index, 1)}
-                aria-label="Move slide down"
+                aria-label={`Move down: ${label}`}
               >
                 <Icon icon="mdi:chevron-down" />
               </IconButton>
@@ -351,44 +325,69 @@ const SlideRow = ({
           </Grid>
 
           {/* Thumbnail */}
-          <Grid item xs={12} sm={3} md={2.5}>
-            <SlidePreview slide={slide} config={config} compact />
-          </Grid>
-
-          {/* Copy summary */}
-          <Grid item xs={12} sm md>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.25 }}>
-              {slide.title || "Untitled slide"}
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
+          <Grid item xs="auto">
+            <Box
               sx={{
-                mb: 1,
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
+                width: { xs: 56, sm: 64 },
+                height: { xs: 56, sm: 64 },
+                borderRadius: 1,
                 overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: "action.hover",
+                color: "text.disabled",
               }}
             >
-              {slide.subtitle || "No supporting line"}
+              {thumb ? (
+                <Box
+                  component="img"
+                  src={thumb}
+                  alt=""
+                  sx={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
+              ) : (
+                <Icon icon="mdi:image-off-outline" style={{ fontSize: 22 }} />
+              )}
+            </Box>
+          </Grid>
+
+          {/* Identity */}
+          <Grid item xs md>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.25 }}>
+              {label}
             </Typography>
             <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-              <Chip size="small" icon={<Icon icon={meta.icon} />} label={meta.label} />
-              <Chip
-                size="small"
-                icon={<Icon icon="mdi:timer-outline" />}
-                label={
-                  slide.durationMs
-                    ? `${msToSeconds(slide.durationMs)}s`
-                    : `${msToSeconds(duration)}s (default)`
-                }
-              />
-              <Chip
-                size="small"
-                icon={<Icon icon="mdi:link-variant" />}
-                label={slide.link || ROUTES.SHOP}
-              />
+              {product.sku && (
+                <Chip size="small" variant="outlined" label={product.sku} sx={{ fontFamily: "monospace" }} />
+              )}
+              {!media && (
+                <Chip
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                  icon={<Icon icon="mdi:image-off-outline" />}
+                  label="No image — slide skipped"
+                />
+              )}
+              {product.isActive === false && (
+                <Chip
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                  icon={<Icon icon="mdi:eye-off-outline" />}
+                  label="Draft — not on the storefront"
+                />
+              )}
+              {dirty && (
+                <Chip
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                  icon={<Icon icon="mdi:pencil-outline" />}
+                  label="Unsaved copy"
+                />
+              )}
             </Box>
           </Grid>
 
@@ -402,62 +401,97 @@ const SlideRow = ({
                 gap: 0.5,
               }}
             >
-              <FormControlLabel
-                sx={{ mr: 0.5 }}
-                control={
-                  <Switch
-                    size="small"
-                    checked={slide.isActive}
-                    disabled={busy}
-                    onChange={() => onToggleActive(slide)}
-                  />
-                }
-                label={
-                  <Typography variant="caption">{slide.isActive ? "Live" : "Hidden"}</Typography>
-                }
-              />
-              <Tooltip title="Edit slide">
-                <span>
-                  {/* The Tooltip wraps a <span> so it still shows on a disabled
-                      button, which means it cannot label the button itself —
-                      each one carries its own aria-label. */}
-                  <IconButton
-                    size="small"
-                    aria-label={`Edit slide: ${slide.title || "Untitled slide"}`}
-                    onClick={() => onEdit(slide)}
-                    disabled={busy}
-                  >
-                    <Icon icon="mdi:pencil-outline" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title="Duplicate slide">
-                <span>
-                  <IconButton
-                    size="small"
-                    aria-label={`Duplicate slide: ${slide.title || "Untitled slide"}`}
-                    onClick={() => onDuplicate(slide)}
-                    disabled={busy}
-                  >
-                    <Icon icon="mdi:content-copy" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title="Delete slide">
+              <Button
+                size="small"
+                onClick={() => onToggle(product.id)}
+                startIcon={<Icon icon={expanded ? "mdi:chevron-up" : "mdi:pencil-outline"} />}
+                sx={{ color: "text.primary" }}
+              >
+                {expanded ? "Close" : "Edit copy"}
+              </Button>
+              <Tooltip title="Remove from the hero">
                 <span>
                   <IconButton
                     size="small"
                     color="error"
-                    aria-label={`Delete slide: ${slide.title || "Untitled slide"}`}
-                    onClick={() => onDelete(slide)}
+                    aria-label={`Remove from the hero: ${label}`}
+                    onClick={() => onRemove(product)}
                     disabled={busy}
                   >
-                    <Icon icon="mdi:delete-outline" />
+                    <Icon icon="mdi:close-circle-outline" />
                   </IconButton>
                 </span>
               </Tooltip>
             </Box>
           </Grid>
+
+          {/* Inline copy editor */}
+          {expanded && (
+            <Grid item xs={12}>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Hero headline"
+                    value={draft.heroHeadline}
+                    onChange={(e) => onDraftChange(product.id, "heroHeadline", e.target.value)}
+                    fullWidth
+                    size="small"
+                    helperText={
+                      draft.heroHeadline.trim()
+                        ? "Keep it short — the stage sets it at about 18 characters a line."
+                        : `Blank — the hero will print the product's promise: “${
+                            product.promise || "nothing written yet"
+                          }”`
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Hero subtext"
+                    value={draft.heroSubtext}
+                    onChange={(e) => onDraftChange(product.id, "heroSubtext", e.target.value)}
+                    fullWidth
+                    size="small"
+                    multiline
+                    rows={2}
+                    helperText={
+                      draft.heroSubtext.trim()
+                        ? "One or two quiet lines under the price."
+                        : "Blank — the hero will print the product's short description."
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => onSave(product)}
+                      disabled={!dirty || saving || busy}
+                      startIcon={
+                        saving ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          <Icon icon="mdi:content-save" />
+                        )
+                      }
+                    >
+                      {saving ? "Saving…" : "Save copy"}
+                    </Button>
+                    <Button
+                      size="small"
+                      onClick={() => onRevert(product)}
+                      disabled={!dirty || saving}
+                      sx={{ color: "text.primary" }}
+                    >
+                      Revert
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Grid>
+          )}
         </Grid>
       </CardContent>
     </Card>
@@ -466,34 +500,39 @@ const SlideRow = ({
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 const AdminHeroSection = () => {
-  const fullScreenDialog = useMediaQuery("(max-width:599.95px)");
+  const { formatPrice } = useStoreSettings();
 
   const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [savingConfig, setSavingConfig] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [savingId, setSavingId] = useState(null);
+
   const [config, setConfig] = useState(() => normalizeHeroConfig(null));
-  const [slides, setSlides] = useState([]);
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState(DEFAULT_HERO_SLIDE);
-  const [savingSlide, setSavingSlide] = useState(false);
-
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [products, setProducts] = useState([]);
+  // Draft copy per product id, so a half-typed headline survives a re-render and
+  // an unsaved row is visibly unsaved rather than silently lost.
+  const [drafts, setDrafts] = useState({});
+  const [expandedId, setExpandedId] = useState(null);
+  const [previewId, setPreviewId] = useState(null);
+  const [toAdd, setToAdd] = useState(null);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       const [cfg, rows] = await Promise.all([
         apiService.admin.getHeroConfig().catch(() => null),
-        apiService.admin.getAnnouncements().catch(() => []),
+        apiService.admin.getProducts().catch(() => []),
       ]);
+      const catalogue = Array.isArray(rows) ? rows : [];
       setConfig(normalizeHeroConfig(cfg));
-      setSlides(normalizeHeroSlides((Array.isArray(rows) ? rows : []).map(rowToSlide)));
+      setProducts(catalogue);
+      setDrafts(
+        catalogue.reduce((acc, product) => ({ ...acc, [product.id]: draftOf(product) }), {})
+      );
     } catch (error) {
-      console.error("Error loading hero section:", error);
-      setSnackbar({ open: true, message: "Failed to load the hero section", severity: "error" });
+      console.error("Error loading the hero:", error);
+      toast("error", "Could not load the hero", error.message);
     } finally {
       setLoading(false);
     }
@@ -503,183 +542,180 @@ const AdminHeroSection = () => {
     load();
   }, [load]);
 
-  const activeCount = useMemo(() => slides.filter((s) => s.isActive).length, [slides]);
+  // A product is a slide when it carries a hero position; the order IS the
+  // position, so the list is sorted by it and never by anything else.
+  const heroProducts = useMemo(
+    () => products.filter((p) => p.heroOrder != null).sort(byHeroOrder),
+    [products]
+  );
 
-  // ── Section config ─────────────────────────────────────────────────────────
-  const setCfg = (patch) => setConfig((prev) => ({ ...prev, ...patch }));
-  const setNested = (key, patch) =>
-    setConfig((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
-  const setHeight = (device, field, value) =>
-    setConfig((prev) => ({
+  const rest = useMemo(
+    () =>
+      products
+        .filter((p) => p.heroOrder == null)
+        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""))),
+    [products]
+  );
+
+  const heroIds = useMemo(() => heroProducts.map((p) => p.id), [heroProducts]);
+
+  // The preview follows the row being edited, then the first slide — an admin
+  // should never have to hunt for the picture of what they are typing.
+  const previewProduct = useMemo(() => {
+    const chosen =
+      heroProducts.find((p) => String(p.id) === String(expandedId)) ||
+      heroProducts.find((p) => String(p.id) === String(previewId));
+    return chosen || heroProducts[0] || null;
+  }, [heroProducts, expandedId, previewId]);
+
+  const previewIndex = previewProduct
+    ? heroProducts.findIndex((p) => p.id === previewProduct.id)
+    : 0;
+
+  const missingImages = useMemo(
+    () => heroProducts.filter((p) => !primaryImage(p)).length,
+    [heroProducts]
+  );
+
+  const dirtyIds = useMemo(
+    () =>
+      heroProducts
+        .filter((p) => {
+          const draft = drafts[p.id];
+          if (!draft) return false;
+          return (
+            draft.heroHeadline !== (p.heroHeadline || "") ||
+            draft.heroSubtext !== (p.heroSubtext || "")
+          );
+        })
+        .map((p) => p.id),
+    [heroProducts, drafts]
+  );
+
+  // ── Copy ───────────────────────────────────────────────────────────────────
+  const handleDraftChange = (id, field, value) =>
+    setDrafts((prev) => ({
       ...prev,
-      heights: {
-        ...prev.heights,
-        [device]: { ...prev.heights[device], [field]: value },
-      },
+      [id]: { ...(prev[id] || { heroHeadline: "", heroSubtext: "" }), [field]: value },
     }));
 
-  const handleSaveConfig = async () => {
+  const handleRevert = (product) =>
+    setDrafts((prev) => ({ ...prev, [product.id]: draftOf(product) }));
+
+  const handleSaveCopy = async (product) => {
+    const draft = drafts[product.id] || draftOf(product);
+    const heroHeadline = draft.heroHeadline.trim();
+    const heroSubtext = draft.heroSubtext.trim();
     try {
-      setSavingConfig(true);
-      // Normalize before sending so the record on disk is always in range,
-      // whatever a half-typed number field held at the moment of saving.
-      const payload = normalizeHeroConfig(config);
-      await apiService.admin.updateHeroConfig(payload);
-      setConfig(payload);
-      setSnackbar({ open: true, message: "Hero settings saved", severity: "success" });
-    } catch (error) {
-      console.error("Error saving hero config:", error);
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.message || error.message || "Failed to save",
-        severity: "error",
+      setSavingId(product.id);
+      // updateProduct PUTs the whole record in mock mode — spread the product
+      // the way AdminProducts does so nothing it does not manage is destroyed.
+      await apiService.admin.updateProduct(product.id, {
+        ...product,
+        heroHeadline,
+        heroSubtext,
       });
-    } finally {
-      setSavingConfig(false);
-    }
-  };
-
-  // ── Slides ─────────────────────────────────────────────────────────────────
-  const openCreate = () => {
-    const maxSort = slides.reduce((m, s) => Math.max(m, s.sortOrder ?? 0), -1);
-    setEditing(null);
-    setForm({ ...DEFAULT_HERO_SLIDE, sortOrder: maxSort + 1 });
-    setDialogOpen(true);
-  };
-
-  const openEdit = (slide) => {
-    setEditing(slide);
-    setForm({ ...DEFAULT_HERO_SLIDE, ...slide });
-    setDialogOpen(true);
-  };
-
-  const handleSaveSlide = async () => {
-    if (!form.title.trim()) {
-      toast("warning", "A headline is required");
-      return;
-    }
-    try {
-      setSavingSlide(true);
-      const payload = slideToRow({ ...form, title: form.title.trim() });
-      if (editing) {
-        await apiService.admin.updateAnnouncement(editing.id, payload);
-      } else {
-        await apiService.admin.createAnnouncement(payload);
-      }
-      setDialogOpen(false);
-      await load();
-      toast("success", editing ? "Slide updated" : "Slide added");
-    } catch (error) {
-      console.error("Error saving slide:", error);
-      toast("error", "Could not save the slide", error.message);
-    } finally {
-      setSavingSlide(false);
-    }
-  };
-
-  const handleDuplicate = async (slide) => {
-    try {
-      setBusy(true);
-      const maxSort = slides.reduce((m, s) => Math.max(m, s.sortOrder ?? 0), -1);
-      await apiService.admin.createAnnouncement(
-        slideToRow({
-          ...slide,
-          title: `${slide.title} (copy)`,
-          // A duplicate arrives hidden, so it can be edited before it goes out.
-          isActive: false,
-          sortOrder: maxSort + 1,
-        })
+      setProducts((prev) =>
+        prev.map((p) => (p.id === product.id ? { ...p, heroHeadline, heroSubtext } : p))
       );
-      await load();
-      toast("success", "Slide duplicated", "The copy is hidden until you switch it on.");
+      setDrafts((prev) => ({ ...prev, [product.id]: { heroHeadline, heroSubtext } }));
+      toast("success", "Hero copy saved");
     } catch (error) {
-      console.error("Error duplicating slide:", error);
-      toast("error", "Could not duplicate the slide", error.message);
+      console.error("Error saving hero copy:", error);
+      toast("error", "Could not save the copy", error.message);
     } finally {
-      setBusy(false);
+      setSavingId(null);
     }
   };
 
-  const handleDelete = async (slide) => {
-    // The storefront falls back to its built-in slide when nothing is live, so
-    // an admin should know before they empty the carousel.
-    const lastLive = slide.isActive && activeCount === 1;
-    const result = await Swal.fire({
-      title: "Delete this slide?",
-      html: `<strong>${slide.title || "Untitled slide"}</strong> will be permanently removed.${
-        lastLive
-          ? "<br/><br/>It is the only live slide — the hero will fall back to its built-in slide until you add another."
-          : ""
-      }`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: ADMIN_PALETTE.error.main,
-      confirmButtonText: "Delete",
-    });
-    if (!result.isConfirmed) return;
+  // ── Order ──────────────────────────────────────────────────────────────────
+  // One write for every order change. `setHeroOrder` renumbers the list from 1
+  // and clears `heroOrder` on everything left out of it, so adding, moving and
+  // removing all go through here and none of them can strand a position.
+  const writeOrder = async (orderedIds, { optimistic, message }) => {
+    const before = products;
+    setProducts(optimistic);
     try {
       setBusy(true);
-      await apiService.admin.deleteAnnouncement(slide.id);
-      await load();
-      toast("success", "Slide deleted");
+      await apiService.admin.setHeroOrder(orderedIds);
+      if (message) toast("success", message);
     } catch (error) {
-      console.error("Error deleting slide:", error);
-      toast("error", "Could not delete the slide", error.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleToggleActive = async (slide) => {
-    const isActive = !slide.isActive;
-    // Optimistic — the switch has to answer immediately.
-    setSlides((prev) => prev.map((s) => (s.id === slide.id ? { ...s, isActive } : s)));
-    try {
-      setBusy(true);
-      await apiService.admin.updateAnnouncement(slide.id, slideToRow({ ...slide, isActive }));
-    } catch (error) {
-      console.error("Error toggling slide:", error);
-      toast("error", "Could not update the slide", error.message);
-      load(); // roll back to server truth
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleMove = async (index, direction) => {
-    const target = index + direction;
-    if (target < 0 || target >= slides.length) return;
-    const next = [...slides];
-    [next[index], next[target]] = [next[target], next[index]];
-    // Renumber from the top so the order is dense and stable.
-    const renumbered = next.map((s, i) => ({ ...s, sortOrder: i }));
-    setSlides(renumbered);
-    try {
-      setBusy(true);
-      await apiService.admin.reorderAnnouncements(
-        renumbered.map((s) => s.id),
-        slides
-      );
-    } catch (error) {
-      console.error("Error reordering slides:", error);
-      toast("error", "Could not save the new order", error.message);
+      console.error("Error writing the hero order:", error);
+      setProducts(before); // roll back to what the server still holds
+      toast("error", "Could not save the hero order", error.message);
       load();
     } finally {
       setBusy(false);
     }
   };
 
-  // ── Render helpers ─────────────────────────────────────────────────────────
-  const setField = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const applyOrder = (orderedIds) => {
+    const position = new Map(orderedIds.map((id, i) => [String(id), i + 1]));
+    return products.map((p) => ({ ...p, heroOrder: position.get(String(p.id)) ?? null }));
+  };
 
-  const renderSkeleton = () => (
-    <Box sx={{ display: "grid", gap: 2 }}>
-      {[0, 1, 2].map((i) => (
-        <Skeleton key={i} variant="rounded" height={132} />
-      ))}
-    </Box>
-  );
+  const handleMove = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= heroIds.length) return;
+    const next = [...heroIds];
+    [next[index], next[target]] = [next[target], next[index]];
+    writeOrder(next, { optimistic: applyOrder(next) });
+  };
 
+  const handleAdd = () => {
+    if (!toAdd) return;
+    const next = [...heroIds, toAdd.id];
+    setToAdd(null);
+    writeOrder(next, {
+      optimistic: applyOrder(next),
+      message: `${toAdd.name} added to the hero`,
+    });
+  };
+
+  const handleRemove = async (product) => {
+    const lastOne = heroIds.length === 1;
+    const result = await Swal.fire({
+      title: "Remove from the hero?",
+      html: `<strong>${product.name}</strong> will keep its hero headline and subtext, but it will no longer open the home page.${
+        lastOne
+          ? "<br/><br/>It is the only hero product — the home page will open on the brand slide until you add another."
+          : ""
+      }`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: ADMIN_PALETTE.error.main,
+      confirmButtonText: "Remove",
+    });
+    if (!result.isConfirmed) return;
+    const next = heroIds.filter((id) => id !== product.id);
+    if (expandedId === product.id) setExpandedId(null);
+    writeOrder(next, {
+      optimistic: applyOrder(next),
+      message: `${product.name} removed from the hero`,
+    });
+  };
+
+  // ── Section settings ───────────────────────────────────────────────────────
+  const setCfg = (patch) => setConfig((prev) => ({ ...prev, ...patch }));
+
+  const handleSaveConfig = async () => {
+    try {
+      setSavingConfig(true);
+      // Normalise before sending so the record on disk is always in range,
+      // whatever a half-typed number field held at the moment of saving.
+      const payload = normalizeHeroConfig(config);
+      await apiService.admin.updateHeroConfig(payload);
+      setConfig(payload);
+      toast("success", "Hero settings saved");
+    } catch (error) {
+      console.error("Error saving hero config:", error);
+      toast("error", "Could not save the settings", error.message);
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   const sectionHeader = (icon, title, description) => (
     <>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
@@ -695,6 +731,14 @@ const AdminHeroSection = () => {
     </>
   );
 
+  const renderSkeleton = () => (
+    <Box sx={{ display: "grid", gap: 2 }}>
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} variant="rounded" height={112} />
+      ))}
+    </Box>
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       <Box sx={{ mb: 3 }}>
@@ -702,20 +746,10 @@ const AdminHeroSection = () => {
           Home &amp; Hero
         </Typography>
         <Typography color="text.secondary">
-          The opening band of the storefront home page — how the carousel behaves on every device.
-          Its slides are now the products themselves.
+          The opening band of the storefront home page. Its slides are the products themselves —
+          choose which ones open the page, in which order, and the two lines each of them prints.
         </Typography>
       </Box>
-
-      <Alert severity="info" icon={<Icon icon="mdi:progress-wrench" />} sx={{ mb: 3 }}>
-        <strong>The hero carousel is product-driven.</strong> Each slide is a product carrying a
-        hero position, and it prints that product&rsquo;s own hero headline and hero subtext — so
-        there is no slide to write here any more. The screen for ordering hero products is still to
-        come; until then, the first tab manages the <strong>announcement bar</strong> (the line
-        above the masthead), which is where the old slide records now live. Only its headline
-        (shown as the announcement text), link, on/off switch and order reach the storefront — the
-        background, alignment and timing fields below are carried but unused.
-      </Alert>
 
       {!loading && !config.enabled && (
         <Alert
@@ -728,8 +762,24 @@ const AdminHeroSection = () => {
             </Button>
           }
         >
-          The hero section is switched off — the storefront home page currently opens straight into
-          its first content section.
+          The hero section is switched off — the home page currently opens straight into its first
+          content section.
+        </Alert>
+      )}
+
+      {!loading && config.enabled && heroProducts.length === 0 && (
+        <Alert severity="warning" icon={<Icon icon="mdi:alert-outline" />} sx={{ mb: 3 }}>
+          No product carries a hero position, so the home page opens on the brand slide. Add one
+          below.
+        </Alert>
+      )}
+
+      {!loading && missingImages > 0 && (
+        <Alert severity="warning" icon={<Icon icon="mdi:image-off-outline" />} sx={{ mb: 3 }}>
+          {missingImages === 1
+            ? "One hero product has no primary image, so the carousel skips it."
+            : `${missingImages} hero products have no primary image, so the carousel skips them.`}{" "}
+          Add one in Products → Media.
         </Alert>
       )}
 
@@ -746,9 +796,9 @@ const AdminHeroSection = () => {
           }}
         >
           <Tab
-            icon={<Icon icon="mdi:bullhorn-outline" style={{ fontSize: 20 }} />}
+            icon={<Icon icon="mdi:view-carousel-outline" style={{ fontSize: 20 }} />}
             iconPosition="start"
-            label={`Announcements (temporary)${loading ? "" : ` (${slides.length})`}`}
+            label={`Hero products${loading ? "" : ` (${heroProducts.length})`}`}
           />
           <Tab
             icon={<Icon icon="mdi:tune-variant" style={{ fontSize: 20 }} />}
@@ -758,87 +808,159 @@ const AdminHeroSection = () => {
         </Tabs>
       </Paper>
 
-      {/* ── SLIDES ────────────────────────────────────────────────────────── */}
+      {/* ── HERO PRODUCTS ─────────────────────────────────────────────────── */}
       {tab === 0 &&
         (loading ? (
           renderSkeleton()
         ) : (
-          <>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 2,
-                mb: 2.5,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                <Chip
-                  size="small"
-                  color={activeCount > 0 ? "success" : "warning"}
-                  icon={<Icon icon="mdi:broadcast" />}
-                  label={`${activeCount} live`}
-                />
-                {slides.length - activeCount > 0 && (
-                  <Chip
-                    size="small"
-                    icon={<Icon icon="mdi:eye-off-outline" />}
-                    label={`${slides.length - activeCount} hidden`}
-                  />
-                )}
-                <Typography variant="body2" color="text.secondary">
-                  Shown in this order, top first, in the announcement bar.
-                </Typography>
-              </Box>
-              <Button
-                variant="contained"
-                startIcon={<Icon icon="mdi:plus" />}
-                onClick={openCreate}
-                disabled={busy}
-              >
-                Add Slide
-              </Button>
-            </Box>
-
-            {slides.length === 0 ? (
+          <Grid container spacing={3}>
+            <Grid item xs={12} lg={7}>
               <Paper
                 elevation={0}
-                sx={{ p: { xs: 4, sm: 6 }, textAlign: "center", border: "1px dashed", borderColor: "divider" }}
+                sx={{
+                  p: { xs: 1.5, sm: 2 },
+                  mb: 2.5,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 1.5,
+                  alignItems: { xs: "stretch", sm: "center" },
+                }}
               >
-                <Icon icon="mdi:image-multiple-outline" style={{ fontSize: 48, opacity: 0.4 }} />
-                <Typography variant="h6" sx={{ mt: 1 }}>
-                  No announcements yet
-                </Typography>
-                <Typography color="text.secondary" sx={{ mb: 3 }}>
-                  The announcement bar is hidden while there is nothing to say. Add a line to show
-                  it.
-                </Typography>
-                <Button variant="contained" startIcon={<Icon icon="mdi:plus" />} onClick={openCreate}>
-                  Add the first slide
+                <Autocomplete
+                  size="small"
+                  sx={{ flex: 1 }}
+                  options={rest}
+                  value={toAdd}
+                  onChange={(e, value) => setToAdd(value)}
+                  getOptionLabel={(option) => option.name || ""}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  renderOption={(props, option) => (
+                    <li {...props} key={option.id}>
+                      {option.name}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Add product to hero" placeholder="Search the catalogue" />
+                  )}
+                  noOptionsText="Every product is already in the hero"
+                  disabled={busy}
+                />
+                <Button
+                  variant="contained"
+                  startIcon={<Icon icon="mdi:plus" />}
+                  onClick={handleAdd}
+                  disabled={!toAdd || busy}
+                  sx={{ flexShrink: 0 }}
+                >
+                  Add to hero
                 </Button>
               </Paper>
-            ) : (
-              <Box sx={{ display: "grid", gap: 2 }}>
-                {slides.map((slide, index) => (
-                  <SlideRow
-                    key={slide.id}
-                    slide={slide}
-                    config={config}
-                    index={index}
-                    total={slides.length}
-                    busy={busy}
-                    onEdit={openEdit}
-                    onDuplicate={handleDuplicate}
-                    onDelete={handleDelete}
-                    onToggleActive={handleToggleActive}
-                    onMove={handleMove}
-                  />
-                ))}
+
+              {heroProducts.length === 0 ? (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 4, sm: 6 },
+                    textAlign: "center",
+                    border: "1px dashed",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Icon icon="mdi:view-carousel-outline" style={{ fontSize: 48, opacity: 0.4 }} />
+                  <Typography variant="h6" sx={{ mt: 1 }}>
+                    No hero products yet
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Pick a product above to open the home page with it.
+                  </Typography>
+                </Paper>
+              ) : (
+                <>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    Read in this order, first slide first.
+                    {dirtyIds.length > 0 &&
+                      ` ${dirtyIds.length} row${dirtyIds.length === 1 ? " has" : "s have"} unsaved copy.`}
+                  </Typography>
+                  <Box sx={{ display: "grid", gap: 2 }}>
+                    {heroProducts.map((product, index) => (
+                      <HeroProductRow
+                        key={product.id}
+                        product={product}
+                        index={index}
+                        total={heroProducts.length}
+                        draft={drafts[product.id] || draftOf(product)}
+                        dirty={dirtyIds.includes(product.id)}
+                        busy={busy}
+                        saving={savingId === product.id}
+                        expanded={expandedId === product.id}
+                        onToggle={(id) => {
+                          setExpandedId((prev) => (prev === id ? null : id));
+                          setPreviewId(id);
+                        }}
+                        onDraftChange={handleDraftChange}
+                        onSave={handleSaveCopy}
+                        onRevert={handleRevert}
+                        onMove={handleMove}
+                        onRemove={handleRemove}
+                      />
+                    ))}
+                  </Box>
+                </>
+              )}
+            </Grid>
+
+            {/* Live preview — sticky beside the list on a desktop, stacked under
+                it on a phone, where the list is the thing being worked on. */}
+            <Grid item xs={12} lg={5}>
+              <Box sx={{ position: { lg: "sticky" }, top: { lg: 88 } }}>
+                <Paper
+                  elevation={0}
+                  sx={{ p: { xs: 2, sm: 2.5 }, border: "1px solid", borderColor: "divider" }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                    <Icon icon="mdi:eye-outline" style={{ fontSize: 20 }} />
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Live preview
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+                    The slide as the home page composes it — the label crop, the copy, the price and
+                    the two CTAs. Blank copy shows the fallback the storefront would print.
+                  </Typography>
+                  {previewProduct ? (
+                    <SlidePreview
+                      product={{
+                        ...previewProduct,
+                        // Preview the DRAFT, not the saved record: the point of a
+                        // live preview is to answer "does this line fit?" before
+                        // the save, not after it.
+                        ...(drafts[previewProduct.id] || {}),
+                      }}
+                      index={previewIndex < 0 ? 0 : previewIndex}
+                      total={heroProducts.length}
+                      formatPrice={formatPrice}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        p: 4,
+                        textAlign: "center",
+                        border: "1px dashed",
+                        borderColor: "divider",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary">
+                        Add a product to the hero to preview it.
+                      </Typography>
+                    </Box>
+                  )}
+                </Paper>
               </Box>
-            )}
-          </>
+            </Grid>
+          </Grid>
         ))}
 
       {/* ── SECTION SETTINGS ──────────────────────────────────────────────── */}
@@ -858,7 +980,7 @@ const AdminHeroSection = () => {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                These apply to the hero as a whole. Anything a single slide overrides wins over them.
+                These apply to the hero as a whole, whichever products are in it.
               </Typography>
               <Button
                 variant="contained"
@@ -977,8 +1099,8 @@ const AdminHeroSection = () => {
                   <CardContent>
                     {sectionHeader(
                       "mdi:gesture-tap-button",
-                      "Controls & overlay",
-                      "The furniture drawn on top of the slides."
+                      "Controls",
+                      "The furniture drawn around the slides."
                     )}
                     {[
                       {
@@ -989,7 +1111,7 @@ const AdminHeroSection = () => {
                       {
                         key: "showCounter",
                         label: "Slide counter",
-                        hint: "The 01 — 04 marker beside the hairlines",
+                        hint: "The 01 — 08 marker beside the hairlines",
                       },
                       {
                         key: "showProgress",
@@ -1030,611 +1152,12 @@ const AdminHeroSection = () => {
                         }
                       />
                     ))}
-
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" gutterBottom>
-                        Overlay darkness — {config.overlayOpacity}%
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        How heavily the ink wash sits over the media so the headline stays legible.
-                      </Typography>
-                      <Slider
-                        value={config.overlayOpacity}
-                        min={0}
-                        max={100}
-                        step={5}
-                        marks={[
-                          { value: 0, label: "None" },
-                          { value: 100, label: "Full" },
-                        ]}
-                        valueLabelDisplay="auto"
-                        onChange={(e, v) => setCfg({ overlayOpacity: v })}
-                        sx={{ mt: 1 }}
-                      />
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Stage height per device */}
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    {sectionHeader(
-                      "mdi:arrow-expand-vertical",
-                      "Stage height",
-                      "Set independently for each device. The stage takes the viewport-height value, held between the minimum and maximum — so it scales with the screen without ever collapsing or running past the fold."
-                    )}
-                    <Grid container spacing={3}>
-                      {HERO_DEVICES.map((device) => (
-                        <Grid item xs={12} md={4} key={device.key}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 2, height: "100%", bgcolor: (t) => alpha(t.palette.primary.main, 0.03) }}
-                          >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.25 }}>
-                              <Icon icon={device.icon} style={{ fontSize: 20 }} />
-                              <Typography variant="subtitle2" fontWeight={700}>
-                                {device.label}
-                              </Typography>
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {device.hint}
-                            </Typography>
-                            <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
-                              <Grid item xs={4}>
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  type="number"
-                                  label="Min"
-                                  value={config.heights[device.key].min}
-                                  onChange={(e) => setHeight(device.key, "min", e.target.value)}
-                                  InputProps={{
-                                    endAdornment: <InputAdornment position="end">px</InputAdornment>,
-                                  }}
-                                  inputProps={{ min: 200, max: 1200 }}
-                                />
-                              </Grid>
-                              <Grid item xs={4}>
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  type="number"
-                                  label="Height"
-                                  value={config.heights[device.key].vh}
-                                  onChange={(e) => setHeight(device.key, "vh", e.target.value)}
-                                  InputProps={{
-                                    endAdornment: <InputAdornment position="end">vh</InputAdornment>,
-                                  }}
-                                  inputProps={{ min: 20, max: 100 }}
-                                />
-                              </Grid>
-                              <Grid item xs={4}>
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  type="number"
-                                  label="Max"
-                                  value={config.heights[device.key].max}
-                                  onChange={(e) => setHeight(device.key, "max", e.target.value)}
-                                  InputProps={{
-                                    endAdornment: <InputAdornment position="end">px</InputAdornment>,
-                                  }}
-                                  inputProps={{ min: 200, max: 1600 }}
-                                />
-                              </Grid>
-                            </Grid>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ display: "block", mt: 1.5, fontFamily: "monospace" }}
-                            >
-                              clamp({config.heights[device.key].min}px,{" "}
-                              {config.heights[device.key].vh}vh, {config.heights[device.key].max}px)
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Shared secondary CTA */}
-              <Grid item xs={12} md={6}>
-                <Card sx={{ height: "100%" }}>
-                  <CardContent>
-                    {sectionHeader(
-                      "mdi:link-variant",
-                      "Shared secondary button",
-                      "The hairline button beside each slide's gold one. A slide can override it."
-                    )}
-                    <FormControlLabel
-                      sx={{ mb: 2 }}
-                      control={
-                        <Switch
-                          checked={config.secondaryCta.enabled}
-                          onChange={(e) => setNested("secondaryCta", { enabled: e.target.checked })}
-                        />
-                      }
-                      label="Show the secondary button"
-                    />
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Label"
-                          value={config.secondaryCta.label}
-                          disabled={!config.secondaryCta.enabled}
-                          onChange={(e) => setNested("secondaryCta", { label: e.target.value })}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Link"
-                          value={config.secondaryCta.link}
-                          disabled={!config.secondaryCta.enabled}
-                          onChange={(e) => setNested("secondaryCta", { link: e.target.value })}
-                          helperText="A storefront path, e.g. /about"
-                        />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Openers */}
-              <Grid item xs={12} md={6}>
-                <Card sx={{ height: "100%" }}>
-                  <CardContent>
-                    {sectionHeader(
-                      "mdi:format-list-bulleted",
-                      "Collection index row",
-                      "The hairline row of collection links under the stage. The links themselves are your live top-level categories, in their sort order."
-                    )}
-                    <FormControlLabel
-                      sx={{ mb: 2 }}
-                      control={
-                        <Switch
-                          checked={config.openers.enabled}
-                          onChange={(e) => setNested("openers", { enabled: e.target.checked })}
-                        />
-                      }
-                      label="Show the collection index row"
-                    />
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={7}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Row label"
-                          value={config.openers.label}
-                          disabled={!config.openers.enabled}
-                          onChange={(e) => setNested("openers", { label: e.target.value })}
-                          helperText="Hidden on phones to save the width"
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={5}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
-                          label="How many"
-                          value={config.openers.limit}
-                          disabled={!config.openers.enabled}
-                          onChange={(e) => setNested("openers", { limit: e.target.value })}
-                          inputProps={{ min: 1, max: 20 }}
-                          helperText="Max collections shown"
-                        />
-                      </Grid>
-                    </Grid>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
           </>
         ))}
-
-      {/* ── SLIDE EDITOR ──────────────────────────────────────────────────── */}
-      <Dialog
-        open={dialogOpen}
-        onClose={() => !savingSlide && setDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-        fullScreen={fullScreenDialog}
-      >
-        <DialogTitle sx={{ fontWeight: "bold" }}>
-          {editing ? "Edit slide" : "New slide"}
-        </DialogTitle>
-        <DialogContent dividers>
-          {/* Live preview — same normalizers as the storefront. */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="overline" color="text.secondary">
-              Preview
-            </Typography>
-            <SlidePreview slide={normalizeHeroSlide(form)} config={config} />
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
-              A miniature of the real stage. On the storefront the type is far larger and the stage
-              is {config.heights.desktop.vh}vh tall on desktop.
-            </Typography>
-          </Box>
-
-          {/* Copy */}
-          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-            Copy
-          </Typography>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Eyebrow"
-                value={form.eyebrow}
-                onChange={(e) => setField("eyebrow", e.target.value)}
-                helperText="Leave blank to use the linked collection's name"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                size="small"
-                required
-                label="Headline"
-                value={form.title}
-                onChange={(e) => setField("title", e.target.value)}
-                helperText="Reads best up to about 18 characters a line"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Supporting line"
-                value={form.subtitle}
-                onChange={(e) => setField("subtitle", e.target.value)}
-                multiline
-                rows={2}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Button label"
-                value={form.cta}
-                onChange={(e) => setField("cta", e.target.value)}
-                helperText="Blank hides the gold button"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Button link"
-                value={form.link}
-                onChange={(e) => setField("link", e.target.value)}
-                helperText="e.g. /category/face-care"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Secondary button label"
-                value={form.secondaryCtaLabel}
-                onChange={(e) => setField("secondaryCtaLabel", e.target.value)}
-                helperText={`Blank uses the shared "${config.secondaryCta.label}"`}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Secondary button link"
-                value={form.secondaryCtaLink}
-                onChange={(e) => setField("secondaryCtaLink", e.target.value)}
-                helperText={`Blank uses the shared ${config.secondaryCta.link}`}
-              />
-            </Grid>
-          </Grid>
-
-          {/* Background */}
-          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-            Background
-          </Typography>
-          <ToggleButtonGroup
-            exclusive
-            size="small"
-            value={form.backgroundType}
-            onChange={(e, v) => v && setField("backgroundType", v)}
-            sx={{ mb: 2, flexWrap: "wrap" }}
-          >
-            {HERO_BACKGROUND_TYPES.map((t) => (
-              <ToggleButton key={t.value} value={t.value} sx={{ textTransform: "none", gap: 0.75 }}>
-                <Icon icon={t.icon} /> {t.label}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            {form.backgroundType === "image" && (
-              <>
-                <Grid item xs={12} sm={8}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Image URL"
-                    value={form.image}
-                    onChange={(e) => setField("image", e.target.value)}
-                    helperText="Landscape, at least 1600×900. Served as-is — use your CDN URL."
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Focal point"
-                    value={form.imagePosition}
-                    onChange={(e) => setField("imagePosition", e.target.value)}
-                    helperText="Kept in frame when cropped"
-                  >
-                    {HERO_IMAGE_POSITIONS.map((p) => (
-                      <MenuItem key={p.value} value={p.value}>
-                        {p.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-              </>
-            )}
-
-            {form.backgroundType === "video" && (
-              <>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Video URL"
-                    value={form.videoUrl}
-                    onChange={(e) => setField("videoUrl", e.target.value)}
-                    helperText="A direct .mp4 or .webm file — not a YouTube page link"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Poster image URL"
-                    value={form.videoPoster}
-                    onChange={(e) => setField("videoPoster", e.target.value)}
-                    helperText="Shown while the video loads, and instead of it under reduced motion"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Focal point"
-                    value={form.imagePosition}
-                    onChange={(e) => setField("imagePosition", e.target.value)}
-                  >
-                    {HERO_IMAGE_POSITIONS.map((p) => (
-                      <MenuItem key={p.value} value={p.value}>
-                        {p.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-                <Grid item xs={12} sm={8}>
-                  <Alert severity="info" icon={<Icon icon="mdi:volume-off" />} sx={{ height: "100%" }}>
-                    Background video always plays muted, looped and inline — the only way browsers
-                    allow autoplay. Keep the file short and small.
-                  </Alert>
-                </Grid>
-              </>
-            )}
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Gradient"
-                value={form.gradient}
-                onChange={(e) => setField("gradient", e.target.value)}
-                helperText={
-                  form.backgroundType === "gradient"
-                    ? "Any CSS background value"
-                    : "Sits behind the media — it shows while that loads and around any letterboxing"
-                }
-              />
-              <Box sx={{ display: "flex", gap: 1, mt: 1.5, flexWrap: "wrap" }}>
-                {GRADIENT_PRESETS.map((preset) => (
-                  <Tooltip key={preset.label} title={preset.label}>
-                    <Box
-                      component="button"
-                      type="button"
-                      onClick={() => setField("gradient", preset.value)}
-                      aria-label={`Use the ${preset.label} gradient`}
-                      sx={{
-                        width: 56,
-                        height: 32,
-                        p: 0,
-                        cursor: "pointer",
-                        borderRadius: 1,
-                        border: "2px solid",
-                        borderColor: form.gradient === preset.value ? "primary.main" : "divider",
-                      }}
-                      style={{ background: preset.value }}
-                    />
-                  </Tooltip>
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-
-          {/* Layout & timing */}
-          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-            Layout &amp; timing
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Copy alignment
-              </Typography>
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={form.textAlign}
-                onChange={(e, v) => v && setField("textAlign", v)}
-              >
-                {HERO_TEXT_ALIGNMENTS.map((a) => (
-                  <ToggleButton key={a.value} value={a.value} sx={{ textTransform: "none", gap: 0.5 }}>
-                    <Icon icon={a.icon} /> {a.label}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-                The ink wash follows the copy, so it stays legible whichever side it sits on.
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.durationMs > 0}
-                    onChange={(e) =>
-                      setField("durationMs", e.target.checked ? config.intervalMs : 0)
-                    }
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    Give this slide its own time on screen
-                  </Typography>
-                }
-              />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Time on screen"
-                value={form.durationMs > 0 ? msToSeconds(form.durationMs) : msToSeconds(config.intervalMs)}
-                disabled={!form.durationMs}
-                onChange={(e) => setField("durationMs", secondsToMs(e.target.value))}
-                onBlur={() =>
-                  form.durationMs &&
-                  setField(
-                    "durationMs",
-                    clampInt(form.durationMs, HERO_MIN_DURATION_MS, HERO_MAX_DURATION_MS, config.intervalMs)
-                  )
-                }
-                InputProps={{ endAdornment: <InputAdornment position="end">sec</InputAdornment> }}
-                inputProps={{ min: 1, max: 60, step: 0.5 }}
-                helperText={
-                  form.durationMs
-                    ? "Between 1 and 60 seconds"
-                    : `Following the section default of ${msToSeconds(config.intervalMs)}s`
-                }
-                sx={{ mt: 1 }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.overlayOpacity !== null}
-                    onChange={(e) =>
-                      setField("overlayOpacity", e.target.checked ? config.overlayOpacity : null)
-                    }
-                  />
-                }
-                label={<Typography variant="body2">Override the overlay darkness</Typography>}
-              />
-              <Box sx={{ px: 1 }}>
-                <Slider
-                  value={form.overlayOpacity ?? config.overlayOpacity}
-                  min={0}
-                  max={100}
-                  step={5}
-                  disabled={form.overlayOpacity === null}
-                  valueLabelDisplay="auto"
-                  onChange={(e, v) => setField("overlayOpacity", v)}
-                />
-              </Box>
-              <Typography variant="caption" color="text.secondary">
-                {form.overlayOpacity === null
-                  ? `Following the section setting of ${config.overlayOpacity}%`
-                  : `${form.overlayOpacity}% — raise it if the headline is hard to read on this image`}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.isActive}
-                    onChange={(e) => setField("isActive", e.target.checked)}
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    {form.isActive ? "Live on the storefront" : "Hidden from the storefront"}
-                  </Typography>
-                }
-              />
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Position"
-                value={form.sortOrder}
-                onChange={(e) => setField("sortOrder", e.target.value)}
-                helperText="Lower shows first — or reorder with the arrows in the list"
-                sx={{ mt: 1 }}
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={() => setDialogOpen(false)} disabled={savingSlide}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSaveSlide}
-            disabled={savingSlide}
-            startIcon={
-              savingSlide ? <CircularProgress size={18} color="inherit" /> : <Icon icon="mdi:content-save" />
-            }
-          >
-            {savingSlide ? "Saving..." : editing ? "Save slide" : "Add slide"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </motion.div>
   );
 };
