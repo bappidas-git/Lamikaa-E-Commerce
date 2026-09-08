@@ -31,7 +31,7 @@ import { isPlaceholder } from "./placeholders";
 //               section ∈ store|shipping|payment|notifications|seo|social)
 //   label       accessible name on the storefront, field label in the admin
 //   adminIcon   Iconify id — the admin panel is MUI/Iconify furniture
-//   glyph       name in Contact's hairline stroke set (see Support.js)
+//   glyph       Iconify-free stroke-set name kept for the admin's field list
 //   path        24x24 solid brand path — the footer's own drawing language
 //   placeholder the shape of a correct value, shown in the empty admin field
 export const SOCIAL_PLATFORMS = [

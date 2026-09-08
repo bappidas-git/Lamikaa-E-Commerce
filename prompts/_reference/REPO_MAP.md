@@ -1688,6 +1688,95 @@ copy this prompt types is section furniture.
   (offers/availability/aggregateRating gating, image order) and
   `breadcrumbJsonLd`'s two vocabularies.
 
+**Updated by Prompt 28.** The content pages are `siteContent`, typeset. Five
+routes, **not one narrative sentence in JSX**, and **seven old page folders
+deleted** (6,844 lines).
+
+- `pages/About/About.{js,module.css}` (new): opening band —
+  `clamp(280px, 36vw, 480px)` letterbox from 769px with a `GlassCard strong
+  scrim` panel risen into its lower-left corner on a negative margin (the same
+  composition as `CategoryHead`), stacked below a 4:3 plate on a phone. Then the
+  story: `siteContent.about.body` parsed once and rendered in **runs broken at
+  the `::steps` fence**, so the seven-step chain is drawn by `ValueChain` and not
+  by the generic stepper; runs after the first pass `dropCap={false}` (a page
+  opens on one drop cap, not one per run). Then the `image2` plate,
+  `ImpactTriptych showImages` from `siteContent.impact`, `Pillars compact`,
+  `LegalNote`, and a CTA row (`ctaLabel` → `ctaTo`, secondary → `/why-lamikaa`).
+  `useSeo({ title: "Our Story", description: lede, jsonLd: breadcrumbJsonLd })`.
+  Exports `splitAtChain`, `aboutCopy`.
+- `pages/WhyLamikaa/WhyLamikaa.{js,module.css}` (new): the same opening band,
+  then the philosophy + `Pillars` (from `brand.pillars`, not from the record —
+  pillars are BRAND facts), `#difference` (the six-step **ownership** chain
+  through `ContentBlocks`' own stepper, because it is not `brand.valueChain` and
+  `ValueChain` exists so the canonical seven cannot be invented) + `LegalNote`,
+  `#impact` (`ImpactTriptych showImages` + an `Accordion` carrying each item's
+  FULL body, named "Read more: Financial/Social/Environmental"), `#vision` as a
+  pull-quote, and the CTA row. The three ids are real ids on real `<section>`s
+  and `#impact` renders its heading while the copy is in flight, so a cold load
+  on `/why-lamikaa#impact` has something to scroll to. Exports `whyCopy`,
+  `impactDisclosures`. **Replaces the `ComingSoon` stub.**
+- `pages/Faq/Faq.{js,module.css,test.js}` (new, replaces `HelpCenter/`): head +
+  a **52px search** filtering question OR the FILLED answer with a
+  `role="status"` count (ported unchanged); a **200px group rail sticky at
+  112px** from 1025px, a horizontally scrolling chip strip below that, anchors
+  `#group-<key>`; one `<FAQ>` per group over `faqsForGroup` on
+  `forPlacement("help")`, only for groups with rows; a closing band whose email
+  and phone appear only when they resolve. `FAQPage` JSON-LD built from the same
+  prepared text the accordion renders, describing the whole page rather than the
+  current search. `faqSections()` (exported, tested) adds a trailing **"More
+  questions"** group so renaming a heading in the admin cannot drop an answer.
+- `pages/Contact/Contact.{js,module.css}` (new, replaces `Support/`): head,
+  channel cards (Email / Call / WhatsApp, each rendered **only when its href
+  resolves**), the lead form **unchanged in behaviour** — the seven-key payload
+  (`name, email, phone, orderNumber: "", category: "general", subject,
+  message`), `MESSAGE_MIN = 20`, optional phone checked only once typed,
+  first-invalid focus, email pre-fill for a signed-in visitor, a glass success
+  panel that takes focus — restyled onto the design system's 48px input; and a
+  rail carrying a Visit card (only when the address resolves, with a Maps link
+  built from it), `Pillars compact`, the social marks and "Read the FAQ".
+  Exports `buildChannels`.
+- `pages/Policies/PolicyPage.{js,module.css,test.js}` (new, replaces the four
+  policy folders): **one component for four documents**, `useParams().policy` ∈
+  `privacy | terms | shipping-returns | cookies` → `siteContent.policies[key]`
+  (`shippingReturns` for `shipping-returns`), anything else → `NotFound`. The
+  document look — kicker, serif title over a hairline, "Last updated" (only
+  where a record HAS an `updatedAt`), a **220px TOC rail sticky at 112px**,
+  clauses numbered `01…` with the ordinal hung into the gutter from 1280px, a
+  colophon and cross-links to the other three. The route component is split from
+  the document component so the 404 can return before any hook claims the head.
+  Exports `POLICIES`, `policyBySlug`, `clauseTitle`, `clauseNumeral`,
+  `toClauses`.
+- `utils/policyClauses.js` (new) + `.test.js`: the clauses a policy cannot carry
+  in stored prose, emitted as markdown-lite so they typeset and number like the
+  stored ones. `taxClause` / `codClause` / `returnsClause` →
+  `termsPricingBlock()` appended to **Terms** (clause 11);
+  `shippingMethodsBlock(methods)` appended to **Shipping & Returns** from
+  `shipping.getMethods()`. **Every builder returns `""` when it has nothing true
+  to say**, and no builder prints a rate — the old Terms page's three hard-coded
+  rupee rows (₹99 / ₹199 / ₹499) are gone and cannot come back.
+- `hooks/useSiteContent.js` (new): the five pages' shared read of `siteContent`,
+  on `useHomeData`'s tri-state contract (`undefined` in flight, `null` missing or
+  unreadable, value ready), de-duplicating the StrictMode double mount and
+  caching nothing.
+- `ui/ContentBlocks.js`: additive `dropCap` prop (default `true`) for a body
+  rendered in more than one run. `utils/seo.js` (245 → 288): **`faqPageJsonLd`**,
+  which drops any row with no question or nothing publishable left in its answer.
+- `App.js`: `/about` · `/why-lamikaa` · `/faq` · `/contact` and **one param
+  route** `ROUTES.POLICY` (`/policies/:policy`) for the four documents; seven
+  lazy imports retired, five added. The four explicit `ROUTES.POLICY_*`
+  constants stay — every LINK still names its document, and `LegacyRedirects`
+  still maps `/privacy`, `/terms`, `/refund`, `/cookies` onto them.
+  `utils/constants.js` loses `WHY_CHOOSE_US` and `POLICY_LAST_UPDATED` with the
+  pages that were their only consumers.
+- **Deleted**: `pages/{AboutUs,HelpCenter,Support,PrivacyPolicy,TermsOfService,CookiePolicy,RefundPolicy}/`.
+  Four of those shared one "document" stylesheet as four copies whose own header
+  said any change had to be pasted into the other three; there is one now.
+- **Tests**: `utils/policyClauses.test.js`, `pages/Policies/PolicyPage.test.js`,
+  `pages/About/About.test.js`, `pages/Faq/Faq.test.js` — 37 assertions covering
+  the "" answers, the no-rate rule, clause numbering by position, anchor
+  uniqueness, the chain split and "no answer disappears when a heading is
+  renamed".
+
 
 ## 7. Admin panel
 
@@ -1893,8 +1982,8 @@ Legend: **K** keep & restyle (logic kept, tokens/copy/layout re-skinned) · **R*
 | `src/pages/Products/*` | **DONE (23)** → `src/pages/Shop/*` | Filter-free chaptered listing; the old page and its CSS are deleted. |
 | `src/pages/ProductDetails/*` | R | New PDP (Prompts 25–27). |
 | `src/pages/Checkout/*`, `OrderConfirmation/*`, `OrderHistory/*`, `Profile/*`, `Wishlist/*`, `SpecialOffers/*` | K | Restyle, logic preserved (Prompts 29–31). |
-| `src/pages/AboutUs/*` | R | siteContent-driven story (Prompt 28). |
-| `src/pages/HelpCenter/*` → `src/pages/Faq/*`, `Support/*` → `Contact/*`, policies → `src/pages/Policies/*` | R | siteContent-driven (Prompt 28); old routes redirect. |
+| `src/pages/AboutUs/*` | **DONE (28)** → `src/pages/About/*` | siteContent-driven story; the old folder and its 861-line stylesheet are deleted. |
+| `src/pages/HelpCenter/*` → `src/pages/Faq/*`, `Support/*` → `Contact/*`, the four policies → `src/pages/Policies/PolicyPage` | **DONE (28)** | siteContent-driven; the four policy routes collapse into one param route, `/policies/other` is a real 404, and `/help` `/support` `/privacy` `/terms` `/refund` `/cookies` still redirect. Six folders deleted. |
 | `src/pages/Admin/*` | K | Rebrand + new fields/screens (Prompts 32–34). |
 | `public/index.html`, `manifest.json`, favicons, `robots.txt` | R | LAMIKAA identity (Prompt 02), sitemap/robots (38). |
 | `db.json` | R | New seed (Prompt 06). |

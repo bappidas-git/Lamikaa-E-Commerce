@@ -27,12 +27,20 @@ import styles from "./ContentBlocks.module.css";
 // connector running between them, which is the same visual language the ritual
 // steps use on a PDP. It is a real <ol>, so the order is in the markup and not
 // only in the picture.
+//
+// `dropCap` (editorial only) exists for a body rendered in more than one run.
+// The About page (Prompt 28) breaks its copy around the `::steps` block so the
+// value chain can be drawn by `ValueChain` rather than by the generic stepper,
+// which leaves a second, third and fourth <ContentBlocks> further down the same
+// article — and each of them would open its first paragraph on a drop cap. A
+// page opens once; the continuation runs pass `dropCap={false}`.
 // =============================================================================
 
 const ContentBlocks = ({
   text,
   blocks,
   variant = "prose",
+  dropCap = true,
   className = "",
   ...rest
 }) => {
@@ -47,8 +55,12 @@ const ContentBlocks = ({
 
   // The first paragraph is the one that takes the drop cap in editorial. Found
   // by index rather than by CSS `:first-of-type` because a page may open on a
-  // heading, and a drop cap belongs to the opening PROSE.
-  const firstParagraph = parsed.findIndex((block) => block.type === "p");
+  // heading, and a drop cap belongs to the opening PROSE. `-1` is "no paragraph
+  // here", which is also what a continuation run asks for with `dropCap={false}`
+  // — no index can match it, so no letter is set.
+  const firstParagraph = dropCap
+    ? parsed.findIndex((block) => block.type === "p")
+    : -1;
 
   return (
     <div

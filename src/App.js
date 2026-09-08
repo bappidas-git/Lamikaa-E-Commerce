@@ -57,22 +57,23 @@ const Checkout = React.lazy(() => import("./pages/Checkout/Checkout"));
 const OrderConfirmation = React.lazy(() => import("./pages/OrderConfirmation/OrderConfirmation"));
 const OrderHistory = React.lazy(() => import("./pages/OrderHistory/OrderHistory"));
 const Profile = React.lazy(() => import("./pages/Profile/Profile"));
-const HelpCenter = React.lazy(() => import("./pages/HelpCenter/HelpCenter"));
-const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy/PrivacyPolicy"));
-const TermsOfService = React.lazy(() => import("./pages/TermsOfService/TermsOfService"));
-const CookiePolicy = React.lazy(() => import("./pages/CookiePolicy/CookiePolicy"));
-const RefundPolicy = React.lazy(() => import("./pages/RefundPolicy/RefundPolicy"));
-const Support = React.lazy(() => import("./pages/Support/Support"));
-const AboutUs = React.lazy(() => import("./pages/AboutUs/AboutUs"));
+const Faq = React.lazy(() => import("./pages/Faq/Faq"));
+const Contact = React.lazy(() => import("./pages/Contact/Contact"));
+const About = React.lazy(() => import("./pages/About/About"));
+const WhyLamikaa = React.lazy(() => import("./pages/WhyLamikaa/WhyLamikaa"));
+// The four policies are ONE chunk and one component (Prompt 28): they are the
+// same document in four sets of words, and four chunks for four records is
+// four round trips for a visitor who reads two of them.
+const PolicyPage = React.lazy(() => import("./pages/Policies/PolicyPage"));
 const SpecialOffers = React.lazy(() => import("./pages/SpecialOffers/SpecialOffers"));
 const Wishlist = React.lazy(() => import("./pages/Wishlist/Wishlist"));
 const Search = React.lazy(() => import("./pages/Search/Search"));
 const NotFound = React.lazy(() => import("./pages/NotFound/NotFound"));
-// TEMPORARY (Prompt 08, removed by Prompts 28/29 as each page lands): the
-// route map is complete from today, so the pages that have not been built yet
-// say so instead of 404ing or hiding behind a redirect to the homepage.
+// TEMPORARY (Prompt 08, removed by Prompt 29 when the last page lands): the
+// route map is complete from today, so the page that has not been built yet
+// says so instead of 404ing or hiding behind a redirect to the homepage.
 // /search stopped needing it in Prompt 11; /rituals and /rituals/:slug in
-// Prompt 24. Two remain: /why-lamikaa (28) and /cart (29).
+// Prompt 24; /why-lamikaa in Prompt 28. ONE remains: /cart (29).
 const ComingSoon = React.lazy(() => import("./pages/_ComingSoon/ComingSoon"));
 // TEMPORARY (Prompt 05, removed by Prompt 35): the visual QA surface for the
 // shared UI primitives. Unlinked from the navigation and from the sitemap.
@@ -185,24 +186,19 @@ function StorefrontShell() {
                   <Route path={ROUTES.RITUAL} element={<RitualDetail />} />
 
                   {/* ---- Brand and content -------------------------------- */}
-                  {/* Prompt 28 replaces AboutUs with pages/About/About. */}
-                  <Route path={ROUTES.ABOUT} element={<AboutUs />} />
-                  <Route
-                    path={ROUTES.WHY}
-                    element={<ComingSoon prompt="28" title="Why LAMIKAA" />}
-                  />
-                  {/* Prompt 28 → pages/Faq/Faq and pages/Contact/Contact. */}
-                  <Route path={ROUTES.FAQ} element={<HelpCenter />} />
-                  <Route path={ROUTES.CONTACT} element={<Support />} />
-                  {/* Prompt 28 collapses these four into pages/Policies/
-                      PolicyPage, driven by siteContent. */}
-                  <Route path={ROUTES.POLICY_PRIVACY} element={<PrivacyPolicy />} />
-                  <Route path={ROUTES.POLICY_TERMS} element={<TermsOfService />} />
-                  <Route
-                    path={ROUTES.POLICY_SHIPPING_RETURNS}
-                    element={<RefundPolicy />}
-                  />
-                  <Route path={ROUTES.POLICY_COOKIES} element={<CookiePolicy />} />
+                  {/* Every word on these five pages comes from `siteContent`
+                      (Prompt 28) — the story, the philosophy, the answers and
+                      the four policies are edited in the admin, not deployed. */}
+                  <Route path={ROUTES.ABOUT} element={<About />} />
+                  <Route path={ROUTES.WHY} element={<WhyLamikaa />} />
+                  <Route path={ROUTES.FAQ} element={<Faq />} />
+                  <Route path={ROUTES.CONTACT} element={<Contact />} />
+                  {/* ONE param route for the four documents. The four explicit
+                      paths live on in ROUTES (every link still names its
+                      document) and in LegacyRedirects (/privacy, /terms,
+                      /refund, /cookies still land here); a segment the page's
+                      own map does not know renders a real 404. */}
+                  <Route path={ROUTES.POLICY} element={<PolicyPage />} />
 
                   {/* ---- Commerce ---------------------------------------- */}
                   {/* The cart is a drawer until Prompt 29 builds the page. */}

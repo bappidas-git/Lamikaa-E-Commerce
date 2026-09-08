@@ -1,0 +1,435 @@
+/* =============================================================================
+ * /faq — the reference shelf
+ * =============================================================================
+ * MOBILE FIRST: one column, and the contents rail is a horizontally scrolling
+ * chip strip above the answers. From 1025px the page splits — a 200px rail
+ * sticky at 112px (clear of the masthead) on the left, the groups on the right
+ * — which is the width at which a heading list and a 68ch answer both fit.
+ *
+ * The rail scrolls INSIDE itself on a phone (`overflow-x: auto` on the list,
+ * not on the page) so a long set of group names never widens the document —
+ * the horizontal-scroll failure every breakpoint in the QA matrix checks for.
+ *
+ * TOKENS ONLY — no hex, no hard-coded colour.
+ * ========================================================================== */
+
+.page {
+  position: relative;
+}
+
+/* ---- 1. The opening ------------------------------------------------------ */
+
+.head {
+  padding-bottom: calc(var(--sf-section-y) * 0.35);
+}
+
+.eyebrow {
+  margin: 0 0 var(--sf-space-4);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.lede {
+  margin: var(--sf-space-4) 0 0;
+  max-width: 60ch;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- The search ---------------------------------------------------------- */
+
+.search {
+  margin-top: var(--sf-space-10);
+  max-width: 560px;
+}
+
+.searchLabel {
+  display: block;
+  margin-bottom: var(--sf-space-3);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+/* 52px, per the brief — taller than an ordinary field because it is the one
+   control on the page and the first thing a thumb reaches for. */
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  min-height: 52px;
+  padding: 0 var(--sf-space-4);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface-2);
+  transition: border-color var(--sf-transition-fast),
+    box-shadow var(--sf-transition-fast);
+}
+
+.searchRow:focus-within {
+  border-color: var(--sf-color-border-strong);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.searchIcon {
+  display: inline-flex;
+  flex: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--sf-color-text-muted);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sf-color-text);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-normal);
+}
+
+.searchInput::placeholder {
+  color: var(--sf-color-text-muted);
+}
+
+/* The ring belongs to the row, which is the visible control. */
+.searchInput:focus {
+  outline: none;
+}
+
+/* Safari draws its own clear affordance on `type=search`; ours is the one that
+   is 44px and reachable from the keyboard. */
+.searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.searchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--sf-tap-target);
+  height: var(--sf-tap-target);
+  margin-right: calc(var(--sf-space-3) * -1);
+  border: 0;
+  border-radius: var(--sf-radius-pill);
+  background: transparent;
+  color: var(--sf-color-text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color var(--sf-transition-fast);
+}
+
+.searchClear:hover {
+  color: var(--sf-color-text);
+}
+
+.searchClear:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* Always in the DOM, empty when idle: a live region that is added to the page
+   when the first result lands is a live region screen readers never announce. */
+.searchStatus {
+  min-height: 1.25em;
+  margin: var(--sf-space-3) 0 0;
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-muted);
+}
+
+/* ---- 2. The contents and the answers ------------------------------------- */
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-8);
+  align-items: start;
+  padding-bottom: var(--sf-section-y);
+}
+
+/* ---- The rail ------------------------------------------------------------ */
+
+.railTitle {
+  margin: 0 0 var(--sf-space-3);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  color: var(--sf-color-gold-deep);
+}
+
+.railList {
+  display: flex;
+  gap: var(--sf-space-2);
+  margin: 0;
+  padding: 0 0 var(--sf-space-2);
+  list-style: none;
+  /* The strip scrolls, not the page. */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.railItem {
+  flex: none;
+}
+
+.railLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-tap-target);
+  padding: var(--sf-space-2) var(--sf-space-4);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast), background var(--sf-transition-fast);
+}
+
+.railLink:hover {
+  color: var(--sf-color-text);
+  border-color: var(--sf-color-border-strong);
+  background: var(--sf-color-surface-hover);
+}
+
+.railLink:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.railCount {
+  font-variant-numeric: tabular-nums;
+  color: var(--sf-color-text-muted);
+}
+
+/* ---- The groups ---------------------------------------------------------- */
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-12);
+  min-width: 0;
+}
+
+/* `scroll-margin-top` is what makes `#group-orders` land BELOW the sticky
+   masthead instead of underneath it. */
+.group {
+  scroll-margin-top: 112px;
+  min-width: 0;
+}
+
+/* A section landed on from the rail takes focus (ScrollToTop), and a focus ring
+   around a whole section is louder than the arrival it marks. */
+.group:focus {
+  outline: none;
+}
+
+.groupTitle {
+  margin: 0 0 var(--sf-space-6);
+  padding-bottom: var(--sf-space-4);
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.accordion {
+  min-width: 0;
+}
+
+/* ---- The empty state ----------------------------------------------------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sf-space-4);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  color: var(--sf-color-text);
+}
+
+.emptyBody {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- 3. The closing band ------------------------------------------------- */
+
+.band {
+  padding-top: 0;
+}
+
+.bandCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-6);
+  border-radius: var(--sf-radius-xl);
+}
+
+.bandBody {
+  min-width: 0;
+}
+
+.bandTitle {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text);
+}
+
+.bandLede {
+  margin: var(--sf-space-3) 0 0;
+  max-width: 52ch;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.bandMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-3) var(--sf-space-6);
+  margin: var(--sf-space-5) 0 0;
+}
+
+.bandLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: var(--sf-tap-target);
+  color: var(--sf-color-gold);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  text-decoration: none;
+}
+
+.bandLink:hover {
+  color: var(--sf-color-gold-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.bandLink:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.bandActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-4);
+}
+
+.bandGhost {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sf-tap-target);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.bandGhost:hover {
+  color: var(--sf-color-text);
+}
+
+.bandGhost:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- 769+ ---------------------------------------------------------------- */
+
+@media (min-width: 769px) {
+  .title {
+    font-size: var(--sf-text-4xl);
+  }
+
+  .bandCard {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sf-space-10);
+  }
+}
+
+/* ---- 1025+ : the rail becomes a rail ------------------------------------- */
+
+@media (min-width: 1025px) {
+  .body {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--sf-space-16);
+  }
+
+  .rail {
+    position: sticky;
+    top: 112px;
+    /* Its own scroller when the group list outgrows the viewport, so a long
+       set of headings never pins the rail off-screen. */
+    max-height: calc(100vh - 132px);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  .railList {
+    flex-direction: column;
+    gap: var(--sf-space-1);
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .railLink {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    border: 0;
+    border-left: 2px solid var(--sf-color-border);
+    border-radius: 0;
+    background: transparent;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .railLink:hover {
+    border-color: var(--sf-color-gold);
+    background: transparent;
+  }
+}

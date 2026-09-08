@@ -31,7 +31,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 25 | PDP — layout, chapters, purchase panel, mobile bar | complete | 2026-09-08 | (this commit) | The product page is the two-column composition: a **sticky media column** (`top: 96px` from 1025px) beside a scrolling column holding `PurchasePanel` and then the story as numbered **chapters**. `pages/ProductDetails/ProductDetails.js` 1143 → 693 and its stylesheet 1109 → 161: the tab strip, `SILK_SPEC_LABELS`/`deriveSilkSpecRows`/`deriveGenericSpecRows`/`deriveFabricCraft`/`deriveKeyFeatures`/`isPremiumProduct`, the promises band and the hand-rolled `setPageTitle` + `meta[name=description]` effect are all gone; `useSeo({title, description, image, type:"product"})` owns the head (JSON-LD in 27). Three new components in `components/pdp/`: **`PurchasePanel`** (trail → eyebrow → h1 → promise → rating → price → size/fragrance/SKU → trust chips → variants → quantity+stock → Add to Cart / Buy now / wishlist / share → delivery → the ownership note), **`ChapterNav`** (a glass pill bar after 320px of scroll, IntersectionObserver-tracked, `aria-current`, sticky at 72/56px) and **`Chapter`**. `AddToCartBar` rebuilt on `Button`/`Price`/`CloudinaryImage`; **`BottomNav` stands down on `/product/*`** so the two bars never stack. Everything the old page could do still works — reviews, FAQs, the bundle and the related rail are in the column, awaiting Prompt 27's chapters. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` 21 suites / 233 passed (1 suite / 50 skipped), 15 of them new. |
 | 26 | PDP — media gallery with images and videos | complete | 2026-09-08 | (this commit) | The media column is the real gallery. **`pdp/MediaGallery`** (441 + 324) is one list of images and videos behind one index: a 4:5 plate (1:1 ≤768px) on a gold `GlowWrap`, a crossfaded stage that mounts **only the active row** (so a five-frame product never puts five `<video>` elements on the page), the "Full label / Front panel" toggle wherever a row carries a Cloudinary crop, a "Zoom" button, a live counter, 44px glass arrows and **one** rail — `role="tablist"` with roving tabindex, a 72px column beside the stage from 1025px and a 56px snap strip below it under that. **`pdp/Lightbox`** (448 + 249) is `ui/Modal size="full"` repainted as a flat 96% scrim: the picture at `w_2000` uncropped, wheel / pinch / ± / double-tap zoom from 1× to 4× with the pan clamped to the picture's own edges, ←/→/Esc, swipe, and focus back on the Zoom button. **`hooks/useSwipe`** (108) is pointer-based, ignores vertical gestures (`touch-action: pan-y`), **cancels the browser's native image drag** (without which a mouse drag across a photograph never completes) and works with a mouse. `storefront/ProductGallery.*` **deleted** with its export; `STOREFRONT_CONFIG.gallery` is now `{zoom, lightbox}`. One shared-primitive fix on the way: `Modal`'s `.full .body` had no `flex: 1`, so a full-screen dialog's body was content-height and the lightbox's picture region collapsed to 0 (the search overlay had the same latent bug). 17 new tests. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 (22 suites / 250 passed). Browser QA at 360/390/414/768/1024/1280/1440 + touch swipe + keyboard-only + reduced motion: no horizontal scroll, no page errors. |
 | 27 | PDP — supporting content, reviews, cross-sell, JSON-LD | complete | 2026-09-08 | (this commit) | The product page is finished: **nine chapters**, every one of them optional and every one of them printing DATA. `overview · benefits · ingredients · how-to-use · farmer-story · full-ingredients · faqs · reviews · complete-the-ritual`, with the chapter index and the chapter markup reading **one** set of booleans so `ChapterNav` and the document can never disagree. Four new components (`pdp/PackClaims`, `IngredientChapter`, `HowToUse`, `FarmerStory`, 487 lines + 4 modules), `utils/seo.js` 93 → 245 with **`productJsonLd`**, and the three retained blocks rewritten. **Claims discipline held**: `offers` only where `isPriceKnown`, `availability` only where `stock` is a real number, `aggregateRating` only where a real average AND count exist — so on a fresh install **no** graph carries a rating and five of eight carry no offer; the carton's "anti-ageing" line appears exactly once on the page, inside "As printed on the pack". Reviews empty state is now "No reviews yet — Reviews are written by customers from My Orders after delivery."; the flag flip was exercised and reverted. `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 276 passed / 50 skipped (26 new). Browser QA at 360/390/414/768/1024/1280/1440 — **`scrollWidth === clientWidth` at every one** after two container-vs-viewport fixes the browser found. See "Prompt 27 record" below. |
-| 28 | Content pages from siteContent | pending | | | |
+| 28 | Content pages from siteContent | complete | 2026-09-08 | (this commit) | **Five pages, one source of copy.** `/about`, `/why-lamikaa`, `/faq`, `/contact` and `/policies/:policy` are built from `siteContent` and render **not one narrative sentence typed into JSX** — only UI furniture ("Our Story", "Contents", "Send message"). **Seven old page folders deleted** (6,844 lines of Meghali-era JSX + CSS, four of them four copies of one document stylesheet); the four policy routes collapse into **one param route** and `/policies/other` renders a real 404. New: `utils/policyClauses.js` (the tax / COD / returns / shipping-method clauses a policy cannot carry in stored prose), `hooks/useSiteContent.js`, `utils/seo.js` + `faqPageJsonLd`. **The old Terms page's three hard-coded rupee shipping rates are gone and cannot come back** — rates are live data or nothing. Browser QA in Chromium at 360/390/414/768/1024/1280/1440: **no horizontal scroll on any of the five page types**, deep links `/faq#faq-7` and `#group-orders` open and focus the right row, the contact form posts a lead with the same seven keys, and the Terms clause re-words itself when Settings change (verified against a patched settings record, then reverted). `CI=true npm run build` **exit 0 with no warnings**; `npm test -- --watchAll=false` 313 passed / 50 skipped (**37 new**). See "Prompt 28 record" below. |
 | 29 | Cart page and checkout restyle | pending | | | |
 | 30 | Auth, account, orders and wishlist restyle | pending | | | |
 | 31 | Order confirmation, offers, search results and state consistency | pending | | | |
@@ -342,6 +342,16 @@ Record every decision a prompt had to make that the reference files did not sett
 - `26 · 2026-09-08 · `Modal`'s `.full .body` gained `flex: 1 1 auto` — a shared primitive changed outside this prompt's file list · A `size="full"` panel is a whole `100svh`, but its body had no flex grow, so it was content-height and any `flex: 1` region inside it (the lightbox's picture, `SearchModal`'s result list) had nothing to grow into and resolved to **zero**. Measured: the lightbox viewport was `1440×0` and every wheel, pan and double-click landed on the foot instead of the picture. The fix is one declaration in the component whose own comment already promised "one scrolling region beneath it"; `SearchModal` was re-checked in the browser after it (body 959 of a 960 dialog, no visual change).`
 - `26 · 2026-09-08 · `useSwipe` cancels `dragstart` on its element · A gallery stage IS a photograph, and an `<img>` is draggable by default: a mouse drag across it starts the browser's own image drag, the ghost thumbnail follows the cursor, the pointer stream stops dead and no swipe ever completes. Found by the browser QA hanging mid-drag — twice — before the cause was read correctly. The cancel lives in the hook, not in the gallery, because "works with mouse drag too" is the hook's promise to every future consumer.`
 - `26 · 2026-09-08 · The lightbox picture is capped at `min(92svh, 100%)`, not at `92svh` · 92svh is the design's cap; the FRAME is what is left after the 48px head and the zoom-bar foot, which at 960px is 79svh. Capping at the design number alone would have let the picture overflow a frame whose `overflow: hidden` then clips it — a clipped edge being the exact thing a lightbox exists to undo.`
+- `28 · 2026-09-08 · `hooks/useSiteContent.js` was added, outside the prompt's expected-files list · Five pages needed the same effect (read one section of `siteContent`, tri-state it, de-duplicate the StrictMode double mount). Five copies of it would have been five places for the "not yet" vs "not there" distinction to be got wrong — the distinction the whole no-invented-copy rule rests on. It follows `useHomeData`'s contract exactly (`undefined` in flight, `null` missing or unreadable, value ready) and caches nothing, so an owner who edits the About copy in the admin and clicks back sees today's words.`
+- `28 · 2026-09-08 · `ContentBlocks` gained an additive `dropCap` prop (default `true`) — a shared primitive changed outside the file list · `/about` renders its body in RUNS broken at the `::steps` fence, so the value chain can be drawn by `ValueChain` rather than by the generic stepper. Every run after the first would otherwise open on its own drop cap. One prop, one line in the component, no change to any existing call site.`
+- `28 · 2026-09-08 · Clause numbers are generated BY POSITION and the author's own ordinal is stripped off the heading · The seeded bodies write "## 01. Dispatch", and the Terms document has an ELEVENTH clause that no stored prose can carry (the live pricing block). Numbering by position is what lets a generated clause continue the run, and what keeps the document right when an owner reorders two clauses in the admin without renumbering them by hand. `clauseTitle` strips at most TWO digits, so "2026 in review" keeps its year.`
+- `28 · 2026-09-08 · The Shipping & Returns clause lists method NAMES and descriptions and **never a rate** · The prompt forbids hard-coded rupee rates; it would have been equally wrong to print `flatRate`/`freeAbove` from the live record into a legal document, because a policy that quotes money is a policy a customer can hold the checkout to at a moment when the checkout has already recomputed it. The rate belongs at checkout. Asserted in `policyClauses.test.js`.`
+- `28 · 2026-09-08 · A policy `standfirst` is READ but not seeded · The design calls for one under the revision stamp; `siteContent.policies.*` carries `title`, `updatedAt` (privacy only) and `body`, and writing four standfirsts here would have been four paragraphs of brand copy invented by a component. The page renders `record.standfirst` when the owner adds one in Prompt 34's editor and lays out correctly without it. Same rule for `siteContent.faqPage.lede`.`
+- `28 · 2026-09-08 · The FAQ page adds a trailing "More questions" group for rows no configured heading claims · `siteContent.faqPage.groups` is owner-editable, so renaming or deleting a heading in the admin would otherwise silently drop every answer filed under the old key. An answer the store has written must be visible somewhere. Claimed BY KEY rather than by the rows a group returned, so a de-duplicated row cannot reappear under "More questions" as if nobody had filed it. Unit-tested.`
+- `28 · 2026-09-08 · The Why LAMIKAA ownership chain is rendered by `ContentBlocks`' own stepper, NOT by `ValueChain` · `siteContent.whyLamikaa.difference` carries a six-step OWNERSHIP chain, and `ValueChain` exists precisely so the seven canonical VALUE steps (`brand.valueChain`) cannot be invented — handing it a different list would defeat its one job. `/about`'s `::steps` IS the canonical chain, and there it is drawn by `ValueChain`.`
+- `28 · 2026-09-08 · `WHY_CHOOSE_US` and `POLICY_LAST_UPDATED` were deleted from `utils/constants.js` · Both had exactly one consumer each among the seven deleted pages. `WHY_CHOOSE_US` re-shaped `brand.pillars` for the Contact rail, which now mounts `<Pillars compact/>` reading the same config and owning its own glyphs; `POLICY_LAST_UPDATED` was one hard-coded date shared by four hard-coded documents, replaced by each record's own `updatedAt`. Comments left in place of both, per the file's own habit.`
+- `28 · 2026-09-08 · `ROUTES.POLICY` (`/policies/:policy`) was ADDED and the four explicit policy constants KEPT · App.js mounts one route; every link still names its document (`ROUTES.POLICY_TERMS`) rather than building a path, and `LegacyRedirects` still maps `/privacy`, `/terms`, `/refund`, `/cookies` onto those same four constants. One route, four names, no path typed at a call site.`
+- `28 · 2026-09-08 · `PolicyPage` splits into a route component and a document component · The unknown-slug case has to return `NotFound` BEFORE anything reads a record or claims the document head; a guard inside one component would have to run after every hook, so `/policies/other` would publish the policy page's `<title>` and canonical for a frame and then let `NotFound`'s own `useSeo` overwrite them.`
 
 ## Open TODOs
 
@@ -349,8 +359,8 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 
 - `16 · The live Laravel database still holds the PRE-CORRECTION `media[0].crop` rectangles for five products (soap, body wash, face mask, face scrub, face serum). Mock mode reads the fixed values from db.json; live mode will still show a white stripe on the soap plate, white corners on the body wash, white rules on the face mask, a light-grey letterbox on the scrub and a clipped gold band on the serum until it is reseeded from PRODUCTS.md §2. No schema change — five JSON values. · backend/owner · 39`
 
-- `20 · `ImpactTriptych showImages` is shipped but only exercised as `false`: the three 4:3 placeholder photographs it turns on belong to the Why LAMIKAA page, and that layout wants one browser pass once the page exists. · Prompt 28 · 28`
-- `21 · `pages/HelpCenter/HelpCenter.js` and `pages/ProductDetails/ProductDetails.js` still hand-roll their own FAQ accordions (their own open state, their own `aria-expanded` wiring, their own answer markup). Both now have a shared block to mount instead — `<FAQ faqs={…} headingLevel={…}/>` — and both files are rewritten wholesale by the prompts that own them. Until then the guardrail "one accordion implementation only" holds for the home page, not for the site. · Prompts 27 / 28 · 27`
+- ~~`20 · `ImpactTriptych showImages` is shipped but only exercised as `false` …` · **RESOLVED by Prompt 28**~~ — `showImages` is on in two places now (`/about` §4 and `/why-lamikaa#impact`) and both were walked at 360–1440 with no horizontal scroll. The photographs themselves still cannot be SEEN in this sandbox (see the Prompt 28 entry below).
+- ~~`21 · `pages/HelpCenter/HelpCenter.js` and `pages/ProductDetails/ProductDetails.js` still hand-roll their own FAQ accordions …` · **RESOLVED by Prompts 27 and 28**~~ — the PDP mounts `<FAQ faqs={faqs} headingLevel={3}/>` (27) and `pages/HelpCenter/` is deleted, replaced by `pages/Faq/Faq.js`, which mounts one `<FAQ>` per group (28). **One accordion implementation now holds for the whole site.**
 - `21 · `{{RETURN_WINDOW_DAYS}}` resolves from `STOREFRONT_CONFIG.returnsWindowDays`, which still holds the boilerplate **7**, so "You can request a return … within 7 days of delivery" now prints on the HOME page as well as on `/faq`, the PDP panel and the refund policy. The token itself never prints either way (verified: no `{{` anywhere on the page). Owner to confirm the window, or set 0 for "no returns" — at 0 the sentence drops and the answer keeps its second half. · owner · 39`
 - `20 · No placeholder photograph could be seen rendered in the browser in this sandbox — `res.cloudinary.com` and `picsum.photos` reset Chromium's TLS tunnel through the agent proxy (curl gets 200), the same limitation Prompt 19 recorded. Nothing in this section depends on one, but the home page's images as a whole want one run on a developer machine. · developer · 37`
 
@@ -370,7 +380,7 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `04 · Small UI labels below 14px survive in component CSS this prompt may not touch (Task 8 restricts fixes to the scale tokens and the base layer). Measured at 1280px: Header .navLink 11px/500 and .navMoreCount 11px/500 (Header.module.css:269,323 — hardcoded 0.6875rem, not a token); AnnouncementBar .message, TrustStrip .label, the section eyebrows and Footer .colTitle at 12px/500 (--sf-text-xs, which DESIGN_SYSTEM §6 fixes at .75rem); breadcrumbs, "We accept" and "Secure payment" at 12px/400. None is body copy and none is light-weight (the 300 tier is gone), so the acceptance criteria hold — but the 11px pair in particular should not survive the header rebuild. · Prompts 09 / 13 / 23 / 28 · 09`
 - `04 · The "SOFT" 30 decision is reversible in two lines and is the owner's call: swap the Fraunces URL in public/index.html for family=Fraunces:opsz,wght,SOFT@9..144,400,30;9..144,500,30;9..144,600,30 and add font-variation-settings: "SOFT" 30 to the h1,h2 rule in src/index.css. Cost: +54KB on the latin subset. · owner · 38 (perf audit decides)`
 - `04 · .gradient-text in App.css is superseded by the .sf-gradient-text primitive (which clips the SIGNATURE gradient and carries a background-clip fallback) and has zero consumers under src/. Kept unrenamed because it is a global class name; delete it with the rest of the legacy layer. · Prompt 35 · 35`
-- `04 · --sf-text-xl/-2xl/-3xl became FLUID clamps in this prompt, but three components still carry their own hand-rolled clamps for display type: HeroSection .headline clamp(2.5rem, 5.4vw, 4.5rem), ProductDetails .productName clamp(2rem, 3.2vw, 2.75rem) and the AboutUs hero. They fit at every measured width, but each is a second definition of the scale and should move onto the tokens when its component is rebuilt. · Prompts 14 / 25 / 28 · 14`
+- ~~`04 · … three components still carry their own hand-rolled clamps for display type …` · **RESOLVED**~~ — `HeroSection` died with Prompt 14, `ProductDetails .productName` moved onto the tokens in Prompt 25, and the AboutUs hero went with the folder in Prompt 28. `pages/About` and `pages/WhyLamikaa` set their titles from `--sf-text-3xl`/`-4xl` and clamp only the BAND HEIGHT, which is a layout figure and not a second type scale.
 - `04 · The QA in this prompt ran against a build made with REACT_APP_USE_MOCK_API=true forced in the shell, because CRA loads .env.production over .env for `npm run build` and the committed .env.production points at the live Laravel API (unreachable from here). The tree ships unchanged — the final verification build used the normal config. Worth knowing before anyone tries to reproduce the screenshots. · developer · —`
 
 - `05 · `/_playground` (route in App.js + `src/pages/_Playground/`) is TEMPORARY scaffolding and must be deleted with its route and its import. · Prompt 35 · 35`
@@ -388,15 +398,15 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 
 - `07 · AdminHeroSection.js is a STAND-IN and its first tab is mislabelled by design: it edits `announcements` through slide-shaped controls. Only the headline (saved as the row's `text`), the link, the on/off switch and the order reach the storefront; subtitle, eyebrow, CTAs, background, alignment, scrim and timer are written onto the row and ignored. Prompt 34 must split it into a hero product-ordering screen (admin.setHeroOrder) and a real announcements manager (text + link + isActive + sortOrder + the startsAt/endsAt window, which currently has NO control anywhere in the admin — the adapters only preserve it). · Prompt 34 · 34`
 - `07 · HeroSection.js keeps the pre-rebuild carousel alive on product data through the temporary productSlide() adapter, and heroConfig.js still carries the slide-era shape (heights, openers, secondaryCta, overlayOpacity, HERO_BACKGROUND_TYPES, HERO_TEXT_ALIGNMENTS, normalizeHeroSlide(s), HERO_FALLBACK_SLIDES). The seeded heroConfig no longer stores any of those keys — the normalizer supplies them as defaults. Delete the adapter, the component and the dead half of heroConfig.js with the rebuild. · Prompt 14 · 14`
-- `07 · faqsForGroup() and normalizeFaq's `group` have no consumer yet — the FAQ page that renders headings from siteContent.faqPage.groups[] is Prompt 28's, and the admin control that sets a row's group is Prompt 34's. Until then every seeded row keeps the group Prompt 06 gave it and nothing reads it. · Prompts 28 / 34 · 28`
+- `07 · faqsForGroup() now HAS its consumer — `/faq` renders one section per `siteContent.faqPage.groups[]` entry (Prompt 28), and the seeded `brand`/`products`/`orders` keys each become a heading (`account` has no rows and is skipped). What is still missing is the ADMIN CONTROL that sets a row's `group`: until Prompt 34 an owner cannot re-file an answer, and a row filed under a key nobody has configured lands in the page's trailing "More questions" section. · Prompt 34 · 34`
 - `07 · The twenty live routes in REPO_MAP §3.4 do not exist on the Laravel side yet, so Mode B is INCOMPLETE until the backend team ships them. Until then `npm run test:live` will fail on the new tests even against a correct staging host — that is the point of writing them now. · Backend team / owner · 39`
 - `07 · No .env.local and no staging host exist, so no api.js function has ever executed against a real Laravel API in this programme. Every "both modes" claim from here on rests on the mock run plus the §3 review. The first staging URL the owner provides should be spent on a full `npm run test:live`. · Owner · 39`
 - `07 · products.search() is still json-server's `?q=` in mock mode, which matches ANY field of a record (a query can hit an ingredient list or a meta description and rank as highly as a name). Ranking is deliberately left to the caller — **`src/utils/search.js` exists as of Prompt 11**, and BOTH search surfaces (overlay and `/search`) rank client-side from `products.getAll()` rather than calling `products.search()` at all. The function is now unused by the storefront; a server-side `GET /products?search=` is still the answer if the range ever outgrows a linear pass, and its field list is documented at the function. · Prompt 39 / backend team · 39`
 - `07 · admin.setHeroOrder clears `heroOrder` on every product not in the list it is given. That is the documented contract (dropping a product out of the carousel is the same gesture as reordering it), but it means a caller that passes a PARTIAL list silently empties the rest of the hero. The Prompt 34 editor must always send the full order. · Prompt 34 · 34`
 
-- `08 · ComingSoon stubs are live at **/why-lamikaa and /cart** — two, not four. **/search left the list in Prompt 11** (`pages/Search/Search`) and **/rituals + /rituals/:slug left it in Prompt 24** (`pages/Rituals/{Rituals,RitualDetail}`). Each of the two renders "This page is being built (Prompt NN)" and is noindex; Prompt 35 verifies no route still points at pages/_ComingSoon and deletes the folder (Prompt 31 in the index's plan). · Prompts 28, 29 · 28`
+- `08 · **ONE** ComingSoon stub is left, at **/cart**. /search left the list in Prompt 11, /rituals + /rituals/:slug in Prompt 24, and **/why-lamikaa in Prompt 28** (`pages/WhyLamikaa/WhyLamikaa.js`). It renders "This page is being built (Prompt 29)" and is noindex; Prompt 29 takes the last one, then Prompt 35 verifies no route still points at pages/_ComingSoon and deletes the folder. · Prompt 29 · 29`
 - ~~`08 · /search is a stub, so the search OVERLAY is the only search surface until Prompt 11 …` · **RESOLVED by Prompt 11**~~ — `/search?q=` is a real results page and Enter (or "See all N results") lands on it. The one temporarily reduced storefront capability is restored.
-- `08 · pages/AboutUs/AboutUs.js still carries the Meghali silk story end to end (72 matches for silk/saree/weave/Sualkuchi/Mekhela/loom — headline "Three silks, one river, and the families who weave them", the SILKS table, META ["Est. 2010", "Kolkata", …], the placehold.co loom imagery). Prompt 08 touched it for links + useSeo only. Prompt 28 deletes the folder and writes pages/About/About from siteContent. · Prompt 28 · 28`
+- ~~`08 · pages/AboutUs/AboutUs.js still carries the Meghali silk story end to end …` · **RESOLVED by Prompt 28**~~ — the folder is deleted along with six more (`HelpCenter`, `Support`, `PrivacyPolicy`, `TermsOfService`, `CookiePolicy`, `RefundPolicy`), and `grep -rn "Galleria\|Kolkata, West\|Sualkuchi\|National Handloom" src` returns **0**.
 - `08 · pages/Products/Products.js still carries FABRIC_FAMILIES (Muga/Pat/Eri/Toss Silk) and its "Fabric" facet. It renders NOTHING with the LAMIKAA seed (availableFabrics is empty, so the chip group and the drawer section are both hidden) — it is dead code that Prompt 23 deletes with the page. · Prompt 23 · 23`
 - ~~`08 · The temporary `categorySlug` prop on pages/Products/Products (and the CategoryRoute wrapper in App.js) …`~~ · **RESOLVED by Prompt 23** — `pages/Products/` is deleted and the route is `<Shop mode="category" />`; Prompt 24 gave it its head, its breadcrumb, its JSON-LD and its 404.
 - `08 · RouteFallback is a STOREFRONT-token skeleton and it is also what the admin's <Suspense> shows while an admin chunk loads. It reads correctly (the tokens are global) but it is not the admin's own idiom. Give the admin its own fallback when the shell is rebuilt. · Prompt 32 · 32`
@@ -452,6 +462,12 @@ Carry-overs that a later prompt (or the developer/owner) must pick up (format: `
 - `24 · `RitualStep` supports an UNCONTROLLED choice (omit `selectedProductId`/`onSelect` and the row keeps its own) but no caller uses it — `RitualDetail` always lifts the selection, because the CTA panel has to spend it. The path is covered by the component's own default state rather than by a test; the PDP's "part of this ritual" cross-link (Prompt 27) is the surface most likely to want it. · owner of 27 · 27`
 - `24 · The category `heroImage` seeds are unrelated stock frames (`/category/face-care` currently serves the Statue of Liberty). That is expected — they are inventoried in PLACEHOLDER_ASSETS.md and wear `.sf-placeholder-media` — but it is the first prompt where a placeholder photograph is the largest thing on the page, and the glass panel's legibility over it now depends on `scrim` rather than on luck. Re-check the band once real category photography exists. · owner · 39`
 - `24 · Chromium in this sandbox has no outbound HTTPS, so the placeholder photography was rendered by fetching each remote URL in NODE (which does reach picsum/cloudinary through the agent proxy) and fulfilling the browser's request with the bytes. Every screenshot in this prompt's QA is therefore of the REAL seeded frames — the first time in the programme that has been possible — but it is a harness trick, not the app's own path. The `onImageError` fallback was exercised separately by aborting the same requests. · developer · 37`
+
+- `28 · A policy `standfirst` and a `siteContent.faqPage.lede` are READ by the pages and seeded by nobody. Both render when present and cost no layout when absent; neither was written here because a standfirst is brand copy and a component that invents one is exactly what this prompt removed. The admin editor should offer both fields. · Prompt 34 / owner · 34`
+- `28 · Only `siteContent.policies.privacy` carries an `updatedAt`, so Terms, Shipping & Returns and Cookies show no revision stamp. The page prints one only where a record has a date — correct, but three legal documents with no visible "last updated" is a compliance gap the owner should close. Prompt 34's editor should STAMP `updatedAt` on every save. · Prompt 34 / owner · 34`
+- `28 · `siteContent.faqPage.groups[3]` ("Account") has no rows in the seed, so the page renders three headings, not four. Nothing is broken — the page skips an empty heading by design — but the seed promises a section that does not exist. Either write the account answers or drop the group. · owner · 39`
+- `28 · The placeholder photographs on `/about` (heroImage, image2) and `/why-lamikaa` (heroImage, the three impact frames) still could not be SEEN in this sandbox: `picsum.photos` and `res.cloudinary.com` reset Chromium's TLS tunnel through the agent proxy (the same limitation Prompts 19, 20 and 26 recorded; `curl` gets 200). The bands were verified with the images blocked — the wash, the glass panel, the overlap and the aspect ratios all hold on the empty plate — but the composition over a real photograph wants one pass on a developer machine. · developer · 37`
+- `28 · The Terms document's live clause was verified against a PATCHED settings record (tax 18% exclusive, COD ceiling ₹5,000, resolved email/phone/address/WhatsApp) and the patch was then reverted — `git status db.json` is clean. The seeded state prints "inclusive of all taxes" with no rate and hides every contact channel, which is the correct unresolved state, but it means the COD ceiling, the exclusive-tax wording and the three channel cards are code paths **no committed fixture exercises**. · Prompt 39 · 39`
 
 ## Placeholders introduced / resolved
 
@@ -3507,3 +3523,141 @@ the end of the first line. Each `+` now travels with the tile it adds.
 
 Nothing of the PDP. Prompt 28 builds the content pages from the same `siteContent` record this
 chapter reads two sections of, and `/about` is where the "Read our story" button already points.
+
+---
+
+## Prompt 28 record (2026-09-08)
+
+### What the content pages now are
+
+Five pages, one source of copy. Nothing narrative is typed into JSX on any of them — every
+paragraph, heading, callout, quote, answer and clause comes from `siteContent`, and what the
+components own is UI furniture ("Our Story", "Contents", "Search the answers", "Send message").
+That is a legal rule and not a preference: BRAND.md §3.9 rule 2 makes the qualifiers part of the
+sentence ("profits distributed by BAOPCL **can** reach its member farmers as dividends, **subject
+to** applicable laws and the company's dividend declaration"), and a paragraph hard-coded in a
+component is a paragraph nobody can edit, review or withdraw.
+
+| Route | Component | Reads | Shape |
+|---|---|---|---|
+| `/about` | `pages/About/About.js` | `siteContent.about` + `.impact` | Opening band → editorial body (drop cap, the `::steps` chain drawn by `ValueChain`, the LAMIKAA Difference callout, the vision pull-quote) → second plate → `ImpactTriptych showImages` → `Pillars compact` + `LegalNote` → CTA row |
+| `/why-lamikaa` | `pages/WhyLamikaa/WhyLamikaa.js` | `siteContent.whyLamikaa` + `.impact` | Opening band → philosophy + `Pillars` → `#difference` (ownership chain + `LegalNote`) → `#impact` (triptych + three "Read more" disclosures) → `#vision` → CTA row |
+| `/faq` | `pages/Faq/Faq.js` | `useFaqs()` + `siteContent.faqPage` | Head + 52px search (`role="status"` count) → sticky group rail / mobile chip strip → one `<FAQ>` per group → contact band. `FAQPage` JSON-LD |
+| `/contact` | `pages/Contact/Contact.js` | `siteContent.contact` + `useStoreSettings()` | Head → channels grid → the lead form (behaviour unchanged) → rail (Visit, `Pillars compact`, socials, FAQ) |
+| `/policies/:policy` | `pages/Policies/PolicyPage.js` | `siteContent.policies[key]` (+ `settings`, `shipping.getMethods`) | Breadcrumb → kicker → title → revision stamp → TOC rail → numbered clauses → colophon + cross-links |
+
+### What was deleted
+
+Seven page folders, **6,844 lines**: `AboutUs/`, `HelpCenter/`, `Support/`, `PrivacyPolicy/`,
+`TermsOfService/`, `CookiePolicy/`, `RefundPolicy/`. Four of those were four copies of one
+"document" stylesheet whose own header said *"this block is deliberately identical in all four
+modules… Any change here gets copied into the other three"* — collapsing the four routes into one
+param route collapsed the four copies with it, so a change to the document look is now a change to
+all four documents by construction.
+
+The Terms page is the reason this mattered. It stated **three hard-coded rupee shipping rates**
+(₹99 / ₹199 / ₹499), a Kolkata jurisdiction and a company name none of which this store runs on,
+and because they were JSX, correcting them was a deploy.
+
+Two constants went with the pages: `WHY_CHOOSE_US` (one consumer, the Contact rail, which now
+mounts `<Pillars compact/>`) and `POLICY_LAST_UPDATED` (one hard-coded date shared by four
+hard-coded documents, replaced by each record's own `updatedAt`).
+
+### The clauses a policy cannot carry in stored prose
+
+`src/utils/policyClauses.js` — the whole of the old Terms page's live-clause logic, lifted out and
+extended, emitting markdown-lite so a generated clause typesets exactly like a stored one and takes
+a number in the same run:
+
+| Builder | Source | Appended to |
+|---|---|---|
+| `taxClause` | `settings.store.currency / currencySymbol / taxRate / taxIncluded` | Terms |
+| `codClause` | `settings.payment.codEnabled / codMaxOrder` | Terms |
+| `returnsClause` | `STOREFRONT_CONFIG.returnsWindowDays` | Terms |
+| `shippingMethodsBlock` | `apiService.shipping.getMethods()` | Shipping & Returns |
+
+**Every builder returns `""` when it has nothing true to say**, and the page drops the block rather
+than printing a heading over an empty space. The tax clause says "inclusive of all taxes" for the
+seeded 0-rate/inclusive pair rather than claiming a 0% rate — the packs print "M.R.P (incl. of all
+taxes)", and a stated 0% would be false. `shippingMethodsBlock` prints method **names** and
+descriptions and **never a rate**: money in a policy belongs where the checkout can be held to it.
+
+### Numbering, anchors and the table of contents
+
+The stored bodies open their clauses `## 01. Dispatch`. The ordinal is **stripped off the heading**
+(`clauseTitle`, at most two digits so "2026 in review" keeps its year) and **re-generated by
+position** (`clauseNumeral`), hung into the left gutter from 1280px. That is what lets the Terms
+document's generated pricing clause be **11** after ten stored ones, and what keeps the document
+right when an owner reorders two clauses in the admin without renumbering them by hand. Anchors are
+slugified titles (`#your-account`), de-duplicated by number, and the TOC is generated from the
+clauses **actually on the page** — so a generated clause is in it and a clause whose every sentence
+was stripped is not.
+
+### Tokens still never print
+
+Every policy body goes through `fillCopy` (which fills `{freeShipping}` / `{codSentence}` /
+`{taxNote}` / `{{RETURN_WINDOW_DAYS}}` and then drops any sentence still quoting an unsupplied
+`{{TOKEN}}`) before it is parsed. Verified on the page: the GSTIN/CIN line, the `{{JURISDICTION}}`
+sentence and the `{{DISPATCH_SLA}}` sentence are **absent**, and the sentences either side of each
+survive. The `FAQPage` graph is built from the same prepared text the accordion renders — a graph
+built from the raw answer would publish `{{DISPATCH_SLA}}` to a crawler while the page quietly
+dropped the line.
+
+### Files
+
+**Created (13)** — `pages/About/About.{js,module.css,test.js}`,
+`pages/WhyLamikaa/WhyLamikaa.{js,module.css}`, `pages/Faq/Faq.{js,module.css,test.js}`,
+`pages/Contact/Contact.{js,module.css}`, `pages/Policies/PolicyPage.{js,module.css,test.js}`,
+`utils/policyClauses.{js,test.js}`, `hooks/useSiteContent.js`.
+
+**Changed (6)** — `App.js` (five routes, four policy routes → one param route, seven lazy imports
+retired), `components/ui/ContentBlocks.js` (`dropCap` prop), `utils/seo.js` (+`faqPageJsonLd`),
+`utils/constants.js` (+`ROUTES.POLICY`, −`WHY_CHOOSE_US`, −`POLICY_LAST_UPDATED`),
+`utils/socialLinks.js` and `pages/_ComingSoon/ComingSoon.js` (comments that named deleted files).
+
+**Deleted (14)** — the seven folders above.
+
+### Verification
+
+- `CI=true npm run build` — **exit 0, "Compiled successfully.", no warnings** (two
+  `react-hooks/exhaustive-deps` warnings were found and fixed: `content?.groups` and
+  `impact?.items` are fresh arrays on every render and are now read inside their memos).
+- `npm test -- --watchAll=false` — **313 passed / 50 skipped, 27 suites**. 37 new assertions across
+  four files: `policyClauses.test.js` (the "" answers, the no-rate rule, the FAQ graph),
+  `PolicyPage.test.js` (numbering by position, the stripped ordinal, unique anchors, the four-slug
+  map), `About.test.js` (`splitAtChain`), `Faq.test.js` (no answer disappears when a heading is
+  renamed).
+- Greps: `grep -rn "Galleria\|Kolkata, West\|Sualkuchi\|National Handloom" src` → **0**; all seven
+  folders gone; `grep -n "ComingSoon" src/App.js` → **`/cart` only**.
+
+### Browser QA (Chromium 1194, mock mode, dev server)
+
+Every route rendered, one `<h1>` each, **no `{{TOKEN}}` anywhere**, no console error but the
+expected `ERR_CONNECTION_RESET` on the external placeholder images:
+
+- `/about` — 7 value-chain steps, **one** drop cap, 4 pillars, the ownership sentence present.
+- `/why-lamikaa` — `#difference`, `#impact`, `#vision` all real ids; 3 "Read more" disclosures, and
+  opening "Financial" reveals the full §3.4 body.
+- `/faq` — 3 group headings (Account is empty and is skipped), 8 questions, rail hrefs
+  `#group-brand #group-products #group-orders`; search "black rice" → **"2 answers for "black
+  rice""** and 2 rows; a miss shows the empty state; `FAQPage` graph carries 8 questions and no
+  token. **Cold load on `/faq#faq-7` opens, focuses and scrolls to that row**; `#group-orders`
+  scrolls.
+- `/contact` — with the seed (all placeholders) **0 channel cards and no Visit card**, which is the
+  required behaviour; against a patched settings record, `mailto:`/`tel:`/`wa.me` cards, the Visit
+  card and a Maps link built from the address. Invalid submit focuses `#name` and writes 4 errors; a
+  valid submit posts a lead carrying all seven keys (`category: "general"`, `orderNumber: ""`) and
+  moves focus to "Message sent". **The QA lead and the settings patch were both reverted —
+  `git status db.json` is clean.**
+- `/policies/*` — Privacy's TOC has 9 entries and **every target exists**; Terms has 11 clauses
+  numbered `01…11` with the generated "Pricing, tax and payment" last, and it re-worded itself from
+  "inclusive of all taxes" to "exclusive of 18% tax" + "up to ₹5,000" when the settings changed.
+  Shipping & Returns lists the seeded "Standard Delivery" and **no ₹ figure**. `/policies/other` →
+  the real 404. `/help`, `/support`, `/refund` still redirect.
+- **360 / 390 / 414 / 768 / 1024 / 1280 / 1440 on all five page types: `scrollWidth === clientWidth`
+  at every one.**
+
+### Left for Prompt 29
+
+Nothing of the content pages. `/cart` is the last `ComingSoon` stub, and the cart drawer's
+"View cart" is already pointing at it.

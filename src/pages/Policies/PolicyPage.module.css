@@ -1,0 +1,394 @@
+/* =============================================================================
+ * /policies/:policy — the document look, once, for four documents
+ * =============================================================================
+ * This is the treatment the four separate policy pages shared as four copies of
+ * one stylesheet: a tracked gold kicker, a serif title over a hairline, the
+ * revision stamp, then numbered clauses down a ~70-character measure with their
+ * ordinals hung into the left gutter, and a colophon instead of a footer.
+ * Collapsing the four pages into one route collapsed the four copies with them,
+ * so a change here is a change to all four documents by construction.
+ *
+ * MOBILE FIRST: one column, the contents as an inline list above the document,
+ * the ordinals inline above their headings. From 1025px a 220px table-of-
+ * contents rail sticks at 112px (clear of the masthead) beside the measure, and
+ * the ordinals hang out into the gutter the container has to spare.
+ *
+ * BODY IS 16px, not 17: a legal document is read in long runs and at a smaller
+ * measure than an editorial page, which is why `ContentBlocks` is used in its
+ * `prose` variant here and the size is pulled back to the base step.
+ *
+ * TOKENS ONLY — every colour, space, radius and type value resolves through
+ * `--sf-*`. There is one theme and no hex in this file.
+ * ========================================================================== */
+
+.page {
+  padding-block: var(--sf-space-10) var(--sf-section-y);
+}
+
+.container {
+  min-width: 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sf-space-10);
+  align-items: start;
+}
+
+/* ---- The table of contents ----------------------------------------------- */
+
+.tocTitle {
+  margin: 0 0 var(--sf-space-3);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  color: var(--sf-color-gold-deep);
+}
+
+.tocList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tocItem {
+  min-width: 0;
+}
+
+.tocLink {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sf-space-3);
+  min-height: var(--sf-tap-target);
+  padding-block: var(--sf-space-2);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast);
+}
+
+.tocLink:hover {
+  color: var(--sf-color-text);
+}
+
+.tocLink:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.tocNum {
+  flex: none;
+  font-size: var(--sf-text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-gold-deep);
+}
+
+/* ---- The measure --------------------------------------------------------- */
+
+/* 64ch counted against this element's 1rem Manrope, which sets the body inside
+   it at roughly 70 characters a line — the long-form reading band. Everything
+   hangs off this column, breadcrumb included, so the left edge never moves as
+   you read down. */
+.doc {
+  max-width: 64ch;
+  min-width: 0;
+}
+
+.crumbs {
+  margin-bottom: var(--sf-space-10);
+}
+
+/* ---- Masthead ------------------------------------------------------------ */
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  margin: 0 0 var(--sf-space-5);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-gold-deep);
+}
+
+.kicker::before {
+  content: "";
+  width: var(--sf-space-8);
+  height: 1px;
+  background: var(--sf-color-gold);
+}
+
+.title {
+  margin: 0;
+  padding-bottom: var(--sf-space-6);
+  border-bottom: 1px solid var(--sf-color-border-strong);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl);
+  font-weight: var(--sf-font-normal);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+/* Tracked capitals, quiet — a revision stamp, not a headline. */
+.updated {
+  margin: var(--sf-space-5) 0 0;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wide);
+  color: var(--sf-color-text-muted);
+}
+
+.standfirst {
+  margin: var(--sf-space-6) 0 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-normal);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ---- Clauses ------------------------------------------------------------- */
+
+.clauses {
+  margin: var(--sf-space-16) 0 0;
+}
+
+/* A hairline between clauses and nothing else — no cards, no fills. */
+.clause {
+  position: relative;
+  padding-top: var(--sf-space-10);
+  border-top: 1px solid var(--sf-color-border);
+  scroll-margin-top: 112px;
+}
+
+.clause:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.clause + .clause {
+  margin-top: var(--sf-space-10);
+}
+
+/* A clause landed on from the contents takes focus (ScrollToTop), and a ring
+   around a whole clause is louder than the arrival it marks. */
+.clause:focus {
+  outline: none;
+}
+
+/* Inline above the heading on narrow screens; from 1280px it hangs out into
+   the left gutter beside the measure, where the container has room to spare,
+   so the prose keeps one clean edge top to bottom. */
+.clauseNum {
+  display: block;
+  margin: 0 0 var(--sf-space-3);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-gold-deep);
+}
+
+.clauseTitle {
+  margin: 0 0 var(--sf-space-4);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-normal);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+/* The reading body: 16px, and the `prose` measure is already 68ch — the doc
+   column is narrower than that, so the column wins and the two agree. */
+.prose {
+  font-size: var(--sf-text-base);
+}
+
+.prose p,
+.prose li {
+  font-size: var(--sf-text-base);
+}
+
+.missing {
+  margin: var(--sf-space-12) 0 0;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.missing a {
+  color: var(--sf-color-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---- Links in running text ----------------------------------------------- */
+
+.link {
+  color: var(--sf-color-gold);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition: color var(--sf-transition-fast);
+}
+
+.link:hover {
+  color: var(--sf-color-gold-light);
+}
+
+.link:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- Colophon ------------------------------------------------------------ */
+
+.colophon {
+  margin: var(--sf-space-16) 0 0;
+  padding-top: var(--sf-space-8);
+  border-top: 1px solid var(--sf-color-border-strong);
+}
+
+.colophonLabel {
+  margin: 0 0 var(--sf-space-3);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sf-tracking-wider);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-gold-deep);
+}
+
+.colophonText {
+  margin: 0;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.colophonText + .colophonText {
+  margin-top: var(--sf-space-3);
+}
+
+.siblings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-3) var(--sf-space-6);
+  margin-top: var(--sf-space-8);
+}
+
+.sibling {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sf-tap-target);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--sf-transition-fast);
+}
+
+.sibling:hover {
+  color: var(--sf-color-gold);
+}
+
+.sibling:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- 769+ ---------------------------------------------------------------- */
+
+@media (min-width: 769px) {
+  .title {
+    font-size: var(--sf-text-4xl);
+  }
+
+  .clauseTitle {
+    font-size: var(--sf-text-2xl);
+  }
+}
+
+/* ---- 1025+ : the rail ---------------------------------------------------- */
+
+@media (min-width: 1025px) {
+  .layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--sf-space-16);
+  }
+
+  .toc {
+    position: sticky;
+    top: 112px;
+    max-height: calc(100vh - 132px);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  .tocLink {
+    min-height: 0;
+    padding-block: var(--sf-space-2);
+  }
+}
+
+/* ---- 1280+ : the ordinals hang ------------------------------------------- */
+
+@media (min-width: 1280px) {
+  .clauseNum {
+    position: absolute;
+    top: var(--sf-space-10);
+    right: calc(100% + var(--sf-space-8));
+    margin: 0;
+    padding-top: 0.4em;
+    white-space: nowrap;
+  }
+
+  .clause:first-child .clauseNum {
+    top: 0;
+  }
+}
+
+/* ---- Narrow screens ------------------------------------------------------ */
+
+@media (max-width: 640px) {
+  .page {
+    padding-block: var(--sf-space-8) calc(var(--sf-section-y) * 0.75);
+  }
+
+  .crumbs {
+    margin-bottom: var(--sf-space-8);
+  }
+
+  .clauses {
+    margin-top: var(--sf-space-12);
+  }
+
+  .clause {
+    padding-top: var(--sf-space-8);
+  }
+
+  .clause + .clause {
+    margin-top: var(--sf-space-8);
+  }
+
+  .colophon {
+    margin-top: var(--sf-space-12);
+  }
+}
