@@ -31,6 +31,7 @@
     "eject": "react-scripts eject",
     "server": "node server.js",
     "sitemap": "node scripts/generate-sitemap.js",
+    "placeholders": "node scripts/placeholder-inventory.js",
     "dev": "concurrently \"npm start\" \"npm run server\"",
     "test:live": "LIVE_API=1 CI=true NODE_USE_ENV_PROXY=1 react-scripts test --watchAll=false --testPathPattern=api.live --testTimeout=90000"
   },

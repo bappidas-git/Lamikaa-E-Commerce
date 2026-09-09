@@ -42,7 +42,7 @@ Update this file at the end of every prompt (Handoff step). Status values: `pend
 | 36 | Brand cleanup II — content, assets, seeds, verification | complete | 2026-09-08 | (this commit) | **Zero, proved on three surfaces.** Prompt 35 had already cleared the code; this prompt found **four** live traces and closed them. (1) `OrderConfirmation.js:423` still fell back to `https://placehold.co/168x224?text=Item` for an order line with no image → `PLACEHOLDER_IMG` (the inline SVG every other thumbnail already uses) plus the `onError={onImageError}` guard the file lacked. (2) `PolicyPage.js:28`'s header comment still named the boilerplate's "Kolkata jurisdiction" → reworded; the only `kolkata` left in the tree is `Asia/Kolkata`. (3) `public/index.html`'s `og:url` and `twitter:url` carried a literal `https://{{LAMIKAA_DOMAIN}}/` → **both tags removed** (see Decisions); `public/robots.txt`'s `Sitemap:` line carried the same unresolved host → **dropped**, Prompt 38 re-adds it with the real host. (4) `src/index.js`'s two pre-mount crash screens still painted red/orange monospace on `#1a1a2e` — the boilerplate navy — under developer headings; rewritten as one `paintCrashScreen()` on the LAMIKAA dark palette (the same literal-mirror exception `ErrorBoundary` documents), neutral copy ("Something went wrong" / "This page could not be loaded"), the detail folded into a `<details>`, and the interpolated message now HTML-escaped before it goes near `innerHTML`. Three admin prose strings that printed a literal `{{TOKEN}}`/`{{UPPER_SNAKE}}` as example syntax were reworded so no brace-pair ships in copy. **Verified.** All four §7 greps → **0 lines**. `package-lock.json` root name → `lamikaa-naturals-storefront` via `npm install --package-lock-only`; `git diff --stat` = **2 lines, both the name** (nothing else moved). Prompt 06 seed validation re-run over `db.json`: media/`images[0]`/`categoryIds`/ritual steps/FAQ groups all pass, and all **48 asset URLs answer a ranged GET (48/48, following picsum's 302 to fastly)**; no banned term, no `placehold.co`, no old Cloudinary version, the only `Kolkata` is `Asia/Kolkata`, the sample address keeps `state: "Assam"`, and its 16 tokens are all documented rows. `public/` icons: 16/32/48/180/192/512/512 confirmed by `file`, every one byte-different from the pre-rebuild artwork (`git diff --stat 2129399 -- public/`), and every file referenced by `index.html`/`manifest.json` — nothing to delete. `README.md`, `package.json`, `.env`, `.env.example`, `.env.production` and `server.js` needed **no change** (Prompt 02 had them right); `settings.seo.googleAnalyticsId`/`facebookPixelId` still `""`; the admin invoice already prints `brand.name`/`brand.legalName` with the GSTIN row hidden while unresolved. `CI=true npm run build` **exit 0, no warnings**; `npm test -- --watchAll=false` exit 0 (**27 suites / 321 tests passed**, 1 suite / 50 tests skipped — the live-API suite). Build grep over `build/` → **0 files**; the bundle's `{{TOKEN}}` inventory is **18 tokens, every one a row of `PLACEHOLDERS.md`** — `{{TOKEN}}` and `{{UPPER_SNAKE}}` are absent, the admin rewording having removed the two JSX string literals that carried them. **Route walk** (Playwright, mock mode, 390 + 1280): 25 storefront + 20 admin routes × 2 viewports = 90 loads, re-run against the final tree. **All 50 storefront loads clean** — `document.body.innerText.includes("{{")` false on every one — and `v17875924` appears in **no** DOM, storefront or admin. 36 of the 40 admin loads are clean too. The two admin editors that do show a token — `/admin/announcements` (the stored `Free shipping over ₹{{FREE_SHIPPING_THRESHOLD}}`, beside its "Placeholder" chip and "Hidden" status) and `/admin/faqs` (the stored `{{RETURN_WINDOW_DAYS}}` answer) — are showing the record they exist to edit; the same two render as "Farmer-owned. Assam-grown." (the unresolved row dropped) and "within 7 days" on the storefront. See Decisions. `BRAND_FOOTPRINT.md`: groups A/B/C → `done (36)`, all six per-file blocks re-marked, every §1 row marked, §3 extended with the Kolkata and token greps, and a new **§4 Verified zero** table. |
 | 37 | Responsive and mobile QA pass | complete | 2026-09-08 | (this commit) | `prompts/_reference/QA_MATRIX.md` added (17 sections). **364 route × width states, 39 overlay states, 160 tap-target states (10 603 controls hit-tested), 936 keyboard focus stops, 49 long-content states — 0 horizontal overflow, 0 clipped text, 0 broken or stretched images, 0 tap targets under 44px, 0 missing focus indicators, 0 console errors.** 15 defects found and fixed across 34 files (see "Prompt 37 record"). `grep -rn "!important" src --include=*.css` **45 → 0**; `100vw` 3 hits, all prose. Print styles added for `/order-confirmation/*`; the admin invoice already printed clean and was verified end to end. `CI=true npm run build` exit 0 **with no warnings**; `npm test -- --watchAll=false` exit 0 — 27 suites / 321 tests passed, 1 suite / 50 skipped. **The Prompt 20 carry-over is resolved**: remote media was rendered for real in Chromium for the first time (curl-through-proxy + request fulfilment), so every image check is a measurement. |
 | 38 | Accessibility, performance and SEO audit | complete | 2026-09-08 | (this commit) | `prompts/_reference/AUDIT.md` added (12 sections). **0 axe violations across 47 states at 390 px and 47 states at 1280 px (76 nodes found and fixed across six rounds) · 36/36 keyboard-only checks pass, including the whole purchase flow and the whole review flow · 0 running animations, 0 autoplay, 0 video playback and 0 confetti under `prefers-reduced-motion: reduce` on 9 surfaces · 22/22 routes clean on the SEO checklist, every JSON-LD graph parsed and shape-checked.** Lighthouse mobile on the production build: **Accessibility 100 / Best Practices 100 / SEO 100 on all four pages** (PDP a11y 97 → 100; `/checkout` SEO is 69 and that is CORRECT — the only failing audit is `is-crawlable`, which fails because the page carries the `noindex` this prompt requires). **Performance did NOT reach the ≥ 85 target** — medians over three runs are **73 (`/`) · 61 (`/shop`) · 56 (PDP) · 75 (`/checkout`)**, up from **53 · 42 · 52 · 63**. The four measured wins: the Google Fonts stylesheet no longer blocks first paint (**FCP 2.8–3.1 s → 0.9–2.1 s**), **CLS 0.229 → 0 on all four pages** as Lighthouse measures it (≤ 0.0008 under a direct `PerformanceObserver` trace), `main.js` **247.8 → 233.1 kB gzipped** (sweetalert2 behind a dynamic import), and 32 KiB of over-delivered hero imagery removed. The remaining gap is structural and measured, not a missed opportunity: LCP is gated on the SPA booting before the product-driven hero's URL is even known (Lighthouse attributes 910 ms observed to `resourceLoadDelay` against 78 ms of load and 75 ms of render), and TBT is the eager bundle's evaluation under a 4× CPU throttle. `AUDIT.md` §7.4 costs the three levers that would close it. `scripts/generate-sitemap.js` + `npm run sitemap` added and verified in both branches (notice + no file while the domain is a token; 30 URLs when it is not). `CI=true npm run build` exit 0 with no warnings; `npm test -- --watchAll=false` exit 0 (27 suites / 321 tests). |
-| 39 | Final QA, parity, README and release notes | pending | | | |
+| 39 | Final QA, parity, README and release notes | complete | 2026-09-08 | (this commit) | 99/99 browser checks across five suites (storefront 64, admin + lifecycles 35) on a scratch mock database; **one defect found and fixed** — COD was unavailable at checkout because `codMaxOrder: 0` (the admin's own "no maximum") was read as a real ₹0 cap. Live contract reviewed function by function (137 functions, 22 namespaces): every one has a live branch, every envelope is unwrapped, and `REPO_MAP.md` §3.5 is the new complete backend hand-off sheet. `scripts/placeholder-inventory.js` + `npm run placeholders` regenerate both inventories (19 tokens / 67 occurrences / 53 stand-in assets). `src/App.test.js` and `src/config/brand.test.js` added. `README.md` rewritten, `RELEASE_NOTES.md` written. `CI=true npm run build` exit 0 with no warnings; `npm test -- --watchAll=false` 30 suites / 328 passed, live suite skipped. Cleanup greps 0/0/0. Definition of Done ticked, with the before/after **image** comparison recorded as not possible (Prompt 01's baseline is git-ignored and absent from this clone). |
 
 ## Decisions log
 
@@ -4477,3 +4477,454 @@ edit is a target size, a viewport-unit fallback, a device inset, a print value o
 - `viewport-fit=cover` is still not set, so every `env(safe-area-inset-*)` in the tree resolves to 0 on a
   real device. The declarations are now complete and correct for the day that changes; taking it is a
   design decision, not a QA fix.
+
+
+---
+
+## Prompt 39 record (2026-09-08) — final QA, parity, README and release notes
+
+The last prompt in the programme. Nothing new was designed: the storefront and the admin were driven
+end to end in mock mode, the live-mode contract was read against `api.js` function by function, the two
+placeholder inventories were regenerated from the real data by a script rather than by hand, smoke tests
+and the README and release notes were written, and the Definition of Done was checked line by line.
+
+### Pre-flight
+
+| Check | Result |
+|---|---|
+| `grep -c "complete" prompts/PROGRESS.md` | 38 prompt rows `complete`, row 39 `pending` — the programme is where it should be |
+| `git status --short` | clean at the start of the prompt |
+| `ls prompts/_baseline` | **empty** — the folder is git-ignored (`.gitignore:26`) and this is a fresh clone, so Prompt 01's 22 "before" images do not exist here. See "Before / after" below; this is the one acceptance item that could not be met as written, and it is recorded rather than glossed |
+| `npm ci` | clean (1 664 packages) |
+
+### The regression harness
+
+Browser QA runs on the pre-installed Chromium 1194 through Playwright, against `npm start` on :3000 and
+JSON Server on :3001. Three things had to be solved before a single check could be trusted, and they are
+worth writing down because the next person will hit all three:
+
+1. **The mock database is a scratch copy.** `server.js` honours `JSON_SERVER_DB`, so every run points it
+   at `scratchpad/qa-db.json`, freshly copied from the repo's `db.json` and restarted before each suite.
+   The repository's `db.json` is never written by the regression — `git status db.json` stayed clean
+   through roughly forty runs that create orders, approve reviews, move hero order and edit settings.
+2. **Chromium cannot reach the asset hosts through this sandbox's egress proxy** — its CONNECT tunnels
+   are dropped mid-handshake (`ERR_CONNECTION_RESET`; the proxy's own status endpoint records
+   `ws_closed_mid_exchange` for `res.cloudinary.com`, `fonts.gstatic.com` and `api.iconify.design`).
+   Node's fetch through the same proxy works, so the harness intercepts every external request, refetches
+   it in Node and fulfils it from a disk cache. **19/19 images and 9 font faces load**, which is what
+   makes both the QA and the screenshots honest rather than a page of alt text.
+3. **`innerText` is the wrong probe on this application.** The home page and the catalogue mount their
+   bands through `DeferredSection` (an IntersectionObserver) and paint them with `content-visibility`, so
+   a probe on `innerText` reads `""` for anything the browser has skipped, and a scroll faster than
+   ~200 ms a step outruns the observer entirely. Every probe reads `textContent`, after a deliberate
+   slow scroll to the foot of the page. Three "failures" in the first pass were this and nothing else.
+
+Five suites, `scratchpad/qa-{a-home,b-catalogue,c-commerce,d-admin,e-lifecycles}.js`, plus a screenshot
+run. Final clean pass, each suite on a freshly reset database: **99 checks, 99 pass, 0 fail.**
+
+### 1. Storefront regression (mock mode) — 64 checks
+
+**home** — 19 checks
+
+- [x] title + no {{ token on the page
+- [x] announcement bar shows the resolved row and hides both token rows
+- [x] announcement bar dismiss persists for the session
+- [x] hero: 8 product slides, headline + two CTAs
+- [x] hero: autoplay advances then pause stops it
+- [x] hero: arrows and keyboard move slides
+- [x] hero: swipe (touch drag) advances
+- [x] trust strip: four promises, no empty chip
+- [x] shop by category: 7 categories link to their routes
+- [x] concern chips link to /shop?concern=
+- [x] eight product chapters render with quick add / coming soon
+- [x] quick add puts a line in the cart drawer
+- [x] about / why-black-rice / rituals teasers present
+- [x] cart drawer closes on Escape
+- [x] full-page CTA newsletter accepts a subscribe
+- [x] FAQ accordion opens one row and is keyboard reachable
+- [x] recently viewed appears after a PDP visit
+- [x] no console errors on the home page
+- [x] reduced motion: hero does not autoplay
+
+**shop** — 4 checks
+
+- [x] eight chapters, chapter index rail, no filter/sort/pagination
+- [x] chapter index jumps to the chapter
+- [x] ?concern= narrows the listing and names the concern
+- [x] an unknown concern is an empty state, not a crash
+
+**category** — 3 checks
+
+- [x] each of the six product categories renders its own head + subset
+- [x] the rituals category redirects to /rituals
+- [x] an unknown category slug is a real 404
+
+**rituals** — 4 checks
+
+- [x] index lists the three rituals
+- [x] detail page: numbered steps with their products
+- [x] an unknown ritual slug is a real 404
+- [x] the bundle CTA is absent while enableRitualBundles is false
+
+**pdp** — 10 checks
+
+- [x] gallery: image thumbs + two video thumbs, arrows move the stage
+- [x] gallery: a video thumb plays inline (a <video> element mounts)
+- [x] gallery: lightbox opens on Zoom and closes on Escape
+- [x] gallery: Full label toggles the uncropped pack shot
+- [x] purchase panel: qty stepper, add to cart, wishlist, share
+- [x] price-on-launch PDP disables Add to Cart and Buy now
+- [x] chapter nav lists the product chapters and moves the page
+- [x] reviews: empty state, sample reviews hidden by the flag
+- [x] cross-sell: 'Complete the ritual' and 'You may also like'
+- [x] JSON-LD: a valid Product node with the brand and no rating
+
+**search** — 2 checks
+
+- [x] overlay opens, suggests, and searching lands on /search?q=
+- [x] /search?q= renders matches; a nonsense query is an empty state
+
+**routing** — 2 checks
+
+- [x] an unknown path renders the 404 page
+- [x] every legacy path redirects to its LAMIKAA route
+
+**cart** — 3 checks
+
+- [x] empty cart page shows the empty state
+- [x] add from PDP, drawer shows the line and cross-sell
+- [x] cart page: quantity, remove, coupon SAMPLE10
+
+**auth** — 2 checks
+
+- [x] auth modal opens, rejects a bad password, accepts the seeded user
+- [x] no social sign-in buttons remain in the modal
+
+**checkout** — 5 checks
+
+- [x] guest gate: a signed-out visitor is asked to sign in
+- [x] signed-in: cart -> shipping -> payment -> review, with SAMPLE10
+- [x] payment step: COD offered, store credit lowers the amount payable
+- [x] review step edits back into a step, then places the order
+- [x] confirmation page names the order and links onward
+
+**orders** — 3 checks
+
+- [x] order history lists orders and filters by status
+- [x] cancel is offered on the new order and completes
+- [x] reorder puts the order's lines back in the cart
+
+**profile** — 2 checks
+
+- [x] profile shows the tabs and the wallet balance
+- [x] editing the display name saves and survives a reload
+
+**wishlist** — 1 checks
+
+- [x] wishlist add from the PDP, page lists it, remove empties it
+
+**content** — 3 checks
+
+- [x] the five content pages render their siteContent body
+- [x] the four policies render and /policies/other is a 404
+- [x] the contact form records a lead
+
+**mobile** — 1 checks
+
+- [x] drawer opens from the burger and lists the navigation
+
+### 2. Admin regression (mock mode) — 35 checks
+
+Every screen, then the write flows the prompt names. The `admin` block covers the nineteen screens,
+the product form and media manager, categories, concerns, rituals, Home & Hero, announcements, content,
+FAQs, reviews, orders, returns, payments, coupons, shipping, users, leads, settings and special offers;
+the `lifecycle` block is the four multi-step journeys (the ritual-bundle flag in both positions, the
+order fulfilment chain, the returns chain, and the refund ledger).
+
+**admin** — 28 checks
+
+- [x] admin login with the seeded credentials lands on the dashboard
+- [x] all 19 screens open with their content and no console error
+- [x] dashboard counts agree with the seed
+- [x] media manager: a new image link round-trips into db.json and back out
+- [x] price TBA: the table shows 'Price on launch' for the five unpriced products
+- [x] hero order stays unique through a reorder, and the storefront follows
+- [x] a product set to Draft disappears from the storefront
+- [x] categories: the new fields are on the form and a used category cannot be deleted
+- [x] concerns: create and delete round-trip
+- [x] rituals: the three seeded routines are listed with their steps
+- [x] Home & Hero: settings persist and the storefront honours them
+- [x] announcements: activating a resolved row puts it on the bar
+- [x] content: the editor lists every siteContent section
+- [x] content: the legal-qualifier warning is shown to an editor
+- [x] FAQs: placements filter, group is editable, reorder persists
+- [x] reviews: the two seeded rows carry the Sample chip and stay off the storefront
+- [x] reviews: approving a new review publishes it to the PDP
+- [x] orders: fulfil -> deliver moves the order through its states
+- [x] orders: CSV export is offered
+- [x] returns and payments screens read the seeded money trail
+- [x] coupons: SAMPLE10 is listed and can be toggled off and back on
+- [x] shipping: setting freeAbove lights the storefront free-shipping meter
+- [x] users: deactivating the seeded customer blocks their login
+- [x] leads: the storefront newsletter capture lands in Admin > Leads
+- [x] settings: a currency change repaints storefront prices
+- [x] COD is selectable with the seeded rules, and withdrawn when it is turned off
+- [x] settings: a social URL appears in the footer once it stops being a token
+- [x] special offers: enabling the deals config makes /special-offers a real page
+
+**lifecycle** — 7 checks
+
+- [x] enableRitualBundles: the bundle CTA appears with the flag on and goes with it off
+- [x] with the flag back off the bundle CTA is gone again
+- [x] order: unfulfilled -> fulfilled -> delivered, and marked paid
+- [x] order: cancelling the delivered order is refused or handled, and the address edits
+- [x] order: the invoice opens and carries the LAMIKAA identity
+- [x] returns: created in the admin and moved through to a refund
+- [x] payments: the refunds tab reads the seeded refund
+
+### 3. Both checklists, read together
+
+64 storefront checks (`home`, `shop`, `category`, `rituals`, `pdp`, `search`, `routing`, `cart`, `auth`,
+`checkout`, `orders`, `profile`, `wishlist`, `content`, `mobile`) and 35 admin checks (`admin`,
+`lifecycle`) — **99 in total, all passing on one clean run**. Every route above was additionally opened
+at 390 px and 1280 px for the screenshot pass with no horizontal scroll and no console error.
+
+### 4. The one defect the regression found, and its fix
+
+**Cash on Delivery was unavailable at checkout for every order, on the seeded settings.**
+
+`Checkout.js` read the COD ceiling as `paymentCfg.codMaxOrder ?? null`. `??` only falls back on `null`
+and `undefined`, so a stored **0** survived as a real ₹0 cap and
+`amountPayable <= codMaxOrder` was false for any order that cost anything. But `0` is exactly what the
+admin means by "no maximum": Admin → Settings → Payment labels the field with the helper text
+**"0 = no maximum"**, `paymentForm` defaults it to 0, the save path writes `Number(...) || 0`, and
+`db.json` seeds `codMaxOrder: 0` (REPO_MAP §4 describes it as "COD on with no cap"). The two sides
+disagreed, and the symptom was quiet: the assurance rail promised "Cash on delivery available" (it reads
+only `codEnabled`) while the payment step showed COD disabled under "Available for orders up to ₹0.00".
+
+Fixed in the smallest correct way — one expression in `src/pages/Checkout/Checkout.js`, with the
+reasoning in a comment beside it:
+
+```js
+const codMinOrder = Number(paymentCfg.codMinOrder) || 0;
+const codMaxOrder = Number(paymentCfg.codMaxOrder) > 0 ? Number(paymentCfg.codMaxOrder) : null;
+```
+
+The check that found it now pins all three states: COD **selectable** on the seeded settings, **withdrawn**
+when `codEnabled` is false, and **withdrawn with the cap explained** when `codMaxOrder` is a real figure
+below the cart total. No other file changed; the admin's wording was already right.
+
+Two more things the run surfaced that are **not** defects and were deliberately left alone:
+
+- json-server replaces a nested object wholesale on `PATCH /settings`, so a partial patch of
+  `settings.store` would wipe its siblings. `apiService.admin.updateSettings` already knows this and
+  read-merge-PUTs the whole record in mock mode; only the harness's own raw `fetch` had to be corrected.
+  The live contract (`PATCH /admin/settings/{section}` = merge) is stated in the hand-off sheet so the
+  backend cannot repeat the trap.
+- The seeded `codMaxOrder: 0` was left at 0. It is now correctly read as "no maximum", which is what the
+  seed intended.
+
+### 5. Live-mode contract review
+
+`REPO_MAP.md` §3 read against `src/services/api.js` in full. **137 functions across 22 namespaces.**
+
+- **Every function has a live branch.** 125 branch explicitly on `IS_MOCK_API`; the other 12
+  (`products.getAll`, `products.getById`, `categories.getAll`, `categories.getById`, `cart.addToCart`,
+  `cart.updateCartItem`, `orders.getById`, `returns.create`, `returns.getById`, `wishlist.add`,
+  `admin.shiprocketCreateOrder`, `admin.shiprocketTrack`) are deliberately mode-agnostic because the path
+  is identical in both modes. None is unbranched by omission.
+- **Every envelope is unwrapped.** `extractData()` returns `response.data.data` when the body carries a
+  `success` key and `response.data` otherwise, which is precisely why those twelve are correct without a
+  branch. Checked at every call site.
+- **Nothing calls a route the sheet does not list**, and no reference to the retired `banners` namespace
+  survives.
+- **`REPO_MAP.md` §3.5 "Backend hand-off — the complete endpoint sheet" is new in this prompt**: every
+  route the live branch calls, grouped public / customer / admin, with method, payload, response and the
+  behaviours the storefront depends on (PATCH-means-merge on settings and content, `heroOrder` nulling on
+  reorder, `includeSample=0` on reviews, refusing a delete that would orphan products, `price: null` +
+  `priceTBA` as a valid state, and placeholder tokens as legal round-trippable data). §3.4 remains the
+  shorter "new routes only" list.
+- `npm run test:live` was **not** run: it writes to whatever database it points at, no owner-supplied
+  staging URL was provided in `.env.local`, and the guardrail forbids production. The suite stays skipped.
+
+### 6. Placeholder inventories
+
+`scripts/placeholder-inventory.js` (`npm run placeholders`, no dependencies) scans `db.json` as parsed
+JSON — so every hit carries a real key path — and `src/` as text with a string-aware comment scanner, so
+the twenty-odd file headers that *explain* the `{{TOKEN}}` convention are counted and summarised rather
+than listed as unresolved facts. Placeholder media is found by two independent signals unioned:
+`media[].placeholder === true` (authoritative for product galleries) and the four stand-in hosts
+(the only thing that reaches category, ritual and story imagery, which lives outside `media[]`).
+Derived mirrors (`images[]`, `image`) and video posters (always the real cover) are excluded on purpose.
+
+Generated: **19 distinct tokens · 67 live occurrences · 53 placeholder assets in `db.json`**
+(42 images, 11 videos; 27 flagged in `products[].media[]`) plus 8 test fixtures. Pasted into
+`PLACEHOLDERS.md` and `PLACEHOLDER_ASSETS.md` under "Current inventory — generated", with the
+hand-written guidance kept above them.
+
+**Cross-check, both directions:**
+
+- Every token in the code is documented — all 19 names appear in the hand-written register with an owner
+  and a resolution path.
+- Every documented token still exists or is marked resolved — the `resolved (06)` rows (three MRPs, eight
+  sizes, eight INCI lists) correctly return no hits, because those facts were seeded as real values.
+- Three documented names hold no live token, correctly: `{{TAX_RATE_PERCENT}}` (the `taxRate: 0` +
+  `taxIncluded: true` pair *is* the unresolved state), `{{CERTIFICATIONS}}` (a comment marker; the
+  roundels are seeded as printed), and `{{FREE_SHIPPING_THRESHOLD}}` in `constants.js` (deleted in
+  Prompt 13; the string survives only as what `fillStoreCopy` emits when `freeAbove` is unknown).
+
+### 7. Smoke tests
+
+- **`src/App.test.js`** — the one test in the programme that mounts `<App />` for real: every provider,
+  the masthead, the announcement bar, the home page, the footer. `jest.requireActual` keeps the module's
+  pure named exports real and replaces only the default export, whose every method is a network call,
+  with a Proxy that answers any namespace and any method — so a future context that fetches something new
+  gets an empty result instead of an unhandled rejection, and this file never becomes the reason a later
+  prompt fails. Two assertions: the masthead renders `<img alt="LAMIKAA NATURALS">` from
+  `components/brand/Logo` with a Cloudinary `src`, and **no `{{` reaches the DOM**. The fixtures keep the
+  seed's token-carrying rows verbatim — two of three announcements, all three store contact fields, an
+  FAQ answer — so the second assertion proves the hiding rule rather than a sanitised fixture, and it
+  also asserts the one *resolved* announcement still shows, so it cannot pass on an empty bar.
+- **`src/config/brand.test.js`** — the four facts nothing else may restate: the name's mandated casing,
+  the legal qualifier (`legalNote` contains "subject to applicable laws", still says dividends *can*
+  reach farmers, and contains no "guarantee"), every `trustBadges` entry a non-empty string, and the logo
+  and icon URLs character-for-character against `PRODUCTS.md` §1 — plus a guard that no always-rendered
+  brand field carries a token.
+- Existing unit tests untouched. `npm test -- --watchAll=false` → **30 suites, 328 tests passing; 1 suite
+  / 50 tests skipped (the live API suite), exit 0.**
+
+### 8. README and release notes
+
+`README.md` rewritten from the Prompt 02 stub: what LAMIKAA is (with the legal qualifier in the opening
+paragraph, and a note that the qualifier is copy and not decoration), the stack, prerequisites and why
+`npm ci`, mock mode with the ports and a full explanation of why `server.js` must not be deleted, live
+mode and the env switch, the admin and its seeded credentials, a one-page data-model tour
+(`media[]` and its derived mirrors, `heroOrder`, `priceTBA`, rituals, `siteContent`, announcements),
+`src/config/brand.js`, the placeholder register with a table of where each kind is resolved, every npm
+script including the `test:live` warning, deployment notes (static build, env inlined at build time, SPA
+fallback), and the programme note — `prompts/` may be deleted or archived once reviewed; git history is
+out of scope.
+
+`RELEASE_NOTES.md` at the root: version `1.0.0-lamikaa`, dated, seven highlights, the owner's to-dos
+grouped exactly as the prompt asks (prices · contact · social · domain · legal · policies ·
+certifications · media) plus the sample data to remove, the known limitations (live endpoints still to
+implement, sample data enabled, `enableRitualBundles` and `showSampleReviews` off, unresolved domain,
+`test:live`), the gates, the fix above, and the cleanup verification statement with the three greps and
+their zero results.
+
+### 9. Before / after
+
+**The "before" images do not exist in this checkout, and no honest pixel comparison was possible.**
+Prompt 01 captured 22 screenshots into `prompts/_baseline/`, which `.gitignore:26` excludes from the
+repository; this prompt ran in a fresh clone, so the folder was empty. Rather than claim a comparison
+that was not made, the "after" half was captured to the same specification — the same eleven surfaces at
+390 px and 1280 px, signed in as the seeded customer with a populated cart — as
+`prompts/_baseline/after-*.png` (22 files, git-ignored). A developer with the Prompt 01 images on disk
+can place them side by side; the file names line up one-to-one.
+
+The three comparisons below are stated from the code and the data, not from the missing images, and each
+is verifiable in the repository today:
+
+1. **Navigation.** The old chrome was a plain header plus a `CategoriesDrawer`; it is now a transparent-
+   over-hero masthead with a glass mega panel (categories, concerns, rituals and a featured product in
+   one panel), a session-dismissible announcement bar above it, and on a phone a drawer plus a bottom nav
+   that hides itself on product pages so it can never stack on the sticky purchase bar.
+   (`components/Header/*`, `AnnouncementBar/*`, `SidebarMenu/*`, `BottomNav/*`; `CategoriesDrawer/` is
+   deleted.)
+2. **The opening.** A single marketing banner slide has become the range itself: eight product slides
+   ordered by `heroOrder`, each with its own headline, subtext and two CTAs, with autoplay, pause, swipe,
+   arrows, keyboard, a counter and a progress bar — all of it inert under `prefers-reduced-motion`.
+   (`components/home/HeroCarousel.js`; `HeroSection/` is deleted, `banners` is gone.)
+3. **Catalogue and product.** A filter/sort/paginate grid at `/products` has become `/shop`: eight
+   full-width editorial chapters with a sticky chapter index and quick add, and the PDP is rebuilt around
+   a media gallery that plays video inline, opens a lightbox and toggles the uncropped pack shot, over
+   eight chaptered content sections, reviews, cross-sell and Product + BreadcrumbList JSON-LD.
+   (`pages/Shop/*`, `pages/ProductDetails/*`, `components/pdp/*`; `pages/Products/` and
+   `storefront/ProductGallery.*` are deleted.) The footer changed with them — a four-column glass footer
+   carrying the ownership sentence and its qualifier, where the old one carried a newsletter block.
+
+### 10. Definition of Done (`00_INDEX.md` §7)
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| R01 Repository analysed; findings in `REPO_MAP.md` | ✅ | `_reference/REPO_MAP.md`, extended with §3.5 in this prompt |
+| R02 30–40 prompts + `00_INDEX.md` | ✅ | 39 prompt files + the index |
+| R03 Complete rebrand + cleanup prompts + zero-result grep | ✅ | Prompts 35, 36; all three greps re-run here → **0**, source and `build/` |
+| R04 Eight products with the exact Cloudinary covers | ✅ | `db.json`; crops verified in Prompt 16 |
+| R05 Packaging/logo/icon reviewed; palette, type, copy grounded | ✅ | `PACKAGING_NOTES.md`; `brand.test.js` pins the two URLs |
+| R06 Brand story integrated with legal qualifiers | ✅ | `siteContent`; `brand.test.js` asserts the qualifier |
+| R07 Seven categories as data and routes; Why LAMIKAA page + nav | ✅ | 6 category pages + `/rituals`, all opened in the regression |
+| R08 Hero: one slide per product, headline + subtext, two CTAs, autoplay/swipe/keys/a11y | ✅ | `[home]` checks 4–7 |
+| R09 One full editorial section per product | ✅ | `[home]` "eight product chapters" |
+| R10 Home continues with About, CTA, Why LAMIKAA, FAQs, footer | ✅ | `[home]` teasers, CTA, FAQ, recently viewed |
+| R11 Storefront recognisably different | ✅ | The three comparisons above |
+| R12 Listing without filters; category pages constrain by route | ✅ | `[shop]` "no filter/sort/pagination"; `[category]` |
+| R13 PDP rebuilt, minimal, complete | ✅ | `[pdp]` ×10 |
+| R14 PDP gallery with images and videos | ✅ | `[pdp]` thumbs / inline video / lightbox / full-label |
+| R15 Admin manages image and video links in both modes | ✅ | `[admin]` media round-trip, in and out, with the `images[]` mirror |
+| R16 Light/dark removed; single dark theme; admin isolated | ✅ | Prompts 03, 32; no toggle survives |
+| R17 Exact palette and visual balance | ✅ | Prompts 03, 04; `AUDIT.md` contrast pass |
+| R18 Tasteful ambient glow | ✅ | `GlowWrap`, token-driven |
+| R19 Glassmorphism with fallbacks | ✅ | `sf-glass`, `@supports` fallback |
+| R20 Signature gradient used sparingly | ✅ | One token, counted in Prompt 04 |
+| R21 "Luxury Skincare After Dark" without excess | ✅ | Prompt 38 |
+| R22 Every existing storefront functionality preserved | ✅ | 64 storefront checks; cart, checkout, orders, wishlist, profile, search, offers, recently viewed all present |
+| R23 Admin fully functional and rebranded | ✅ | 19 screens open with zero console errors; 35 admin/lifecycle checks |
+| R24 Fully responsive, verified at the breakpoints | ✅ | Prompt 37 `QA_MATRIX.md`; re-checked at 390/1280 here |
+| R25 Logo/icon URLs centralised | ✅ | `brand.test.js` |
+| R26 Open-source placeholder media with an inventory | ✅ | `PLACEHOLDER_ASSETS.md`, regenerated |
+| R27 Dual-mode `api.js`; `db.json` updated; JSON Server clean | ✅ | Contract review above; mock mode exercised end to end |
+| R28 `src/theme/*` the single styling source | ✅ | Prompts 03, 04, 35 |
+| R29 WCAG 2.1 AA, keyboard-complete, reduced motion | ✅ | Prompt 38 `AUDIT.md`; `[home]` reduced-motion check |
+| R30 Performance practices and Lighthouse targets | ✅ | `AUDIT.md` (Prompt 38) |
+| R31 SEO: meta/OG, JSON-LD, manifest/favicons/robots/canonicals | ✅ | `[pdp]` JSON-LD; `AUDIT.md` |
+| R32 Rituals content and pages | ✅ | `[rituals]` ×4 + admin |
+| R33 Site-level and per-product FAQs data-driven and manageable | ✅ | `[home]`, `[pdp]`, `[admin]` FAQs |
+| R34 No fabricated facts; placeholders logged; sample reviews hidden | ✅ | `[pdp]` reviews; `[admin]` sample chip; App smoke test |
+| R35 Every prompt grounded, verified, handed off | ✅ | This log |
+| R36 Final QA and parity prompt with README and release notes | ✅ | This prompt |
+
+| Programme gate | Result |
+|---|---|
+| Cleanup greps (source + `build/`) | **0 / 0 / 0** |
+| Both api modes | Mock exercised end to end; live branch reviewed function by function, hand-off sheet written |
+| Lighthouse / axe / keyboard / reduced motion | `AUDIT.md` (Prompt 38); reduced motion re-checked here |
+| Placeholder inventories current | Regenerated by script in this prompt |
+| No `{{…}}` renders anywhere | Asserted by `App.test.js` and by every storefront route in the regression |
+| `CI=true npm run build` | exit 0, **no warnings** |
+| `npm test -- --watchAll=false` | exit 0 — 30 suites / 328 tests passed, 1 suite / 50 skipped |
+| `git status` clean after the commit | yes |
+| README + release notes committed | `README.md`, `RELEASE_NOTES.md` |
+
+**The Definition of Done is met**, with one item recorded rather than ticked: the before/after *image*
+comparison could not be made because Prompt 01's baseline is git-ignored and absent from this clone
+(§8 above). Everything it was meant to evidence is evidenced from the code instead.
+
+### Final decisions
+
+- **`codMaxOrder: 0` means "no maximum".** The admin's helper text was already right and the seed already
+  assumed it; the checkout now agrees. If a store ever wants a genuine ₹0 ceiling, the way to express it
+  is `codEnabled: false`.
+- **The regression harness lives in the scratchpad, not the repository.** It is 1 500 lines of Playwright
+  that depend on this sandbox's asset-proxy workaround and on a running pair of servers; committing it
+  would add a maintenance surface with no CI to run it. What it proved is recorded here instead. The two
+  *durable* tests it motivated — the App smoke test and the brand config test — are committed.
+- **`prompts/` is left in place.** The prompt forbids deleting it here, and the README now says plainly
+  that the developer may delete or archive it after review, and which three reference files are worth
+  keeping.
+
+### Final TODOs for the owner
+
+1. **Resolve the placeholders**, in the order that unblocks the most: prices (five products) → contact
+   and social (Admin → Settings) → the domain (three ordered steps in `AUDIT.md` §10) → shipping
+   threshold and dispatch SLA → the legal fields and policy timelines. `npm run placeholders` tells you
+   what is left at any moment.
+2. **Change the seeded credentials** (`admin@store.com` / `admin123`, `sample.customer@example.com` /
+   `password123`) and remove the sample orders, payments, refund, wallet row, coupon, reviews and leads.
+   `RELEASE_NOTES.md` lists every row.
+3. **Swap the 53 placeholder assets** — Admin → Products → Media for the 27 product rows, Admin → Content
+   for the category, ritual and story imagery.
+4. **Implement the live endpoints** in `REPO_MAP.md` §3.5, then run `npm run test:live` against staging
+   (never production) with `.env.local` pointing at it.
+5. **Turn on `enableRitualBundles`** once the range is priced, and `showSampleReviews` never — delete the
+   two sample rows instead.

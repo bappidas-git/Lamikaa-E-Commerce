@@ -58,6 +58,81 @@ Status column: `introduced (NN)` = the token exists in the codebase as of Prompt
 | `{{JURISDICTION}}` | introduced (06) | `db.json → siteContent.policies.terms` §09 ("The courts of {{JURISDICTION}} have exclusive jurisdiction…") | Terms of Service | Courts/jurisdiction named in the terms | The sentence is dropped by `stripPlaceholderSentences` until resolved; the "governed by the laws of India" sentence before it survives on its own |
 | `{{REFUND_TIMELINE}}` | introduced (06) | `db.json → siteContent.policies.shippingReturns` §05 ("Refunds are processed {{REFUND_TIMELINE}}.") | Shipping & Returns policy, returns FAQ | Refund processing time after inspection | The sentence is dropped until resolved; **never seed a number** — "5–7 business days after inspection" is a candidate for the owner to confirm, not a fact. The "your bank may take a few days more" sentence after it survives |
 
+## Current inventory — generated
+
+> **Generated, not hand-maintained.** `npm run placeholders`
+> (`scripts/placeholder-inventory.js`) scans `db.json` and `src/` for the
+> `{{UPPER_SNAKE}}` grammar and prints this table. Everything above it is the
+> hand-written guidance — what each fact is, who supplies it, what the packaging
+> suggests — and stays. Re-run the script after resolving a token and paste the
+> output here.
+>
+> **Last regenerated: Prompt 39, 2026-09-08.**
+>
+> How to read the `Kinds` column: `data` = a value in the `db.json` seed;
+> `config` = a value in `src/config/brand.js`; `copy-default` = a token inside
+> the boilerplate copy in `src/utils/constants.js`; `helper` = a fallback
+> `src/utils/storeSettings.js` *emits* when a setting is missing (resolving the
+> setting removes it — it is not itself an unsupplied fact); `admin-hint` = a
+> row in the admin's insert-a-token palette (`MarkdownField.js`), which is a menu
+> for editors, not an unresolved fact; `test-fixture` = a token inside a unit
+> test.
+
+### Table 1 — `{{TOKEN}}` occurrences in `db.json` and `src/`
+
+| Token | Live hits | Kinds | Where (file → key path / line) |
+|---|---|---|---|
+| `{{CERTIFICATIONS}}` | 1 | test-fixture | `src/components/pdp/PdpChapters.test.js:33` |
+| `{{CIN}}` | 3 | admin-hint, config, data | `db.json` → `siteContent.policies.terms.body`; `src/config/brand.js:146`; `src/pages/Admin/components/MarkdownField.js:54` |
+| `{{DISPATCH_SLA}}` | 2 | admin-hint, data | `db.json` → `siteContent.policies.shippingReturns.body`; `src/pages/Admin/components/MarkdownField.js:56` |
+| `{{FREE_SHIPPING_THRESHOLD}}` | 5 | admin-hint, config, data, helper, test-fixture | `db.json` → `announcements[1].text`; `src/App.test.js:126`; `src/config/brand.js:123`; `src/pages/Admin/components/MarkdownField.js:59`; `src/utils/storeSettings.js:183` |
+| `{{GSTIN}}` | 3 | admin-hint, config, data | `db.json` → `siteContent.policies.terms.body`; `src/config/brand.js:145`; `src/pages/Admin/components/MarkdownField.js:53` |
+| `{{JURISDICTION}}` | 2 | admin-hint, data | `db.json` → `siteContent.policies.terms.body`; `src/pages/Admin/components/MarkdownField.js:55` |
+| `{{LAMIKAA_ADDRESS}}` | 5 | admin-hint, config, data, test-fixture | `db.json` → `siteContent.policies.privacy.body`; `db.json` → `settings.store.address`; `src/App.test.js:172`; `src/config/brand.js:132`; `src/pages/Admin/components/MarkdownField.js:51` |
+| `{{LAMIKAA_DOMAIN}}` | 1 | config | `src/config/brand.js:165` |
+| `{{LAMIKAA_EMAIL}}` | 10 | admin-hint, config, data, test-fixture | `db.json` → `siteContent.policies.privacy.body`; `db.json` → `siteContent.policies.terms.body`; `db.json` → `siteContent.policies.shippingReturns.body`; `db.json` → `siteContent.policies.cookies.body`; `db.json` → `settings.store.email`; `db.json` → `settings.notifications.adminEmail`; `db.json` → `settings.notifications.lowStockEmail`; `src/App.test.js:170`; `src/config/brand.js:130`; `src/pages/Admin/components/MarkdownField.js:49` |
+| `{{LAMIKAA_FACEBOOK_URL}}` | 3 | config, data, test-fixture | `db.json` → `settings.social.facebook`; `src/App.test.js:180`; `src/config/brand.js:137` |
+| `{{LAMIKAA_INSTAGRAM_URL}}` | 3 | config, data, test-fixture | `db.json` → `settings.social.instagram`; `src/App.test.js:179`; `src/config/brand.js:136` |
+| `{{LAMIKAA_PHONE}}` | 4 | admin-hint, config, data, test-fixture | `db.json` → `settings.store.phone`; `src/App.test.js:171`; `src/config/brand.js:131`; `src/pages/Admin/components/MarkdownField.js:50` |
+| `{{LAMIKAA_WHATSAPP_URL}}` | 3 | config, data, test-fixture | `db.json` → `settings.social.whatsapp`; `src/App.test.js:182`; `src/config/brand.js:139` |
+| `{{LAMIKAA_YOUTUBE_URL}}` | 3 | config, data, test-fixture | `db.json` → `settings.social.youtube`; `src/App.test.js:181`; `src/config/brand.js:138` |
+| `{{LAUNCH_OFFER_TEXT}}` | 3 | config, data, test-fixture | `db.json` → `announcements[2].text`; `src/App.test.js:127`; `src/config/brand.js:124` |
+| `{{REFUND_TIMELINE}}` | 2 | admin-hint, data | `db.json` → `siteContent.policies.shippingReturns.body`; `src/pages/Admin/components/MarkdownField.js:57` |
+| `{{RETURN_WINDOW_DAYS}}` | 8 | admin-hint, copy-default, data, helper, test-fixture | `db.json` → `faqs[6].answer`; `db.json` → `siteContent.policies.shippingReturns.body`; `src/App.test.js:135`; `src/components/FAQ/FAQ.test.js:49`; `src/pages/Admin/components/MarkdownField.js:58`; `src/utils/constants.js:255`; `src/utils/storeSettings.js:188`; `src/utils/storeSettings.js:189` |
+| `{{SHELF_LIFE}}` | 2 | admin-hint, config | `src/config/brand.js:178`; `src/pages/Admin/components/MarkdownField.js:60` |
+| `{{SUPPORT_HOURS}}` | 4 | admin-hint, config, data, test-fixture | `db.json` → `siteContent.contact.hoursNote`; `src/App.test.js:150`; `src/config/brand.js:133`; `src/pages/Admin/components/MarkdownField.js:52` |
+
+**19 distinct tokens · 67 live occurrences.** 18 are unresolved facts an owner must supply (kinds `data`, `config`, `copy-default`); the rest are a helper fallback, the admin's insert-a-token palette or a test fixture.
+
+39 further mentions sit inside code comments and are NOT inventory (`{{ADDRESS_2}}`, `{{CERTIFICATIONS}}`, `{{DISPATCH_SLA}}`, `{{DOUBLE_BRACE}}`, `{{GSTIN}}`, `{{LAMIKAA_DOMAIN}}`, `{{LAMIKAA_EMAIL}}`, `{{LAMIKAA_INSTAGRAM_URL}}`, `{{RETURN_WINDOW_DAYS}}`, `{{SHELF_LIFE}}`, `{{SUPPORT_HOURS}}`, `{{TAX_RATE_PERCENT}}`, `{{TOKENS}}`, `{{TOKEN}}`, `{{UPPER_SNAKE}}`, `{{X}}` — 6 of those names are generic, used only to describe the convention).
+
+**Cross-check against the hand-written inventory above — Prompt 39.**
+
+- **Every token in the code is documented.** All 19 names the scan finds appear
+  in the inventory table above, with an owner and a resolution path.
+- **Every documented token still exists, or is marked resolved.** The rows marked
+  `resolved (06)` — the three packaging MRPs, the eight sizes, the eight INCI
+  lists — correctly return **no** hits: those facts were seeded as real values
+  and the token strings are gone from `db.json`, which is what "resolved" means.
+- **Three documented names deliberately hold no live token, and that is correct:**
+  - `{{TAX_RATE_PERCENT}}` — no token string is stored; the seeded
+    `taxRate: 0` + `taxIncluded: true` pair *is* the unresolved state, and
+    `fillStoreCopy`'s `{taxNote}` prints "inclusive of all taxes" for it.
+  - `{{CERTIFICATIONS}}` — a marker in the comment above `brand.packBadges`; the
+    four roundels are seeded as printed, so the only live hit is a test fixture.
+  - `{{FREE_SHIPPING_THRESHOLD}}` in `constants.js` — deleted in Prompt 13. The
+    threshold's one home is `shipping_methods[0].freeAbove`, read live; the token
+    survives only as the string `fillStoreCopy` emits when that is unknown.
+- **39 further mentions sit inside code comments** and are not inventory. Six of
+  the names used there (`{{TOKEN}}`, `{{TOKENS}}`, `{{UPPER_SNAKE}}`,
+  `{{DOUBLE_BRACE}}`, `{{X}}`, `{{ADDRESS_2}}`) are generic, used only to
+  describe the convention, and no owner will ever supply them.
+- **Nothing unresolved renders.** `src/App.test.js` mounts the whole application
+  over a seed that keeps two token-carrying announcement rows, three token
+  contact fields and a token FAQ answer, and asserts that no `{{` reaches the
+  DOM; the Prompt 39 browser regression asserts the same on every storefront
+  route.
+
 ## Not tokens, but flagged sample data (replace before launch)
 
 Seeded by Prompt 06 and re-listed in Prompt 39's release notes. Nothing here is a token — each row is real data that has to be **replaced or removed** before the store goes live.
