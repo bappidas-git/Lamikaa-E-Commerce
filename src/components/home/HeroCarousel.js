@@ -12,7 +12,15 @@ import { useCart } from "../../hooks/useCart";
 import { ROUTES } from "../../utils/constants";
 import { buildCartItem, productPath } from "../../utils/helpers";
 import { primaryImage, productAlt } from "../../utils/product";
-import { normalizeHeroConfig } from "../../utils/heroConfig";
+import {
+  hasHeroBackground,
+  heroBackgroundSrc,
+  heroBackgroundVars,
+  isHeroBackgroundOnly,
+  normalizeHeroBackground,
+  normalizeHeroConfig,
+  resolveHeroBackground,
+} from "../../utils/heroConfig";
 import { Button, Chip, CloudinaryImage, GlowWrap, Price } from "../ui";
 import Logo from "../brand/Logo";
 import HeroIndex from "./HeroIndex";
@@ -46,6 +54,25 @@ import styles from "./HeroCarousel.module.css";
 // block becomes an `aria-live="polite"` region only while autoplay is paused or
 // stopped: a change the visitor asked for is worth announcing, one the timer
 // made would talk over whatever they were reading.
+//
+// BACKGROUNDS are the admin's, per slide. Behind everything the section draws
+// there is one crossfading layer per slide, painted from the picture Admin ->
+// Home & Hero resolved for it: the product's own `heroBackground`, else the
+// section-wide `heroConfig.background`, else nothing at all — which is the
+// composition this carousel shipped with, and still the answer until a merchant
+// uploads something. `utils/heroConfig` owns every rule about which picture,
+// how hard the scrim, which focal point and how much blur; this file only
+// stacks the layers and crossfades them with the slide.
+//
+//   ONE URL IS A COMPLETE BACKGROUND. Nothing else has to be filled in for a
+//   slide to be backed by a picture, and a slide may also be told to show
+//   NOTHING BUT that picture (`showContent: false`) — the copy is then hidden
+//   from view but its `h1` stays in the accessibility tree, and the plate for
+//   that slide is not drawn at all.
+//
+//   The phone may be handed its own file (`mobileUrl`). The choice is made in
+//   JS, off the same 768px media flag the plate's ratio already reads, so the
+//   browser is never asked to download both.
 //
 // MOTION is CSS, not a timeline, so the first slide is painted at full strength
 // on the first frame: crossfade + 1.02 -> 1 scale over --sf-duration-slow. Under
@@ -116,6 +143,67 @@ export const resolveHeroSlides = (heroProducts, featured) => {
   if (hero.length > 0) return hero;
   const backup = Array.isArray(featured) ? featured.filter(Boolean) : [];
   return backup.slice(0, FALLBACK_LIMIT);
+};
+
+// ─── The backdrop ───────────────────────────────────────────────────────────
+//
+// One absolutely positioned layer per slide, crossfaded by the same `index` the
+// plate is, plus its scrim. Rendered ONCE for the carousel and once (single
+// layer) for the brand slide, which is why it is a component rather than a
+// branch inside the JSX below.
+//
+// It is `aria-hidden` in full: a background is decoration by definition — the
+// slide is already labelled by its product, and a screen reader gaining a
+// second, wordless "image" per slide would only be noise. That is also why the
+// `<img>` carries an empty alt rather than an admin-typed one.
+//
+// A layer only exists where a picture resolved, so a carousel where one slide
+// has art and seven do not costs seven nothing.
+const HeroBackdrop = ({ backgrounds, index, isMobile, instant, mounted }) => {
+  const layers = backgrounds
+    .map((background, i) => ({ background, i, src: heroBackgroundSrc(background, isMobile) }))
+    .filter((layer) => layer.src);
+
+  if (layers.length === 0) return null;
+
+  return (
+    <div
+      className={[styles.backdrop, instant ? styles.backdropInstant : ""]
+        .filter(Boolean)
+        .join(" ")}
+      aria-hidden="true"
+    >
+      {layers.map(({ background, i, src }) => {
+        // Same first-paint rule as the plate: everything past the opening slide
+        // waits for the idle pass, so one background image competes for the
+        // connection that paints the LCP rather than eight.
+        if (i !== 0 && i !== index && !mounted) return null;
+        return (
+          <div
+            key={i}
+            className={[styles.backdropLayer, i === index ? styles.backdropLayerActive : ""]
+              .filter(Boolean)
+              .join(" ")}
+            style={heroBackgroundVars(background)}
+          >
+            <CloudinaryImage
+              src={src}
+              alt=""
+              fit="cover"
+              // A full-bleed frame: the phone rungs and the two desktop ones.
+              // 480 is dropped — no viewport this paints is that narrow once
+              // the device pixel ratio is counted.
+              widths={[640, 900, 1080, 1440, 1920]}
+              sizes="100vw"
+              priority={i === 0}
+              className={styles.backdropImage}
+            />
+            <span className={styles.backdropScrim} />
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 // ─── Media queries, as state ────────────────────────────────────────────────
@@ -240,6 +328,23 @@ const HeroCarousel = ({ heroProducts }) => {
   }, [heroProducts]);
 
   const config = useMemo(() => normalizeHeroConfig(rawConfig), [rawConfig]);
+
+  // ── Backgrounds ──────────────────────────────────────────────────────────
+  // One resolved record per slide — the product's own picture, else the
+  // section's, else an empty record. Memoised on the two things it reads, so a
+  // carousel that re-renders on a timer does not re-normalise eight records a
+  // tick.
+  const backgrounds = useMemo(
+    () => products.map((product) => resolveHeroBackground(product, config)),
+    [products, config]
+  );
+
+  // The section default on its own — what the BRAND slide is backed by, since
+  // it has no product to carry a picture of its own.
+  const sectionBackground = useMemo(
+    () => normalizeHeroBackground(config.background),
+    [config]
+  );
 
   const total = products.length;
   const multiple = total > 1;
@@ -469,7 +574,27 @@ const HeroCarousel = ({ heroProducts }) => {
 
   if (brandOnly) {
     return (
-      <section className={`${styles.hero} ${styles.heroBrand}`} aria-label={brand.name}>
+      <section
+        className={[
+          styles.hero,
+          styles.heroBrand,
+          hasHeroBackground(sectionBackground) ? styles.heroBackdrop : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-label={brand.name}
+      >
+        {/* The brand slide has no product, so it takes the SECTION picture —
+            the wordmark still lands on whatever the merchant chose for the
+            band, rather than the hero losing its art the moment it is switched
+            off or the catalogue cannot be reached. */}
+        <HeroBackdrop
+          backgrounds={[sectionBackground]}
+          index={0}
+          isMobile={isMobile}
+          instant={prefersReducedMotion}
+          mounted
+        />
         <div id="hero-sentinel" aria-hidden="true" className={styles.sentinel} />
         <div className={`sf-container ${styles.brandInner}`}>
           <h1 className="sf-visually-hidden">{brand.name}</h1>
@@ -486,6 +611,11 @@ const HeroCarousel = ({ heroProducts }) => {
   }
 
   const active = products[index] || null;
+  // The picture behind the slide on screen, and whether the merchant asked for
+  // that picture ALONE — no copy, no CTAs, no plate.
+  const activeBackground = backgrounds[index] || null;
+  const backdropOnly = isHeroBackgroundOnly(activeBackground);
+  const anyBackdrop = backgrounds.some(hasHeroBackground);
   const headline = heroHeadline(active);
   const subtext = heroSubtext(active);
   const badges = Array.isArray(active?.badges) ? active.badges : [];
@@ -495,6 +625,9 @@ const HeroCarousel = ({ heroProducts }) => {
   const stageClasses = [
     styles.stage,
     config.transition === "none" || prefersReducedMotion ? styles.stageInstant : "",
+    // Not `visibility: hidden`: the stage is the swipe target, and a hidden box
+    // stops receiving the pointer events a phone changes slides with.
+    backdropOnly ? styles.stageBackdropOnly : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -502,7 +635,9 @@ const HeroCarousel = ({ heroProducts }) => {
   return (
     <section
       ref={heroRef}
-      className={styles.hero}
+      className={[styles.hero, anyBackdrop ? styles.heroBackdrop : ""]
+        .filter(Boolean)
+        .join(" ")}
       aria-roledescription="carousel"
       aria-label="Black Rice range"
       onKeyDown={handleKeyDown}
@@ -512,6 +647,16 @@ const HeroCarousel = ({ heroProducts }) => {
       onFocus={() => setFocusWithin(true)}
       onBlur={() => setFocusWithin(false)}
     >
+      {/* The admin's artwork, one crossfading layer per slide, behind
+          everything else the section draws. */}
+      <HeroBackdrop
+        backgrounds={backgrounds}
+        index={index}
+        isMobile={isMobile}
+        instant={config.transition === "none" || prefersReducedMotion}
+        mounted={restMounted}
+      />
+
       {/* The header watches this: transparent while the hero's opening band is
           on screen, glass the moment content starts passing beneath it. */}
       <div id="hero-sentinel" aria-hidden="true" className={styles.sentinel} />
@@ -585,8 +730,17 @@ const HeroCarousel = ({ heroProducts }) => {
               ))}
             </div>
 
-            {/* The copy itself: ONE block, laid over the sizer. */}
-            <div className={styles.copyBlock}>
+            {/* The copy itself: ONE block, laid over the sizer. On a slide the
+                merchant set to "background only" it keeps its box (the sizer
+                below it is what reserves the height either way) and hands the
+                whole stage to the picture — see `.copyBackdropOnly`, which
+                hides the words and the CTAs from view and from the tab order
+                while leaving the `h1` in the accessibility tree. */}
+            <div
+              className={[styles.copyBlock, backdropOnly ? styles.copyBackdropOnly : ""]
+                .filter(Boolean)
+                .join(" ")}
+            >
               {/* Live only while the timer is not running, so an announcement is
                   always the answer to something the visitor just did. The CTAs
                   sit outside it: their labels change with the slide too, and a
@@ -691,6 +845,10 @@ const HeroCarousel = ({ heroProducts }) => {
               // Everything past the first slide waits for the idle pass; the
               // active slide is always mounted in case a control ran first.
               if (i !== 0 && i !== index && !restMounted) return null;
+              // "Background only": the picture IS the slide, so the label plate
+              // is never fetched for it, let alone crossfaded in behind a copy
+              // column that is not being drawn either.
+              if (isHeroBackgroundOnly(backgrounds[i])) return null;
               const media = primaryImage(product);
               if (!media) return null;
               return (

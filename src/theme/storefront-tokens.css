@@ -141,6 +141,11 @@
 
   /* ---- Surfaces & text -------------------------------------------------- */
   --sf-color-bg: #0B0B0D;              /* page ground — never pure black */
+  /* The same ground as three channels, for the one thing a hex cannot do:
+     be composited at an alpha a component computes. The hero's slide scrim is
+     the only consumer today — its strength is an admin slider, so the colour
+     has to take a `calc()` alpha rather than a fixed one. */
+  --sf-color-bg-rgb: 11, 11, 13;
   --sf-color-surface: #141416;         /* sections, cards, drawers, plates */
   --sf-color-surface-2: #1C1C20;       /* inputs, sunken panels, thumbnails */
   --sf-color-surface-hover: #222228;
@@ -394,6 +399,7 @@
 
     /* ---- Grounds → paper ------------------------------------------------ */
     --sf-color-bg: #ffffff;
+    --sf-color-bg-rgb: 255, 255, 255;
     --sf-color-surface: #ffffff;
     --sf-color-surface-2: #ffffff;
     --sf-color-surface-hover: #ffffff;

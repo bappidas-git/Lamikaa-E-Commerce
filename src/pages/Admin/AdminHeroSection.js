@@ -8,6 +8,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Collapse,
   Divider,
   FormControlLabel,
   Grid,
@@ -16,6 +17,7 @@ import {
   MenuItem,
   Paper,
   Skeleton,
+  Slider,
   Switch,
   Tab,
   Tabs,
@@ -32,12 +34,21 @@ import { ADMIN_GOLD_GRADIENT, ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { primaryImage, resolvePrice, stageSrc } from "../../utils/product";
 import {
+  DEFAULT_HERO_BACKGROUND,
   DEFAULT_HERO_CONFIG,
+  HERO_BACKGROUND_POSITIONS,
+  HERO_BLUR_MAX,
   HERO_INTERVAL_MAX_MS,
   HERO_INTERVAL_MIN_MS,
+  HERO_OVERLAY_MAX,
   HERO_TRANSITIONS,
   clampInt,
+  hasHeroBackground,
+  heroBackgroundSrc,
+  isHeroBackgroundOnly,
+  normalizeHeroBackground,
   normalizeHeroConfig,
+  resolveHeroBackground,
 } from "../../utils/heroConfig";
 
 // =============================================================================
@@ -66,8 +77,26 @@ import {
 //                   replaces the whole record.
 //
 //   SECTION SETTINGS  the `heroConfig` singleton: the master toggle, autoplay
-//                   and its timer, the transition and which chrome is drawn.
-//                   Exactly the ten keys `HeroCarousel` reads.
+//                   and its timer, the transition, which chrome is drawn — and
+//                   the SLIDE BACKGROUND every slide falls back to.
+//
+// BACKGROUNDS (added after the rebuild). The carousel had no artwork behind its
+// slides and this screen had nowhere to put any. It now edits the picture at
+// both levels, through ONE editor rendered twice:
+//
+//   • Section settings -> "Slide background"   one picture behind EVERY slide.
+//   • Hero products -> a row -> "Background"   that slide's own, overriding it.
+//
+// ONLY THE URL IS A DECISION. Paste an image link and the slide has a
+// background: the focal point, the scrim and the blur all have designed
+// defaults, and they sit behind a disclosure so they are never in the way of
+// the one field that matters. Everything the storefront does with those values
+// lives in `utils/heroConfig` — this screen writes the record and previews it,
+// it does not re-implement the rules.
+//
+//   A slide may also be told to show NOTHING BUT its picture ("Show the product
+//   over the picture", switched off). The copy, the CTAs and the label plate
+//   then step aside for that slide alone.
 //
 // THE PREVIEW IS THE REAL COMPOSITION, PAINTED IN THE ADMIN'S OWN PALETTE. It
 // shows the label plate on its glow (the recorded crop, through `stageSrc`, so
@@ -122,13 +151,239 @@ const byHeroOrder = (a, b) => (a.heroOrder ?? 0) - (b.heroOrder ?? 0);
 const draftOf = (product) => ({
   heroHeadline: product?.heroHeadline || "",
   heroSubtext: product?.heroSubtext || "",
+  // Always a complete record, so every field below can be a controlled input
+  // whether or not this product has ever had a background.
+  background: normalizeHeroBackground(product?.heroBackground),
 });
+
+/** Two background records, compared the way they are stored. */
+const sameBackground = (a, b) =>
+  Object.keys(DEFAULT_HERO_BACKGROUND).every((key) => a?.[key] === b?.[key]);
+
+/** What actually reaches the product: a record, or nothing at all. A picture is
+    what makes a background exist, so a row with no URL is stored as `null`
+    rather than as a shelf of defaults on every product in the catalogue. */
+const backgroundToStore = (background) =>
+  hasHeroBackground(background) ? background : null;
+
+// ─── Background editor ───────────────────────────────────────────────────────
+//
+// ONE editor, rendered twice: once for the section-wide picture and once inside
+// a slide's row. The wording changes with `scope`; the fields do not.
+//
+// THE FIRST FIELD IS THE WHOLE FEATURE. A merchant who pastes an image link and
+// presses save has a working background — the scrim, the focal point and the
+// blur all have designed answers, and they are folded away behind "Framing &
+// scrim" so they never read as things that must be filled in first. Everything
+// under that disclosure is refinement.
+//
+// LINKS, NOT FILE PICKERS, exactly as Products -> Media works: assets live on
+// Cloudinary (a Cloudinary link is delivered responsively — f_auto/q_auto and a
+// srcset — and any other host is used as given), and the admin's job is to
+// point at them. The preview beside each field is therefore the safety net: it
+// renders the real asset from the real URL, so a mis-pasted link is visibly
+// broken here rather than on the home page.
+const BackgroundEditor = ({ value, onChange, disabled = false, scope = "slide" }) => {
+  const [open, setOpen] = useState(false);
+  const isSection = scope === "section";
+  const set = (patch) => onChange({ ...value, ...patch });
+  const live = hasHeroBackground(value);
+
+  const thumb = (url) => (
+    <Box
+      sx={{
+        width: 84,
+        height: 56,
+        flexShrink: 0,
+        borderRadius: 1,
+        overflow: "hidden",
+        border: "1px solid",
+        borderColor: "divider",
+        bgcolor: "action.hover",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "text.disabled",
+      }}
+    >
+      {url ? (
+        <Box
+          component="img"
+          src={url}
+          alt=""
+          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      ) : (
+        <Icon icon="mdi:image-outline" style={{ fontSize: 22 }} />
+      )}
+    </Box>
+  );
+
+  const urlField = (field, label, helper) => (
+    <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+      <TextField
+        label={label}
+        value={value[field]}
+        onChange={(e) => set({ [field]: e.target.value })}
+        fullWidth
+        size="small"
+        disabled={disabled}
+        placeholder="https://..."
+        helperText={helper}
+      />
+      {thumb(value[field])}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: "grid", gap: 2 }}>
+      {urlField(
+        "url",
+        "Background image URL",
+        isSection
+          ? "One picture behind every slide that has not been given its own. Paste a link — nothing else here has to be filled in."
+          : "This slide's own picture, in place of the section background. Paste a link — nothing else here has to be filled in."
+      )}
+
+      {urlField(
+        "mobileUrl",
+        "Phone image URL (optional)",
+        "Used on screens up to 768px. Leave it blank and the picture above is used on every device."
+      )}
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Button
+          size="small"
+          onClick={() => setOpen((prev) => !prev)}
+          startIcon={<Icon icon={open ? "mdi:chevron-up" : "mdi:tune-variant"} />}
+          sx={{ color: "text.primary" }}
+        >
+          {open ? "Hide framing & scrim" : "Framing & scrim"}
+        </Button>
+        {!open && live && (
+          <Typography variant="caption" color="text.secondary">
+            {HERO_BACKGROUND_POSITIONS.find((p) => p.value === value.position)?.label} ·{" "}
+            {value.overlay}% scrim
+            {value.blur > 0 ? ` · ${value.blur}px blur` : ""}
+            {value.showContent ? "" : " · background only"}
+          </Typography>
+        )}
+        <Box sx={{ flex: 1 }} />
+        {live && (
+          <Button
+            size="small"
+            color="error"
+            disabled={disabled}
+            startIcon={<Icon icon="mdi:image-remove-outline" />}
+            onClick={() => onChange({ ...DEFAULT_HERO_BACKGROUND })}
+          >
+            Remove picture
+          </Button>
+        )}
+      </Box>
+
+      <Collapse in={open} unmountOnExit>
+        <Grid container spacing={2.5}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Focal point"
+              value={value.position}
+              disabled={disabled}
+              onChange={(e) => set({ position: e.target.value })}
+              helperText={
+                HERO_BACKGROUND_POSITIONS.find((p) => p.value === value.position)?.hint
+              }
+            >
+              {HERO_BACKGROUND_POSITIONS.map((p) => (
+                <MenuItem key={p.value} value={p.value}>
+                  {p.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" gutterBottom>
+              Scrim over the picture
+            </Typography>
+            <Slider
+              size="small"
+              value={value.overlay}
+              min={0}
+              max={HERO_OVERLAY_MAX}
+              step={5}
+              disabled={disabled}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(v) => `${v}%`}
+              onChange={(e, v) => set({ overlay: v })}
+              aria-label="Scrim over the picture"
+            />
+            <Typography variant="caption" color="text.secondary">
+              How much of the picture is darkened so the headline, the price and the buttons
+              stay readable. Below about 30% a bright photograph will fight the copy.
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" gutterBottom>
+              Soft focus
+            </Typography>
+            <Slider
+              size="small"
+              value={value.blur}
+              min={0}
+              max={HERO_BLUR_MAX}
+              step={1}
+              disabled={disabled}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(v) => `${v}px`}
+              onChange={(e, v) => set({ blur: v })}
+              aria-label="Soft focus"
+            />
+            <Typography variant="caption" color="text.secondary">
+              Blurs a busy photograph so sharp type can sit on it. 0 leaves it as shot.
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel
+              sx={{ display: "flex", alignItems: "flex-start", m: 0 }}
+              control={
+                <Switch
+                  checked={value.showContent}
+                  disabled={disabled || !live}
+                  onChange={(e) => set({ showContent: e.target.checked })}
+                />
+              }
+              label={
+                <Box sx={{ pt: 0.75 }}>
+                  <Typography variant="body2">Show the product over the picture</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Switched off, {isSection ? "a slide using this picture" : "this slide"} is the
+                    picture and nothing else — no headline, no price, no buttons and no label
+                    plate.
+                  </Typography>
+                </Box>
+              }
+            />
+          </Grid>
+        </Grid>
+      </Collapse>
+    </Box>
+  );
+};
 
 // ─── Live slide preview ──────────────────────────────────────────────────────
 // A miniature of the real stage, in the admin's palette: the plate on its glow,
 // then the copy column. Everything it prints is what the storefront will print,
 // fallbacks included, so an empty headline shows the `promise` here too.
-const SlidePreview = ({ product, index, total, formatPrice }) => {
+const SlidePreview = ({ product, index, total, formatPrice, background }) => {
   const media = primaryImage(product);
   const src = stageSrc(product, { w: 520, ar: "4:5" });
   const { known, price } = resolvePrice(product);
@@ -136,9 +391,20 @@ const SlidePreview = ({ product, index, total, formatPrice }) => {
   const headline = previewHeadline(product);
   const subtext = previewSubtext(product);
 
+  // The picture the storefront would resolve for this slide, framed the way the
+  // storefront frames it: the same focal point, the same blur, and a scrim
+  // built from the same multiples of the admin's own slider. The ink is the
+  // admin's `background.default`, which is the storefront's ground colour too,
+  // so what is previewed here is what will be painted there.
+  const backdrop = background || DEFAULT_HERO_BACKGROUND;
+  const backdropSrc = heroBackgroundSrc(backdrop, false);
+  const scrim = (weight) => alpha("#0B0B0D", Math.min(1, (backdrop.overlay / 100) * weight));
+  const backdropOnly = isHeroBackgroundOnly(backdrop);
+
   return (
     <Box
       sx={{
+        position: "relative",
         borderRadius: 1,
         overflow: "hidden",
         border: "1px solid",
@@ -147,7 +413,64 @@ const SlidePreview = ({ product, index, total, formatPrice }) => {
         p: { xs: 2, sm: 2.5 },
       }}
     >
-      <Grid container spacing={2} alignItems="center">
+      {backdropSrc && (
+        <>
+          <Box
+            component="img"
+            src={backdropSrc}
+            alt=""
+            sx={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: backdrop.position,
+              filter: backdrop.blur > 0 ? `blur(${backdrop.blur}px)` : "none",
+              transform: backdrop.blur > 0 ? "scale(1.08)" : "none",
+            }}
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+          <Box
+            aria-hidden
+            sx={{
+              position: "absolute",
+              inset: 0,
+              bgcolor: scrim(0.55),
+              backgroundImage: `linear-gradient(to right, ${scrim(0.95)} 0%, ${scrim(
+                0.5
+              )} 46%, ${alpha("#0B0B0D", 0)} 82%)`,
+            }}
+          />
+        </>
+      )}
+
+      {backdropOnly && (
+        <Box
+          sx={{
+            position: "relative",
+            aspectRatio: "16 / 9",
+            display: "flex",
+            alignItems: "flex-end",
+          }}
+        >
+          <Chip
+            size="small"
+            variant="outlined"
+            icon={<Icon icon="mdi:image-outline" />}
+            label="Background only — no copy, no plate"
+          />
+        </Box>
+      )}
+
+      <Grid
+        container
+        spacing={2}
+        alignItems="center"
+        sx={{ position: "relative", display: backdropOnly ? "none" : undefined }}
+      >
         <Grid item xs={5} sm={4}>
           {/* The plate: the label crop on a soft gold wash, contained rather
               than cropped — a bottle is never sliced to fill a frame. */}
@@ -264,10 +587,14 @@ const SlidePreview = ({ product, index, total, formatPrice }) => {
         </Grid>
       </Grid>
 
-      {!media && (
-        <Alert severity="warning" icon={<Icon icon="mdi:image-off-outline" />} sx={{ mt: 2 }}>
-          This product has no primary image, so the carousel will skip it. Add one in
-          Products → Media.
+      {!media && !backdropOnly && (
+        <Alert
+          severity="warning"
+          icon={<Icon icon="mdi:image-off-outline" />}
+          sx={{ mt: 2, position: "relative" }}
+        >
+          This product has no primary image, so the slide opens without its label plate. Add
+          one in Products → Media.
         </Alert>
       )}
     </Box>
@@ -284,8 +611,10 @@ const HeroProductRow = ({
   busy,
   saving,
   expanded,
+  sectionBackground,
   onToggle,
   onDraftChange,
+  onBackgroundChange,
   onSave,
   onRevert,
   onMove,
@@ -294,6 +623,10 @@ const HeroProductRow = ({
   const media = primaryImage(product);
   const thumb = stageSrc(product, { w: 200, ar: "1:1" });
   const label = product.name || `Product #${product.id}`;
+  // The row reads the DRAFT, not the saved product: a background someone is
+  // still typing should already be described by the chips beside its name.
+  const ownBackground = hasHeroBackground(draft.background);
+  const backdropOnly = isHeroBackgroundOnly(draft.background);
 
   return (
     <Card sx={{ borderLeft: "3px solid", borderLeftColor: media ? "primary.main" : "warning.main" }}>
@@ -361,14 +694,32 @@ const HeroProductRow = ({
               {product.sku && (
                 <Chip size="small" variant="outlined" label={product.sku} sx={{ fontFamily: "monospace" }} />
               )}
-              {!media && (
+              {!media && !backdropOnly && (
                 <Chip
                   size="small"
                   color="warning"
                   variant="outlined"
                   icon={<Icon icon="mdi:image-off-outline" />}
-                  label="No image — slide skipped"
+                  label="No image — no label plate"
                 />
+              )}
+              {ownBackground ? (
+                <Chip
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                  icon={<Icon icon={backdropOnly ? "mdi:image-filter-hdr" : "mdi:image-outline"} />}
+                  label={backdropOnly ? "Background only" : "Own background"}
+                />
+              ) : (
+                hasHeroBackground(sectionBackground) && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    icon={<Icon icon="mdi:image-multiple-outline" />}
+                    label="Section background"
+                  />
+                )
               )}
               {product.isActive === false && (
                 <Chip
@@ -385,7 +736,7 @@ const HeroProductRow = ({
                   color="info"
                   variant="outlined"
                   icon={<Icon icon="mdi:pencil-outline" />}
-                  label="Unsaved copy"
+                  label="Unsaved changes"
                 />
               )}
             </Box>
@@ -407,7 +758,7 @@ const HeroProductRow = ({
                 startIcon={<Icon icon={expanded ? "mdi:chevron-up" : "mdi:pencil-outline"} />}
                 sx={{ color: "text.primary" }}
               >
-                {expanded ? "Close" : "Edit copy"}
+                {expanded ? "Close" : "Edit slide"}
               </Button>
               <Tooltip title="Remove from the hero">
                 <span>
@@ -463,6 +814,29 @@ const HeroProductRow = ({
                   />
                 </Grid>
                 <Grid item xs={12}>
+                  <Divider sx={{ mb: 2 }} />
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                    <Icon icon="mdi:image-outline" style={{ fontSize: 20 }} />
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Background
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+                    {ownBackground
+                      ? "This slide's own picture. Remove it and the slide falls back to the section background."
+                      : hasHeroBackground(sectionBackground)
+                      ? "This slide currently shows the section background. Paste a link here to give it one of its own."
+                      : "Paste an image link to put a picture behind this slide. Nothing else on this screen has to be filled in."}
+                  </Typography>
+                  <BackgroundEditor
+                    value={draft.background}
+                    onChange={(next) => onBackgroundChange(product.id, next)}
+                    disabled={busy}
+                    scope="slide"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
                   <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                     <Button
                       variant="contained"
@@ -477,7 +851,7 @@ const HeroProductRow = ({
                         )
                       }
                     >
-                      {saving ? "Saving…" : "Save copy"}
+                      {saving ? "Saving…" : "Save slide"}
                     </Button>
                     <Button
                       size="small"
@@ -572,9 +946,30 @@ const AdminHeroSection = () => {
     ? heroProducts.findIndex((p) => p.id === previewProduct.id)
     : 0;
 
+  // The section-wide picture, live: the settings tab edits it in place, so the
+  // rows and the preview follow an unsaved change straight away.
+  const sectionBackground = useMemo(
+    () => normalizeHeroBackground(config.background),
+    [config.background]
+  );
+
+  /** The background this slide will actually be drawn with, drafts included. */
+  const backgroundOf = useCallback(
+    (product) =>
+      resolveHeroBackground(
+        { heroBackground: drafts[product?.id]?.background ?? product?.heroBackground },
+        config
+      ),
+    [drafts, config]
+  );
+
+  // A slide with no primary image is only a problem while it is still drawing a
+  // label plate — one showing nothing but its background has no plate to miss.
   const missingImages = useMemo(
-    () => heroProducts.filter((p) => !primaryImage(p)).length,
-    [heroProducts]
+    () =>
+      heroProducts.filter((p) => !primaryImage(p) && !isHeroBackgroundOnly(backgroundOf(p)))
+        .length,
+    [heroProducts, backgroundOf]
   );
 
   const dirtyIds = useMemo(
@@ -585,27 +980,38 @@ const AdminHeroSection = () => {
           if (!draft) return false;
           return (
             draft.heroHeadline !== (p.heroHeadline || "") ||
-            draft.heroSubtext !== (p.heroSubtext || "")
+            draft.heroSubtext !== (p.heroSubtext || "") ||
+            !sameBackground(draft.background, normalizeHeroBackground(p.heroBackground))
           );
         })
         .map((p) => p.id),
     [heroProducts, drafts]
   );
 
-  // ── Copy ───────────────────────────────────────────────────────────────────
+  // ── The slide: its two lines and its picture ───────────────────────────────
   const handleDraftChange = (id, field, value) =>
     setDrafts((prev) => ({
       ...prev,
-      [id]: { ...(prev[id] || { heroHeadline: "", heroSubtext: "" }), [field]: value },
+      [id]: { ...(prev[id] || draftOf(null)), [field]: value },
+    }));
+
+  const handleBackgroundChange = (id, background) =>
+    setDrafts((prev) => ({
+      ...prev,
+      // Normalised on the way in, so an out-of-range value can never reach the
+      // record and the preview is always drawing what the storefront would.
+      [id]: { ...(prev[id] || draftOf(null)), background: normalizeHeroBackground(background) },
     }));
 
   const handleRevert = (product) =>
     setDrafts((prev) => ({ ...prev, [product.id]: draftOf(product) }));
 
-  const handleSaveCopy = async (product) => {
+  const handleSaveSlide = async (product) => {
     const draft = drafts[product.id] || draftOf(product);
     const heroHeadline = draft.heroHeadline.trim();
     const heroSubtext = draft.heroSubtext.trim();
+    const background = normalizeHeroBackground(draft.background);
+    const heroBackground = backgroundToStore(background);
     try {
       setSavingId(product.id);
       // updateProduct PUTs the whole record in mock mode — spread the product
@@ -614,15 +1020,21 @@ const AdminHeroSection = () => {
         ...product,
         heroHeadline,
         heroSubtext,
+        heroBackground,
       });
       setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? { ...p, heroHeadline, heroSubtext } : p))
+        prev.map((p) =>
+          p.id === product.id ? { ...p, heroHeadline, heroSubtext, heroBackground } : p
+        )
       );
-      setDrafts((prev) => ({ ...prev, [product.id]: { heroHeadline, heroSubtext } }));
-      toast("success", "Hero copy saved");
+      setDrafts((prev) => ({
+        ...prev,
+        [product.id]: { heroHeadline, heroSubtext, background },
+      }));
+      toast("success", "Slide saved");
     } catch (error) {
-      console.error("Error saving hero copy:", error);
-      toast("error", "Could not save the copy", error.message);
+      console.error("Error saving the hero slide:", error);
+      toast("error", "Could not save the slide", error.message);
     } finally {
       setSavingId(null);
     }
@@ -676,7 +1088,7 @@ const AdminHeroSection = () => {
     const lastOne = heroIds.length === 1;
     const result = await Swal.fire({
       title: "Remove from the hero?",
-      html: `<strong>${product.name}</strong> will keep its hero headline and subtext, but it will no longer open the home page.${
+      html: `<strong>${product.name}</strong> will keep its hero headline, subtext and background, but it will no longer open the home page.${
         lastOne
           ? "<br/><br/>It is the only hero product — the home page will open on the brand slide until you add another."
           : ""
@@ -747,7 +1159,9 @@ const AdminHeroSection = () => {
         </Typography>
         <Typography color="text.secondary">
           The opening band of the storefront home page. Its slides are the products themselves —
-          choose which ones open the page, in which order, and the two lines each of them prints.
+          choose which ones open the page, in which order, the two lines each of them prints and
+          the picture behind them. One background link in Section settings dresses every slide;
+          a slide can also carry its own, or show nothing but its picture.
         </Typography>
       </Box>
 
@@ -890,7 +1304,9 @@ const AdminHeroSection = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                     Read in this order, first slide first.
                     {dirtyIds.length > 0 &&
-                      ` ${dirtyIds.length} row${dirtyIds.length === 1 ? " has" : "s have"} unsaved copy.`}
+                      ` ${dirtyIds.length} row${
+                        dirtyIds.length === 1 ? " has" : "s have"
+                      } unsaved changes.`}
                   </Typography>
                   <Box sx={{ display: "grid", gap: 2 }}>
                     {heroProducts.map((product, index) => (
@@ -904,12 +1320,14 @@ const AdminHeroSection = () => {
                         busy={busy}
                         saving={savingId === product.id}
                         expanded={expandedId === product.id}
+                        sectionBackground={sectionBackground}
                         onToggle={(id) => {
                           setExpandedId((prev) => (prev === id ? null : id));
                           setPreviewId(id);
                         }}
                         onDraftChange={handleDraftChange}
-                        onSave={handleSaveCopy}
+                        onBackgroundChange={handleBackgroundChange}
+                        onSave={handleSaveSlide}
                         onRevert={handleRevert}
                         onMove={handleMove}
                         onRemove={handleRemove}
@@ -935,8 +1353,9 @@ const AdminHeroSection = () => {
                     </Typography>
                   </Box>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
-                    The slide as the home page composes it — the label crop, the copy, the price and
-                    the two CTAs. Blank copy shows the fallback the storefront would print.
+                    The slide as the home page composes it — the background picture and its
+                    scrim, the label crop, the copy, the price and the two CTAs. Blank copy
+                    shows the fallback the storefront would print.
                   </Typography>
                   {previewProduct ? (
                     <SlidePreview
@@ -945,8 +1364,15 @@ const AdminHeroSection = () => {
                         // Preview the DRAFT, not the saved record: the point of a
                         // live preview is to answer "does this line fit?" before
                         // the save, not after it.
-                        ...(drafts[previewProduct.id] || {}),
+                        heroHeadline: (drafts[previewProduct.id] || draftOf(previewProduct))
+                          .heroHeadline,
+                        heroSubtext: (drafts[previewProduct.id] || draftOf(previewProduct))
+                          .heroSubtext,
                       }}
+                      // Same rule for the picture, and it resolves through the
+                      // SECTION default — including one typed on the other tab
+                      // and not yet saved.
+                      background={backgroundOf(previewProduct)}
                       index={previewIndex < 0 ? 0 : previewIndex}
                       total={heroProducts.length}
                       formatPrice={formatPrice}
@@ -1011,6 +1437,45 @@ const AdminHeroSection = () => {
             </Box>
 
             <Grid container spacing={3}>
+              {/* The picture behind every slide. First, because it is the one
+                  setting on this tab that changes what the section LOOKS like
+                  rather than how it behaves — and because it is the fastest way
+                  to give the whole carousel artwork: one link, every slide. */}
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    {sectionHeader(
+                      "mdi:image-outline",
+                      "Slide background",
+                      "One picture behind every slide. A slide with a background of its own — set on the Hero products tab — uses that instead."
+                    )}
+                    <BackgroundEditor
+                      value={sectionBackground}
+                      onChange={(next) => setCfg({ background: normalizeHeroBackground(next) })}
+                      disabled={savingConfig}
+                      scope="section"
+                    />
+                    {!hasHeroBackground(sectionBackground) && (
+                      <Alert severity="info" icon={<Icon icon="mdi:information-outline" />} sx={{ mt: 2 }}>
+                        No picture yet, so the hero opens on the page's own ground — which is
+                        exactly how it looks today. Paste a link above and every slide has a
+                        background; nothing else needs to change.
+                      </Alert>
+                    )}
+                    {hasHeroBackground(sectionBackground) && !sectionBackground.showContent && (
+                      <Alert severity="warning" icon={<Icon icon="mdi:eye-off-outline" />} sx={{ mt: 2 }}>
+                        Every slide that uses this picture will show it ALONE — no headline, no
+                        price, no buttons and no label plate. Switch “Show the product over the
+                        picture” back on to bring the copy back.
+                      </Alert>
+                    )}
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2 }}>
+                      Saved with the rest of this tab — press “Save Changes” above.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+
               {/* Visibility + playback */}
               <Grid item xs={12} md={6}>
                 <Card sx={{ height: "100%" }}>
