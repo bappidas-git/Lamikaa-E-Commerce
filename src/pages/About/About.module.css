@@ -1,12 +1,15 @@
 /* =============================================================================
  * /about — the farmer-owned story
  * =============================================================================
- * MOBILE FIRST. On a phone the opening is a 4:3 photograph with the panel
- * stacked underneath it; from 769px the band becomes the brief's letterbox —
- * clamp(280px, 36vw, 480px) — and the panel rises into its lower-left corner
- * on a negative margin, exactly as `CategoryHead` does. The two openings are
- * deliberately the same composition: a category page and the story page are
- * both "a place", and a visitor should not have to learn a second one.
+ * MOBILE FIRST. On a phone the opening is a 2:1 photograph with the panel
+ * stacked underneath it; from 769px the band becomes a letterbox —
+ * clamp(176px, 22.5vw, 300px) under a 325px ceiling — and the panel rises into
+ * its lower-left corner on a negative margin, exactly as `CategoryHead` does.
+ * The two openings are deliberately the same COMPOSITION: a category page and
+ * the story page are both "a place", and a visitor should not have to learn a
+ * second one. The story band is the shallower of the two on purpose — this
+ * page is read, not browsed, so the opening hands the fold to the copy instead
+ * of spending it on a photograph the reader has already taken in.
  *
  * WHY A NEGATIVE MARGIN AND NOT `position: absolute`. An absolutely positioned
  * panel is measured against the band, so a long lede either overflows it or is
@@ -33,9 +36,9 @@
    scroll every breakpoint in the QA matrix checks for. */
 .band {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  max-height: 62vh;
-  max-height: 62svh;
+  aspect-ratio: 2 / 1;
+  max-height: 40vh;
+  max-height: 40svh;
   background: var(--sf-color-surface);
   /* `.sf-placeholder-media` supplies the desaturation and the wash. */
 }
@@ -172,10 +175,12 @@
 
 @media (min-width: 769px) {
   .band {
-    aspect-ratio: 21 / 9;
-    /* The brief's band height, as a floor under the ratio. */
-    min-height: clamp(280px, 36vw, 480px);
-    max-height: 520px;
+    aspect-ratio: 15 / 4;
+    /* The band height, as a floor under the ratio. The ceiling is what a wide
+       desktop actually gets: past ~1240px the ratio would out-run it, so 325px
+       is the height the opening settles at from a laptop upwards. */
+    min-height: clamp(176px, 22.5vw, 300px);
+    max-height: 325px;
   }
 
   .panel {
