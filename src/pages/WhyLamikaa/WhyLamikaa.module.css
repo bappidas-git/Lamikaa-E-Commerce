@@ -2,9 +2,11 @@
  * /why-lamikaa — the philosophy, the difference, the impact and the vision
  * =============================================================================
  * MOBILE FIRST, and the opening is deliberately the same composition as
- * `/about` and a category page: a 4:3 photograph with the panel stacked under
- * it on a phone; from 769px the brief's clamp(280px, 36vw, 480px) letterbox
- * with the panel risen into its lower-left corner on a negative margin.
+ * `/about`: a 2:1 photograph with the panel stacked under it on a phone; from
+ * 769px a clamp(176px, 22.5vw, 300px) letterbox under a 325px ceiling, with
+ * the panel risen into its lower-left corner on a negative margin. The band is
+ * shallower than a category page's for the same reason `/about`'s is — this
+ * page is read rather than browsed, so the fold belongs to the argument.
  *
  * The page then alternates between a READING COLUMN (the philosophy, the
  * difference, the vision) and FULL-WIDTH FURNITURE (the pillars, the triptych,
@@ -27,9 +29,9 @@
 
 .band {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  max-height: 62vh;
-  max-height: 62svh;
+  aspect-ratio: 2 / 1;
+  max-height: 40vh;
+  max-height: 40svh;
   background: var(--sf-color-surface);
 }
 
@@ -155,9 +157,11 @@
 
 @media (min-width: 769px) {
   .band {
-    aspect-ratio: 21 / 9;
-    min-height: clamp(280px, 36vw, 480px);
-    max-height: 520px;
+    aspect-ratio: 15 / 4;
+    /* The floor under the ratio, and the ceiling a wide desktop settles at:
+       past ~1240px the ratio out-runs 325px and the band stops growing. */
+    min-height: clamp(176px, 22.5vw, 300px);
+    max-height: 325px;
   }
 
   .panel {
