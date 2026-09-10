@@ -87,6 +87,8 @@ const Cart = () => {
     removeFromCart,
     getCartTotal,
     getCartItemCount,
+    appliedCoupon: couponApplied,
+    setAppliedCoupon: setCouponApplied,
   } = useCart();
 
   const cart = useMemo(() => cartItems || [], [cartItems]);
@@ -97,10 +99,12 @@ const Cart = () => {
   const couponPanelId = useId();
 
   // ---- Coupon state (the drawer's, gesture for gesture) --------------------
+  // `couponApplied` itself is the CART's (see CartContext), so a code entered
+  // in the tray is already applied here, and one entered here survives the
+  // step into Checkout instead of quietly falling off the order.
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponNote, setCouponNote] = useState("");
-  const [couponApplied, setCouponApplied] = useState(null);
   const [applying, setApplying] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
 
@@ -143,7 +147,8 @@ const Cart = () => {
         )}.`
       );
     }
-  }, [subtotal, couponApplied, formatPrice]);
+    // See the drawer: the setter comes from the cart context now.
+  }, [subtotal, couponApplied, setCouponApplied, formatPrice]);
 
   const applyCoupon = async () => {
     setCouponError("");

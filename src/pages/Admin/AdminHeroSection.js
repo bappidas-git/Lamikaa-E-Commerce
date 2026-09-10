@@ -796,11 +796,15 @@ const AdminHeroSection = () => {
           }}
         >
           <Tab
+            id="hero-tab-0"
+            aria-controls="hero-tabpanel-0"
             icon={<Icon icon="mdi:view-carousel-outline" style={{ fontSize: 20 }} />}
             iconPosition="start"
             label={`Hero products${loading ? "" : ` (${heroProducts.length})`}`}
           />
           <Tab
+            id="hero-tab-1"
+            aria-controls="hero-tabpanel-1"
             icon={<Icon icon="mdi:tune-variant" style={{ fontSize: 20 }} />}
             iconPosition="start"
             label="Section settings"
@@ -809,6 +813,11 @@ const AdminHeroSection = () => {
       </Paper>
 
       {/* ── HERO PRODUCTS ─────────────────────────────────────────────────── */}
+      {/* The two panels each sit in a real role="tabpanel", named by the tab
+          above them (the pattern AdminSettings already uses). Without it the
+          tabs announce as tabs that control nothing, and everything below them
+          reads as loose page content. */}
+      <div role="tabpanel" id="hero-tabpanel-0" aria-labelledby="hero-tab-0" hidden={tab !== 0}>
       {tab === 0 &&
         (loading ? (
           renderSkeleton()
@@ -963,7 +972,10 @@ const AdminHeroSection = () => {
           </Grid>
         ))}
 
+      </div>
+
       {/* ── SECTION SETTINGS ──────────────────────────────────────────────── */}
+      <div role="tabpanel" id="hero-tabpanel-1" aria-labelledby="hero-tab-1" hidden={tab !== 1}>
       {tab === 1 &&
         (loading ? (
           renderSkeleton()
@@ -1158,6 +1170,7 @@ const AdminHeroSection = () => {
             </Grid>
           </>
         ))}
+      </div>
     </motion.div>
   );
 };

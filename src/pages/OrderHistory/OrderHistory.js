@@ -767,7 +767,22 @@ const OrderHistory = () => {
                             variant="secondary"
                             size="sm"
                             className={styles.actionAccent}
-                            onClick={() => navigate(ROUTES.CONTACT)}
+                            // The care desk answers returns on this branch, so
+                            // the order goes WITH the visitor: Contact seeds the
+                            // subject, the order number and the category from
+                            // this state, instead of handing them a blank letter
+                            // and the admin a lead with no order on it.
+                            onClick={() =>
+                              navigate(ROUTES.CONTACT, {
+                                state: {
+                                  orderNumber: order.orderNumber || String(order.id),
+                                  category: "order",
+                                  subject: `Return or exchange · ${
+                                    order.orderNumber || order.id
+                                  }`,
+                                },
+                              })
+                            }
                           >
                             Return / exchange
                           </Button>

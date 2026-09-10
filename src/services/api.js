@@ -1036,9 +1036,36 @@ const apiService = {
       try {
         // Caller passes a single object: { currentPassword, newPassword, confirmPassword }.
         const { currentPassword, newPassword, confirmPassword } = passwordData || {};
-        // JSON Server has no auth/password endpoint — mirror the Laravel success
-        // shape so the UI flow can be exercised. (Mock = no real persistence.)
-        if (IS_MOCK_API) return { success: true };
+        // JSON Server has no auth/password endpoint, so the mock branch does the
+        // work the Laravel one would: CHECK the current password, then WRITE the
+        // new one. It used to `return { success: true }` unconditionally, which
+        // made Profile → Settings lie twice over — a wrong current password was
+        // accepted, and the password never actually changed, so the next sign-in
+        // wanted the old one. Same reads/writes the rest of this branch uses
+        // (login's /users lookup, updateUser's PATCH /users/:id).
+        if (IS_MOCK_API) {
+          const stored = authStorage.get("user");
+          if (!stored) throw new Error("Not signed in.");
+          const { id, email } = JSON.parse(stored);
+          const match = await api.get("/users", {
+            params: { email, password: currentPassword },
+          });
+          if (!match.data.length) {
+            const err = new Error("Your current password is not correct.");
+            err.code = "WRONG_PASSWORD";
+            throw err;
+          }
+          if (newPassword !== confirmPassword) {
+            const err = new Error("The new passwords do not match.");
+            err.code = "PASSWORD_MISMATCH";
+            throw err;
+          }
+          await api.patch(`/users/${id}`, {
+            password: newPassword,
+            updatedAt: new Date().toISOString(),
+          });
+          return { success: true };
+        }
         // Laravel expects snake_case, same convention as register's
         // password_confirmation. Map here so callers keep the camelCase shape.
         const response = await api.put("/auth/password", {
@@ -1047,7 +1074,15 @@ const apiService = {
           password_confirmation: confirmPassword,
         });
         return extractData(response);
-      } catch (error) { console.error("Change password error:", error); throw error; }
+      } catch (error) {
+        // A wrong password is an expected outcome, not a fault — same rule the
+        // login and register branches above follow. Keep the console clean and
+        // let the caller print the message.
+        if (error.code !== "WRONG_PASSWORD" && error.code !== "PASSWORD_MISMATCH") {
+          console.error("Change password error:", error);
+        }
+        throw error;
+      }
     },
   },
 

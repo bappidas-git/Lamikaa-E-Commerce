@@ -107,6 +107,10 @@ const CartDrawer = ({ open, onClose }) => {
     removeFromCart,
     getCartTotal,
     getCartItemCount,
+    // The applied coupon lives on the cart, not on this tray: a code entered
+    // here is still applied on /cart and at Checkout (and the other way round).
+    appliedCoupon: couponApplied,
+    setAppliedCoupon: setCouponApplied,
   } = useCart();
 
   const cart = useMemo(() => cartItems || [], [cartItems]);
@@ -118,11 +122,10 @@ const CartDrawer = ({ open, onClose }) => {
 
   const couponPanelId = useId();
 
-  // ---- Coupon state --------------------------------------------------------
+  // ---- Coupon state (the applied code itself comes from the cart) ----------
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponNote, setCouponNote] = useState("");
-  const [couponApplied, setCouponApplied] = useState(null);
   const [applying, setApplying] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
 
@@ -213,7 +216,9 @@ const CartDrawer = ({ open, onClose }) => {
         )}.`
       );
     }
-  }, [subtotal, couponApplied, formatPrice]);
+    // `setCouponApplied` is the cart context's state setter — stable for the
+    // life of the provider, and listed because it is no longer a local one.
+  }, [subtotal, couponApplied, setCouponApplied, formatPrice]);
 
   const applyCoupon = async () => {
     setCouponError("");
