@@ -248,6 +248,21 @@ const AdminLayout = () => {
     if (!isMobile && mobileOpen) setMobileOpen(false);
   }, [isMobile, mobileOpen]);
 
+  // …and close it whenever the route changes, whatever moved us — a nav item,
+  // a quick action, the browser's Back button.
+  //
+  // THIS IS THE ONE THAT MATTERS ON A PHONE. Closing the drawer in the same
+  // commit as navigate() interrupts the Modal's exit transition: the paper
+  // slides away, but `onExited` never fires, so MUI never puts the modal back
+  // to `visibility: hidden` and its backdrop stays at full opacity over the
+  // screen. The panel then LOOKS fine and swallows every tap — the admin was
+  // unusable on mobile after one nav tap. Running the close from an effect, in
+  // the commit AFTER the route has swapped, lets the transition finish and the
+  // backdrop lift. (The handlers below no longer close it themselves.)
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   const loadNotifications = useCallback(async () => {
     try {
       if (isMountedRef.current) setNotificationLoading(true);
@@ -483,10 +498,7 @@ const AdminLayout = () => {
               <ListItemButton
                 selected={isActive}
                 aria-current={isActive ? "page" : undefined}
-                onClick={() => {
-                  navigate(item.path);
-                  if (isMobile) setMobileOpen(false);
-                }}
+                onClick={() => navigate(item.path)}
                 sx={{
                   mx: 0.5,
                   py: 0.75,

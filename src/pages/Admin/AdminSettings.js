@@ -384,11 +384,14 @@ const AdminSettings = () => {
             "& .MuiTab-root": { textTransform: "none", fontWeight: 500 },
           }}
         >
-          <Tab icon={<Icon icon="mdi:cog" style={{ fontSize: 20 }} />} iconPosition="start" label="General" />
-          <Tab icon={<Icon icon="mdi:folder-multiple" style={{ fontSize: 20 }} />} iconPosition="start" label="Categories" />
-          <Tab icon={<Icon icon="mdi:storefront-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="Storefront" />
-          <Tab icon={<Icon icon="mdi:comment-question-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="FAQs" />
-          <Tab icon={<Icon icon="mdi:share-variant" style={{ fontSize: 20 }} />} iconPosition="start" label="Social Links" />
+          {/* The ids are what TabPanel's `aria-labelledby` points AT. Without
+              them each panel named an element that did not exist, so the five
+              panels had no accessible name and the tabs controlled nothing. */}
+          <Tab id="settings-tab-0" aria-controls="settings-tabpanel-0" icon={<Icon icon="mdi:cog" style={{ fontSize: 20 }} />} iconPosition="start" label="General" />
+          <Tab id="settings-tab-1" aria-controls="settings-tabpanel-1" icon={<Icon icon="mdi:folder-multiple" style={{ fontSize: 20 }} />} iconPosition="start" label="Categories" />
+          <Tab id="settings-tab-2" aria-controls="settings-tabpanel-2" icon={<Icon icon="mdi:storefront-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="Storefront" />
+          <Tab id="settings-tab-3" aria-controls="settings-tabpanel-3" icon={<Icon icon="mdi:comment-question-outline" style={{ fontSize: 20 }} />} iconPosition="start" label="FAQs" />
+          <Tab id="settings-tab-4" aria-controls="settings-tabpanel-4" icon={<Icon icon="mdi:share-variant" style={{ fontSize: 20 }} />} iconPosition="start" label="Social Links" />
         </Tabs>
       </Paper>
 

@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { fireAlert } from "../../utils/alerts";
 import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../context/WishlistContext";
-import apiService from "../../services/api";
+import apiService, { getErrorMessage } from "../../services/api";
 import { formatDate, formatCurrency, getInitials, generateId, isValidPhone } from "../../utils/helpers";
 import { collapse, reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
@@ -394,7 +394,13 @@ const Profile = () => {
       setShowPasswords({ current: false, new: false, confirm: false });
       showFeedback("success", "Password updated successfully.");
     } catch (err) {
-      showFeedback("error", "Failed to change password. Please check your current password.");
+      // The API says WHY when it knows (a wrong current password, a mismatch);
+      // the generic line is the fallback for a transport failure.
+      showFeedback(
+        "error",
+        getErrorMessage(err) ||
+          "Failed to change password. Please check your current password."
+      );
     } finally {
       setLoading(false);
     }

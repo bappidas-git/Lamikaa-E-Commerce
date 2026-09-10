@@ -157,3 +157,66 @@ closing section).
   disabled ("Available for orders up to ₹0.00") on every order that cost
   anything — while the assurance rail still promised "Cash on delivery
   available". Zero now means no maximum, as documented.
+
+---
+
+## 1.0.1-lamikaa — 2026-09-10
+
+A full-surface QA pass over the storefront and the admin console in mock mode:
+every route, every tab, every button and every write path driven in a real
+browser at four viewport widths, plus the keyboard, the accessibility tree and
+the API-down case. Six defects were found and fixed; nothing else changed.
+
+### Fixed
+
+- **Changing your password did nothing, and said it had.** In mock mode
+  `auth.changePassword` returned `{ success: true }` without checking anything
+  or writing anything, so Profile → Settings accepted a WRONG current password
+  and reported "Password updated successfully" — while the account kept the old
+  password, locking the shopper out of the one they thought they had just set.
+  The mock branch now verifies the current password against the stored user and
+  writes the new one, and the screen prints the reason a change was refused.
+
+- **A coupon applied in the cart was lost at checkout.** The tray, `/cart` and
+  Checkout each held their own `couponApplied` state, so a code applied on one
+  screen was simply gone on the next: the shopper was shown a discount and then
+  charged the full price, and the order recorded no coupon. The applied coupon
+  now lives on the cart (`CartContext`), shared by all three, persisted with the
+  cart, re-validated when it is restored (a code that has since expired or been
+  switched off is dropped rather than honoured), and cleared with the cart when
+  the order is placed.
+
+- **The admin was unusable on a phone after one tap.** Closing the navigation
+  drawer in the same commit as `navigate()` interrupted MUI's exit transition,
+  so `onExited` never fired, the modal never returned to `visibility: hidden`,
+  and its backdrop stayed at full opacity over the whole panel — the screen
+  looked fine and swallowed every tap. The drawer now closes from an effect on
+  the route, in the commit after the swap, so the transition completes.
+
+- **"Move to cart" threw on a saved product with no price.** The wishlist's own
+  button ignored `priceTBA` — the card directly above it did not — so clicking
+  it on any of the five unpriced products threw `PRICE_TBA` out of the click
+  handler: nothing added, no toast, nothing said. It now reads "Coming soon" and
+  is disabled, exactly like every other Add button in the storefront.
+
+- **A product page reported a network failure as a 404.** Any failed read — a
+  dropped connection, a 5xx, a timeout — set `notFound`, so a shopper on a
+  flaky connection was told the product they had clicked does not exist. A
+  genuine miss (an unknown slug, an unknown id, a drafted product) is still a
+  real 404; a failed read now gets the error state and a "Try again", the same
+  rule `/shop` already followed.
+
+- **"Return / exchange" handed the care desk nothing.** The button in My Orders
+  navigated to a blank contact form, and the lead reached Admin → Leads with an
+  empty `orderNumber` — the field that screen prints. The order now travels with
+  the visitor and seeds the subject, the order number and the category.
+
+Two accessibility defects in the admin's tab sets were fixed alongside them:
+Home & Hero's two panels had no `role="tabpanel"` at all, and Settings' five
+panels were named by `aria-labelledby` ids that did not exist.
+
+### Gates
+
+- `CI=true npm run build` — clean, no warnings.
+- `npm test -- --watchAll=false` — 29 suites, 328 tests passing; the live-API
+  suite skipped, as designed.

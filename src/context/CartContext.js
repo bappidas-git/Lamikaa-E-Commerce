@@ -132,10 +132,21 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // The applied coupon belongs to the CART, not to whichever screen the shopper
+  // typed it on. It used to be three separate useState(null)s — one in the
+  // tray, one on /cart, one in Checkout — so a code applied in the cart was
+  // silently gone by the time the order was placed, and the shopper paid the
+  // full price they had just been shown a discount off. One owner here, read by
+  // all three. The DISCOUNT is still derived from the subtotal at each call
+  // site, so quantity changes can never leave a stale amount.
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // Skips the very first "save" so the initial empty state can't overwrite the
   // persisted cart before the "load" effect has hydrated it.
   const firstSaveRef = useRef(true);
+  // The same guard for the coupon, so mounting with no coupon in state cannot
+  // delete the one the load effect is about to restore.
+  const firstCouponSaveRef = useRef(true);
   // Serializes API writes so overlapping syncs can't interleave delete/recreate.
   const syncChainRef = useRef(Promise.resolve());
   // Tracks the previous auth value so we only clear the cart on a real logout
@@ -153,16 +164,62 @@ export const CartProvider = ({ children }) => {
 
   // ── Persistence: load once on mount ──────────────────────────────────────
   useEffect(() => {
+    let lines = [];
     try {
       const saved = localStorage.getItem("cart");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) setCartItems(parsed.map(normalizeCartItem));
+        if (Array.isArray(parsed)) {
+          lines = parsed.map(normalizeCartItem);
+          setCartItems(lines);
+        }
       }
     } catch (error) {
       console.error("Error loading cart:", error);
       localStorage.removeItem("cart");
     }
+
+    // The coupon rides with the cart: a reload between /cart and the Review
+    // step must not quietly drop the discount the shopper was just shown.
+    //
+    // BUT A RESTORED CODE IS RE-CHECKED BEFORE IT IS TRUSTED. What is in
+    // storage is the coupon as it was when it was applied, and days can pass:
+    // it may since have expired, been switched off, or run out of redemptions.
+    // Honouring a stale one would quote a discount the order cannot have, so
+    // the code goes back through the same validator the Apply button uses, at
+    // the restored cart's own subtotal, and is dropped if it no longer stands.
+    let cancelled = false;
+    let restored = null;
+    try {
+      const savedCoupon = localStorage.getItem("cartCoupon");
+      if (savedCoupon) {
+        const parsed = JSON.parse(savedCoupon);
+        if (parsed && typeof parsed === "object" && parsed.code) restored = parsed;
+      }
+    } catch (error) {
+      localStorage.removeItem("cartCoupon");
+    }
+    if (restored) {
+      setAppliedCoupon(restored);
+      const subtotal = lines.reduce(
+        (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
+        0
+      );
+      apiService.coupons
+        .validate(restored.code, subtotal)
+        .then((fresh) => {
+          // Re-read the coupon rather than keeping the stored copy: a merchant
+          // may have edited its value since it was applied.
+          if (!cancelled && fresh) setAppliedCoupon(fresh);
+        })
+        .catch(() => {
+          if (!cancelled) setAppliedCoupon(null);
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ── Persistence: save on every change (skipping the initial commit) ──────
@@ -173,6 +230,18 @@ export const CartProvider = ({ children }) => {
     }
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
+
+  useEffect(() => {
+    if (firstCouponSaveRef.current) {
+      firstCouponSaveRef.current = false;
+      return;
+    }
+    if (appliedCoupon) {
+      localStorage.setItem("cartCoupon", JSON.stringify(appliedCoupon));
+    } else {
+      localStorage.removeItem("cartCoupon");
+    }
+  }, [appliedCoupon]);
 
   // ── Replace the logged-in user's server cart with the local cart ─────────
   // Local state is the single source of truth; this mirrors it to the API as a
@@ -227,6 +296,7 @@ export const CartProvider = ({ children }) => {
         cartLoadedRef.current = false;
         setCartItems([]);
         setIsCartOpen(false);
+        setAppliedCoupon(null);
         localStorage.removeItem("cart");
       }
       // The server cart is left intact so logging back in restores it.
@@ -399,6 +469,10 @@ export const CartProvider = ({ children }) => {
     // for logged-in users. `silent` skips the toast for flows where emptying is
     // a side effect of something bigger (e.g. an order was just placed).
     setCartItems([]);
+    // The code was spent on the order that just cleared this cart (or dropped
+    // with the lines it discounted) — either way it must not survive into the
+    // next one.
+    setAppliedCoupon(null);
     if (!options.silent) {
       cartToast({
         icon: "info",
@@ -434,6 +508,9 @@ export const CartProvider = ({ children }) => {
     getCartItemCount,
     toggleCart,
     setIsCartOpen,
+    // The one applied coupon, shared by the tray, /cart and Checkout.
+    appliedCoupon,
+    setAppliedCoupon,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

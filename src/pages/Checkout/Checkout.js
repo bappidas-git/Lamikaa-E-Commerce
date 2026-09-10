@@ -213,7 +213,19 @@ const Checkout = () => {
 
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
-  const { cartItems, getCartTotal, getCartItemCount, updateQuantity, removeFromCart, clearCart } = useCart();
+  const {
+    cartItems,
+    getCartTotal,
+    getCartItemCount,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    // Shared with the tray and /cart: a code applied before this screen is
+    // already applied ON it, so the discount the shopper was shown is the
+    // discount the order is placed with. clearCart() drops it with the lines.
+    appliedCoupon: couponApplied,
+    setAppliedCoupon: setCouponApplied,
+  } = useCart();
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const { createOrder } = useOrder();
   // Tax rate, tax treatment, COD rules, the currency symbol and the care
@@ -231,7 +243,6 @@ const Checkout = () => {
   const [step, setStep] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
-  const [couponApplied, setCouponApplied] = useState(null);
   const [shippingMethods, setShippingMethods] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState(null);
   const [shippingError, setShippingError] = useState("");
@@ -384,7 +395,8 @@ const Checkout = () => {
         `${couponApplied.code} was removed — it needs a minimum order of ${formatCurrency(couponApplied.minOrderAmount)}.`
       );
     }
-  }, [subtotal, couponApplied]);
+    // See the drawer: the setter comes from the cart context now.
+  }, [subtotal, couponApplied, setCouponApplied]);
 
   const applyCoupon = async () => {
     setCouponError("");

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import Pillars from "../../components/brand/Pillars";
 import { Button, GlassCard } from "../../components/ui";
@@ -113,6 +113,7 @@ const Contact = () => {
 
   const { content } = useSiteContent("contact");
   const { user } = useAuth();
+  const location = useLocation();
   const {
     email: supportEmail,
     phone: supportPhone,
@@ -154,6 +155,24 @@ const Contact = () => {
       setFormData((prev) => (prev.email ? prev : { ...prev, email: user.email }));
     }
   }, [user]);
+
+  // ARRIVING FROM AN ORDER. "Return / exchange" in My Orders sends the visitor
+  // here, and used to send NOTHING with them: they landed on an empty letter
+  // and had to remember which order they were writing about, while the lead
+  // reached Admin → Leads with a blank `orderNumber` — the very field that
+  // screen prints. The order travels in `location.state` (never in the URL: an
+  // order number is not something to leave in a shared link) and seeds the
+  // subject, the number and the category the admin already has an icon for.
+  useEffect(() => {
+    const from = location.state;
+    if (!from?.orderNumber) return;
+    setFormData((prev) => ({
+      ...prev,
+      orderNumber: prev.orderNumber || from.orderNumber,
+      category: from.category || "order",
+      subject: prev.subject || from.subject || `Return or exchange · ${from.orderNumber}`,
+    }));
+  }, [location.state]);
 
   // The success panel replaces the form in place; move focus to it so a
   // keyboard visitor is not dropped onto <body> when the button disappears.

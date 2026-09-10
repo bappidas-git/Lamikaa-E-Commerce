@@ -15,7 +15,7 @@ import { isPlaceholder } from "../../utils/placeholders";
 import { breadcrumbJsonLd, productJsonLd } from "../../utils/seo";
 import { ROUTES } from "../../utils/constants";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
-import { Accordion, ContentBlocks, Skeleton } from "../../components/ui";
+import { Accordion, Button, ContentBlocks, ErrorState, Skeleton } from "../../components/ui";
 import FAQ from "../../components/FAQ/FAQ";
 import Chapter from "../../components/pdp/Chapter";
 import MediaGallery from "../../components/pdp/MediaGallery";
@@ -191,6 +191,12 @@ const useProductPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // NOT the same thing as `notFound`, and the difference is the whole point.
+  // "There is no such product" is a 404; "the read did not come back" is a
+  // failure, and telling a shopper on a dropped connection that the product
+  // they clicked does not exist is the one mistake this page must not make —
+  // the same rule `/shop` states for the listing.
+  const [failed, setFailed] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -212,16 +218,25 @@ const useProductPage = () => {
     try {
       setLoading(true);
       setNotFound(false);
+      setFailed(false);
 
       const isLegacyId = /^\d+$/.test(String(slug));
+      // A 404 from the API is an ANSWER ("no such row"), not a failure, so it
+      // is folded into the null the callers below already treat as a miss.
+      // Everything else — no response at all, a 5xx, a timeout — is left to
+      // throw, and lands in the failure branch at the bottom.
+      const missToNull = (error) => {
+        if (error?.response?.status === 404) return null;
+        throw error;
+      };
       let data = isLegacyId
-        ? await apiService.products.getById(slug)
-        : await apiService.products.getBySlug(slug);
+        ? await apiService.products.getById(slug).catch(missToNull)
+        : await apiService.products.getBySlug(slug).catch(missToNull);
 
       if (!data) {
         data = isLegacyId
-          ? await apiService.products.getBySlug(slug).catch(() => null)
-          : await apiService.products.getById(slug).catch(() => null);
+          ? await apiService.products.getBySlug(slug).catch(missToNull)
+          : await apiService.products.getById(slug).catch(missToNull);
       }
 
       if (!data) {
@@ -274,7 +289,8 @@ const useProductPage = () => {
       }
     } catch (error) {
       console.error("Error fetching product:", error);
-      setNotFound(true);
+      setProduct(null);
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -447,6 +463,8 @@ const useProductPage = () => {
     product,
     loading,
     notFound,
+    failed,
+    retry: fetchProduct,
     category,
     shipping,
     settings,
@@ -945,10 +963,40 @@ const ProductDetailsView = ({
  * whose "Active (visible on store)" switch is off, which is the same answer a
  * missing slug gets and the same page it deserves.
  */
+/**
+ * The read did not come back. Its own component, and therefore its own single
+ * `useSeo`, for the same reason <NotFound/> is: exactly one of them is ever
+ * mounted on this route, so nothing restores the <head> in the wrong order.
+ * `noindex` because a page that could not load its product is not a page a
+ * crawler should keep.
+ */
+const ProductLoadFailed = ({ onRetry }) => {
+  useSeo({ title: "We couldn't load this product", noindex: true });
+  return (
+    <div className={styles.page}>
+      <div className="sf-container">
+        <ErrorState
+          title="We couldn't load this product"
+          text="Nothing was changed — the product is still there, it just didn't reach this page. Check your connection and try again."
+          onRetry={onRetry}
+          actions={
+            <Button variant="secondary" to={ROUTES.SHOP}>
+              Back to the range
+            </Button>
+          }
+        />
+      </div>
+    </div>
+  );
+};
+
 const ProductDetails = () => {
   const data = useProductPage();
 
   if (data.loading) return <PageSkeleton />;
+  // The failure comes FIRST: a read that never arrived must not be reported as
+  // a product that does not exist.
+  if (data.failed) return <ProductLoadFailed onRetry={data.retry} />;
   if (data.notFound || !data.product) return <NotFound />;
 
   return <ProductDetailsView {...data} />;

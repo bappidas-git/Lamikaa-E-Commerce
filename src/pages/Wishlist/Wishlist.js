@@ -11,6 +11,7 @@ import {
   getDefaultCartVariant,
   buildCartItem,
 } from "../../utils/helpers";
+import { isPriceKnown } from "../../utils/product";
 import { DURATION, RISE, staggerDelay, t, tween } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
 import useSeo from "../../hooks/useSeo";
@@ -226,15 +227,26 @@ const Wishlist = () => {
   // Add to cart WITHOUT removing from the wishlist. Same normalized line shape
   // as card/PDP quick-adds (same default variant + id scheme) so it merges into
   // the existing cart line. The wishlist row's product id lives in `productId`.
+  //
+  // THE GUARD IS NOT DECORATION. `buildCartItem` THROWS PRICE_TBA for a product
+  // with no committed price — that is the guardrail that stops a ₹0 line
+  // checking out — and five of the eight products ship that way. The card above
+  // this button has always known (its own Add reads "Coming soon" and is
+  // disabled); this button did not, so clicking it on a saved unpriced product
+  // threw out of the click handler: nothing added, no toast, nothing said.
   const handleAddToCart = (item) => {
+    if (!isPriceKnown(item)) return false;
     addToCart(buildCartItem({ ...item, id: item.productId }), 1);
+    return true;
   };
 
   // Move to cart: add, then silently remove from the wishlist (keeps the
   // "Added to Cart" toast on screen instead of replacing it with a "Removed" one).
+  // A row that could not be added stays saved — moving it to a cart it never
+  // reached would lose it.
   const handleMoveToCart = (e, item) => {
     e.stopPropagation();
-    handleAddToCart(item);
+    if (!handleAddToCart(item)) return;
     setRemovingId(item.productId);
     setTimeout(() => {
       removeFromWishlist(item.productId, { silent: true });
@@ -405,6 +417,10 @@ const Wishlist = () => {
                 const stockValue = defaultVariant ? defaultVariant.stock : item.stock;
                 const inStock =
                   stockValue == null || stockValue === "" || Number(stockValue) > 0;
+                // The same two reasons a product cannot be added anywhere else
+                // on the storefront, in the same order and the same words as
+                // ProductCard's own button: no committed price first, then stock.
+                const comingSoon = !isPriceKnown(item);
                 const isRemoving = removingId === item.productId;
 
                 return (
@@ -452,10 +468,14 @@ const Wishlist = () => {
                       block
                       className={styles.moveBtn}
                       onClick={(e) => handleMoveToCart(e, item)}
-                      disabled={!inStock}
+                      disabled={comingSoon || !inStock}
                       icon={<CartMark />}
                     >
-                      Move to cart
+                      {comingSoon
+                        ? "Coming soon"
+                        : !inStock
+                        ? "Out of stock"
+                        : "Move to cart"}
                     </Button>
                   </motion.div>
                 );
