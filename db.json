@@ -1958,6 +1958,14 @@
     "showProgress": true,
     "showArrows": true,
     "showPause": true,
+    "background": {
+      "url": "",
+      "mobileUrl": "",
+      "position": "center",
+      "overlay": 55,
+      "blur": 0,
+      "showContent": true
+    },
     "updatedAt": "2026-09-06T00:00:00.000Z"
   },
   "settings": {

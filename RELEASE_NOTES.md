@@ -220,3 +220,65 @@ panels were named by `aria-labelledby` ids that did not exist.
 - `CI=true npm run build` — clean, no warnings.
 - `npm test -- --watchAll=false` — 29 suites, 328 tests passing; the live-API
   suite skipped, as designed.
+
+---
+
+## 1.1.0-lamikaa — 2026-09-10
+
+The home page hero can now carry artwork behind its slides, set from the admin
+console. Nothing else changed, and a storefront with no picture uploaded opens
+exactly as it did before.
+
+### Added
+
+- **Slide backgrounds, at two levels.** The hero carousel drew its slides on the
+  page's own ground — there was no artwork behind them and nowhere in the admin
+  to put any. There are now two places a picture can come from, sharing one
+  shape: `heroConfig.background`, the SECTION picture behind every slide, and
+  `product.heroBackground`, ONE slide's own, which overrides it. Both are edited
+  in **Admin → Home & Hero** — the section picture on *Section settings*, a
+  slide's own inside its row on *Hero products* — and both are stored, read and
+  rendered like every other admin-managed value: nothing about the hero's
+  artwork is hardcoded.
+
+- **One link is a whole background.** Only the image URL is a decision. The
+  focal point, the scrim strength and the soft focus all have designed defaults
+  and sit behind a "Framing & scrim" disclosure, so pasting a link and pressing
+  save is a complete edit — and one link on *Section settings* dresses all eight
+  slides at once. `normalizeHeroBackground()` accepts a bare URL string as well
+  as a record, so a hand-edited `db.json` may say `"heroBackground": "https://…"`
+  and mean it.
+
+- **A slide can be its picture and nothing else.** Switching off "Show the
+  product over the picture" hides that slide's copy, its two CTAs and its label
+  plate, leaving the artwork and the control rail. The heading stays in the
+  accessibility tree (the page keeps exactly one `h1`), the sizer keeps the
+  column's height so nothing below the hero moves, and the plate for that slide
+  is never fetched.
+
+- **Every device.** A separate phone picture (`mobileUrl`) may be given for
+  screens up to 768px, chosen in JS off the same media flag the plate's ratio
+  already reads, so a browser downloads one file and not both; either URL alone
+  is enough and each falls back to the other. The scrim turns with the
+  composition — over the foot of the frame on a phone, over the copy column from
+  the tablet up — and keeps a fixed wash under the transparent masthead so the
+  header's type always has ground. Cloudinary links are delivered responsively
+  (`f_auto,q_auto` + a five-rung `srcset`); any other host is used as given.
+
+- **The carousel's existing budgets are unchanged.** Only the first slide's
+  background is `priority`; the rest mount in the same `requestIdleCallback`
+  pass the plates use. The crossfade follows the configured transition and stops
+  under `prefers-reduced-motion`; an unblurred layer emits `filter: none` rather
+  than `blur(0px)`, so it is never promoted to its own viewport-sized
+  compositing layer; and the whole backdrop is dropped in print.
+
+### Changed
+
+- `Admin → Home & Hero`: a row's disclosure is now **Edit slide** and its button
+  **Save slide** — it saves the two lines and the picture together. Rows are
+  chipped with what backs them ("Own background", "Section background",
+  "Background only"), and the live preview paints the resolved picture and its
+  scrim. The "no primary image" warning no longer fires for a slide that shows
+  nothing but its background, and it says what actually happens (the slide opens
+  without its label plate) rather than that the slide is skipped.
+

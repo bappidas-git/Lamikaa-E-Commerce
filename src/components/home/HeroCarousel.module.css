@@ -12,6 +12,12 @@
  *   • `.headline` and `.subtext` carry min-heights in their OWN em, so a slide
  *     whose copy is one line shorter cannot move the CTAs under a thumb.
  *
+ * THE BACKDROP is the admin's picture, and it is the one layer here that is
+ * DATA-DRIVEN: `utils/heroConfig.heroBackgroundVars()` writes four custom
+ * properties onto each layer (focal point, scrim strength, blur, overscan) and
+ * every rule below reads them. The defaults are declared on `.backdropLayer`
+ * itself, so a layer rendered without them still looks the way it was designed.
+ *
  * WHAT THE STYLESHEET DOES NOT DO
  *   • It never crops the label artwork. The pack is pulled out of the cover
  *     photograph by the Cloudinary crop rectangle and padded to the ratio
@@ -51,6 +57,115 @@
   right: 0;
   height: 140px;
   pointer-events: none;
+}
+
+/* ─── The backdrop ─────────────────────────────────────────────────────────
+   One layer per slide, crossfaded with the plate, behind everything. Rendered
+   only where a merchant uploaded a picture — a hero with no artwork has no
+   backdrop element at all and opens on the page's own ground, as it always
+   did. */
+
+.backdrop {
+  position: absolute;
+  /* The masthead is sticky and transparent over the hero, so the picture bleeds
+     UP behind it and reaches the top of the page. Without this the image starts
+     on a hard line under the header, which reads as a banner dropped into the
+     page rather than as the page's own opening. */
+  top: calc(-1 * var(--sf-hero-chrome));
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  /* Keeps a blurred layer's overscan inside the band. Safe here (and not a
+     scroll container) because the element is absolutely positioned. */
+  overflow: hidden;
+  /* The hero's own handlers own the pointer: the swipe target is the stage. */
+  pointer-events: none;
+}
+
+.backdropLayer {
+  /* The designed answers, so a layer whose custom properties never arrived is
+     still framed, scrimmed and unblurred rather than unstyled. The admin's
+     values are written inline and win over these. */
+  --sf-hero-bg-position: center;
+  --sf-hero-bg-overlay: 0.55;
+  --sf-hero-bg-filter: none;
+  --sf-hero-bg-transform: none;
+
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--sf-duration-slow) var(--sf-ease);
+}
+
+.backdropLayerActive {
+  opacity: 1;
+}
+
+/* `transition: "none"` in the hero config, and reduced motion, both land here —
+   the same contract `.stageInstant` has for the plate. */
+.backdropInstant .backdropLayer {
+  transition: none;
+}
+
+/* The picture itself. `cover` comes from CloudinaryImage; what belongs here is
+   WHICH part of it survives that cover, and the optional soft focus. */
+.backdrop .backdropImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: var(--sf-hero-bg-transform);
+  filter: var(--sf-hero-bg-filter);
+}
+
+.backdrop .backdropImage img {
+  object-position: var(--sf-hero-bg-position);
+}
+
+/* THE SCRIM — three grounds in one element, so a photograph can never cost the
+   copy its contrast (WCAG 1.4.3):
+     1. a short FIXED wash at the top, under the transparent masthead, so the
+        header's warm-white type always has something to sit on;
+     2. the directional one over the copy — the foot of the frame on a phone,
+        the left column from the tablet up — at the admin's own strength;
+     3. a flat wash across the whole picture, at a little over half that
+        strength, which is what keeps the plate side legible too.
+   Every alpha is a multiple of `--sf-hero-bg-overlay`, so the admin's slider
+   moves all of it together and 0 really is "no scrim at all". */
+.backdropScrim {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(
+    var(--sf-color-bg-rgb),
+    calc(var(--sf-hero-bg-overlay) * 0.55)
+  );
+  background-image: linear-gradient(
+      to bottom,
+      rgba(var(--sf-color-bg-rgb), 0.6) 0%,
+      rgba(var(--sf-color-bg-rgb), 0) 24%
+    ),
+    linear-gradient(
+      to top,
+      rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.95)) 0%,
+      rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.45)) 58%,
+      rgba(var(--sf-color-bg-rgb), 0) 100%
+    );
+}
+
+/* With a picture behind it the gold ground light reads as a lens flare rather
+   than as light, and the display type wants an edge of its own. Written as a
+   compound selector because the desktop rule that turns the lamp ON is further
+   down the file: this has to win on specificity, not on order. */
+.hero.heroBackdrop .groundGlow {
+  display: none;
+}
+
+.heroBackdrop .eyebrow,
+.heroBackdrop .headline,
+.heroBackdrop .subtext,
+.heroBackdrop .brandTagline {
+  text-shadow: 0 2px 18px rgba(var(--sf-color-bg-rgb), 0.55);
 }
 
 /* Desktop-only ground light behind the copy column — faint, and NOT breathing:
@@ -126,6 +241,37 @@
 .copyText > .copyBlock {
   position: absolute;
   inset: 0;
+}
+
+/* BACKGROUND ONLY. The merchant asked for this slide to be its picture and
+   nothing else, so everything the copy column draws steps out of the way —
+   `visibility: hidden`, which also takes the two CTAs out of the tab order, and
+   which the SIZER underneath makes free: the column keeps its height, so
+   nothing below the hero moves when the slide changes.
+
+   The headline is the exception. It is the page's only `h1`, and a page that
+   loses its heading between two slides is a document that changes shape under a
+   screen reader. So it is hidden the way `.sf-visually-hidden` hides things —
+   off-screen but still spoken — rather than with `visibility`, which would take
+   it out of the accessibility tree along with the rest. */
+.copyBackdropOnly > .copyLines > *:not(.headline),
+.copyBackdropOnly > .actions,
+.copyBackdropOnly > .badges {
+  visibility: hidden;
+}
+
+.copyBackdropOnly .headline {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .eyebrow {
@@ -396,6 +542,17 @@
   aspect-ratio: 1 / 1;
   /* A vertical drag is always the page's; only a horizontal one is ours. */
   touch-action: pan-y;
+  /* Declared here rather than on `.stageBackdropOnly` so the plate fades BOTH
+     ways: a class that carries its own transition has none left to run with
+     when it is removed. */
+  transition: opacity var(--sf-duration-slow) var(--sf-ease);
+}
+
+/* BACKGROUND ONLY: the plate and its lamp give the frame up to the picture.
+   `opacity`, not `visibility` — this box is the swipe target, and a hidden
+   element stops receiving the pointer events a phone changes slides with. */
+.stageBackdropOnly {
+  opacity: 0;
 }
 
 /* A mouse drag across the card is a swipe, so the browser's own image drag —
@@ -442,8 +599,12 @@
 }
 
 /* `transition: "none"` in the hero config, and reduced motion, both land here. */
+.stageInstant,
 .stageInstant .layer {
   transition: none;
+}
+
+.stageInstant .layer {
   transform: none;
 }
 
@@ -507,6 +668,23 @@
     min-height: calc(100vh - var(--sf-hero-chrome));
     min-height: calc(100svh - var(--sf-hero-chrome));
     padding-bottom: var(--sf-space-16);
+  }
+
+  /* The copy has moved from the foot of the frame to the left column, so the
+     directional half of the scrim turns with it and the plate side of the
+     picture is left open. The masthead's fixed top wash is unchanged. */
+  .backdropScrim {
+    background-image: linear-gradient(
+        to bottom,
+        rgba(var(--sf-color-bg-rgb), 0.6) 0%,
+        rgba(var(--sf-color-bg-rgb), 0) 22%
+      ),
+      linear-gradient(
+        to right,
+        rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.95)) 0%,
+        rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.5)) 46%,
+        rgba(var(--sf-color-bg-rgb), 0) 82%
+      );
   }
 
   .inner {
@@ -599,6 +777,15 @@
     transition: opacity var(--sf-duration-slow) var(--sf-ease);
   }
 
+  /* The backdrop is the largest moving thing on the page; the token layer has
+     already zeroed the duration, and the component passes `instant`, but the
+     rule is restated here so reduced motion holds even if a layer is rendered
+     without it. */
+  .backdropLayer,
+  .stage {
+    transition: none;
+  }
+
   .stage .stageGlow {
     transform: none;
     transition: none;
@@ -612,5 +799,40 @@
   .names {
     scroll-behavior: auto;
     scroll-snap-type: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT. A full-bleed photograph is ink a visitor did not ask for, and the
+   token layer has already re-pointed the scrim to paper white — so the backdrop
+   comes off the sheet entirely. With the picture gone, a slide that was showing
+   nothing but that picture has to print its words instead, or the hero prints
+   as a blank band.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  .backdrop {
+    display: none;
+  }
+
+  .copyBackdropOnly > .copyLines > *,
+  .copyBackdropOnly > .actions,
+  .copyBackdropOnly > .badges {
+    visibility: visible;
+  }
+
+  .copyBackdropOnly .headline {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .stageBackdropOnly {
+    opacity: 1;
   }
 }

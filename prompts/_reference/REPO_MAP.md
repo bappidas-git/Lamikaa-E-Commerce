@@ -160,7 +160,7 @@ Everything below is what the **live branch of `api.js` already calls**. Mock mod
 
 | # | Method & path | Params | `data` response | Notes |
 |---|---|---|---|---|
-| 1 | `GET /products/hero` | — | `Product[]` | Visible products with `heroOrder != null`, ascending. Each must carry `heroHeadline`, `heroSubtext`, `heroOrder`, `shortName` and `media[]`. |
+| 1 | `GET /products/hero` | — | `Product[]` | Visible products with `heroOrder != null`, ascending. Each must carry `heroHeadline`, `heroSubtext`, `heroOrder`, `shortName`, `media[]` and `heroBackground` (object|null — that slide's own picture, same shape as `heroConfig.background`). |
 | 2 | `GET /products/category/slug/{slug}` | — | `{ category: Category, products: Product[] }` | Membership: `categoryIds[]` contains the id **or** `categoryId` equals it. Visible only. 404 for an unknown slug. |
 | 3 | `GET /products` | `concern=<slug>` | `Product[]` | Products whose `concerns[]` contains the slug. Visible only. |
 | 4 | `GET /products` | `search=<q>` | `Product[]` | Must search at least `name`, `shortName`, `tags[]`, `concerns[]`, `keyIngredients[].name`, `benefits[]`, `description`. |
@@ -171,7 +171,7 @@ Everything below is what the **live branch of `api.js` already calls**. Mock mod
 | 9 | `GET /content` | — | `SiteContent` | The whole keyed record (`about`, `whyLamikaa`, `impact`, `home`, `contact`, `policies`, `faqPage`). |
 | 10 | `GET /content/{key}` | — | `object` | One section. |
 | 11 | `GET /announcements` | — | `Announcement[]` | `{ id, text, link, isActive, sortOrder, startsAt, endsAt }`. Serve the live, in-window rows; the client applies the same gate. |
-| 12 | `GET /hero/config` | — | `HeroConfig` | `{ enabled, source: "products", autoplay, intervalMs, transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, updatedAt }`. |
+| 12 | `GET /hero/config` | — | `HeroConfig` | `{ enabled, source: "products", autoplay, intervalMs, transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, showPause, background, updatedAt }`. `background` is the section-wide slide picture: `{ url, mobileUrl, position, overlay (0–100), blur (0–24), showContent }`, every key optional and the whole object optional — an absent or partial record resolves to the defaults in `src/utils/heroConfig.js`. |
 | 13 | `GET/POST /admin/concerns`, `PUT/DELETE /admin/concerns/{id}` | — | `Concern` / `Concern[]` | Full CRUD. `slug` is the key products point at — renaming a concern must not change it. |
 | 14 | `GET/POST /admin/rituals`, `PUT/DELETE /admin/rituals/{id}` | — | `Ritual` / `Ritual[]` | `GET` returns inactive rituals too. |
 | 15 | `PUT /admin/rituals/reorder` | body `{ order: id[] }` | `true` | Full list, first first; `sortOrder` = index. |
@@ -190,7 +190,7 @@ media: [{ type: "image"|"video", url, alt?, primary?: true, crop?: {x,y,w,h}, po
 
 Exactly one **image** row is `primary`; videos never carry the flag; the authored order of `media[]` is preserved (the gallery is authored, not sorted). `images: string[]` and `image: string` are the **derived mirrors** — the image URLs with the primary first — and must be stored and returned alongside `media[]`, because cart lines, wishlist snapshots and order items keep a copy of `images[0]` that cannot be re-derived later. The client sends all three on write (`syncProductMedia`) and rebuilds them on read (`normalizeProduct`), so a server that derives them itself will simply agree.
 
-The other new product fields the live API must round-trip: `shortName`, `categoryIds[]`, `concerns[]` (slugs), `ritualStep{order,label,frequency}`, `heroHeadline`, `heroSubtext`, `heroOrder` (int|null), `promise`, `benefits[]`, `keyIngredients[{name,benefit}]`, `howToUse[]`, `ingredientsList`, `packClaims[]`, `fragranceNote`, `caution`, `suitableFor[]`, `size`, `price` (**nullable**), `priceTBA`, `priceSource`, `currency`, `badges[]`, `faqs[{q,a}]`, `isNew`. A FAQ row additionally carries `group` (a `siteContent.faqPage.groups[].key`), and a category carries `displayName`, `heroImage` and `kind` (`"products"|"rituals"`).
+The other new product fields the live API must round-trip: `shortName`, `categoryIds[]`, `concerns[]` (slugs), `ritualStep{order,label,frequency}`, `heroHeadline`, `heroSubtext`, `heroOrder` (int|null), `heroBackground` (object|null), `promise`, `benefits[]`, `keyIngredients[{name,benefit}]`, `howToUse[]`, `ingredientsList`, `packClaims[]`, `fragranceNote`, `caution`, `suitableFor[]`, `size`, `price` (**nullable**), `priceTBA`, `priceSource`, `currency`, `badges[]`, `faqs[{q,a}]`, `isNew`. A FAQ row additionally carries `group` (a `siteContent.faqPage.groups[].key`), and a category carries `displayName`, `heroImage` and `kind` (`"products"|"rituals"`).
 
 **Removed:** the `banners` namespace and `admin.getBanners/createBanner/updateBanner/deleteBanner/reorderBanners`, together with `GET /banners` and `/admin/banners*`. The collection became `announcements`; the hero's slides became the products. No reference to it remains in `src/`.
 
@@ -240,7 +240,7 @@ difference for settings and site content.
 | `GET /products/slug/{slug}` | — | `Product` | 404 for an unknown slug. |
 | `GET /products/featured` | `limit` | `Product[]` | |
 | `GET /products/trending` | `limit` | `Product[]` | |
-| `GET /products/hero` | — | `Product[]` | `heroOrder != null`, ascending. Must carry `heroHeadline`, `heroSubtext`, `heroOrder`, `shortName`, `media[]`. |
+| `GET /products/hero` | — | `Product[]` | `heroOrder != null`, ascending. Must carry `heroHeadline`, `heroSubtext`, `heroOrder`, `shortName`, `media[]`, `heroBackground` (object|null). |
 | `GET /products/category/{categoryId}` | — | `Product[]` | Numeric id. |
 | `GET /products/category/slug/{slug}` | — | `{ category: Category, products: Product[] }` | Membership = `categoryIds[]` contains the id **or** `categoryId` equals it. 404 for an unknown slug. |
 | `GET /products/{productId}/reviews` | `includeSample=0\|1` | `Review[]` | Approved only; `includeSample=0` (the storefront default) drops rows flagged `isSample`. |
@@ -257,7 +257,7 @@ difference for settings and site content.
 | `GET /content` | — | `SiteContent` | The whole keyed record: `about`, `whyLamikaa`, `impact`, `home`, `contact`, `policies`, `faqPage`. |
 | `GET /content/{key}` | — | `object` | One section. |
 | `GET /announcements` | — | `Announcement[]` | Serve the live, in-window rows; the client applies the same gate and additionally drops any row whose `text` still carries a `{{TOKEN}}`. |
-| `GET /hero/config` | — | `HeroConfig` | `{ enabled, source: "products", autoplay, intervalMs, transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, updatedAt }`. |
+| `GET /hero/config` | — | `HeroConfig` | `{ enabled, source: "products", autoplay, intervalMs, transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, showPause, background, updatedAt }`. `background` is the section-wide slide picture: `{ url, mobileUrl, position, overlay (0–100), blur (0–24), showContent }`, every key optional and the whole object optional — an absent or partial record resolves to the defaults in `src/utils/heroConfig.js`. |
 | `GET /faqs` | — | `Faq[]` | `{ id, question, answer, group, placements[], productIds[], isActive, sortOrder }`. Never throws client-side: an error falls back to the built-in set. |
 | `GET /settings` | — | `Settings` | Public store settings — `store`, `shipping`, `payment` (COD rules), `seo`, `social`. **`payment.codMaxOrder: 0` means "no maximum"**, matching the admin's own field help; the checkout reads a positive value only. |
 | `GET /shipping/methods` | — | `ShippingMethod[]` | Active only. `freeAbove` drives the free-shipping meter; `null`/absent means "unknown" and the meter hides. |
@@ -343,7 +343,7 @@ will simply agree.
 
 The other new product fields the live API must round-trip: `shortName`,
 `categoryIds[]`, `concerns[]` (slugs), `ritualStep{order,label,frequency}`,
-`heroHeadline`, `heroSubtext`, `heroOrder` (int|null), `promise`, `benefits[]`,
+`heroHeadline`, `heroSubtext`, `heroOrder` (int|null), `heroBackground` (object|null), `promise`, `benefits[]`,
 `keyIngredients[{name,benefit}]`, `howToUse[]`, `ingredientsList`, `packClaims[]`,
 `fragranceNote`, `caution`, `suitableFor[]`, `size`, `price` (**nullable**),
 `priceTBA`, `priceSource`, `currency`, `badges[]`, `faqs[{q,a}]`, `isNew`. A FAQ
@@ -364,7 +364,7 @@ Rewritten for LAMIKAA NATURALS. **23 collections in this order**; `banners` is g
 
 | Collection | Rows | Fields (type) | Notes / LAMIKAA values |
 |---|---|---|---|
-| `products` | 8 | **kept:** `id, slug, name, sku, brand ("LAMIKAA Naturals"), categoryId (number), shortDescription, description, images[] (derived from media, primary first), price (number\|null), comparePrice, costPrice, stock, lowStockThreshold, weight, dimensions (null), variants[] (empty), tags[], featured, trending, hot, isActive, rating (0), totalReviews (0), metaTitle, metaDescription, relatedProductIds[], frequentlyBoughtTogetherIds[], createdAt, updatedAt`. **new:** `shortName, categoryIds[], concerns[] (slugs), ritualStep{order,label,frequency}, heroHeadline, heroSubtext, heroOrder (1–8), promise, benefits[], keyIngredients[{name,benefit}], howToUse[], ingredientsList, packClaims[], fragranceNote, caution, suitableFor[], size, priceTBA, priceSource, currency ("INR"), badges[] (= brand.trustBadges), media[], faqs[{q,a}], isNew` | The Black Rice range, ids 1–8 in `PRODUCTS.md` §2 order. Covers are the real Cloudinary URLs; gallery images and videos are placeholders. Prices: 390 / 90 / 349 with `priceSource: "packaging-mrp"` (ids 1, 2, 6); the other five are `price: null, priceTBA: true`. `rating`/`totalReviews` are 0 for all eight — no fabricated social proof. SKUs `LK-BR-{FW,GS,BW,FM,MI,SC,SE,MG}-00n`. Product 6 (scrub) carries `fragranceNote: ""` — its pack does not print the sandalwood line. |
+| `products` | 8 | **kept:** `id, slug, name, sku, brand ("LAMIKAA Naturals"), categoryId (number), shortDescription, description, images[] (derived from media, primary first), price (number\|null), comparePrice, costPrice, stock, lowStockThreshold, weight, dimensions (null), variants[] (empty), tags[], featured, trending, hot, isActive, rating (0), totalReviews (0), metaTitle, metaDescription, relatedProductIds[], frequentlyBoughtTogetherIds[], createdAt, updatedAt`. **new:** `shortName, categoryIds[], concerns[] (slugs), ritualStep{order,label,frequency}, heroHeadline, heroSubtext, heroOrder (1–8), heroBackground (object|null), promise, benefits[], keyIngredients[{name,benefit}], howToUse[], ingredientsList, packClaims[], fragranceNote, caution, suitableFor[], size, priceTBA, priceSource, currency ("INR"), badges[] (= brand.trustBadges), media[], faqs[{q,a}], isNew` | The Black Rice range, ids 1–8 in `PRODUCTS.md` §2 order. Covers are the real Cloudinary URLs; gallery images and videos are placeholders. Prices: 390 / 90 / 349 with `priceSource: "packaging-mrp"` (ids 1, 2, 6); the other five are `price: null, priceTBA: true`. `rating`/`totalReviews` are 0 for all eight — no fabricated social proof. SKUs `LK-BR-{FW,GS,BW,FM,MI,SC,SE,MG}-00n`. Product 6 (scrub) carries `fragranceNote: ""` — its pack does not print the sandalwood line. |
 | `products[].media[]` | 4–5 per product | `{ type: "image"\|"video", url, alt?, primary?, crop?{x,y,w,h} (image, Cloudinary pixels), poster? (video), title? (video), placeholder?: true }` | Row 0 is the real cover: `primary: true` + the `stageCrop` from `PRODUCTS.md` §2. Rows 1–2 are Picsum stand-ins, row 3 a CC0 video (products 1, 4, 7 carry a second one). Exactly one image is `primary`; `images[0]` always equals `media[0].url`; every video carries a `poster` (the cover) and a `title`. |
 | `categories` | 7 | `id, slug, name, displayName, description, image (= heroImage), heroImage, kind ("products"\|"rituals"), parentId (null), isActive, sortOrder, showInMainMenu, menuOrder, createdAt, updatedAt` | face-care · body-care · cleansers · serums · moisturizers · masks · rituals. `kind: "rituals"` marks the one category that routes to `/rituals` rather than a product listing. |
 | `concerns` | 11 | `id, slug, name, order` | cleansing · brightening · hydration · refresh · glow · revive · exfoliation · texture · even-tone · comfort · nourishing. "Shop by concern" links to `/shop?concern=<slug>`. |
@@ -372,7 +372,7 @@ Rewritten for LAMIKAA NATURALS. **23 collections in this order**; `banners` is g
 | `faqs` | 8 | `id, question, answer, group ("brand"\|"products"\|"orders"\|"account"), placements[] (home/help/product), productIds[], isActive, sortOrder, createdAt, updatedAt` | The eight site FAQs from `constants.js → FAQ_ITEMS`, same ids and order. `group` is new and must be one of `siteContent.faqPage.groups[].key`; rows 1–2 `brand`, 3–5 `products`, 6–8 `orders`. Answers keep the `{freeShipping}` and `{{RETURN_WINDOW_DAYS}}` copy tokens `fillStoreCopy()` resolves. |
 | `siteContent` | singleton | `about{heroImage,image2,eyebrow,title,lede,body,ctaLabel,ctaTo}`, `whyLamikaa{heroImage,eyebrow,title,body,pillars[{key,title,text}],difference,vision}`, `impact{eyebrow,title,intro,items[{key,title,image,points[],body}]}`, `home{aboutTeaser{…},whyBlackRice{…},fullPageCta{lines[],primaryLabel,primaryTo,secondaryLabel,secondaryTo,image}}`, `contact{eyebrow,title,lede,hoursNote}`, `policies{privacy{title,updatedAt,body},terms{title,body},shippingReturns{title,body},cookies{title,body}}`, `faqPage{eyebrow,title,groups[{key,label}]}` | Every long `body`/`text`/`intro`/`difference` field is plain text in the markdown-lite grammar of `src/utils/contentBlocks.js` (`## `, `### `, `- `, `1. `, `> `, `---`, `::callout Title` … `::`, `::steps` … `::`, `**bold**`, `[label](/href)`). Copy traces to `BRAND.md` §3 or to packaging; the four policies are generic templates carrying `{{TOKENS}}`. |
 | `announcements` | 3 | `id, text, link ("" \| "/shop"), isActive, sortOrder, startsAt (null), endsAt (null), createdAt, updatedAt` | Replaces `banners`. From `brand.announcements`: "Farmer-owned. Assam-grown." then two token-carrying rows (`{{FREE_SHIPPING_THRESHOLD}}`, `{{LAUNCH_OFFER_TEXT}}`) left `isActive: true` — the bar hides an unresolved text rather than printing it. |
-| `heroConfig` | singleton | `enabled, source ("products"), autoplay, intervalMs (6500), transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, updatedAt` | Product-driven: the slides are the eight products ordered by `heroOrder`, so the old `overlayOpacity`, `heights{}`, `secondaryCta{}` and `openers{}` keys are dropped. |
+| `heroConfig` | singleton | `enabled, source ("products"), autoplay, intervalMs (6500), transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, showPause, background{url,mobileUrl,position,overlay,blur,showContent}, updatedAt` | Product-driven: the slides are the eight products ordered by `heroOrder`, so the old `overlayOpacity`, `heights{}`, `secondaryCta{}` and `openers{}` keys are dropped. |
 | `settings` | singleton | `store{name,tagline,email,phone,address,currency,currencySymbol,timezone,logo,favicon,taxRate,taxIncluded}, shipping{shiprocketEnabled,shiprocketEmail,shiprocketPassword,defaultWeight,defaultDimensions{}}, payment{razorpayEnabled,razorpayKeyId,stripeEnabled,stripePublishableKey,codEnabled,codFee,codMinOrder,codMaxOrder}, notifications{orderConfirmationEmail,shippingUpdateEmail,adminNewOrderEmail,adminEmail,lowStockAlert,lowStockEmail}, seo{metaTitle,metaDescription,googleAnalyticsId,facebookPixelId}, social{facebook,instagram,twitter,youtube,whatsapp}` | Contact, notification and social fields are `{{TOKENS}}` (blanked by `normalizeStoreSettings`/`normalizeSocialUrl` until the owner fills Admin → Settings). `taxRate: 0` with `taxIncluded: true` — packs print "M.R.P (incl. of all taxes)". Gateway credentials blank, COD on with no cap. |
 | `dealsConfig` | singleton | `enabled (false), hero{tag,title,subtitle}, timer{enabled,endAt,onExpiry}, featuredCouponIds[], dealOfTheDayIds[], featuredProductIds[], updatedAt` | Offers page stays hidden until the owner enables it. |
 | `admins` | 1 | `id, email, password (plain!), firstName, lastName, role, isActive, createdAt` | `admin@store.com / admin123` (super_admin) — **change before launch**. |
@@ -713,7 +713,8 @@ component.
   Black Rice Range" → `/shop`) — never a fabricated product. Config goes through
   `normalizeHeroConfig`; the component reads only `enabled`, `autoplay`,
   `intervalMs`, `transition`, `pauseOnHover`, `showControls`, `showCounter`,
-  `showProgress`, `showArrows`, `showPause`.
+  `showProgress`, `showArrows`, `showPause` — and, since slide backgrounds were
+  added, `background` (the section-wide picture each slide falls back to).
   **Contract:** no props, no context beyond `useCart`; renders
   `<div id="hero-sentinel">` (the hero's opening 140px — `Header.js`'s observer
   is unchanged) and the page's single `h1`.
@@ -768,6 +769,22 @@ component.
   bound in step.
 - `pages/Home/Home.js`: imports `components/home/HeroCarousel` and renders it in
   the existing `.heroSection` wrapper. Nothing else on the page changed.
+
+**Updated after the rebuild — SLIDE BACKGROUNDS.** The carousel had no artwork
+behind its slides. `utils/heroConfig.js` gained `DEFAULT_HERO_BACKGROUND`
+(`url`, `mobileUrl`, `position`, `overlay` 0–100, `blur` 0–24, `showContent`),
+`HERO_BACKGROUND_POSITIONS`, and the pure helpers `normalizeHeroBackground`
+(tolerant of a bare URL string and of the older `image`/`mobileImage` spellings),
+`hasHeroBackground`, `heroBackgroundSrc(bg, isMobile)`, `resolveHeroBackground`
+(a slide's own picture wins whole; `showContent` is an AND across both levels),
+`isHeroBackgroundOnly` and `heroBackgroundVars` — all unit-tested in
+`utils/heroConfig.test.js`. `heroConfig.background` is the section default;
+`product.heroBackground` is one slide's own. `HeroCarousel` renders one
+crossfading `.backdropLayer` per slide with its scrim, mounts everything past
+the first in the same idle pass the plate uses, and on a `showContent: false`
+slide hides the copy (`visibility`, keeping the `h1` in the accessibility tree)
+and skips that slide's plate. `Admin → Home & Hero` edits the record at both
+levels through one `BackgroundEditor`.
 
 **Updated by Prompt 15.** The trust strip, the shop-by-category/concern section
 and the shared product card. `components/catalogue/` is a NEW folder (the

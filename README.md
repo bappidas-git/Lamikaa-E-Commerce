@@ -141,6 +141,14 @@ schema). Five things are worth knowing before you touch it:
 - **`heroOrder`** (1…n, or `null`) drives the home hero: the slides *are* the
   products, ordered by this field, with `heroHeadline`/`heroSubtext` per slide.
   There is no `banners` collection any more — it became `announcements`.
+- **`heroBackground`** is the picture behind one slide —
+  `{ url, mobileUrl, position, overlay, blur, showContent }`, all optional but
+  the URL, and `null`/absent when the slide has none. `heroConfig.background`
+  holds the same shape for the whole section, and a slide falls back to it.
+  Pasting one link in Admin → Home & Hero → Section settings therefore dresses
+  every slide at once; `showContent: false` makes a slide the picture alone.
+  Every rule about them (the fallbacks, the clamps, the scrim) lives in
+  `src/utils/heroConfig.js`.
 - **`priceTBA`** with `price: null` is the honest unpriced state: the card and
   the PDP show "Price on launch", Add to Cart and Buy now are disabled, and the
   product is excluded from ritual bundles. Five of the eight products ship this
