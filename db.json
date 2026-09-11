@@ -95,17 +95,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
           "alt": "Black Rice Face Wash by LAMIKAA Naturals — label",
-<<<<<<< Updated upstream
           "primary": true
-=======
-          "primary": true,
-          "crop": {
-            "x": 1050,
-            "y": 100,
-            "w": 1800,
-            "h": 3200
-          }
->>>>>>> Stashed changes
         },
         {
           "type": "image",
