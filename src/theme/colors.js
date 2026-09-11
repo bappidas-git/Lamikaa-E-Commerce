@@ -22,6 +22,10 @@
 // where it reads at 13.4:1. Everything MUI paints here is page-side, so
 // page-side is the palette it gets.
 //
+// The gold is measured against --sf-color-surface-hover (#EFE5D2), the
+// DARKEST of the four grounds it can land on, not against the cream page —
+// a gold picked on the page is a few points short on a sunken input.
+//
 // HOW TO USE:
 //   1. Change the hex values below.
 //   2. Save the file — hot-reload picks up the changes instantly in dev.
@@ -33,7 +37,7 @@ export const PALETTE = {
   // white, because on a cream page the fill has to be the dark half of the
   // pair (a pale fill on a pale ground is not a button).
   primary: {
-    main: "#8C6410", // --sf-color-primary / --sf-color-gold
+    main: "#825C0E", // --sf-color-primary / --sf-color-gold
     light: "#6E4E0A", // --sf-color-gold-light — hover (DEEPER on cream)
     dark: "#513707", // --sf-color-gold-deep — pressed
     contrastText: "#FFFCF5", // --sf-color-primary-contrast
@@ -58,9 +62,9 @@ export const PALETTE = {
   // Gradients. `primary` fills contained buttons; `hero` mirrors
   // --sf-gradient-brand, the pale wash behind full-bleed bands.
   gradient: {
-    primary: "linear-gradient(135deg, #A87C14 0%, #8C6410 50%, #6E4E0A 100%)",
+    primary: "linear-gradient(135deg, #A87C14 0%, #825C0E 50%, #6E4E0A 100%)",
     primaryReverse:
-      "linear-gradient(135deg, #6E4E0A 0%, #8C6410 50%, #A87C14 100%)",
+      "linear-gradient(135deg, #6E4E0A 0%, #825C0E 50%, #A87C14 100%)",
     hero: "linear-gradient(135deg, #FFFDF9 0%, #F4ECDD 55%, #EFE4DC 100%)",
   },
   // Body background. Static — the same ground the pre-mount markup in

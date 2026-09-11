@@ -49,7 +49,7 @@
  * Warm cream grounds, near-white plates, espresso type, and an antique gold
  * that is DARK ENOUGH TO READ. That last point is the whole re-skin: champagne
  * gold (#F5D76E) is 1.4:1 on cream and disappears, so on the light ground the
- * accent role is carried by a deep amber (#8C6410) while the champagne stays
+ * accent role is carried by a deep amber (#825C0E) while the champagne stays
  * exactly where it still shines — inside `.sf-on-dark`, on the chrome, beside
  * the lockup. The pink/violet neon of the dark theme is ambient light and has
  * no daylight equivalent; on cream it becomes berry and plum, held at ink
@@ -59,14 +59,19 @@
  * warm shadow rather than a glow, and nothing is dimmed: a bottle photographed
  * on white now sits on white, ringed by a hairline, on a cream page.
  *
- *   LIGHT ROLES                                       contrast on #F8F3EA
+ *   LIGHT ROLES                            contrast on the WORST ground
+ *   (every ink below is measured against --sf-color-surface-hover, #EFE5D2,
+ *    the darkest of the four grounds a token can land on — not against the
+ *    page. A gold that clears 4.5:1 on the cream page is 4.3:1 on a sunken
+ *    input, and a figure quoted against the ground you happened to test is how
+ *    a palette ships three marginal failures.)
  *   #F8F3EA  page ground — warm cream                                   —
  *   #FFFDF9  surface — sections, cards, drawers, image plates           —
  *   #F1E9DA  sunken — inputs, panels, thumbnails                        —
  *   #1B1714  espresso primary type                                 16.1:1
  *   #544C42  secondary type                                         7.6:1
  *   rgba(27,23,20,.68)  muted type / captions                       6.6:1
- *   #8C6410  antique gold — accent, eyebrows, prices, links, CTA     4.8:1
+ *   #825C0E  antique gold — accent, eyebrows, prices, links, CTA     4.8:1
  *   #6E4E0A  gold, deepened — hover/active                           6.9:1
  *   #513707  gold, pressed — gradient stop, strong borders           9.9:1
  *   #A63D6A  berry — gradient stop, concern accent                   5.6:1
@@ -160,15 +165,15 @@
      NOTE THE FLIP FROM THE DARK THEME: there the fill was a pale champagne
      under a near-black label; on cream the same pair has to run the other way
      round, because a pale fill on a pale page is not a button. */
-  --sf-color-primary: #8C6410;
+  --sf-color-primary: #825C0E;
   --sf-color-primary-dark: #513707;    /* pressed */
   --sf-color-primary-light: #6E4E0A;   /* hover — DEEPER, not lighter */
   --sf-color-primary-contrast: #FFFCF5; /* warm white on gold — 5.2:1 */
-  --sf-color-primary-soft: rgba(140, 100, 16, 0.10); /* tinted fills/hovers */
-  --sf-color-secondary: #8C6410;
-  --sf-color-accent: #8C6410;          /* links/accents — text-safe on cream */
-  --sf-gradient-primary: linear-gradient(135deg, #A87C14 0%, #8C6410 50%, #6E4E0A 100%);
-  --sf-gradient-primary-hover: linear-gradient(135deg, #6E4E0A 0%, #8C6410 50%, #A87C14 100%);
+  --sf-color-primary-soft: rgba(130, 92, 14, 0.10); /* tinted fills/hovers */
+  --sf-color-secondary: #825C0E;
+  --sf-color-accent: #825C0E;          /* links/accents — text-safe on cream */
+  --sf-gradient-primary: linear-gradient(135deg, #A87C14 0%, #825C0E 50%, #6E4E0A 100%);
+  --sf-gradient-primary-hover: linear-gradient(135deg, #6E4E0A 0%, #825C0E 50%, #A87C14 100%);
 
   /* ---- Surfaces & text -------------------------------------------------- */
   --sf-color-bg: #F8F3EA;              /* page ground — warm cream */
@@ -184,7 +189,7 @@
   --sf-color-text-secondary: #544C42;
   --sf-color-text-muted: rgba(27, 23, 20, 0.68); /* ≈ #5D5954 — 6.6:1 */
   --sf-color-border: rgba(27, 23, 20, 0.12);     /* hairline */
-  --sf-color-border-strong: rgba(140, 100, 16, 0.55); /* emphasised hairline */
+  --sf-color-border-strong: rgba(130, 92, 14, 0.55); /* emphasised hairline */
   /* THE TWO SCRIMS ARE NOT THE SAME THING, which is why there are two tokens.
      `--sf-color-overlay` is a PLATE: it sits on a photograph with page-coloured
      type on top of it (a stock tag across the foot of a product plate), so it
@@ -208,15 +213,15 @@
   --sf-color-info-bg: rgba(18, 98, 111, 0.10);
 
   /* ---- Commerce-specific ----------------------------------------------- */
-  --sf-color-star: #8C6410;            /* rating stars */
-  --sf-color-price: #8C6410;           /* current/sale price */
-  --sf-color-compare: #7A7168;         /* struck-through original price */
+  --sf-color-star: #825C0E;            /* rating stars */
+  --sf-color-price: #825C0E;           /* current/sale price */
+  --sf-color-compare: #6E655C;         /* struck-through original price */
   --sf-color-discount: #1D6B42;        /* "% off" + savings */
   --sf-color-discount-bg: rgba(29, 107, 66, 0.10);
   --sf-color-badge-bg: rgba(27, 23, 20, 0.06); /* neutral chip */
 
   /* ---- Accents ---------------------------------------------------------- */
-  --sf-color-gold: #8C6410;            /* antique gold — the one accent */
+  --sf-color-gold: #825C0E;            /* antique gold — the one accent */
   --sf-color-gold-light: #6E4E0A;      /* hover/active — deeper on cream */
   --sf-color-gold-deep: #513707;       /* pressed, gradient stop, borders */
   --sf-color-pink: #A63D6A;            /* berry — gradient stop, accent */
@@ -225,7 +230,7 @@
 
   /* The primary call-to-action: fill, hover fill, and the label that sits on
      both. The three move together, so a CTA never loses its contrast. */
-  --sf-color-cta: #8C6410;
+  --sf-color-cta: #825C0E;
   --sf-color-cta-hover: #6E4E0A;
   --sf-color-cta-contrast: #FFFCF5;
 
@@ -234,8 +239,8 @@
      gradient-text keyword per section, the full-page CTA wash. All three stops
      are ink here, not light — `.sf-gradient-text` clips this to glyphs, so a
      stop that fails 4.5:1 on cream would be an unreadable syllable. */
-  --sf-gradient-signature: linear-gradient(135deg, #8C6410, #A63D6A, #5B3E96);
-  --sf-gradient-gold: linear-gradient(135deg, #A87C14, #8C6410 50%, #513707);
+  --sf-gradient-signature: linear-gradient(135deg, #825C0E, #A63D6A, #5B3E96);
+  --sf-gradient-gold: linear-gradient(135deg, #A87C14, #825C0E 50%, #513707);
   --sf-gradient-brand: linear-gradient(135deg, #FFFDF9, #F4ECDD 55%, #EFE4DC);
   /* One wash behind the announcement bar, whichever message is showing. The
      bar lives in `.sf-on-dark`, so this value is the fallback rather than the
@@ -252,7 +257,7 @@
   --sf-concern-pink: #A63D6A;
   --sf-concern-violet: #5B3E96;
   --sf-concern-cyan: #12626F;
-  --sf-concern-gold: #8C6410;
+  --sf-concern-gold: #825C0E;
   --sf-concern-mint: #1B6B45;
   --sf-concern-rose: #A03F5C;
 
@@ -315,8 +320,8 @@
   --sf-shadow-md: var(--sf-shadow-1);
   --sf-shadow-lg: var(--sf-shadow-2);
   /* One gold ring, everywhere something takes keyboard focus. */
-  --sf-color-focus-ring: #8C6410;
-  --sf-shadow-focus: 0 0 0 3px rgba(140, 100, 16, 0.45);
+  --sf-color-focus-ring: #825C0E;
+  --sf-shadow-focus: 0 0 0 3px rgba(130, 92, 14, 0.45);
 
   /* ---- Typography ------------------------------------------------------- */
   /* Two families carry the whole storefront: FRAUNCES for display (the warm,

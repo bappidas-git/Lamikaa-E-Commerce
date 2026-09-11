@@ -6,7 +6,9 @@ import { Icon } from "@iconify/react";
 // fifteen primitives (Drawer, Modal, VideoPlayer…) into the admin chunk for one
 // component. It is styled by the global `--sf-*` tokens, which index.css
 // declares on :root for the whole document, so it renders here exactly as it
-// renders on /about — inside a neutral frame that says so.
+// renders on /about — inside a neutral frame that says so, and that has to
+// paint the storefront's ground rather than the admin's for the match to hold
+// (see the frame below).
 import ContentBlocks from "../../../components/ui/ContentBlocks";
 
 // =============================================================================
@@ -149,15 +151,24 @@ const MarkdownField = ({
       </Box>
 
       {previewing ? (
-        // The neutral frame: the storefront's own renderer, on the page's own
-        // ground, framed so nobody mistakes it for part of the admin's chrome.
+        // The neutral frame: the storefront's own renderer, on THE STOREFRONT'S
+        // own ground, framed with a dashed rule so nobody mistakes it for part
+        // of the admin's chrome.
+        //
+        // `var(--sf-color-bg)`, not the admin's `background.default`. The two
+        // used to be the same near-black and the distinction did not show; the
+        // storefront is a cream page now, and <ContentBlocks> paints espresso
+        // type on the assumption that it is standing on it. On the admin's own
+        // ground that is ~1.5:1 — a preview you cannot read. It is also simply
+        // the more honest preview: this panel exists to answer "what will this
+        // look like on /about", and /about is cream.
         <Paper
           elevation={0}
           sx={{
             p: { xs: 2, sm: 3 },
             border: "1px dashed",
             borderColor: "divider",
-            bgcolor: "background.default",
+            bgcolor: "var(--sf-color-bg)",
             minHeight: 160,
           }}
         >

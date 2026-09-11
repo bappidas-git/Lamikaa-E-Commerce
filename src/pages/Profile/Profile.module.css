@@ -212,7 +212,10 @@
 }
 
 .metaSep {
-  color: var(--sf-color-border-strong);
+  /* --sf-color-text-muted, not --sf-color-border-strong: this glyph is
+     TEXT, and a hairline token is a colour chosen to be nearly invisible.
+     It read at 3.2:1 on the old dark ground and 2.2:1 on the cream one. */
+  color: var(--sf-color-text-muted);
 }
 
 .editLink {

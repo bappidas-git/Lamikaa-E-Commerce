@@ -61,12 +61,40 @@ light-ground variant.
   storefront falls back to when the catalogue is empty — now set it on
   `.sf-lockup-plate`, a patch of the chrome's own ground.
 
+- **The admin's markdown preview went unreadable.** `MarkdownField` renders the
+  storefront's own `<ContentBlocks>` so a preview cannot drift from the page,
+  and it paints espresso type on the assumption that it is standing on the
+  cream page. Its frame was the ADMIN's ground — which is still near-black —
+  so the preview came out at about 1.5:1. The frame is the storefront's ground
+  now, which is also the more honest preview: the panel exists to answer "what
+  will this look like on /about", and /about is cream. It is the only place the
+  admin renders a storefront component; nothing else in the admin reads
+  `--sf-*`.
+
+- **Three text tokens were measured against the wrong ground.** A colour picked
+  to clear 4.5:1 on the cream PAGE is a few points short on a sunken input or a
+  hover row, which is where a price, a rating or an avatar's initials often
+  sit. Auditing every text-role token against all four grounds found the gold
+  at 4.26:1 on `--sf-color-surface-hover` and the struck compare-price at
+  3.83:1; both are deepened, and the doc table now quotes the worst ground
+  rather than the page.
+
+- **A hairline token was being used as a text colour.** The "·" and "/"
+  separators in Profile, Order history and Checkout took
+  `--sf-color-border-strong` — a value chosen to be nearly invisible. They read
+  at 3.2:1 on the old dark ground and 2.2:1 on cream; they are
+  `--sf-color-text-muted` now.
+
 ### Gates
 
 - `npm test` — 369 tests, 32 suites, all passing.
-- `npm run build` — clean, no warnings.
-- Contrast swept in Chromium over 16 routes × {1440×900, 390×844}: every text
-  node on a resolvable ground meets WCAG AA (4.5:1, or 3:1 at large sizes).
+- `npm run build` — compiled successfully, no warnings.
+- Every text-role token checked against all four grounds (`bg`, `surface`,
+  `surface-2`, `surface-hover`): none below 4.5:1 on either surface.
+- Contrast swept in Chromium over 18 storefront routes × {1440×900, 390×844},
+  signed-in pages included (profile, orders, wishlist, a filled cart and
+  checkout): every text node on a resolvable ground meets WCAG AA (4.5:1, or
+  3:1 at large sizes).
 
 ## 1.1.2-lamikaa — 2026-09-11
 

@@ -51,7 +51,7 @@ const iconButtonTouchOverrides = {
 // low alpha, not white: white-on-cream is not a line, it is nothing.
 const HAIRLINE = "rgba(27, 23, 20, 0.12)";
 // --sf-color-border-strong — the emphasised hairline (hover, focus-within).
-const HAIRLINE_STRONG = "rgba(140, 100, 16, 0.55)";
+const HAIRLINE_STRONG = "rgba(130, 92, 14, 0.55)";
 // --sf-ease / --sf-duration-fast, spelled out because MUI takes strings.
 const TRANSITION = "0.16s cubic-bezier(0.2, 0.7, 0.2, 1)";
 
@@ -64,7 +64,7 @@ const theme = createTheme({
     text: PALETTE.text,
     divider: HAIRLINE,
     action: {
-      hover: "rgba(140, 100, 16, 0.10)", // --sf-color-primary-soft
+      hover: "rgba(130, 92, 14, 0.10)", // --sf-color-primary-soft
     },
   },
   typography: {
