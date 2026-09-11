@@ -2,9 +2,16 @@
  * CategoryHead — the band and the panel
  * =============================================================================
  * MOBILE FIRST, and the two layouts are genuinely different rather than one
- * layout squeezed: on a phone the band is a 4:3 photograph with the panel
- * stacked underneath it; from 769px the band is a 21:9 letterbox and the panel
+ * layout squeezed: on a phone the band is a 2:1 photograph with the panel
+ * stacked underneath it; from 769px the band is a 15:4 letterbox and the panel
  * rises into its lower-left corner on a negative margin.
+ *
+ * THE BAND IS THE SAME BAND `Our Story` AND `Why LAMIKAA` OPEN WITH — same
+ * ratios, same floor, same ceiling. A category is one page in a set of opening
+ * bands, so a 4:3 phone crop and a 21:9 letterbox that ran half again as tall
+ * as every other head on the site read as a different template rather than the
+ * same one. Change these numbers and change them in About.module.css and
+ * WhyLamikaa.module.css too.
  *
  * WHY A NEGATIVE MARGIN AND NOT `position: absolute`. An absolutely positioned
  * panel is measured against the band, so a long description either overflows it
@@ -25,9 +32,9 @@
 
 .band {
   width: 100%;
-  aspect-ratio: 4 / 3;
-  max-height: 62vh;
-  max-height: 62svh;
+  aspect-ratio: 2 / 1;
+  max-height: 40vh;
+  max-height: 40svh;
   background: var(--sf-color-surface);
   /* `.sf-placeholder-media` supplies the desaturation and the wash. */
 }
@@ -104,13 +111,11 @@
 
 @media (min-width: 769px) {
   .band {
-    aspect-ratio: 21 / 9;
-    /* The brief's band height, as a floor under the ratio: at 1440px the 21:9
-       box is 617px and the clamp never bites; at 769px it is 330px, inside the
-       clamp's range. The `max-height` above keeps a very wide viewport from
-       turning the head into a full screen of stock photography. */
-    min-height: clamp(260px, 32vw, 420px);
-    max-height: 520px;
+    aspect-ratio: 15 / 4;
+    /* The floor under the ratio, and the ceiling a wide desktop settles at:
+       past ~1240px the ratio out-runs 325px and the band stops growing. */
+    min-height: clamp(176px, 22.5vw, 300px);
+    max-height: 325px;
   }
 
   .panel {
