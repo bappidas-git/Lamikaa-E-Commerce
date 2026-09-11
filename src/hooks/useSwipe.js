@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 // =============================================================================
-// useSwipe(ref, { onLeft, onRight, threshold, enabled })
+// useSwipe(ref, { onLeft, onRight, threshold, enabled, touchAction })
 // =============================================================================
 // The one horizontal gesture the storefront reads: a flick across a gallery.
 //
@@ -19,6 +19,7 @@ import { useEffect, useRef } from "react";
 //     browser keeps handling vertical panning natively and never waits on us.
 //     It is set here rather than left to a stylesheet because it is part of the
 //     contract — a consumer that forgets it gets a gallery that eats scrolls.
+//     (A surface that owns the whole screen overrides it; see `touchAction`.)
 //   • A gesture only counts when it travelled further across than down
 //     (|dx| > |dy|) AND cleared `threshold`. A 40px floor is about a thumb's
 //     width: shorter than that is a tap that wobbled, not a swipe.
@@ -35,6 +36,20 @@ import { useEffect, useRef } from "react";
 // completes. Cancelling `dragstart` on the element is what makes "works with
 // mouse drag too" true of a surface whose whole content is a photograph.
 //
+// A SECOND FINGER CANCELS THE GESTURE. Two pointers down is a pinch, and a
+// pinch is not a swipe however far apart the fingers end up: spreading them to
+// zoom moves each one sideways, usually well past the threshold and mostly
+// across, so without this guard the release of a pinch-to-zoom read as a flick
+// and the gallery jumped to the next frame instead of magnifying the one the
+// visitor was looking at. That was the lightbox's zoom "not coming out" on
+// every touch device.
+//
+// `touchAction` IS THE CALLER'S. `pan-y` is right for a gallery sitting in the
+// middle of a page the visitor scrolls THROUGH, which is the PDP stage. It is
+// wrong for the lightbox, which IS the page: there the element wants every
+// gesture, so it passes "none" and nothing is left for the browser to claim
+// mid-pinch. Whatever is passed is written inline and removed again on cleanup.
+//
 // `enabled: false` removes the listeners entirely (and restores the element's
 // own `touch-action`) — the lightbox turns the gesture off while an image is
 // zoomed in, because there the same drag means "pan", not "next".
@@ -47,10 +62,11 @@ import { useEffect, useRef } from "react";
  * @param {Function} [options.onRight]    rightward swipe — conventionally "previous"
  * @param {number}   [options.threshold]  px of horizontal travel required (40)
  * @param {boolean}  [options.enabled]    listen at all (true)
+ * @param {string}   [options.touchAction] what the browser keeps ("pan-y")
  */
 export default function useSwipe(
   ref,
-  { onLeft, onRight, threshold = 40, enabled = true } = {}
+  { onLeft, onRight, threshold = 40, enabled = true, touchAction = "pan-y" } = {}
 ) {
   // The callbacks are read at gesture time, so a consumer that rebuilds them
   // every render does not re-bind a listener every render.
@@ -64,18 +80,34 @@ export default function useSwipe(
     if (!node || !enabled || typeof window === "undefined") return undefined;
 
     const previousTouchAction = node.style.touchAction;
-    node.style.touchAction = "pan-y";
+    node.style.touchAction = touchAction;
 
     let start = null;
+    // Every pointer currently down ON THE ELEMENT. The release is read on the
+    // window (see above), so the count has to be kept rather than queried.
+    const down = new Set();
 
     const onPointerDown = (event) => {
       // Secondary mouse buttons are menus, not gestures.
       if (event.pointerType === "mouse" && event.button !== 0) return;
+      down.add(event.pointerId);
+      if (down.size > 1) {
+        // A pinch. Drop the gesture in progress and take nothing further from
+        // it — releasing two spread fingers must not page the gallery.
+        start = null;
+        return;
+      }
       start = { x: event.clientX, y: event.clientY, id: event.pointerId };
     };
 
     const onPointerUp = (event) => {
+      const multi = down.size > 1;
+      down.delete(event.pointerId);
       if (!start || event.pointerId !== start.id) return;
+      if (multi) {
+        start = null;
+        return;
+      }
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
       start = null;
@@ -86,7 +118,8 @@ export default function useSwipe(
       else handlers.current.onRight?.();
     };
 
-    const forget = () => {
+    const forget = (event) => {
+      if (event?.pointerId !== undefined) down.delete(event.pointerId);
       start = null;
     };
 
@@ -104,5 +137,5 @@ export default function useSwipe(
       window.removeEventListener("pointercancel", forget);
       node.style.touchAction = previousTouchAction;
     };
-  }, [ref, threshold, enabled]);
+  }, [ref, threshold, enabled, touchAction]);
 }
