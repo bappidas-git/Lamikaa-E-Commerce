@@ -217,10 +217,23 @@
 
 /* The image plate: a 1:1 surface a product photograph is CENTRED on, never
    cropped to. Packaging is the product — a bottle whose cap has been sliced off
-   by an `object-fit: cover` is a defect, so everything inside a plate contains. */
+   by an `object-fit: cover` is a defect, so everything inside a plate contains.
+
+   THE FRAME IS `--sf-plate-border`, NOT THE GLASS HAIRLINE. Every plate on the
+   storefront — the chapter's editorial 4:5 stage, the card's 1:1, the PDP
+   stage, the drawer and search thumbs — is the same surface, so the frame is
+   stated once here and every one of them picks it up, at every width and in
+   both token scopes. The glass hairline is for glass; a plate carries artwork
+   that often ends in its own near-white, and at 10% ink the edge of the
+   photograph and the edge of the section were the same non-line.
+
+   ONE PIXEL AT EVERY WIDTH, deliberately. A hairline that thickens on a phone
+   is a frame competing with the pack inside it, and the alpha already does the
+   work the extra pixel would: at 3x the browser paints this as a crisp physical
+   line rather than the soft half-pixel a 1px CSS border gives a desktop. */
 .sf-plate {
   background: var(--sf-color-surface);
-  border: 1px solid var(--sf-glass-border);
+  border: 1px solid var(--sf-plate-border);
   border-radius: var(--sf-radius-lg);
   aspect-ratio: 1;
   display: grid;
