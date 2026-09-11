@@ -39,7 +39,13 @@ const imagesOnlyProduct = () => ({
   image: COVER,
 });
 
-/** The seeded shape: an ordered mixed gallery with exactly one primary. */
+/**
+ * The seeded shape: an ordered mixed gallery with exactly one primary.
+ *
+ * The cover row still carries a legacy `crop`, deliberately: a record written
+ * before this rule (or by an older admin build) can hold one, and the point of
+ * the fixture is that normalisation defuses it.
+ */
 const mediaProduct = () => ({
   id: 3,
   name: "Black Rice Body Wash",
@@ -79,7 +85,12 @@ describe("normalizeProduct", () => {
     // not sorted — and the video never enters images[].
     expect(product.media.map((row) => row.url)).toEqual([SHOT_2, COVER, CLIP]);
     expect(product.media.filter((row) => row.primary === true)).toHaveLength(1);
-    expect(primaryImage(product).crop).toEqual({ x: 715, y: 30, w: 395, h: 710 });
+    // The record's legacy source-pixel crop does NOT survive normalisation. It
+    // was measured against one particular upload, and the row's URL can change
+    // under it at any time — a stale crop would then slice a quarter out of a
+    // pack shot and throw the rest away.
+    expect(primaryImage(product).crop).toBeUndefined();
+    expect(product.media.every((row) => row.crop === undefined)).toBe(true);
     expect(productVideos(product)).toHaveLength(1);
   });
 
@@ -234,9 +245,9 @@ describe("validateMedia", () => {
 });
 
 describe("stageSrc", () => {
-  it("crops and pads a Cloudinary cover to the stage ratio", () => {
+  it("pads the WHOLE cover to the stage ratio and never cuts it", () => {
     const src = stageSrc(normalizeProduct(mediaProduct()), { w: 900 });
-    expect(src).toContain("c_crop,x_715,y_30,w_395,h_710");
+    expect(src).not.toContain("c_crop");
     expect(src).toContain("c_pad,ar_1:1,b_auto");
     expect(src).toContain("f_auto,q_auto,w_900");
   });

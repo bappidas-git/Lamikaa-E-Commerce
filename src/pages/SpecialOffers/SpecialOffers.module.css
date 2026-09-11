@@ -495,10 +495,14 @@
   border-radius: inherit;
 }
 
+/* CONTAIN. Packaging is the product, so the feature plate letterboxes the pack
+   rather than slicing it to fill the 4:5 box. Cloudinary has already padded the
+   delivery to the same ratio on a sampled ground, so in practice the picture
+   meets all four edges anyway. */
 .plate img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   transition: transform var(--sf-transition-slow);
 }

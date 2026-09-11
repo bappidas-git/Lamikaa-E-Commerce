@@ -132,9 +132,12 @@ policies, the FAQs, the announcement bar — is edited here, not deployed.
 schema). Five things are worth knowing before you touch it:
 
 - **`media[]`** is the product gallery: an ordered list of
-  `{ type: "image"|"video", url, alt?, primary?, crop?, poster?, title?, placeholder? }`.
+  `{ type: "image"|"video", url, alt?, primary?, poster?, title?, placeholder? }`.
   Exactly one *image* row is `primary`; videos never carry the flag; the
-  authored order is the display order. `images[]` and `image` are **derived
+  authored order is the display order. A row is a picture and its labels and
+  **nothing crops it** — swapping a row's `url` can never leave stale framing
+  behind, because there is no framing to leave. (Rows written before this rule
+  may still hold a `crop`; `normalizeProduct` drops it on the way in.) `images[]` and `image` are **derived
   mirrors** kept in step by `normalizeProduct`/`syncProductMedia`, because cart
   lines, wishlist snapshots and order items keep a copy of `images[0]` that
   cannot be re-derived later. Edit `media[]`; never edit the mirrors by hand.

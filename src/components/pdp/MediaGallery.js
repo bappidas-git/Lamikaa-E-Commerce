@@ -21,13 +21,16 @@ import styles from "./MediaGallery.module.css";
 // set of arrows. A separate "video tab" would ask a shopper to know, before
 // they look, which of the two things they wanted.
 //
-// THE PLATE NEVER CROPS. Every product cover is a photograph of packaging, and
-// packaging IS the product — a bottle with its cap sliced off by `object-fit:
-// cover` is a defect, not a composition. So the stage contains, always, and the
-// only cropping in this component happens at CLOUDINARY: the per-product
-// `crop` recorded in PRODUCTS.md pulls the front panel out of the studio frame
-// and `c_pad,b_auto` letterboxes it back to the stage's ratio. "Full label"
-// simply stops passing that crop, and the whole shot returns.
+// THE PLATE NEVER CROPS — AND NEITHER DOES CLOUDINARY. Every product cover is a
+// photograph of packaging, and packaging IS the product: a bottle with its cap
+// sliced off by `object-fit: cover` is a defect, not a composition. So the stage
+// contains, always, and the delivery does the same. The ONLY transform on the
+// way down is `c_pad,b_auto`, which letterboxes the COMPLETE frame to the
+// stage's ratio on a ground sampled from the shot's own edges — the plate is
+// filled edge to edge and not one pixel of the pack is lost. Whatever a record
+// holds, `utils/product.js` has already dropped any stored source-pixel crop
+// before the gallery sees a row, so there is no second version of a frame to
+// offer and no toggle to offer it with.
 //
 // THE RAIL IS ONE ELEMENT, moved by CSS — a vertical column of 72px squares to
 // the left of the stage from 1025px, a horizontal 56px snap strip beneath it
@@ -48,8 +51,8 @@ import styles from "./MediaGallery.module.css";
 //
 // STATE THAT BELONGS TO THE PRODUCT, NOT TO THE COMPONENT: mount this with
 // `key={product.id}` (ProductDetails does) and a navigation between two
-// products resets the index, the toggle and the lightbox the way a new page
-// should, without a single reset effect.
+// products resets the index and the lightbox the way a new page should,
+// without a single reset effect.
 // =============================================================================
 
 /**
@@ -64,18 +67,12 @@ const STAGE_AR = "4:5";
 /** Thumbnails are 72px at most, on a 2x screen. */
 const THUMB_WIDTH = 144;
 
-// ---- The gallery's four copy/URL decisions, as functions -------------------
+// ---- The gallery's three copy/URL decisions, as functions ------------------
 // Pinned down here so they can be read (and tested) without clicking through
 // five frames of eight products.
 
 /** "3 / 7". 1-based, because a shopper counts from one. */
 export const counterLabel = (index, count) => `${index + 1} / ${count}`;
-
-/**
- * What the label toggle OFFERS, which is the opposite of what is on the plate:
- * showing the front-panel crop, the button offers the whole shot.
- */
-export const toggleLabel = (showFull) => (showFull ? "Front panel" : "Full label");
 
 /**
  * A thumbnail's accessible name. A video says so — its poster is a frame of the
@@ -86,21 +83,17 @@ export const thumbLabel = (product, row) =>
   row?.type === "video" ? `Video: ${row.title || productAlt(product, row)}` : undefined;
 
 /**
- * The delivered thumbnail: a square, 144px for a 72px tile on a 2x screen, and
- * for an image the same front-panel crop the stage opens on, so the rail reads
- * as the stage in miniature. A video shows its poster, or the pack itself when
+ * The delivered thumbnail: a square, 144px for a 72px tile on a 2x screen,
+ * holding the whole frame padded onto its own sampled ground — so the rail
+ * reads as the stage in miniature and a shopper can tell two frames apart by
+ * what is actually in them. A video shows its poster, or the pack itself when
  * the record has not been given one.
  */
 export const thumbSource = (row, posterFallback = "") => {
   if (!row) return "";
   const source = row.type === "video" ? row.poster || posterFallback : row.url;
   if (!source) return "";
-  return cld(source, {
-    crop: row.type === "video" ? undefined : row.crop,
-    ar: "1:1",
-    pad: true,
-    w: THUMB_WIDTH,
-  });
+  return cld(source, { ar: "1:1", pad: true, w: THUMB_WIDTH });
 };
 
 /** The next index in a gallery that wraps at both ends. */
@@ -126,7 +119,6 @@ const MediaGallery = ({
   const [rawIndex, setIndex] = useState(() =>
     Math.min(Math.max(0, Number(initialIndex) || 0), Math.max(0, count - 1))
   );
-  const [showFull, setShowFull] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // A record whose media shrank under us (an admin deleting a row while the
@@ -141,12 +133,6 @@ const MediaGallery = ({
     },
     [count]
   );
-
-  // Every image opens on its front panel. Carrying "Full label" across to the
-  // next frame would show the next pack in a state nobody chose for it.
-  useEffect(() => {
-    setShowFull(false);
-  }, [index]);
 
   // The active thumbnail comes into view in the rail — `nearest`, so a rail
   // that already shows it does not move, and the PAGE never scrolls because of
@@ -188,7 +174,6 @@ const MediaGallery = ({
   if (!row) return null;
 
   const isVideo = row.type === "video";
-  const cropped = !showFull && !!row.crop;
   const posterFallback = primaryImage(product)?.url || "";
   const name = product?.name || "Product";
   const multi = count > 1;
@@ -300,9 +285,8 @@ const MediaGallery = ({
                   <CloudinaryImage
                     src={row.url}
                     alt={productAlt(product, row)}
-                    crop={cropped ? row.crop : undefined}
-                    ar={cropped ? STAGE_AR : undefined}
-                    pad={cropped || undefined}
+                    ar={STAGE_AR}
+                    pad
                     fit="contain"
                     priority={index === firstImageIndex}
                     sizes="(max-width: 768px) 100vw, 48vw"
@@ -311,20 +295,6 @@ const MediaGallery = ({
                 )}
               </motion.div>
             </AnimatePresence>
-
-            {/* ── The front-panel / whole-shot toggle ───────────────────────
-                Only for a row that HAS a crop — on a lifestyle frame there is
-                no second version to offer and the pill would be a lie. */}
-            {!isVideo && row.crop ? (
-              <button
-                type="button"
-                className={`sf-glass ${styles.toggle}`}
-                onClick={() => setShowFull((current) => !current)}
-                aria-pressed={showFull}
-              >
-                {toggleLabel(showFull)}
-              </button>
-            ) : null}
 
             {canLightbox ? (
               <Button

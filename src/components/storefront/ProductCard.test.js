@@ -76,11 +76,14 @@ describe("concernLabel", () => {
 });
 
 describe("plateSources", () => {
-  it("applies the recorded crop and offers the card's four widths", () => {
+  // The fixture's cover still carries a legacy source-pixel crop; the card must
+  // deliver the WHOLE pack regardless, padded onto its own sampled ground.
+  it("pads the whole pack to the plate and offers the card's four widths", () => {
     const { src, srcSet } = plateSources(catalogueProduct());
-    expect(src).toContain("c_crop,x_1050,y_100,w_1500,h_3200");
+    expect(src).not.toContain("c_crop");
     expect(src).toContain("c_pad,ar_1:1");
     expect(src).toContain("w_640");
+    expect(srcSet).not.toContain("c_crop");
     expect(srcSet.split(", ")).toHaveLength(4);
     expect(srcSet).toContain(" 320w");
     expect(srcSet).toContain(" 900w");
