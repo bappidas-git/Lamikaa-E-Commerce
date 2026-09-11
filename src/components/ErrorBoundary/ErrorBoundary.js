@@ -9,18 +9,18 @@ import React from "react";
 // resolved value of the --sf-* token named in its comment. Re-copy them
 // whenever that file's palette changes; nothing here updates automatically.
 const palette = {
-  bg: "#0B0B0D", // --sf-color-bg
-  card: "#141416", // --sf-color-surface
-  border: "rgba(255, 255, 255, 0.08)", // --sf-color-border
+  bg: "#17120F", // --sf-color-bg
+  card: "#201A15", // --sf-color-surface
+  border: "rgba(247, 243, 234, 0.10)", // --sf-color-border
   heading: "#F7F5F0", // --sf-color-text
-  text: "#B8B5B0", // --sf-color-text-secondary
-  detailsBg: "#1C1C20", // --sf-color-surface-2
+  text: "#BDB5A8", // --sf-color-text-secondary
+  detailsBg: "#29221B", // --sf-color-surface-2
   detailsText: "#FF8A80", // --sf-color-danger
   primaryBg: "#F5D76E", // --sf-color-cta (the gold CTA fill)
-  primaryText: "#0B0B0D", // --sf-color-cta-contrast
+  primaryText: "#17120F", // --sf-color-cta-contrast
   ghostBorder: "#B88924", // --sf-color-gold-deep
   ghostText: "#F7F5F0", // --sf-color-text
-  shadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2
+  shadow: "0 20px 60px rgba(23, 15, 6, 0.45)", // --sf-shadow-2
 };
 
 class ErrorBoundary extends React.Component {
