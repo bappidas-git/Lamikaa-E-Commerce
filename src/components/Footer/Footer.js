@@ -252,7 +252,13 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className={styles.footer} aria-labelledby={HEADING_ID}>
+    /* The chrome scope. The footer carries the second LAMIKAA lockup and is
+       the page's full stop — near-black here bookends the masthead and gives
+       the cream pages above it an edge to end on. */
+    <footer
+      className={`sf-on-dark ${styles.footer}`}
+      aria-labelledby={HEADING_ID}
+    >
       {/* The whole transition from page to close: one signature seam. */}
       <div className="sf-hairline sf-hairline--gradient" aria-hidden="true" />
 

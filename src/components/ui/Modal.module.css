@@ -17,7 +17,11 @@
 .backdrop {
   position: absolute;
   inset: 0;
-  background: var(--sf-color-overlay);
+  /* --sf-color-scrim, not --sf-color-overlay: this is the BACKDROP that pushes
+     the page away, and it stays dark on the light theme so a pale panel still
+     separates from a pale page. `--sf-color-overlay` is the other scrim — the
+     one a label sits ON, over a photograph — and it follows the page. */
+  background: var(--sf-color-scrim);
 }
 
 .panel {

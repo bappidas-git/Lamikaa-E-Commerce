@@ -12,7 +12,9 @@
 .backdrop {
   position: absolute;
   inset: 0;
-  background: var(--sf-color-overlay);
+  /* The BACKDROP token, which stays dark on the light theme — see the note in
+     Modal.module.css. Not --sf-color-overlay, which is the label plate. */
+  background: var(--sf-color-scrim);
 }
 
 .panel {

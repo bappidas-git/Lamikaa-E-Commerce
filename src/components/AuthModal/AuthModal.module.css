@@ -72,10 +72,18 @@
   margin-bottom: var(--sf-space-6);
 }
 
+/* The plate carries the gap under the lockup, so the artwork itself keeps its
+   own box and nothing about the wordmark's size depends on the plate. */
+.logoPlate {
+  margin-bottom: var(--sf-space-2);
+  padding: var(--sf-space-2) var(--sf-space-4);
+  border-radius: var(--sf-radius-md);
+}
+
 .logo {
   height: 34px;
   width: auto;
-  margin-bottom: var(--sf-space-2);
+  display: block;
 }
 
 .title {

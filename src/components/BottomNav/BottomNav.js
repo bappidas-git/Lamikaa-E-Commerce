@@ -165,6 +165,9 @@ const BottomNav = () => {
     <>
       <nav
         className={[
+          // The chrome scope — the same near-black band as the masthead,
+          // closing the page at the foot of a phone.
+          "sf-on-dark",
           "sf-glass",
           "sf-glass--strong",
           // "text on glass over imagery gets .sf-glass--scrim" (DESIGN_SYSTEM

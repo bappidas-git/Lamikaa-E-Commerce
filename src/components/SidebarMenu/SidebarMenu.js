@@ -336,7 +336,9 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
       side="left"
       width="min(100vw, 420px)"
       labelledBy={labelId}
-      className={styles.panel}
+      /* The chrome scope: this drawer IS the masthead on a phone, wordmark and
+         all, so it carries the same near-black ground. */
+      className={`sf-on-dark ${styles.panel}`}
       title={
         <span className={styles.brand}>
           {/* The dialog's accessible name and the drawer's heading in one

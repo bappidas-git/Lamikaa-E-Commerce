@@ -405,9 +405,15 @@ const AuthModal = ({ open, onClose, defaultTab = "login" }) => {
         )}
       </AnimatePresence>
 
-      {/* ---- Masthead: the wordmark straight on the sheet ---- */}
+      {/* ---- Masthead: the wordmark on its plate ----
+           NOT straight on the sheet any more. The sheet is near-white and the
+           wordmark is champagne gold — 1.4:1, a watermark. `.sf-lockup-plate`
+           (with `.sf-on-dark`, which is what gives it its ground) puts the
+           lockup back on the near-black it was drawn for. */}
       <div className={styles.header}>
-        <Logo className={styles.logo} width={LOGO_WIDTH} alt={storeName} />
+        <span className={`sf-on-dark sf-lockup-plate ${styles.logoPlate}`}>
+          <Logo className={styles.logo} width={LOGO_WIDTH} alt={storeName} />
+        </span>
         <h2 id="auth-modal-title" className={styles.title}>
           {isLogin ? "Welcome back" : "Create your account"}
         </h2>

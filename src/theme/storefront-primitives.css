@@ -6,13 +6,16 @@
  * storefront. Every class is prefixed with `sf-` to avoid collisions. Loaded
  * app-wide exactly once via `src/index.css` (right after storefront-tokens.css).
  *
- * THE LOOK: "Luxury Skincare After Dark". Near-black grounds, warm-white type,
- * champagne gold as the one accent that may fill a control. Pills everywhere —
- * every button, chip, badge and ribbon on the storefront is a pill from
- * Prompt 04 onward. Labels are SENTENCE CASE in Manrope 600; the only uppercase
- * left in the system is the tracked gold eyebrow above a section heading.
- * Glass, glow and the signature gradient are supporting devices with hard
- * budgets (DESIGN_SYSTEM.md §4–§5), never the subject.
+ * THE LOOK: "Black Rice in Daylight". Warm cream grounds, near-white plates,
+ * espresso type, antique gold as the one accent that may fill a control. The
+ * CHROME is the exception and keeps the brand's near-black ground and its
+ * champagne gold — it carries the lockup — which it gets from the `.sf-on-dark`
+ * token scope rather than from any rule here. Pills everywhere — every button,
+ * chip, badge and ribbon on the storefront is a pill. Labels are SENTENCE CASE
+ * in Manrope 600; the only uppercase left in the system is the tracked gold
+ * eyebrow above a section heading. Glass, glow and the signature gradient are
+ * supporting devices with hard budgets (DESIGN_SYSTEM.md §4–§5), never the
+ * subject.
  *
  * THE HOVER / PRESS VOCABULARY — three treatments, storefront-wide:
  *
@@ -37,6 +40,8 @@
  *   B1 LAYOUT      .sf-section  .sf-section--tight
  *                  .sf-container  .sf-container--wide
  *   B2 SURFACE     .sf-glass  .sf-glass--strong  .sf-glass--scrim
+ *                  .sf-on-dark.sf-glass (the chrome veil — see B2)
+ *                  .sf-lockup-plate (pair with .sf-on-dark)
  *                  .sf-plate  .sf-hairline  .sf-hairline--gradient
  *   B3 GLOW        .sf-glow  .sf-glow--violet  .sf-glow--gold  .sf-glow--duo
  *                  .sf-glow--breathe
@@ -58,6 +63,10 @@
  *     hardcode hex, gradients, shadows, radius, or spacing here. Where a spec
  *     names a literal colour, express it as a color-mix() of the token that
  *     produces it, so the palette stays the single source.
+ *   • `.sf-on-dark` is declared in storefront-tokens.css and is a SCOPE, not a
+ *     look. Nothing here may assume the page is light or dark: read the tokens
+ *     and both surfaces come out right. The one compound rule below that names
+ *     the scope does so because the veil genuinely has to invert.
  *   • Do NOT redefine tokens and do NOT @import fonts (fonts load in
  *     public/index.html, once).
  *   • These are the brand PRIMITIVES that later prompts (Header, ProductCard,
@@ -127,6 +136,36 @@
   background: var(--sf-glass-bg-strong);
 }
 
+/* ---- GLASS THAT IS ALSO CHROME ------------------------------------------
+   The recipe above is a veil of WHITE, and it works because the thing behind
+   it is dark. On the light storefront that assumption holds everywhere except
+   the one place it matters most: the chrome. The masthead, the mega sheet, the
+   mobile nav drawer and the bottom bar all carry `.sf-on-dark` — they are
+   near-black bars floating over a CREAM page — and 6% white over cream is
+   cream. The bar would vanish and its warm-white type with it.
+
+   So where the two classes meet, the veil inverts: the page ground of the dark
+   scope at a high alpha, which reads as smoked glass over whatever scrolls
+   beneath. Written as a color-mix of --sf-color-bg (which inside `.sf-on-dark`
+   IS #0B0B0D) rather than an rgba literal, per this sheet's RULES.
+
+   IT IS A COMPOUND SELECTOR, NOT A DESCENDANT ONE, and that is the whole
+   design: only the element that IS the chrome takes the dark veil. A glass
+   child INSIDE the chrome — the lightbox's counter pill, the footer's
+   newsletter field, a nav control — sits on the bar's own near-black ground,
+   where 6% white is exactly right, and keeps the recipe above untouched.
+
+   Two classes beat one on specificity, so this wins over `.sf-glass` wherever
+   the module sheets happen to land in the bundle. */
+.sf-on-dark.sf-glass {
+  background: color-mix(in srgb, var(--sf-color-bg) 86%, transparent);
+  border-color: color-mix(in srgb, var(--sf-color-text) 12%, transparent);
+}
+
+.sf-on-dark.sf-glass--strong {
+  background: color-mix(in srgb, var(--sf-color-bg) 94%, transparent);
+}
+
 /* A darker inner scrim, for text sitting on glass over a photograph. Needs a
    positioned parent; the scrim is inert and never eats a click. */
 .sf-glass--scrim {
@@ -164,6 +203,14 @@
   .sf-glass--strong {
     background: var(--sf-glass-fallback);
   }
+
+  /* …and the chrome goes fully opaque rather than nearly so, for the same
+     reason: without the blur there is nothing between the bar's type and a
+     product photograph scrolling under it. */
+  .sf-on-dark.sf-glass,
+  .sf-on-dark.sf-glass--strong {
+    background: var(--sf-color-bg);
+  }
 }
 
 /* The image plate: a 1:1 surface a product photograph is CENTRED on, never
@@ -184,6 +231,30 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* ---- THE LOCKUP PLATE ----------------------------------------------------
+   The LAMIKAA wordmark is champagne-gold artwork on a transparent ground and it
+   has no light-ground variant: on cream it measures 1.4:1 and reads as a
+   watermark. The chrome answers this by BEING dark — masthead, mobile nav and
+   footer all carry `.sf-on-dark`, which is the whole reason that scope exists.
+   The two places the lockup appears INSIDE the cream page answer it with a
+   plate: a patch of the same near-black ground, sized to the artwork. They are
+   the auth dialog's header, and the brand hero the storefront falls back to
+   when the catalogue is empty.
+
+   PAIR IT WITH `.sf-on-dark`. The ground is `--sf-color-bg`, which is the cream
+   page everywhere except inside that scope — so `class="sf-on-dark
+   sf-lockup-plate"`, always, and the plate then follows the chrome if the
+   chrome is ever retuned. Alone it paints cream on cream, which is exactly the
+   bug it exists to prevent. */
+.sf-lockup-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sf-space-3) var(--sf-space-5);
+  border-radius: var(--sf-radius-lg);
+  background: var(--sf-color-bg);
 }
 
 /* A rule. Not a border on something else — a rule in its own right, so it can

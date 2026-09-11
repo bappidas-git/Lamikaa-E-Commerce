@@ -26,10 +26,12 @@
  * page ground the palette's contrast figures were measured against; the numbers
  * are at .lede below.
  *
- * NO HARD-CODED COLOUR. The wash's rgba(11,11,13,.82 -> .94) is
- * --sf-color-bg at those two alphas, written as a color-mix() of the token that
- * produces it — the idiom the primitives sheet uses wherever a spec names a
- * literal (see storefront-primitives.css, RULES).
+ * NO HARD-CODED COLOUR. The wash is --sf-color-bg at two alphas (.82 -> .94),
+ * written as a color-mix() of the token that produces it — the idiom the
+ * primitives sheet uses wherever a spec names a literal (see
+ * storefront-primitives.css, RULES). On the cream page that resolves to a warm
+ * near-white veil rather than the near-black one it used to be, and the
+ * photograph under it stays a texture either way.
  * ========================================================================== */
 
 .section {
@@ -56,7 +58,7 @@
   overflow-x: clip;
 
   /* The gradient layer blends with the two layers under it and with nothing
-     else: `isolation` keeps `mix-blend-mode: screen` inside this section rather
+     else: `isolation` keeps the gradient's blend inside this section rather
      than letting it reach the page behind it. */
   isolation: isolate;
 }
@@ -85,7 +87,9 @@
 
 /* ---- 2. The wash ---------------------------------------------------------
    82% of the page ground at the top edge, 94% at the bottom: the photograph is
-   a texture under the type, not a picture the eye is asked to read. */
+   a texture under the type, not a picture the eye is asked to read. Page
+   ground, so it follows the theme — cream here, and the card's espresso type
+   keeps the contrast the palette was measured for. */
 .wash {
   z-index: 1;
   background: linear-gradient(
@@ -96,13 +100,21 @@
 }
 
 /* ---- 3. The signature gradient ------------------------------------------
-   12%, screened, so the champagne / pink / violet come THROUGH the dark rather
-   than sitting on top of it. One gradient wash per page, and this is it. */
+   12%, blended, so the gold / berry / plum come THROUGH the wash rather than
+   sitting on top of it. One gradient wash per page, and this is it.
+
+   THE BLEND MODE IS A TOKEN because the right one depends on which way round
+   the ground is. `screen` lightens toward the stop colour, which is how the
+   dark theme got neon to glow out of near-black — and screening onto a cream
+   wash is very nearly a no-op, so on this page the same layer would simply not
+   be there. `multiply` is its mirror: it darkens toward the stop, which is what
+   tints a pale ground. `--sf-blend-signature` carries whichever the current
+   surface needs, and resolves to `normal` in print. */
 .gradient {
   z-index: 2;
   background-image: var(--sf-gradient-signature);
   opacity: 0.12;
-  mix-blend-mode: screen;
+  mix-blend-mode: var(--sf-blend-signature);
 }
 
 /* ---- 4. The card --------------------------------------------------------- */

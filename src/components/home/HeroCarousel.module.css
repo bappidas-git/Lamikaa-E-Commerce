@@ -67,11 +67,20 @@
 
 .backdrop {
   position: absolute;
-  /* The masthead is sticky and transparent over the hero, so the picture bleeds
-     UP behind it and reaches the top of the page. Without this the image starts
-     on a hard line under the header, which reads as a banner dropped into the
-     page rather than as the page's own opening. */
-  top: calc(-1 * var(--sf-hero-chrome));
+  /* NO UPWARD BLEED. The picture used to start at `-1 * --sf-hero-chrome`,
+     reaching the top of the page behind a masthead that was transparent over
+     the hero — without it the image began on a hard line under the header and
+     read as a banner dropped into the page.
+
+     The masthead is not transparent any more. It is the chrome: a solid
+     near-black bar carrying the golden lockup over a cream page, and the
+     announcement band above it is the same. So the bleed no longer passes
+     behind anything — it passes UNDER the band, which is only 36px tall and is
+     not part of the header's stacking context, and paints a cream-scrimmed
+     slice of the photograph across it. (It always did; while the whole
+     storefront was near-black, a near-black scrim over a near-black band was
+     invisible.) The hero now starts where the hero starts. */
+  top: 0;
   right: 0;
   bottom: 0;
   left: 0;
@@ -125,8 +134,9 @@
 
 /* THE SCRIM — three grounds in one element, so a photograph can never cost the
    copy its contrast (WCAG 1.4.3):
-     1. a short FIXED wash at the top, under the transparent masthead, so the
-        header's warm-white type always has something to sit on;
+     1. a short FIXED wash at the top edge — it no longer has a transparent
+        masthead to serve (the chrome is opaque now), and it stays because it
+        softens the seam where the near-black bar meets the photograph;
      2. the directional one over the copy — the foot of the frame on a phone,
         the left column from the tablet up — at the admin's own strength;
      3. a flat wash across the whole picture, at a little over half that
@@ -640,6 +650,13 @@
 .brandGlow {
   display: inline-block;
   width: auto;
+}
+
+/* The lockup's plate. Generous padding because the artwork has no margin of
+   its own and a wordmark crowded to the edge of a card reads as a crop. */
+.brandPlate {
+  padding: var(--sf-space-6) var(--sf-space-8);
+  max-width: 100%;
 }
 
 .brandMark {

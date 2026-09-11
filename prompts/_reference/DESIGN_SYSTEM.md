@@ -1,5 +1,40 @@
 # DESIGN_SYSTEM — "Luxury Skincare After Dark", adapted to this repository
 
+> ## ⚠ AMENDED — the storefront is LIGHT now ("Black Rice in Daylight")
+>
+> Everything below records the original brief and the prompts that built it, and
+> it is still the right reference for **structure**: the token NAMES, the glass
+> and glow recipes, the type scale, the component behaviours and the budgets are
+> all unchanged. What changed is the **values**.
+>
+> The storefront ground is a warm cream (`#F8F3EA`) under espresso type
+> (`#1B1714`), and the accent that carries every role champagne gold used to
+> carry — eyebrows, prices, links, the CTA fill — is an antique gold
+> (`#8C6410`) deep enough to read on it. Champagne gold at 1.4:1 on cream is a
+> watermark, so it did not survive the move as an ink.
+>
+> It did survive as the CHROME. `.sf-on-dark` is a token scope declared
+> alongside `:root` in `src/theme/storefront-tokens.css`: it re-points the
+> colour half of the token set back onto `#0B0B0D` with `#F5D76E` on it — the
+> exact palette in §2 below — and it is worn by the announcement band, the
+> masthead and its mega panel, the mobile nav drawer, the bottom bar, the footer
+> and the PDP lightbox. The golden LAMIKAA lockup has no light-ground variant,
+> so wherever it appears the ground comes to it: inside that scope for the
+> chrome, and on `.sf-lockup-plate` for the two places it lands on the page (the
+> auth dialog and the empty-catalogue brand hero).
+>
+> **Read §2 below as the values of `.sf-on-dark`, not of `:root`.** The live and
+> authoritative table for both surfaces is the comment block at the top of
+> `src/theme/storefront-tokens.css`; `src/theme/colors.js` mirrors the light set
+> for MUI. Three sentences in §1 are simply superseded — `html { color-scheme }`
+> is `light`, `:root` is the light set, and `--sf-color-overlay` has split into
+> a page-following label plate (`--sf-color-overlay`) and an always-dark modal
+> backdrop (`--sf-color-scrim`). `meta[name=theme-color]` stays `#0B0B0D`
+> because it colours the browser chrome above the near-black band, not the page.
+>
+> Unchanged and still non-negotiable: one theme, no toggle, no stored
+> preference, no `body.light` / `body.dark`, no hard-coded colour in a component.
+
 > Brief §6 in full, translated into the repo's real styling approach: **CSS Modules consuming `--sf-*` custom properties** declared once in `src/theme/storefront-tokens.css`, global primitives in `src/theme/storefront-primitives.css`, a JS mirror in `src/theme/tokens.js` / `colors.js` / `motion.js`, and one MUI theme built in `src/context/ThemeContext.js` (storefront) plus `src/theme/adminTheme.js` (admin). The `--lk-*` names in the brief are **not** adopted: 100+ CSS modules consume tokens by name, so the `--sf-` prefix (it means "storefront", not the old brand) stays and the values change. The mapping table in §2 is the contract every prompt uses.
 
 ## 1. Non-negotiables (repo form)

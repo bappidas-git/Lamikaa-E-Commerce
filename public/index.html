@@ -44,8 +44,11 @@
     />
 
     <!--
-      Browser chrome colour. Mirrors --lk-bg / --sf-color-bg: #0B0B0D is the
-      LAMIKAA page ground. Static — there is one theme.
+      Browser chrome colour. NOT the page ground (that is cream, #F8F3EA) — the
+      colour of the band the browser's own chrome sits against, which on this
+      storefront is the near-black announcement bar and masthead. Mirroring the
+      cream ground here would put a pale strip of UA chrome directly above a
+      near-black bar. Static — there is one theme.
     -->
     <meta name="theme-color" content="#0B0B0D" />
 
@@ -229,18 +232,32 @@
       TOKEN DISCIPLINE — this stylesheet is inlined into public/index.html and is
       parsed long before the app bundle (and therefore before
       src/theme/storefront-tokens.css) exists, so it CANNOT use var(--sf-*).
-      Every literal below is the LAMIKAA dark palette and must be re-copied if
-      the palette moves. There is ONE theme, so there is one set:
+      Every literal below must be re-copied if the palette moves. There is ONE
+      theme, and it needs BOTH sets, because the splash and the page it fades
+      into are deliberately not the same colour:
 
-        #0B0B0D  --sf-color-bg              (page ground)
+        PAGE (`:root`)
+        #F8F3EA  --sf-color-bg              (page ground — warm cream)
+
+        SPLASH (`.sf-on-dark`, the chrome scope)
+        #0B0B0D  --sf-color-bg              (chrome ground)
         #141416  --sf-color-surface
         #F7F5F0  --sf-color-text            (warm white)
         #B8B5B0  --sf-color-text-secondary
         #F5D76E  --sf-color-gold            (champagne gold)
         rgba(255, 255, 255, 0.08)           --sf-color-border (hairline)
+
         cubic-bezier(0.2, 0.7, 0.2, 1)      --sf-ease
         "Manrope", "Inter", …               --sf-font-family (splash body)
         "Fraunces", "Playfair Display", …   --sf-font-display (splash tagline)
+
+      WHY THE SPLASH STAYS DARK. The only thing on it is the wordmark, and the
+      wordmark is champagne gold on a transparent ground — 1.4:1 on cream. It
+      has no light-ground variant, so the splash keeps the near-black plate the
+      masthead and the footer keep, for the same reason. The fade-out therefore
+      crosses from near-black to cream instead of dissolving into a matching
+      ground; at 600ms that reads as the page opening up, which is the one
+      moment in the session where a colour step is worth having.
 
       The two families come from the single Google Fonts <link> above, which
       the browser has already started fetching by the time this block is
@@ -257,8 +274,9 @@
         -moz-osx-font-smoothing: grayscale;
         /* One theme, one ground, declared statically. Nothing reads a stored
            preference and nothing repaints this at mount, so no other colour
-           can ever flash. Mirrors --sf-color-bg. */
-        background: #0b0b0d;
+           can ever flash. Mirrors --sf-color-bg on `:root` — the CREAM page,
+           not the splash above it. */
+        background: #f8f3ea;
         min-height: 100vh;
       }
 
@@ -276,8 +294,10 @@
         left: 0;
         width: 100%;
         height: 100%;
-        /* Identical to the body ground above, so the fade-out reveals the page
-           with no colour step. */
+        /* The CHROME ground, not the body ground below — see the note above
+           the stylesheet: the gold wordmark needs a near-black plate, so this
+           is the one surface that deliberately does not match what it reveals.
+           Mirrors --sf-color-bg inside `.sf-on-dark`. */
         background: #0b0b0d;
         display: flex;
         justify-content: center;
@@ -307,7 +327,8 @@
       }
 
       /* One wordmark, one theme — the transparent-ground artwork reads on the
-         dark splash, so there is no second asset and no swap. */
+         dark splash, which is precisely why the splash is dark. No second
+         asset, no swap. */
       .loader-logo {
         display: block;
         width: clamp(190px, 46vw, 260px);
@@ -386,6 +407,9 @@
         text-align: center;
         font-size: 14px;
         line-height: 1.5;
+        /* The no-JS notice is chrome too: it sits at the very top of the
+           document, where the announcement band would be, so it wears the
+           chrome's own surface rather than the cream page's. */
         color: #f7f5f0;
         background: #141416;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);

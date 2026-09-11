@@ -11,9 +11,10 @@
  * page chrome before the first scroll is 100px.
  *
  * The surface is the `.sf-glass` / `.sf-glass--strong` primitive applied from
- * Header.js — this module never restates the recipe, it only says where the
- * blur has to stop (the two-layer budget) and what the transparent state looks
- * like over the hero.
+ * Header.js, under `.sf-on-dark` — which is what turns that recipe from a white
+ * veil into the chrome's smoked near-black one. This module never restates the
+ * recipe; it only says where the blur has to stop (the two-layer budget) and
+ * what the over-the-hero state looks like.
  *
  * Fully token-driven: no hardcoded colour, radius, shadow or duration.
  * ========================================================================== */
@@ -34,18 +35,33 @@
     box-shadow var(--sf-transition);
 }
 
-/* Over the hero the header is nothing at all: no ground, no blur, no hairline.
-   The type stays warm white because the hero ground is --sf-color-bg. */
+/* OVER THE HERO the masthead used to be nothing at all — no ground, no blur, no
+   hairline — because the hero ground was --sf-color-bg and warm-white type sat
+   on it safely. That is no longer true: the page is cream, the hero is a
+   photograph the admin chooses, and a transparent bar would put warm-white type
+   and a gold wordmark over whatever happens to be up there.
+
+   So it keeps a ground, and the ground is the chrome's own near-black, solid.
+   A fade to transparent was tried first and it is the wrong answer on a cream
+   page: fading toward nothing means fading toward the cream, so the bottom half
+   of the bar reads as a band of grey smudge under the black rather than as a
+   bar. Solid is also what was actually asked for — a masthead that is
+   unambiguously dark, under the golden lockup, against a light storefront.
+
+   Still NO blur, NO hairline and NO shadow here: over the hero the bar is a
+   flush continuation of the chrome above it, and `.strong` below is where it
+   lifts off the page once the hero has scrolled away. */
 .transparent {
-  background: transparent;
+  background: var(--sf-color-bg);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   border-bottom-color: transparent;
   box-shadow: none;
 }
 
-/* Scrolled: `.sf-glass--strong` takes the ground from 6% to 8% white, and this
-   firms the hairline under it to the emphasised token. NOT a second shadow —
+/* Scrolled: `.sf-glass--strong` takes the chrome veil from 86% to 94% of the
+   near-black ground (storefront-primitives.css, "glass that is also chrome"),
+   and this firms the hairline under it to the emphasised token. NOT a second shadow —
    `.sf-glass` already carries --sf-shadow-1 at rest, so restating it here would
    have made the scrolled state a class that changes nothing you can see. */
 .strong {
@@ -124,7 +140,10 @@
 
 /* ---- Wordmark ----------------------------------------------------------- */
 /* Transparent-ground artwork directly on the ground — no plate, no glow; the
-   logo's own keyline carries it on #0B0B0D and on glass (PACKAGING_NOTES §1). */
+   logo's own keyline carries it on #0B0B0D and on glass (PACKAGING_NOTES §1).
+   That near-black is why the masthead wears `.sf-on-dark` while the page under
+   it is cream: the wordmark is drawn in champagne gold and has no light-ground
+   variant, so the ground comes to it. */
 .logoLink {
   display: inline-flex;
   align-items: center;

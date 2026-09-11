@@ -5,7 +5,9 @@
  * skin. Everything here reads the design tokens in
  * `src/theme/storefront-tokens.css` (--sf-*) — no brand hex is hardcoded in this
  * file. There is ONE theme, declared once in `:root`, so no rule below needs a
- * mode twin and nothing here is keyed off a class on <body>.
+ * mode twin and nothing here is keyed off a class on <body>. (The chrome's
+ * `.sf-on-dark` scope is not a second theme and needs nothing here: it
+ * re-points the same token names, and every rule below reads them.)
  *
  * ADMIN IS OUT OF SCOPE. The admin panel keeps its own flat design language
  * on the LAMIKAA palette (recoloured in Prompt 32): the `body.admin-area`
@@ -103,9 +105,18 @@ body {
 
 /* =============================================================================
  * SCROLLBARS
- * Quiet: 8px, the page ground as the track, a hover-surface thumb that lifts to
- * muted text under the cursor — the scrollbar is chrome, not an accent, so no
- * gold goes anywhere near it. One theme, one rule set; the admin follows.
+ * Quiet: 8px, the page ground as the track, a thumb a fifth of the way from that
+ * ground toward the page's own ink, lifting to muted text under the cursor —
+ * the scrollbar is chrome, not an accent, so no gold goes anywhere near it. One
+ * theme, one rule set; the admin follows.
+ *
+ * THE THUMB IS A MIX, NOT A SURFACE TOKEN. It used to be
+ * --sf-color-surface-hover, which was one step LIGHTER than the ground while
+ * the storefront was near-black and is one step DARKER now that it is cream —
+ * three or four values of separation either way, which was a visible lift on
+ * black and is an invisible one on cream. Mixing the ground with the ink states
+ * what the rule actually wants and holds on any ground, `.sf-on-dark`
+ * included.
  * ========================================================================== */
 ::-webkit-scrollbar {
   width: 8px;
@@ -117,7 +128,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--sf-color-surface-hover);
+  background: color-mix(in srgb, var(--sf-color-text) 22%, var(--sf-color-bg));
   border-radius: var(--sf-radius-pill);
 }
 
@@ -129,7 +140,8 @@ body {
    every scroll container. Storefront only — admin keeps the UA default. */
 body:not(.admin-area) {
   scrollbar-width: thin;
-  scrollbar-color: var(--sf-color-surface-hover) var(--sf-color-bg);
+  scrollbar-color: color-mix(in srgb, var(--sf-color-text) 22%, var(--sf-color-bg))
+    var(--sf-color-bg);
 }
 
 /* Pin the page background to the admin ground while an admin screen is

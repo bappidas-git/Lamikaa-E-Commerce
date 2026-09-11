@@ -186,7 +186,9 @@ const AnnouncementBar = ({ className = "" }) => {
 
   return (
     <div
-      className={`${styles.bar} ${className}`.trim()}
+      /* `sf-on-dark` — the chrome scope. The band is the first thing above the
+         masthead, so it is where the near-black run of navigation starts. */
+      className={`sf-on-dark ${styles.bar} ${className}`.trim()}
       role="status"
       aria-live="polite"
       onMouseEnter={() => setPaused(true)}

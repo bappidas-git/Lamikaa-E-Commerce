@@ -203,7 +203,7 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
         id={id}
         role="region"
         aria-label="Shop menu"
-        className={`${styles.panel} sf-glass--strong`}
+        className={`sf-on-dark ${styles.panel} sf-glass--strong`}
         {...motionProps}
       >
         <div className={styles.scroll}>
@@ -230,7 +230,7 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
       id={id}
       role="region"
       aria-label="Shop menu"
-      className={`${styles.panel} sf-glass--strong`}
+      className={`sf-on-dark ${styles.panel} sf-glass--strong`}
       {...motionProps}
     >
       {/* The SHEET is `.panel` and the SCROLL BOX is this div, never the other

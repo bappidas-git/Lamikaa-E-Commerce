@@ -598,8 +598,13 @@ const HeroCarousel = ({ heroProducts }) => {
         <div id="hero-sentinel" aria-hidden="true" className={styles.sentinel} />
         <div className={`sf-container ${styles.brandInner}`}>
           <h1 className="sf-visually-hidden">{brand.name}</h1>
+          {/* The lockup on its plate: this hero opens on the CREAM page, and
+              the wordmark is champagne gold with no light-ground variant. The
+              plate is the same near-black the masthead above it is. */}
           <GlowWrap tone="duo" intensity={0.2} className={styles.brandGlow}>
-            <Logo variant="wordmark" width={280} alt="" className={styles.brandMark} />
+            <span className={`sf-on-dark sf-lockup-plate ${styles.brandPlate}`}>
+              <Logo variant="wordmark" width={280} alt="" className={styles.brandMark} />
+            </span>
           </GlowWrap>
           <p className={styles.brandTagline}>{brand.tagline}</p>
           <Button variant="primary" size="lg" to={ROUTES.SHOP}>
