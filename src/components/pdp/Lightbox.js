@@ -37,7 +37,16 @@ import styles from "./Lightbox.module.css";
 //
 // THE GESTURE IS EXCLUSIVE. `useSwipe` is disabled the moment the picture is
 // zoomed: the same drag means "next" at 1x and "pan" above it, and guessing
-// between them is how a lightbox ends up doing neither.
+// between them is how a lightbox ends up doing neither. At 1x, where the swipe
+// IS listening, it is handed `touchAction: "none"` and it drops any gesture a
+// second finger joins — so a pinch is read here as a pinch rather than paged
+// away as a flick, which is what it was doing on every touch device.
+//
+// THE FRAME IS RE-READ WHENEVER IT CHANGES. A phone turned on its side, a
+// window dragged narrower or an address bar collapsing all resize the box the
+// pan offset was clamped against, and an offset clamped to the old one leaves
+// the picture hanging off the new edge with empty ground beside it. Every
+// resize re-clamps against the box as it now is.
 // =============================================================================
 
 const MIN_ZOOM = 1;
@@ -124,17 +133,42 @@ const Lightbox = ({
   }, [index, open]);
 
   /**
+   * How far the picture may travel from centre, on each axis, at `scale`.
+   *
+   * `offsetWidth`/`offsetHeight` are the UNtransformed box — the picture at 1x,
+   * which is what `panBounds` wants; a rect would already carry the scale.
+   */
+  const boundsAt = useCallback((scale) => {
+    const view = viewportRef.current;
+    const picture = imageRef.current;
+    if (!view || !picture) return { maxX: 0, maxY: 0 };
+    return {
+      maxX: panBounds(picture.offsetWidth, view.clientWidth, scale),
+      maxY: panBounds(picture.offsetHeight, view.clientHeight, scale),
+    };
+  }, []);
+
+  /**
    * Move to `nextScale`, keeping `anchor` (a viewport point) over the same
    * pixel of the picture, and clamp the offset to the picture's own edges.
+   *
+   * `nextScale` may be a FUNCTION of the scale in force, which is what the
+   * wheel passes. A number has to be computed from a scale read outside
+   * the updater, which is the scale of the last COMMITTED render — and a wheel
+   * emits faster than React commits, so a flick of the wheel resolved every
+   * step against the same stale base and threw all but the last one away. As a
+   * function it composes: each delta multiplies whatever the one before it
+   * left, however many arrive between two frames.
    */
   const zoomTo = useCallback((nextScale, anchor) => {
     setZoom((current) => {
-      const scale = clampScale(nextScale);
+      const scale = clampScale(
+        typeof nextScale === "function" ? nextScale(current.scale) : nextScale
+      );
       if (scale === current.scale) return current;
       if (scale === MIN_ZOOM) return REST;
 
       const view = viewportRef.current;
-      const picture = imageRef.current;
       const ratio = scale / current.scale;
 
       let { x, y } = current;
@@ -150,30 +184,46 @@ const Lightbox = ({
         y *= ratio;
       }
 
-      // `offsetWidth` is the UNtransformed box; the rect would already carry
-      // the scale we are in the middle of changing.
-      const maxX = picture && view ? panBounds(picture.offsetWidth, view.clientWidth, scale) : 0;
-      const maxY = picture && view ? panBounds(picture.offsetHeight, view.clientHeight, scale) : 0;
-
+      const { maxX, maxY } = boundsAt(scale);
       return { scale, x: clamp(x, -maxX, maxX), y: clamp(y, -maxY, maxY) };
     });
-  }, []);
+  }, [boundsAt]);
 
-  const panBy = useCallback((dx, dy, origin) => {
-    setZoom((current) => {
-      const view = viewportRef.current;
-      const picture = imageRef.current;
-      const maxX =
-        picture && view ? panBounds(picture.offsetWidth, view.clientWidth, current.scale) : 0;
-      const maxY =
-        picture && view ? panBounds(picture.offsetHeight, view.clientHeight, current.scale) : 0;
-      return {
-        ...current,
-        x: clamp(origin.x + dx, -maxX, maxX),
-        y: clamp(origin.y + dy, -maxY, maxY),
-      };
-    });
-  }, []);
+  const panBy = useCallback(
+    (dx, dy, origin) => {
+      setZoom((current) => {
+        const { maxX, maxY } = boundsAt(current.scale);
+        return {
+          ...current,
+          x: clamp(origin.x + dx, -maxX, maxX),
+          y: clamp(origin.y + dy, -maxY, maxY),
+        };
+      });
+    },
+    [boundsAt]
+  );
+
+  // ---- The frame changed under a zoomed picture ----------------------------
+  // A rotation, a resized window, a collapsing address bar: the box the offset
+  // was clamped against is not the box it is drawn in any more. Re-clamp rather
+  // than reset — a visitor who has found the corner of a label keeps it.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onResize = () =>
+      setZoom((current) => {
+        if (current.scale === MIN_ZOOM) return current;
+        const { maxX, maxY } = boundsAt(current.scale);
+        const x = clamp(current.x, -maxX, maxX);
+        const y = clamp(current.y, -maxY, maxY);
+        return x === current.x && y === current.y ? current : { ...current, x, y };
+      });
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [open, boundsAt]);
 
   // ---- Wheel ---------------------------------------------------------------
   // Registered by hand because it must be NON-passive: a wheel over a zoomable
@@ -186,16 +236,18 @@ const Lightbox = ({
     const onWheel = (event) => {
       event.preventDefault();
       const factor = Math.exp(-event.deltaY * 0.0015);
-      zoomTo(zoom.scale * factor, { x: event.clientX, y: event.clientY });
+      zoomTo((scale) => scale * factor, { x: event.clientX, y: event.clientY });
     };
 
     view.addEventListener("wheel", onWheel, { passive: false });
     return () => view.removeEventListener("wheel", onWheel);
-  }, [open, canZoom, zoom.scale, zoomTo]);
+  }, [open, canZoom, zoomTo]);
 
   // ---- Pointers: pinch, pan, double-tap ------------------------------------
   const onPointerDown = (event) => {
     if (!canZoom) return;
+    // Secondary mouse buttons are menus, not gestures.
+    if (event.pointerType === "mouse" && event.button !== 0) return;
     const pointers = pointersRef.current;
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -273,11 +325,15 @@ const Lightbox = ({
     zoomTo(zoomed ? MIN_ZOOM : DOUBLE_ZOOM, { x: event.clientX, y: event.clientY });
   };
 
-  // A swipe is a swipe only at 1x — above it the same drag is a pan.
+  // A swipe is a swipe only at 1x — above it the same drag is a pan. And even
+  // at 1x the browser keeps nothing: this dialog IS the page, there is no
+  // scroll behind it to preserve, and `pan-y` would leave a two-finger gesture
+  // for the browser to take back in the middle of a pinch.
   useSwipe(viewportRef, {
     onLeft: () => step(1),
     onRight: () => step(-1),
     enabled: open && count > 1 && !zoomed,
+    touchAction: "none",
   });
 
   // ---- Keyboard ------------------------------------------------------------
