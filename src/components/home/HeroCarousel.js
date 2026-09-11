@@ -866,8 +866,8 @@ const HeroCarousel = ({ heroProducts }) => {
                     src={media.url}
                     alt={productAlt(product, media)}
                     ar={isMobile ? "1:1" : "4:5"}
-                    pad
-                    fit="contain"
+                    gravity="center"
+                    fit="cover"
                     plate
                     widths={[480, 768, 1080]}
                     sizes="(max-width: 768px) 80vw, 40vw"

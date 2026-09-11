@@ -65,14 +65,27 @@ const num = (value) => {
  * @param {string} [opts.ar]       aspect ratio for the pad/fill step, e.g. "1:1"
  * @param {boolean} [opts.pad]     with `ar`, pad to the ratio on an auto-picked ground
  * @param {boolean} [opts.fit]     with both `w` and `h`, letterbox rather than crop (default true)
+ * @param {boolean} [opts.limit]   with `w` alone, scale down only — never upscale past the source
  * @param {string} [opts.quality]  `q_` value (default "auto")
  * @param {string} [opts.format]   `f_` value (default "auto")
- * @param {string} [opts.gravity]  "auto" switches the `ar` step to a smart fill
+ * @param {string} [opts.gravity]  switches the `ar` step to a fill — "auto" finds the
+ *                                 subject, "center" takes the middle of the frame
  * @returns {string}
  */
 export function cld(
   url,
-  { w, h, crop, ar, pad, fit = true, quality = "auto", format = "auto", gravity } = {}
+  {
+    w,
+    h,
+    crop,
+    ar,
+    pad,
+    fit = true,
+    limit = false,
+    quality = "auto",
+    format = "auto",
+    gravity,
+  } = {}
 ) {
   if (!isCloudinary(url)) return url;
 
@@ -86,23 +99,30 @@ export function cld(
     );
   }
 
-  // 2. Aspect-ratio step. `gravity: "auto"` fills the frame and lets Cloudinary
-  //    pick the subject; otherwise the art is padded onto a ground sampled from
-  //    its own edges (`b_auto`), which is what keeps a transparent-corner pack
-  //    shot from being sliced.
+  // 2. Aspect-ratio step. A `gravity` FILLS the frame: "auto" lets Cloudinary
+  //    hunt for the subject, "center" simply takes the middle — which is what a
+  //    centred pack in a lifestyle scene wants, and it is deterministic, so the
+  //    eight products in a row crop the same way. Without a gravity the art is
+  //    padded onto a ground sampled from its own edges (`b_auto`), which is
+  //    what keeps a flat label or a transparent-corner shot from being sliced.
   if (ar) {
-    if (gravity === "auto") chain.push(`c_fill,g_auto,ar_${ar}`);
+    if (gravity) chain.push(`c_fill,g_${gravity},ar_${ar}`);
     else if (pad) chain.push(`c_pad,ar_${ar},b_auto`);
   }
 
   // 3. Delivery. `c_fit` only makes sense once both dimensions are known — with
-  //    a single dimension Cloudinary already scales proportionally.
+  //    a single dimension Cloudinary already scales proportionally. `c_limit`
+  //    is that same proportional scale with a floor: it will shrink a source to
+  //    the asked-for width but never stretch one past its own pixels, so a
+  //    request for more than the master holds returns the master rather than an
+  //    interpolated blur that costs more bytes than the sharp original.
   const width = num(w);
   const height = num(h);
   const delivery = [`f_${format}`, `q_${quality}`];
   if (width) delivery.push(`w_${width}`);
   if (height) delivery.push(`h_${height}`);
   if (width && height && fit) delivery.push("c_fit");
+  else if (width && limit) delivery.push("c_limit");
   chain.push(delivery.join(","));
 
   const [origin, rest] = url.split("/upload/");

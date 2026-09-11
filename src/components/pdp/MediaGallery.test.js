@@ -189,10 +189,12 @@ describe("<MediaGallery> — the rendered gallery", () => {
     expect(screen.getByText("5 / 5")).toBeInTheDocument();
   });
 
-  // The whole shot is the ONLY shot. A record carrying a legacy crop gets it
-  // dropped in normalisation, so the stage delivers an uncut frame and there is
-  // no "Full label" pill offering a second version that no longer exists.
-  it("delivers the whole frame, with no front-panel toggle to offer", () => {
+  // One shot per row. A record carrying a legacy crop gets it dropped in
+  // normalisation, so there is no "Full label" pill offering a second version
+  // that no longer exists — and the stage is delivered square and FILLED, not
+  // padded, with the desktop's 4:5 taken by `object-fit: cover` rather than by
+  // a second server-side crop the phone would also have paid for.
+  it("fills the stage frame, with no front-panel toggle to offer", () => {
     renderGallery(FACE_WASH);
 
     expect(screen.queryByRole("button", { name: /Full label|Front panel/ })).toBeNull();
@@ -202,7 +204,8 @@ describe("<MediaGallery> — the rendered gallery", () => {
       screen.getByRole("group", { name: "Black Rice Face Wash media" })
     ).getByRole("img", { name: "Black Rice Face Wash — label" });
     expect(plate.getAttribute("src")).not.toContain("c_crop");
-    expect(plate.getAttribute("src")).toContain("c_pad,ar_4:5,b_auto");
+    expect(plate.getAttribute("src")).toContain("c_fill,g_center,ar_1:1");
+    expect(plate.getAttribute("src")).not.toContain("b_auto");
     expect(plate.getAttribute("srcset") || "").not.toContain("c_crop");
 
     // And the rail shows the same uncut frame in miniature.

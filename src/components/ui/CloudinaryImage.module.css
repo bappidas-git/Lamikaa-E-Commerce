@@ -19,14 +19,22 @@
      and `height: 100%` on an auto-height parent resolves to auto. */
 }
 
-/* Product photography CONTAINS. This is the storefront default and the reason
-   `.sf-plate` exists: the pack is the product, and cropping it is a defect. */
-.contain {
+/* Flat label art CONTAINS. This is the storefront default and the reason
+   `.sf-plate` exists: on a label the artwork IS the product, and a sliced line
+   of type is a defect.
+
+   BOTH ARE TWO CLASSES DEEP, and that is not decoration. The primitive states
+   `.sf-plate img { object-fit: contain }` — a descendant selector, 0-1-1 — and
+   a single class on the image is 0-1-0, so a bare `.cover` LOSES to it on every
+   element that also carries `plate`, silently, with the markup reading as if
+   the image covers. `.img.cover` is 0-2-0 and settles it. */
+.img.contain {
   object-fit: contain;
 }
 
 /* `cover` is for editorial and lifestyle imagery, where the frame is the
-   composition rather than the subject. */
-.cover {
+   composition rather than the subject — the product stages, which are handed a
+   file Cloudinary has already filled to the same ratio. */
+.img.cover {
   object-fit: cover;
 }

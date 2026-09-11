@@ -227,9 +227,9 @@ const ProductChapter = ({
                 src={media?.url}
                 alt={productAlt(p, media)}
                 ar="4:5"
-                pad
+                gravity="center"
                 plate
-                fit="contain"
+                fit="cover"
                 aspectRatio="4 / 5"
                 widths={PLATE_WIDTHS}
                 sizes={PLATE_SIZES}

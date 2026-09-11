@@ -17,9 +17,15 @@ import styles from "./CloudinaryImage.module.css";
 //
 // LAYOUT SHIFT. The wrapper takes `aspectRatio` and reserves the box before the
 // bytes arrive, which is the whole reason this renders a wrapper at all. `plate`
-// wraps it in `.sf-plate` instead — the 1:1 surface product photography is
-// CENTRED on, never cropped to, because packaging is the product and a bottle
-// with its cap sliced off by `object-fit: cover` is a defect.
+// wraps it in `.sf-plate` instead — the 1:1 surface a FLAT LABEL is centred on
+// and never cropped to, because on a label the artwork is the product and a
+// sliced line of type is a defect.
+//
+// `gravity` + `fit="cover"` is the other half of that rule, for the surfaces
+// whose art is a PHOTOGRAPH rather than a label: a lifestyle scene has margin
+// to give, and a frame it fills edge to edge beats the same frame with a
+// `b_auto` band across the top and the foot of it. Pass both together — the
+// delivered file and the CSS box have to agree on which one is happening.
 //
 // `priority` is for the one image above the fold (the hero, a PDP stage): eager
 // loading plus `fetchpriority="high"`. The attribute is spelled in LOWERCASE
@@ -44,6 +50,8 @@ const CloudinaryImage = forwardRef(function CloudinaryImage(
     crop,
     ar,
     pad,
+    gravity,
+    limit = false,
     priority = false,
     placeholder = false,
     className = "",
@@ -54,7 +62,7 @@ const CloudinaryImage = forwardRef(function CloudinaryImage(
   },
   ref
 ) {
-  const transform = { crop, ar, pad };
+  const transform = { crop, ar, pad, gravity, limit };
   const cloudinary = isCloudinary(src);
 
   // The `src` fallback is a MIDDLE width, not the largest: it is only used by

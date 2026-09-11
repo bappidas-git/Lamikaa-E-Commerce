@@ -56,13 +56,29 @@ import styles from "./MediaGallery.module.css";
 // =============================================================================
 
 /**
- * The stage ratio Cloudinary delivers into. The desktop plate is 4:5 and the
- * phone plate is 1:1, and ONE delivered file serves both: the covers are tall,
- * so a square tile would have set every pack as a narrow strip down the middle
- * of a very wide mount at both sizes, while the 4:5 tile letterboxes only on
- * the phone, by a few dozen pixels a side.
+ * The ratio Cloudinary delivers the stage into. ONE file still serves both
+ * plates — the phone's 1:1 and the 4:5 the desktop takes at 769px — but it is
+ * delivered SQUARE and the CSS does the reframing, with `object-fit: cover`
+ * trimming the sides on desktop.
+ *
+ * WHY THE FILE IS NOT 4:5. That is the shape of the bigger plate, so it looks
+ * like the right one to deliver, and it is the wrong one twice over. The phone
+ * plate is square, so a 4:5 file arrives there and is cropped A SECOND TIME by
+ * `cover` — measured on the Face Wash, that took 20% off the width at the
+ * server and 20% off the height in the browser, and the tube lost its cap and
+ * its base. And a 4:5 frame is TALLER than the square master it is cut from,
+ * so `w_1080` upscaled a 1003px crop. Delivered square, the phone gets the
+ * whole scene uncut and the desktop gets exactly the crop `c_fill,ar_4:5`
+ * would have given it, from pixels that were never stretched.
+ *
+ * IT FILLS, it does not pad. The covers are lifestyle photographs now — the
+ * pack staged in a scene with margin all round — so the frame is the
+ * composition and the plate is edge-to-edge product. Padding one into 4:5 cost
+ * 111px of `b_auto` brown across the top and the foot of a 900px stage, a fifth
+ * of the plate spent on a sampled background. The uncut frame is still one tap
+ * away: the lightbox delivers the original with no `ar` at all.
  */
-const STAGE_AR = "4:5";
+const STAGE_AR = "1:1";
 
 /** Thumbnails are 72px at most, on a 2x screen. */
 const THUMB_WIDTH = 144;
@@ -286,8 +302,8 @@ const MediaGallery = ({
                     src={row.url}
                     alt={productAlt(product, row)}
                     ar={STAGE_AR}
-                    pad
-                    fit="contain"
+                    gravity="center"
+                    fit="cover"
                     priority={index === firstImageIndex}
                     sizes="(max-width: 768px) 100vw, 48vw"
                     className={styles.media}

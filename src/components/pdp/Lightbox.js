@@ -45,7 +45,15 @@ const MAX_ZOOM = 4;
 const ZOOM_STEP = 0.5;
 const DOUBLE_ZOOM = 2;
 
-/** The delivered width for a full-screen frame — uncropped, whatever the crop. */
+/**
+ * The delivered width for a full-screen frame — uncropped, whatever the crop.
+ *
+ * Paired with `limit`, so this is a CEILING rather than a demand: a 2000px
+ * master is served at 2000, and a smaller one is served at its own size instead
+ * of being stretched to 2000. Upscaling here buys nothing — there is no detail
+ * in the extra pixels — and costs bytes on the one view that is already the
+ * heaviest on the page.
+ */
 const FULL_WIDTH = 2000;
 
 /** Two taps this close together, in time and in space, are one double-tap. */
@@ -316,7 +324,7 @@ const Lightbox = ({
 
   const alt = productAlt(product, row);
   const title = row.title || alt;
-  const source = isImage ? cld(row.url, { w: FULL_WIDTH }) : row.url;
+  const source = isImage ? cld(row.url, { w: FULL_WIDTH, limit: true }) : row.url;
 
   return (
     <Modal
