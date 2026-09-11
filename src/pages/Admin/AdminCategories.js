@@ -174,6 +174,11 @@ const AdminCategories = () => {
       // Blank means "no separate display name" — the storefront falls back to
       // `name`, so an empty string is stored rather than a duplicate of it.
       displayName: form.displayName.trim(),
+      // Both image URLs are trimmed on the way in. A link pasted with a
+      // trailing space is the commonest way an image field looks set and
+      // behaves empty; the storefront trims defensively too, but the stored
+      // record should be the clean one.
+      image: form.image.trim(),
       heroImage: form.heroImage.trim(),
       kind: form.kind === "rituals" ? "rituals" : "products",
       sortOrder: Number(form.sortOrder) || 0,
@@ -418,7 +423,7 @@ const AdminCategories = () => {
             </TextField>
             <TextField label="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} fullWidth size="small" multiline rows={2} />
             {[
-              { field: "image", label: "Card image URL", hint: "The tile in the mega panel and the shop-by-category rail" },
+              { field: "image", label: "Card image URL", hint: "The tile in the Shop menu, the mobile menu and the shop-by-category rail" },
               { field: "heroImage", label: "Hero image URL", hint: "The wide banner at the top of the category page" },
             ].map((row) => (
               <Box key={row.field} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>

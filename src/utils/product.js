@@ -321,7 +321,8 @@ export const productVideos = (product) =>
   productMedia(product).filter((row) => row.type === "video");
 
 /**
- * The delivery URL for a product's hero/stage image.
+ * The delivery URL for ANY picture that sits on a plate — a product cover, a
+ * category tile, a banner reused as a thumbnail.
  *
  * THE WHOLE SHOT, ALWAYS. A cover is a photograph of packaging, and packaging
  * IS the product — so nothing here cuts. `c_pad` letterboxes the complete frame
@@ -330,13 +331,23 @@ export const productVideos = (product) =>
  * square grid with neither of them losing a millimetre. A non-Cloudinary URL (a
  * placeholder host, an admin-typed link) takes the plain width transform, which
  * `cld()` returns unchanged for such hosts.
+ *
+ * IT TAKES A URL, NOT A RECORD, because the two things that need it are not
+ * the same shape: `stageSrc()` below hands it a product's primary image, and
+ * `categoryThumbSrc()` (utils/catalogue.js) hands it the URL the admin typed
+ * into a category's "Card image" field. One delivery rule, two callers — a
+ * category tile is sized, formatted and letterboxed exactly like the product
+ * cover it sits beside.
  */
-export const stageSrc = (product, { w = 900, ar = "1:1" } = {}) => {
-  const primary = primaryImage(product);
-  if (!primary) return "";
-  if (!isCloudinary(primary.url)) return cld(primary.url, { w });
-  return cld(primary.url, { ar, pad: true, w });
+export const plateSrc = (url, { w = 900, ar = "1:1" } = {}) => {
+  const clean = trimmedUrl(url);
+  if (!clean) return "";
+  if (!isCloudinary(clean)) return cld(clean, { w });
+  return cld(clean, { ar, pad: true, w });
 };
+
+/** The delivery URL for a product's hero/stage image, or "" when it has none. */
+export const stageSrc = (product, opts) => plateSrc(primaryImage(product)?.url, opts);
 
 /** Alt text for one media row: the row's own, then the product name. */
 export const productAlt = (product, media) =>
@@ -392,6 +403,7 @@ const product = {
   productMedia,
   primaryImage,
   productVideos,
+  plateSrc,
   stageSrc,
   productAlt,
   isPriceKnown,

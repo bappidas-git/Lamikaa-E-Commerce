@@ -16,7 +16,10 @@ import SidebarMenu from "../SidebarMenu/SidebarMenu";
 import AuthModal from "../AuthModal/AuthModal";
 import SearchModal from "../SearchModal/SearchModal";
 import HeaderActions from "./HeaderActions";
-import MegaPanel, { loadMegaPanelData } from "./MegaPanel";
+import MegaPanel, {
+  clearMegaPanelCache,
+  loadMegaPanelData,
+} from "./MegaPanel";
 import styles from "./Header.module.css";
 
 // =============================================================================
@@ -194,6 +197,19 @@ const Header = () => {
       document.removeEventListener("touchstart", onDocumentPointerDown);
     };
   }, [megaOpen, closeMega]);
+
+  // THE SHOP MENU FOLLOWS THE ADMIN, not the page load. `loadMegaPanelData()`
+  // caches the catalogue in a module so the panel opens from memory on every
+  // hover — but the panel itself is mounted only WHILE it is open, so it cannot
+  // be the thing that notices the catalogue moved. The header can: it is on
+  // every storefront route, so returning from the admin tab drops the cache
+  // here and the next open of the menu reads a category's current name, its
+  // current membership and its current image without a reload.
+  useEffect(() => {
+    const onFocus = () => clearMegaPanelCache();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   const handleShopPointerEnter = () => {
     if (!hasFinePointer()) return;

@@ -13,9 +13,14 @@ import styles from "./ShopByCategory.module.css";
 // =============================================================================
 //
 // The second thing the home page says, directly under the hero's trust strip.
-// Seven glass cards, each with a real product's label on its plate and a real
-// count under its name, then a row of the eleven concern chips for the shopper
-// who arrives with a problem rather than with a product in mind.
+// Seven glass cards, each with the category's own picture on its plate and a
+// real count under its name, then a row of the eleven concern chips for the
+// shopper who arrives with a problem rather than with a product in mind.
+//
+// THE PLATE IS THE CATEGORY'S OWN IMAGE, the one set in Categories > Edit.
+// `CategoryCard` resolves it through `categoryThumbSrc()` and only falls back
+// to the product this section hands it when the category has no picture — which
+// is why the `product` below is still computed and still matters.
 //
 // EVERY NUMBER IS COUNTED, NEVER TYPED. A category's count is the size of its
 // membership under `utils/catalogue.js` (listed in `categoryIds`, or the

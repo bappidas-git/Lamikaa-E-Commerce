@@ -3,8 +3,12 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
 import { categoryPath, concernPath, ritualPath } from "../../utils/categories";
-import { firstProductForCategory, productsForCategory } from "../../utils/catalogue";
-import { productPath } from "../../utils/helpers";
+import {
+  categoryThumbSrc,
+  firstProductForCategory,
+  productsForCategory,
+} from "../../utils/catalogue";
+import { onImageError, productPath } from "../../utils/helpers";
 import { stageSrc, productAlt, primaryImage } from "../../utils/product";
 import { ROUTES } from "../../utils/constants";
 import { Button, Chip, GlassCard, Price } from "../ui";
@@ -15,11 +19,18 @@ import styles from "./MegaPanel.module.css";
 // MegaPanel — the Shop menu, opened from the header's "Shop" trigger
 // =============================================================================
 //
-// Three columns under one hairline: the seven CATEGORIES with a thumbnail of a
-// real product from each, the eleven CONCERNS as chips, and one FEATURED
-// product on a glow card. Everything is data — categories, concerns, products
-// and rituals all come from the API the admin writes — so the panel changes
-// when the catalogue does and never when this file does.
+// Three columns under one hairline: the seven CATEGORIES each with its own
+// picture, the eleven CONCERNS as chips, and one FEATURED product on a glow
+// card. Everything is data — categories, concerns, products and rituals all
+// come from the API the admin writes — so the panel changes when the catalogue
+// does and never when this file does.
+//
+// THE CATEGORY THUMBNAIL IS THE CATEGORY'S OWN PICTURE. `categoryThumbSrc()`
+// reads the "Card image" the admin set on the category and only falls back to
+// the first product's cover when the category has none — so editing a category
+// image in the admin is visible here, which it was not while this panel looked
+// exclusively at products. The rule is shared with the mobile drawer and the
+// home rail (utils/catalogue.js), so all three agree at every width.
 //
 // WHERE IT LIVES IN THE DOM. Rendered INSIDE the Shop <li>, positioned against
 // the sticky <header> (`top: 100%`, full width). That placement is the whole
@@ -29,11 +40,25 @@ import styles from "./MegaPanel.module.css";
 // sibling of the <ul> would have been visually identical and eight links away
 // from the keyboard.
 //
-// THE DATA IS FETCHED ONCE PER PAGE LOAD. `loadMegaPanelData()` is a module-
-// level promise, the same shape as SearchModal's `loadSearchData` — the panel
-// opens and closes on every hover, and re-fetching four collections each time
-// would be four round trips for a menu the visitor is skimming. A failed load
-// clears the promise so the next open retries.
+// THE DATA IS FETCHED ONCE AND KEPT. `loadMegaPanelData()` is a module-level
+// promise, the same shape as SearchModal's `loadSearchData` — the panel opens
+// and closes on every hover, and re-fetching four collections each time would
+// be four round trips for a menu the visitor is skimming. A failed load clears
+// the promise so the next open retries.
+//
+// …BUT IT IS DROPPED WHEN THE TAB COMES BACK. An owner editing the catalogue
+// works in two tabs, and a cache that only expired on a hard reload meant a
+// renamed category or a new category image sat invisible behind the Shop
+// trigger for the rest of the session. Returning to the storefront clears the
+// cache, so the next open reads the catalogue again — the same freshness rule
+// SidebarMenu applies to the drawer's copy of the same two collections.
+//
+// HEADER OWNS THAT LISTENER, NOT THIS FILE. This component is mounted only
+// WHILE the panel is open (`{megaOpen && <MegaPanel/>}`), and the visitor who
+// comes back from the admin has the menu shut — so a focus listener here would
+// be unmounted at exactly the moment it was needed. Header.js is on every
+// storefront route and clears the cache there; the listener kept below only
+// repaints a panel that happens to be OPEN when focus returns.
 //
 // TABLET (769-1024) NEVER RENDERS THIS. The header collapses into the hamburger
 // there, so the panel has no trigger; Header.js gates it on a media query
@@ -77,6 +102,18 @@ export const loadMegaPanelData = () => {
   return megaDataPromise;
 };
 
+/**
+ * Forget the catalogue so the next `loadMegaPanelData()` goes to the network.
+ *
+ * Header.js calls this on every window focus — it is the surface that is always
+ * mounted, and therefore the only one that can notice the admin changed
+ * something while this panel was closed.
+ */
+export const clearMegaPanelCache = () => {
+  megaDataCache = null;
+  megaDataPromise = null;
+};
+
 const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
   const reduce = useReducedMotion();
   const [data, setData] = useState(megaDataCache);
@@ -96,15 +133,33 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
 
   useEffect(() => {
     let active = true;
-    loadMegaPanelData()
-      .then((loaded) => {
-        if (active) setData(loaded);
-      })
-      .catch(() => {
-        if (active) setFailed(true);
-      });
+
+    const load = () =>
+      loadMegaPanelData()
+        .then((loaded) => {
+          if (!active) return;
+          setData(loaded);
+          setFailed(false);
+        })
+        .catch(() => {
+          if (active) setFailed(true);
+        });
+
+    load();
+
+    // Focus returned while the panel is OPEN — repaint it against the current
+    // catalogue rather than leaving a stale grid on screen. The closed-panel
+    // case (the common one) is Header's, which clears the same cache so the
+    // next open refetches; both clearing is harmless, the second is a no-op.
+    const onFocus = () => {
+      clearMegaPanelCache();
+      load();
+    };
+    window.addEventListener("focus", onFocus);
+
     return () => {
       active = false;
+      window.removeEventListener("focus", onFocus);
     };
   }, []);
 
@@ -112,19 +167,27 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
   const products = data?.products || [];
   const rituals = data?.rituals || [];
 
-  // One pass over the hero-ordered catalogue per category: the first product
-  // that belongs to it (which is the lowest heroOrder, since getHeroProducts
-  // returns them in that order) and how many of them there are. The membership
-  // rule itself lives in utils/catalogue.js — the mobile drawer's Shop
-  // accordion (Prompt 10) draws the same row from the same helper. Keyed on
-  // `data` itself — the `|| []` fallbacks above are fresh arrays on every
-  // render, so they would defeat the memo they were the dependencies of.
+  // One pass over the hero-ordered catalogue per category: the picture for its
+  // row and how many products are in it. The picture is the category's own
+  // "Card image" from the admin, and only when it has none does the first
+  // product in the category (the lowest heroOrder, since getHeroProducts
+  // returns them in that order) stand in. Both rules live in utils/catalogue.js
+  // — the mobile drawer's Shop accordion (Prompt 10) draws the same row from
+  // the same two helpers. Keyed on `data` itself: the `|| []` fallbacks above
+  // are fresh arrays on every render, so they would defeat the memo they were
+  // the dependencies of.
+  //
+  // 96px of art for a 40px slot is the retina allowance at DPR 2, and the
+  // 1:1 pad is the plate's own ratio — a wide category banner letterboxes into
+  // the square rather than being cut down to it.
   const rows = useMemo(() => {
     const cats = data?.categories || [];
     const catalogue = data?.products || [];
     return cats.map((cat) => ({
       cat,
-      firstProduct: firstProductForCategory(catalogue, cat),
+      thumb: categoryThumbSrc(cat, firstProductForCategory(catalogue, cat), {
+        w: 96,
+      }),
       count: productsForCategory(catalogue, cat).length,
     }));
   }, [data]);
@@ -182,44 +245,45 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
           <div className={styles.column}>
             <p className={`sf-eyebrow ${styles.eyebrow}`}>Categories</p>
             <ul className={styles.categoryList}>
-              {rows.map(({ cat, firstProduct, count }) => {
-                const thumb = firstProduct ? stageSrc(firstProduct, { w: 96 }) : "";
-                return (
-                  <li key={cat.id}>
-                    <Link
-                      to={categoryPath(cat)}
-                      className={styles.categoryRow}
-                      onClick={onNavigate}
-                    >
-                      <span className={`sf-plate ${styles.thumb}`} aria-hidden="true">
-                        {thumb ? (
-                          <img
-                            src={thumb}
-                            alt=""
-                            width="40"
-                            height="40"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        ) : null}
-                      </span>
-                      <span className={styles.categoryText}>
-                        <span className={styles.categoryName}>
-                          {cat.displayName || cat.name}
-                        </span>
-                        {cat.description ? (
-                          <span className={styles.categoryDesc}>{cat.description}</span>
-                        ) : null}
-                      </span>
-                      {count > 0 ? (
-                        <span className={styles.countChip} aria-hidden="true">
-                          {count}
-                        </span>
+              {rows.map(({ cat, thumb, count }) => (
+                <li key={cat.id}>
+                  <Link
+                    to={categoryPath(cat)}
+                    className={styles.categoryRow}
+                    onClick={onNavigate}
+                  >
+                    <span className={`sf-plate ${styles.thumb}`} aria-hidden="true">
+                      {thumb ? (
+                        <img
+                          src={thumb}
+                          alt=""
+                          width="40"
+                          height="40"
+                          loading="lazy"
+                          decoding="async"
+                          /* An admin-typed URL can 404. The placeholder is a
+                             quieter failure than a torn-image glyph in a 40px
+                             slot. */
+                          onError={onImageError}
+                        />
                       ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
+                    </span>
+                    <span className={styles.categoryText}>
+                      <span className={styles.categoryName}>
+                        {cat.displayName || cat.name}
+                      </span>
+                      {cat.description ? (
+                        <span className={styles.categoryDesc}>{cat.description}</span>
+                      ) : null}
+                    </span>
+                    {count > 0 ? (
+                      <span className={styles.countChip} aria-hidden="true">
+                        {count}
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              ))}
               <li>
                 <Link
                   to={ROUTES.SHOP}

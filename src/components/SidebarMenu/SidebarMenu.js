@@ -15,8 +15,8 @@ import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { categoryPath } from "../../utils/categories";
-import { firstProductForCategory } from "../../utils/catalogue";
-import { stageSrc } from "../../utils/product";
+import { categoryThumbSrc, firstProductForCategory } from "../../utils/catalogue";
+import { onImageError } from "../../utils/helpers";
 import { ROUTES } from "../../utils/constants";
 import Logo from "../brand/Logo";
 import { Accordion, Button, Drawer } from "../ui";
@@ -111,9 +111,10 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   const wishlistCount = getWishlistCount();
 
   // ---- Catalogue ---------------------------------------------------------
-  // Categories for the rows, hero products for their thumbnails — the same two
-  // reads the mega panel makes, resolved through the same helper so a product
-  // that gains a second category shows up identically on both surfaces.
+  // Categories for the rows, hero products for the thumbnails a category has no
+  // picture of its own for — the same two reads the mega panel makes, resolved
+  // through the same helpers, so the drawer and the desktop menu cannot show a
+  // visitor two different pictures for the same category.
   const [catalogue, setCatalogue] = useState({ categories: [], products: [] });
   const [loadingCatalogue, setLoadingCatalogue] = useState(false);
   const loadedRef = useRef(false);
@@ -194,14 +195,18 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   // ---- Rows --------------------------------------------------------------
   const categoryRows = useMemo(
     () =>
-      (catalogue.categories || []).map((cat) => {
-        const first = firstProductForCategory(catalogue.products, cat);
-        return {
+      (catalogue.categories || []).map((cat) => ({
+        cat,
+        // The category's own "Card image" from the admin, and only when it has
+        // none the cover of the first product in it (utils/catalogue.js). 32px
+        // slot, requested at 2x for retina, padded to the plate's 1:1 so a wide
+        // banner letterboxes instead of being cut.
+        thumb: categoryThumbSrc(
           cat,
-          // 32px slot, requested at 2x for retina.
-          thumb: first ? stageSrc(first, { w: 64 }) : "",
-        };
-      }),
+          firstProductForCategory(catalogue.products, cat),
+          { w: 64 }
+        ),
+      })),
     [catalogue]
   );
 
@@ -295,6 +300,9 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                     height="32"
                     loading="lazy"
                     decoding="async"
+                    /* An admin-typed URL can 404; the placeholder is a quieter
+                       failure than a torn-image glyph in a 32px slot. */
+                    onError={onImageError}
                   />
                 ) : null}
               </span>
