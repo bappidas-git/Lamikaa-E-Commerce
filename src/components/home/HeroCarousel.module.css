@@ -178,6 +178,96 @@
   text-shadow: 0 2px 18px rgba(var(--sf-color-bg-rgb), 0.55);
 }
 
+/* THE CONTROLS OVER A PHOTOGRAPH ─────────────────────────────────────────────
+   The words above survive any frame on that text-shadow. The CONTROLS under
+   them do not, because two of the three are made of glass and the third is a
+   flat ochre:
+
+     • the trust marks are a 55%-alpha hairline and gold ink on NOTHING, so on
+       a busy frame the pill has no edge and the ink has no ground — they are
+       the first thing to disappear, and they disappear completely;
+     • `Add to Cart` fills with `--sf-glass-bg`, 66% white, so the picture reads
+       straight through the button and takes the espresso label with it;
+     • the `Explore …` fill IS opaque, but it is antique gold on a range whose
+       photography is all warm browns and golds, and a shape the same colour as
+       its ground is not a button.
+
+   And the admin owns BOTH free variables: which picture, and a scrim that goes
+   all the way to zero. So no stronger default scrim could fix this — whatever
+   this stylesheet leans on, the next upload is entitled to undo. The controls
+   have to carry their own contrast instead, so over a backdrop they stop being
+   glass: a solid ground, a full-strength hairline, and the pair of edges below
+   — a warm lift for a PALE frame, a light ring for a DARK one, because the
+   picture is one the stylesheet has never seen and either may be underneath.
+
+   Outside every media query on purpose. The phone is handed the same picture
+   (often its own file, at the admin's `mobileUrl`) under the same three
+   controls, and its scrim is the softest of the three, so the phone, the tablet
+   and the desktop all take this. */
+.hero.heroBackdrop {
+  /* Warm ink, not neutral black: the same family the shadow tokens are mixed
+     from, so this reads as light falling on cream rather than as a UI drop
+     shadow borrowed from another system. */
+  --sf-hero-control-lift: 0 1px 2px rgba(20, 14, 6, 0.26),
+    0 10px 26px rgba(20, 14, 6, 0.26);
+  --sf-hero-control-ring: 0 0 0 1px rgba(255, 252, 245, 0.4);
+  /* A mark is not a control. Same move, a quarter of the weight, so the three
+     badges do not come forward as three more buttons. */
+  --sf-hero-mark-lift: 0 2px 10px rgba(20, 14, 6, 0.2);
+}
+
+.hero.heroBackdrop .cta {
+  box-shadow: var(--sf-hero-control-ring), var(--sf-hero-control-lift);
+}
+
+/* `Add to Cart` — the glass becomes a card ground and the hairline goes to full
+   gold. That is what puts the espresso label back on the surface it was
+   measured against — 17.5:1, rather than whatever a photograph leaves of it
+   (WCAG 1.4.3). */
+.hero.heroBackdrop .cta:global(.sf-btn--outline-gold) {
+  background-color: var(--sf-color-surface);
+  border-color: var(--sf-color-gold);
+  color: var(--sf-color-text);
+}
+
+/* Hover and focus are restated because the two rules above out-specify the
+   primitives' own `.sf-btn--primary:hover` and `.sf-btn:focus-visible`, and
+   both set the same property. The hover tint has to be opaque here for the
+   same reason the resting one is; the focus rule matches the hover rule's
+   specificity and follows it, which is exactly how the primitives keep the
+   champagne ring on a button that is hovered and focused at once. */
+.hero.heroBackdrop .cta:global(.sf-btn--primary):hover {
+  box-shadow: var(--sf-hero-control-ring), var(--sf-hero-control-lift),
+    0 8px 24px color-mix(in srgb, var(--sf-color-gold) 25%, transparent);
+}
+
+.hero.heroBackdrop .cta:global(.sf-btn--outline-gold):hover {
+  background-color: var(--sf-color-surface-hover);
+  border-color: var(--sf-color-gold-deep);
+}
+
+.hero.heroBackdrop .cta:global(.sf-btn--primary):focus-visible,
+.hero.heroBackdrop .cta:global(.sf-btn--outline-gold):focus-visible {
+  box-shadow: var(--sf-shadow-focus), var(--sf-hero-control-lift);
+}
+
+/* The trust marks. `.sf-chip` rather than the module's own class because the
+   chip is a primitive the hero composes, and this is the one place the badges
+   are asked to sit on a photograph.
+
+   The ground is the PAGE's cream, not the card white the button above takes:
+   cream is the colour `.trust` was drawn on (its own `background: transparent`
+   over this hero's ground), so this is the mark put back on the ground it was
+   designed for rather than restyled. It also keeps the hierarchy the row needs
+   — three near-white pills under a near-white `Add to Cart` would read as a
+   second row of buttons. The gold ink is untouched: 5.5:1 here, and it is the
+   missing GROUND, not the ink, that this fixes. */
+.hero.heroBackdrop .badges :global(.sf-chip) {
+  background-color: var(--sf-color-bg);
+  border-color: var(--sf-color-gold);
+  box-shadow: var(--sf-hero-mark-lift);
+}
+
 /* Desktop-only ground light behind the copy column — faint, and NOT breathing:
    the plate owns the single breathing glow above the fold. */
 .hero .groundGlow {
@@ -831,6 +921,14 @@
 @media print {
   .backdrop {
     display: none;
+  }
+
+  /* With the picture gone the lift under the controls is ink spent separating
+     them from paper, and the ring is a white line on white. Both come off; the
+     solid grounds above resolve to the print tokens' paper white anyway. */
+  .hero.heroBackdrop .cta,
+  .hero.heroBackdrop .badges :global(.sf-chip) {
+    box-shadow: none;
   }
 
   .copyBackdropOnly > .copyLines > *,
