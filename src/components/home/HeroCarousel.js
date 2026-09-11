@@ -607,7 +607,16 @@ const HeroCarousel = ({ heroProducts }) => {
             </span>
           </GlowWrap>
           <p className={styles.brandTagline}>{brand.tagline}</p>
-          <Button variant="primary" size="lg" to={ROUTES.SHOP}>
+          {/* `.cta` is what the backdrop's contrast rules key off (the CSS's
+              "controls over a photograph" block). It carries no layout of its
+              own outside `.actions`, so the one button on the brand slide takes
+              the treatment without taking the CTA row's full-width geometry. */}
+          <Button
+            variant="primary"
+            size="lg"
+            to={ROUTES.SHOP}
+            className={styles.cta}
+          >
             Shop the Black Rice Range
           </Button>
         </div>
