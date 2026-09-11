@@ -93,19 +93,29 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
           "alt": "Black Rice Face Wash by LAMIKAA Naturals — label",
+<<<<<<< Updated upstream
           "primary": true
+=======
+          "primary": true,
+          "crop": {
+            "x": 1050,
+            "y": 100,
+            "w": 1800,
+            "h": 3200
+          }
+>>>>>>> Stashed changes
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-wash-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080337/balck_rice_face_wash_v2.png",
           "alt": "Black Rice Face Wash — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-wash-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080334/balck_rice_face_wash_v3.png",
           "alt": "Black Rice Face Wash — placeholder texture image",
           "placeholder": true
         },
@@ -125,9 +135,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-wash-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-wash-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080337/balck_rice_face_wash_v2.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080334/balck_rice_face_wash_v3.png"
       ],
       "faqs": [
         {
@@ -164,7 +174,16 @@
       "metaTitle": "Black Rice Face Wash · LAMIKAA NATURALS",
       "metaDescription": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T05:12:33.316Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
+      "heroBackground": {
+        "url": "https://images.unsplash.com/photo-1526779259212-939e64788e3c?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZnJlZSUyMGltYWdlc3xlbnwwfHwwfHx8MA%3D%3D",
+        "mobileUrl": "https://images.unsplash.com/photo-1526779259212-939e64788e3c?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZnJlZSUyMGltYWdlc3xlbnwwfHwwfHx8MA%3D%3D",
+        "position": "left",
+        "overlay": 55,
+        "blur": 24,
+        "showContent": true
+      }
     },
     {
       "id": 2,
@@ -193,7 +212,7 @@
       "promise": "A luxurious cleansing bar that nourishes as it cleans.",
       "shortDescription": "A luxurious cleansing bar that nourishes as it cleans.",
       "description": "Goat milk and black rice extract, pressed into a bar that gently cleanses while helping to nourish and moisturise your skin. Antioxidants help it feel soft, smooth and healthy-looking after every wash.",
-      "price": 90,
+      "price": 900,
       "priceSource": "packaging-mrp",
       "priceTBA": false,
       "comparePrice": 0,
@@ -255,19 +274,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v3.png",
           "alt": "Black Rice Goat Milk Soap by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v1.png",
           "alt": "Black Rice Goat Milk Soap — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080355/black_rice_goat_milk_soap_v2.png",
           "alt": "Black Rice Goat Milk Soap — placeholder texture image",
           "placeholder": true
         },
@@ -280,9 +299,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-goat-milk-soap-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v3.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v1.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080355/black_rice_goat_milk_soap_v2.png"
       ],
       "faqs": [
         {
@@ -320,7 +339,8 @@
       "metaTitle": "Black Rice Goat Milk Soap · LAMIKAA NATURALS",
       "metaDescription": "Black rice and goat milk, pressed into a bar that treats your skin the way tradition always meant to. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-10T22:57:01.370Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v3.png"
     },
     {
       "id": 3,
@@ -349,9 +369,9 @@
       "promise": "A nourishing wash that turns a quick shower into a slow, fragrant ritual.",
       "shortDescription": "A nourishing wash that turns a quick shower into a slow, fragrant ritual.",
       "description": "Black rice and sandalwood extracts in a gentle cleansing formula that helps remove dirt and impurities while leaving your skin feeling soft, fresh and hydrated.",
-      "price": null,
+      "price": 500,
       "priceSource": null,
-      "priceTBA": true,
+      "priceTBA": false,
       "comparePrice": 0,
       "costPrice": 0,
       "currency": "INR",
@@ -410,19 +430,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v2.png",
           "alt": "Black Rice Body Wash by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-body-wash-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v1.png",
           "alt": "Black Rice Body Wash — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-body-wash-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080345/black_rice_body_wash_v3.png",
           "alt": "Black Rice Body Wash — placeholder texture image",
           "placeholder": true
         },
@@ -435,9 +455,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-body-wash-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-body-wash-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v2.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v1.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080345/black_rice_body_wash_v3.png"
       ],
       "faqs": [
         {
@@ -475,7 +495,8 @@
       "metaTitle": "Black Rice Body Wash · LAMIKAA NATURALS",
       "metaDescription": "A nourishing black rice and sandalwood body wash that turns a quick shower into a slow, fragrant ritual. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-10T22:57:21.412Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v2.png"
     },
     {
       "id": 4,
@@ -504,9 +525,9 @@
       "promise": "Ten quiet minutes for skin that looks refreshed and smooth.",
       "shortDescription": "Ten quiet minutes for skin that looks refreshed and smooth.",
       "description": "A purifying clay mask with black rice, sandalwood, kaolin and bentonite. It helps absorb excess oil and impurities while aloe vera and skin-conditioning ingredients leave your skin feeling refreshed and smooth.",
-      "price": null,
+      "price": 200,
       "priceSource": null,
-      "priceTBA": true,
+      "priceTBA": false,
       "comparePrice": 0,
       "costPrice": 0,
       "currency": "INR",
@@ -564,19 +585,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080356/face_mask_v1.png",
           "alt": "Black Rice Face Mask by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mask-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080364/face_mask_v3.png",
           "alt": "Black Rice Face Mask — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mask-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080358/face_mask_v2.png",
           "alt": "Black Rice Face Mask — placeholder texture image",
           "placeholder": true
         },
@@ -596,9 +617,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-mask-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-mask-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080356/face_mask_v1.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080364/face_mask_v3.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080358/face_mask_v2.png"
       ],
       "faqs": [
         {
@@ -636,7 +657,8 @@
       "metaTitle": "Black Rice Face Mask · LAMIKAA NATURALS",
       "metaDescription": "A black rice clay mask that gives tired skin its freshness back, one unhurried evening at a time. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-10T22:57:47.987Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080356/face_mask_v1.png"
     },
     {
       "id": 5,
@@ -726,19 +748,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080344/black_rice_face_mist_v1.png",
           "alt": "Black Rice Face Mist by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mist-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080347/black_rice_face_mist_v2.png",
           "alt": "Black Rice Face Mist — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-mist-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080345/black_rice_face_mist_v3.png",
           "alt": "Black Rice Face Mist — placeholder texture image",
           "placeholder": true
         },
@@ -751,9 +773,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-mist-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-mist-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080344/black_rice_face_mist_v1.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080347/black_rice_face_mist_v2.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080345/black_rice_face_mist_v3.png"
       ],
       "faqs": [
         {
@@ -791,7 +813,8 @@
       "metaTitle": "Black Rice Face Mist · LAMIKAA NATURALS",
       "metaDescription": "Hydrating black rice mist to wake, refresh and settle your skin whenever the day asks for a pause. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-10T22:53:51.965Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080344/black_rice_face_mist_v1.png"
     },
     {
       "id": 6,
@@ -880,19 +903,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080362/face_scrub_v1.png",
           "alt": "Black Rice Exfoliating Face Scrub by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080365/face_scrub_v3.png",
           "alt": "Black Rice Exfoliating Face Scrub — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080363/face_scrub_v2.png",
           "alt": "Black Rice Exfoliating Face Scrub — placeholder texture image",
           "placeholder": true
         },
@@ -905,9 +928,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-exfoliating-face-scrub-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080362/face_scrub_v1.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080365/face_scrub_v3.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080363/face_scrub_v2.png"
       ],
       "faqs": [
         {
@@ -945,7 +968,8 @@
       "metaTitle": "Black Rice Exfoliating Face Scrub · LAMIKAA NATURALS",
       "metaDescription": "Fine black rice exfoliation that gently polishes away dullness and lets your natural light through. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-10T22:59:21.205Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080362/face_scrub_v1.png"
     },
     {
       "id": 7,
@@ -970,7 +994,7 @@
       },
       "heroHeadline": "The glow that grows with you.",
       "heroSubtext": "A lightweight black rice serum for skin that looks rested, even and luminous, day after day.",
-      "heroOrder": 7,
+      "heroOrder": 8,
       "promise": "A daily drop of light for skin that looks rested, even and luminous.",
       "shortDescription": "A daily drop of light for skin that looks rested, even and luminous.",
       "description": "A lightweight serum combining black rice extract, niacinamide and alpha-arbutin with hyaluronic acid and panthenol. It helps improve the appearance of dull, uneven-looking skin while supporting a soft, hydrated and smooth look.",
@@ -1039,19 +1063,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080346/Black_rice_face_serum_v1.png",
           "alt": "Black Rice Face Serum by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-serum-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080347/black_rice_face_serum_v2.png",
           "alt": "Black Rice Face Serum — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-face-serum-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/back_rice_face_serum_v3.png",
           "alt": "Black Rice Face Serum — placeholder texture image",
           "placeholder": true
         },
@@ -1071,9 +1095,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-serum-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-face-serum-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080346/Black_rice_face_serum_v1.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080347/black_rice_face_serum_v2.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/back_rice_face_serum_v3.png"
       ],
       "faqs": [
         {
@@ -1111,7 +1135,8 @@
       "metaTitle": "Black Rice Face Serum · LAMIKAA NATURALS",
       "metaDescription": "A lightweight black rice serum for skin that looks rested, even and luminous, day after day. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-10T22:55:44.664Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080346/Black_rice_face_serum_v1.png"
     },
     {
       "id": 8,
@@ -1136,13 +1161,13 @@
       },
       "heroHeadline": "Weightless. Endless. Hydration.",
       "heroSubtext": "A featherlight black rice gel that drinks in fast and keeps skin soft, smooth and comfortable all day.",
-      "heroOrder": 8,
+      "heroOrder": 7,
       "promise": "Weightless hydration that keeps skin soft, smooth and comfortable all day.",
       "shortDescription": "Weightless hydration that keeps skin soft, smooth and comfortable all day.",
       "description": "A lightweight moisturising gel with black rice extract, niacinamide, aloe vera and hyaluronic acid. Its refreshing texture helps replenish moisture and leaves your skin feeling soft, smooth and hydrated.",
-      "price": null,
+      "price": 600,
       "priceSource": null,
-      "priceTBA": true,
+      "priceTBA": false,
       "comparePrice": 0,
       "costPrice": 0,
       "currency": "INR",
@@ -1201,19 +1226,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080370/moisturizer_gel_v3.png",
           "alt": "Black Rice Moisturizer Gel by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-2/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080367/moisturizer_gel_v2.png",
           "alt": "Black Rice Moisturizer Gel — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-3/1200/1500",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080362/moisturizer_gel_v1.png",
           "alt": "Black Rice Moisturizer Gel — placeholder texture image",
           "placeholder": true
         },
@@ -1226,9 +1251,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg",
-        "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-2/1200/1500",
-        "https://picsum.photos/seed/lamikaa-black-rice-moisturizer-gel-3/1200/1500"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080370/moisturizer_gel_v3.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080367/moisturizer_gel_v2.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080362/moisturizer_gel_v1.png"
       ],
       "faqs": [
         {
@@ -1266,7 +1291,8 @@
       "metaTitle": "Black Rice Moisturizer Gel · LAMIKAA NATURALS",
       "metaDescription": "A featherlight black rice gel that drinks in fast and keeps skin soft, smooth and comfortable all day. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-10T22:58:07.535Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080370/moisturizer_gel_v3.png"
     }
   ],
   "categories": [
@@ -1910,14 +1936,6 @@
     "showProgress": true,
     "showArrows": true,
     "showPause": true,
-    "background": {
-      "url": "",
-      "mobileUrl": "",
-      "position": "center",
-      "overlay": 55,
-      "blur": 0,
-      "showContent": true
-    },
     "updatedAt": "2026-09-06T00:00:00.000Z"
   },
   "settings": {
