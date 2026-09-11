@@ -1564,8 +1564,9 @@ have their two pages. `/rituals` and `/rituals/:slug` are real; **two**
   with `description` from the category record. Exports `concernsOf` alongside
   `shopOrder` and `productCountLabel`.
 - `components/catalogue/CategoryHead.{js,module.css}` (new): a full-bleed
-  `.sf-placeholder-media` band (4:3 on a phone; 21:9 with
-  `min-height: clamp(260px, 32vw, 420px)` and `max-height: 520px` from 769px)
+  `.sf-placeholder-media` band — the SAME band `About` and `WhyLamikaa` open
+  with (2:1 and `max-height: 40svh` on a phone; 15:4 with
+  `min-height: clamp(176px, 22.5vw, 300px)` and `max-height: 325px` from 769px)
   under a `GlassCard strong scrim` panel (max 640px) holding `Breadcrumb`,
   eyebrow "Category", the `<h1>` (`--sf-text-3xl`, `4xl` from 1025px), the
   description, the count and the concern chips. The overlap is a NEGATIVE MARGIN

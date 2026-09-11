@@ -19,7 +19,7 @@ import styles from "./CategoryHead.module.css";
 //
 // THE PANEL OVERLAPS ONLY WHERE THERE IS ROOM. From 769px it sits INSIDE the
 // band's bottom edge (`margin-top: -Npx`), which is the composition the brief
-// asks for. On a phone the band is 4:3 and the panel is BELOW it, full width:
+// asks for. On a phone the band is 2:1 and the panel is BELOW it, full width:
 // an overlapping glass panel on a 360px screen either covers the photograph it
 // is meant to sit on or squeezes the h1 to four words a line. Two layouts, one
 // component, and no absolute positioning in either — the overlap is a negative
