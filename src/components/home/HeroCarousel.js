@@ -865,7 +865,6 @@ const HeroCarousel = ({ heroProducts }) => {
                   <CloudinaryImage
                     src={media.url}
                     alt={productAlt(product, media)}
-                    crop={media.crop}
                     ar={isMobile ? "1:1" : "4:5"}
                     pad
                     fit="contain"

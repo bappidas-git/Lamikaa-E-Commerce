@@ -1,5 +1,50 @@
 # Release notes
 
+## 1.1.1-lamikaa — 2026-09-11
+
+Product pictures are never cut again. Whatever a product's image is — a pack
+shot, a carton dieline, a finished lifestyle photograph — every surface now
+delivers the WHOLE frame and lets the plate letterbox it.
+
+### Fixed
+
+- **A stored crop could outlive the picture it was measured against.** Each
+  seeded product carried a `crop` in its cover's own source pixels, recorded to
+  pull a front panel out of a carton dieline. Those coordinates describe one
+  specific upload and nothing else, so the moment a row's `url` changed — a new
+  photograph pasted over the old link in **Admin → Products → Media** — the same
+  numbers went on cutting, and every card, hero, chapter, gallery stage,
+  thumbnail, cart bar and search hit showed a narrow strip of the new picture
+  with 60–75% of it thrown away. The eight seeded rectangles kept between 25.7%
+  and 39.0% of their frames.
+
+- **The whole frame, everywhere.** `stageSrc()` and the PDP gallery now deliver
+  `c_pad,ar_…,b_auto` only: the complete picture, letterboxed to the plate's
+  ratio on a ground sampled from the shot's own edges, at every breakpoint.
+  Nothing in the storefront emits `c_crop`.
+
+- **The Deal of the Day plate.** `/offers` rendered the raw `images[0]` — the
+  full multi-megapixel upload — and then let CSS cut a 4:5 window out of it. It
+  goes through `stageSrc()` like every other product plate now: sized for its
+  box, padded rather than cropped, and `object-fit: contain`.
+
+- **The admin's row preview** shows the whole asset (`contain`, not `cover`), so
+  a merchant sees before saving exactly what the storefront will show.
+
+### Removed
+
+- **The stored crop, at the boundary.** `normalizeProduct` drops any `crop` a
+  record still holds, so a stale rectangle from *any* backend — `db.json`, the
+  Laravel API, a months-old wishlist snapshot — cannot reach a delivery URL. The
+  eight rectangles are gone from `db.json` as well.
+
+- **"Advanced: stage crop"** in the admin media manager, and the PDP's
+  **"Full label" / "Front panel"** toggle. With nothing cropped there is no
+  second version of a frame to offer, and a control that claimed otherwise would
+  be a lie.
+
+---
+
 ## 1.0.0-lamikaa — 2026-09-08
 
 The complete rebuild of this repository from the previous storefront into

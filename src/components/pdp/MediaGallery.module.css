@@ -73,58 +73,11 @@
 }
 
 /* ---- Furniture on the plate ---------------------------------------------- */
-.toggle,
 .zoom,
 .arrow,
 .counter {
   position: absolute;
   z-index: 2;
-}
-
-/* "Full label" / "Front panel" — a 32px pill whose TARGET is the full 44px.
-   The pill is the size the design asks for; the invisible ring around it is
-   what WCAG 2.5.5 asks for, and neither has to give way to the other. */
-.toggle {
-  top: var(--sf-space-4);
-  left: var(--sf-space-4);
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 var(--sf-space-4);
-  border-radius: var(--sf-radius-pill);
-  color: var(--sf-color-text);
-  font-family: var(--sf-font-family);
-  font-size: var(--sf-text-xs);
-  font-weight: var(--sf-font-semibold);
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: color var(--sf-transition-fast), border-color var(--sf-transition-fast),
-    background-color var(--sf-transition-fast);
-}
-
-/* The height is stated rather than inset: `inset` resolves against the padding
-   box, and the pill's glass hairline takes 2px out of its 32px, so `-6px` grew
-   30 to 42 — two short of the 44 the comment above promises. */
-.toggle::after {
-  content: "";
-  position: absolute;
-  left: -6px;
-  right: -6px;
-  top: 50%;
-  height: var(--sf-tap-target);
-  transform: translateY(-50%);
-}
-
-.toggle:hover {
-  color: var(--sf-color-gold);
-  border-color: var(--sf-color-border-strong);
-  background: var(--sf-color-surface-hover);
-}
-
-.toggle:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
 }
 
 .zoom {
@@ -324,8 +277,7 @@
 @media (prefers-reduced-motion: reduce) {
   .arrow,
   .dot,
-  .thumb,
-  .toggle {
+  .thumb {
     transition: none;
   }
 }

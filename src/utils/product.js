@@ -20,8 +20,13 @@ import { getProductMinPrice } from "./helpers";
 // The first two are twins: whatever normalizeProduct() would derive for a record,
 // syncProductMedia() has already written into it. That is what lets the same
 // components render a current db.json product (images-only, no media[]) and a
-// seeded one (media[] with crops, posters and placeholder flags) without ever
-// asking which shape they were handed.
+// seeded one (media[] with posters and placeholder flags) without ever asking
+// which shape they were handed.
+//
+// NOTHING CROPS. A media row is a URL and its labels; it carries no instruction
+// to cut the picture. Every surface delivers the COMPLETE frame and lets the
+// plate letterbox it. See normalizeRow() for why a stored crop is dropped on
+// the way in rather than merely left unused.
 //
 // EVERYTHING HERE IS PURE. No React, no fetching, no module state — these are
 // called inside render, inside reducers and inside tests, and none of those can
@@ -75,6 +80,17 @@ const normalizeRow = (row, name) => {
   // A video can never be the primary IMAGE, however the record is flagged.
   if (type === "video" || out.primary !== true) delete out.primary;
   if (type === "image" && !out.alt) out.alt = name;
+  // NO SOURCE-PIXEL CROP SURVIVES NORMALISATION. Older records (and the rows a
+  // previous admin build could still write) carry a `crop` in the ORIGINAL
+  // image's own pixels, recorded against one specific upload to pull a front
+  // panel out of a carton dieline. Those coordinates mean nothing the moment
+  // the bytes behind the row change — swap the URL for a finished product
+  // photograph and the same numbers slice a quarter of it out and throw the
+  // rest away, which is exactly what a storefront must never do to a pack.
+  // Dropping it HERE is what makes that true for every backend: db.json, the
+  // Laravel API, a wishlist snapshot taken months ago. Cloudinary still sizes,
+  // formats and letterboxes every delivery — it just never cuts.
+  delete out.crop;
   return out;
 };
 
@@ -296,7 +312,7 @@ export const validateMedia = (media) => {
 /** The normalised media list for a product in any shape. */
 export const productMedia = (product) => (product ? buildMedia(product) : []);
 
-/** The primary image ROW (`{ type, url, alt, crop?, … }`), or null. */
+/** The primary image ROW (`{ type, url, alt, … }`), or null. */
 export const primaryImage = (product) =>
   productMedia(product).find((row) => row.type === "image" && row.primary) || null;
 
@@ -307,18 +323,19 @@ export const productVideos = (product) =>
 /**
  * The delivery URL for a product's hero/stage image.
  *
- * The cover shots are photographs of packaging on a studio ground, so the crop
- * recorded per product in PRODUCTS.md pulls the pack out of the frame first and
- * `c_pad` letterboxes it to the stage ratio on a ground sampled from its own
- * edges — a bottle is never sliced to fill a square. A non-Cloudinary URL (a
- * placeholder host, an admin-typed link) has no crop to apply, so it takes the
- * plain width transform, which `cld()` returns unchanged for such hosts.
+ * THE WHOLE SHOT, ALWAYS. A cover is a photograph of packaging, and packaging
+ * IS the product — so nothing here cuts. `c_pad` letterboxes the complete frame
+ * to the plate's ratio on a ground sampled from the shot's own edges (`b_auto`),
+ * which is what lets a portrait bottle and a landscape pack sit in the same
+ * square grid with neither of them losing a millimetre. A non-Cloudinary URL (a
+ * placeholder host, an admin-typed link) takes the plain width transform, which
+ * `cld()` returns unchanged for such hosts.
  */
 export const stageSrc = (product, { w = 900, ar = "1:1" } = {}) => {
   const primary = primaryImage(product);
   if (!primary) return "";
   if (!isCloudinary(primary.url)) return cld(primary.url, { w });
-  return cld(primary.url, { crop: primary.crop, ar, pad: true, w });
+  return cld(primary.url, { ar, pad: true, w });
 };
 
 /** Alt text for one media row: the row's own, then the product name. */

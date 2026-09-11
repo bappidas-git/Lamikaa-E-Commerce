@@ -95,13 +95,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Black-Rice-Face-Wash-Cover.jpg",
           "alt": "Black Rice Face Wash by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 1050,
-            "y": 100,
-            "w": 1500,
-            "h": 3200
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -263,13 +257,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Black-Rice-Goat-Milk-Soap-Cover.jpg",
           "alt": "Black Rice Goat Milk Soap by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 216,
-            "y": 522,
-            "w": 1377,
-            "h": 1248
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -424,13 +412,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Body-Wash-Cover.jpg",
           "alt": "Black Rice Body Wash by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 716,
-            "y": 43,
-            "w": 391,
-            "h": 688
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -584,13 +566,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670690/Face-Mask-Cover.jpg",
           "alt": "Black Rice Face Mask by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 478,
-            "y": 12,
-            "w": 356,
-            "h": 382
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -752,13 +728,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670691/Face-Mist-Cover.jpg",
           "alt": "Black Rice Face Mist by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 320,
-            "y": 20,
-            "w": 410,
-            "h": 710
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -912,13 +882,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670694/Face-Scrub-Cover.jpg",
           "alt": "Black Rice Exfoliating Face Scrub by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 1767,
-            "y": 2,
-            "w": 1428,
-            "h": 740
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -1077,13 +1041,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670692/Face-Serum-Cover.jpg",
           "alt": "Black Rice Face Serum by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 432,
-            "y": 12,
-            "w": 464,
-            "h": 534
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -1245,13 +1203,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670693/Moisturizer-Gel-Cover.jpg",
           "alt": "Black Rice Moisturizer Gel by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 240,
-            "y": 40,
-            "w": 330,
-            "h": 680
-          }
+          "primary": true
         },
         {
           "type": "image",

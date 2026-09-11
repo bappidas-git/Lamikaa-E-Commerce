@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Box, Button, Chip, Collapse, IconButton, Paper, Radio, TextField, Tooltip, Typography,
+  Box, Button, Chip, IconButton, Paper, Radio, TextField, Tooltip, Typography,
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
@@ -53,13 +53,6 @@ const THUMB_WIDTH = 128;
 
 const THUMB = 64;
 
-const CROP_FIELDS = [
-  { key: "x", label: "X" },
-  { key: "y", label: "Y" },
-  { key: "w", label: "W" },
-  { key: "h", label: "H" },
-];
-
 const trimmed = (value) => (typeof value === "string" ? value.trim() : "");
 
 /** A patch whose `undefined` values REMOVE the key rather than setting it. */
@@ -82,9 +75,6 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
 
   const [imgStatus, setImgStatus] = useState({});
   const [videoStatus, setVideoStatus] = useState({});
-  // Keyed by URL, not by index: the disclosure belongs to the asset, so a
-  // reorder must not leave it open on whichever row inherited the position.
-  const [openCrop, setOpenCrop] = useState({});
   const [dragging, setDragging] = useState(null); // { list, index }
   const [dragOver, setDragOver] = useState(null); // { list, index }
   const [focusRequest, setFocusRequest] = useState(null);
@@ -176,16 +166,6 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
     if (viaKeyboard) {
       setFocusRequest({ list: "image", index: index + delta, dir: delta < 0 ? "up" : "down" });
     }
-  };
-
-  const setCropField = (index, field, raw) => {
-    const current = images[index]?.crop || {};
-    const next = { ...current };
-    const parsed = parseInt(raw, 10);
-    if (raw === "" || Number.isNaN(parsed)) delete next[field];
-    else next[field] = Math.max(0, parsed);
-    const hasAny = CROP_FIELDS.some(({ key }) => next[key] != null);
-    setImage(index, { crop: hasAny ? next : undefined });
   };
 
   // ── Videos ────────────────────────────────────────────────────────────────
@@ -424,8 +404,6 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
             const broken = url && imgStatus[url] === "error";
             const message = rowError(row) || (broken ? "Invalid image URL" : "");
             const cloudinary = isCloudinary(url);
-            const cropOpen = !!openCrop[url];
-            const crop = row.crop || {};
             return (
               <Paper
                 /* eslint-disable-next-line react/no-array-index-key */
@@ -445,7 +423,12 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
                       alt=""
                       onLoad={() => setImgStatus((s) => (s[url] === "ok" ? s : { ...s, [url]: "ok" }))}
                       onError={() => setImgStatus((s) => (s[url] === "error" ? s : { ...s, [url]: "error" }))}
-                      sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      /* CONTAIN, not cover: this preview is the merchant's only
+                         look at the asset before saving, and the storefront
+                         shows the whole frame. A cropped preview would hide
+                         exactly the mistake — a pack sitting off to one side of
+                         a wide shot — that the preview exists to catch. */
+                      sx={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                     />
                   ) : (
                     <Icon
@@ -493,43 +476,7 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
                     {row.placeholder && (
                       <Chip label="Placeholder" size="small" variant="outlined" sx={{ height: 20, fontSize: "0.65rem" }} />
                     )}
-                    {cloudinary && (
-                      <Button
-                        size="small"
-                        onClick={() => setOpenCrop((s) => ({ ...s, [url]: !s[url] }))}
-                        startIcon={<Icon icon={cropOpen ? "mdi:chevron-up" : "mdi:chevron-down"} />}
-                        sx={{ fontSize: "0.7rem" }}
-                        aria-expanded={cropOpen}
-                      >
-                        Advanced: stage crop
-                      </Button>
-                    )}
                   </Box>
-
-                  {cloudinary && (
-                    <Collapse in={cropOpen} unmountOnExit>
-                      <Box sx={{ mt: 1 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                          Source-pixel crop applied before the product page pads the shot to its stage
-                          ratio. Leave every box empty to deliver the whole frame.
-                        </Typography>
-                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                          {CROP_FIELDS.map(({ key, label }) => (
-                            <TextField
-                              key={key}
-                              label={label}
-                              type="number"
-                              value={crop[key] ?? ""}
-                              onChange={(e) => setCropField(index, key, e.target.value)}
-                              size="small"
-                              inputProps={{ min: 0 }}
-                              sx={{ width: 96 }}
-                            />
-                          ))}
-                        </Box>
-                      </Box>
-                    </Collapse>
-                  )}
 
                   {errorText(message)}
                 </Box>

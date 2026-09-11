@@ -23,6 +23,7 @@ import {
   PLACEHOLDER_IMG,
   onImageError,
 } from "../../utils/helpers";
+import { stageSrc } from "../../utils/product";
 import { resolveCountdownTarget, diffToParts } from "../../utils/dealsConfig";
 import { reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
@@ -351,8 +352,14 @@ const DealFeature = ({ product, categoryName, onAddToCart, index, reduceMotion }
     >
       <div className={styles.featureMedia}>
         <Link to={productPath(product)} className={styles.plate} aria-label={product.name}>
+          {/* Through `stageSrc`, like every other product plate: the WHOLE frame,
+              sized for this box and padded to 4:5 on a ground sampled from the
+              shot's own edges. The raw `images[0]` this used to render was the
+              full multi-megapixel upload, and the plate then cut a 4:5 window
+              out of it — the feature showed a slice of the pack at the cost of
+              downloading all of it. */}
           <img
-            src={product.images?.[0] || product.image || PLACEHOLDER_IMG}
+            src={stageSrc(product, { w: 900, ar: "4:5" }) || PLACEHOLDER_IMG}
             alt={product.name}
             loading="lazy"
             onError={onImageError}

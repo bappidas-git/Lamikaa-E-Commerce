@@ -18,13 +18,13 @@ import MediaGallery, {
   stepIndex,
   thumbLabel,
   thumbSource,
-  toggleLabel,
 } from "./MediaGallery";
 import { clampScale, panBounds } from "./Lightbox";
 
-// A miniature of the seeded Face Wash: the cover with its front-panel crop, two
-// placeholder stills, and two clips — 3 images + 2 videos, the shape the whole
-// range ships in.
+// A miniature of the seeded Face Wash: the cover, two placeholder stills, and
+// two clips — 3 images + 2 videos, the shape the whole range ships in. The cover
+// still carries a legacy source-pixel `crop` on purpose: a stored record can
+// hold one, and nothing downstream may act on it.
 const COVER = {
   type: "image",
   url: "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670695/Face-Wash-Cover.jpg",
@@ -74,7 +74,7 @@ const renderGallery = (product) =>
     </MemoryRouter>
   );
 
-describe("counterLabel / stepIndex / toggleLabel", () => {
+describe("counterLabel / stepIndex", () => {
   it("counts from one", () => {
     expect(counterLabel(0, 5)).toBe("1 / 5");
     expect(counterLabel(4, 5)).toBe("5 / 5");
@@ -89,12 +89,6 @@ describe("counterLabel / stepIndex / toggleLabel", () => {
   // An empty gallery has no index to move to, and `% 0` is NaN.
   it("stays at zero when there is nothing to step through", () => {
     expect(stepIndex(0, 1, 0)).toBe(0);
-  });
-
-  // The button offers the OTHER view, so its label is the opposite of the plate.
-  it("offers the whole shot while the front panel is showing, and back again", () => {
-    expect(toggleLabel(false)).toBe("Full label");
-    expect(toggleLabel(true)).toBe("Front panel");
   });
 });
 
@@ -116,15 +110,15 @@ describe("thumbLabel", () => {
 });
 
 describe("thumbSource", () => {
-  it("delivers a 144px square carrying the row's own crop", () => {
+  // Even handed a row that still carries one, the thumbnail never cuts: the
+  // whole frame is padded into the square.
+  it("delivers a 144px square holding the whole frame", () => {
     const url = thumbSource(COVER);
-    expect(url).toContain("c_crop,x_1050,y_100,w_1500,h_3200");
+    expect(url).not.toContain("c_crop");
     expect(url).toContain("c_pad,ar_1:1,b_auto");
     expect(url).toContain("w_144");
   });
 
-  // A video's poster is a frame, not a pack shot: there is no product crop to
-  // apply to it, and applying the row's own would be applying nothing.
   it("shows a video's poster, square and uncropped", () => {
     const url = thumbSource(HOW_TO);
     expect(url).not.toContain("c_crop");
@@ -195,21 +189,25 @@ describe("<MediaGallery> — the rendered gallery", () => {
     expect(screen.getByText("5 / 5")).toBeInTheDocument();
   });
 
-  it("offers the whole shot only where there is a crop to drop", () => {
+  // The whole shot is the ONLY shot. A record carrying a legacy crop gets it
+  // dropped in normalisation, so the stage delivers an uncut frame and there is
+  // no "Full label" pill offering a second version that no longer exists.
+  it("delivers the whole frame, with no front-panel toggle to offer", () => {
     renderGallery(FACE_WASH);
 
-    const toggle = screen.getByRole("button", { name: "Full label" });
-    expect(toggle).toHaveAttribute("aria-pressed", "false");
-    fireEvent.click(toggle);
-    expect(screen.getByRole("button", { name: "Front panel" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-
-    // The second still is a lifestyle frame with no crop recorded — there is no
-    // second version of it to offer, and the toggle must not claim there is.
-    fireEvent.click(screen.getAllByRole("tab")[1]);
     expect(screen.queryByRole("button", { name: /Full label|Front panel/ })).toBeNull();
+
+    // Scoped to the stage: the rail carries the same frame under the same alt.
+    const plate = within(
+      screen.getByRole("group", { name: "Black Rice Face Wash media" })
+    ).getByRole("img", { name: "Black Rice Face Wash — label" });
+    expect(plate.getAttribute("src")).not.toContain("c_crop");
+    expect(plate.getAttribute("src")).toContain("c_pad,ar_4:5,b_auto");
+    expect(plate.getAttribute("srcset") || "").not.toContain("c_crop");
+
+    // And the rail shows the same uncut frame in miniature.
+    const thumb = within(screen.getByRole("tablist")).getAllByRole("img")[0];
+    expect(thumb.getAttribute("src")).not.toContain("c_crop");
   });
 
   it("renders a one-image, no-video product with no rail, arrows or counter", () => {

@@ -226,7 +226,6 @@ const ProductChapter = ({
               <CloudinaryImage
                 src={media?.url}
                 alt={productAlt(p, media)}
-                crop={media?.crop}
                 ar="4:5"
                 pad
                 plate

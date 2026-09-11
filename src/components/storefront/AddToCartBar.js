@@ -98,7 +98,6 @@ const AddToCartBar = ({
           <CloudinaryImage
             src={media.url}
             alt={productAlt(product, media)}
-            crop={media.crop}
             plate
             widths={[160, 240]}
             sizes="56px"
