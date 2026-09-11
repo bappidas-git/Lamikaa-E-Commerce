@@ -156,6 +156,7 @@
   display: flex;
   gap: var(--sf-space-2);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   padding-bottom: var(--sf-space-1);

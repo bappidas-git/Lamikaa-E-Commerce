@@ -133,6 +133,7 @@
      1025-1180px and wider than a phone at any width, so the row scrolls
      sideways inside itself rather than pushing the page. */
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   /* Room for a plate's focus ring, top and bottom. */
   padding-block: var(--sf-space-1);
   -webkit-overflow-scrolling: touch;

@@ -187,12 +187,14 @@
   /* The strip scrolls, not the page. */
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
 
 .railItem {
   flex: none;
+  scroll-snap-align: start;
 }
 
 .railLink {

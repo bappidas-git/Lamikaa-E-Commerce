@@ -472,6 +472,7 @@
   margin: 0;
   padding-bottom: var(--sf-space-1);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
 }

@@ -1,0 +1,314 @@
+/* =============================================================================
+ * Rail — the one horizontal card scroller
+ * =============================================================================
+ * Three things live here and nothing else does: how wide a card is, how the
+ * track scrolls, and the three affordances (the fade, the arrows, the progress
+ * bar). Every colour, space, radius and duration is a `--sf-*` token.
+ *
+ * THE CARD WIDTH IS A CLAMP, AND THE CLAMP IS MEASURED AGAINST THE RAIL
+ *   `flex-basis: clamp(min, (100% - gaps) / per-view, max)`. A flex-basis
+ *   percentage resolves against the TRACK's content box, so one declaration
+ *   covers a page-wide band, a PDP chapter column and a phone — and the floor
+ *   is what stops a narrow host from grinding the cards down to a contact
+ *   sheet, which is exactly what the viewport-keyed rules this replaced did.
+ *
+ *   `min()` guards the floor itself: on a 320px phone a 240px minimum plus the
+ *   track's own padding would be wider than the track, and a card wider than
+ *   its rail can never be scrolled fully into view.
+ *
+ * THE AFFORDANCES ARE DIRECTIONAL
+ *   A fade on the left while the rail is parked at its start says "there is
+ *   something back there" when there is not, and dims the first card for no
+ *   reason. Both fades and both arrows are keyed to `data-at-start` /
+ *   `data-at-end`, which the component keeps in step with the real scroll
+ *   position, and the whole treatment is off when the row fits.
+ * ========================================================================== */
+
+.rail {
+  --rail-gap: var(--sf-space-6);
+  /* Room for a card's focus ring and its 4px hover lift, which the scroll
+     container would otherwise clip. Taken back with a negative margin so the
+     first card still starts on the section's own left edge. */
+  --rail-pad: var(--sf-space-1);
+  /* Wide enough to read as a soft edge on the dark ground rather than as a
+     rendering artefact — at 40px over a card that is barely lighter than the
+     page, the fade was invisible and the cut card just looked sliced. */
+  --rail-fade: var(--sf-space-16);
+  /* Where the arrows sit vertically. A third of the way down is over the
+     photograph on a product card, which is the one part of a card there is
+     never anything to read. */
+  --rail-arrow-top: 34%;
+
+  position: relative;
+}
+
+/* A phone's card is most of its screen, and 64px of that is a quarter of the
+   card. The peek and the progress bar carry the affordance there. */
+@media (max-width: 768px) {
+  .rail {
+    --rail-fade: var(--sf-space-8);
+  }
+}
+
+/* ── The window onto the cards ─────────────────────────────────────────────── */
+
+/* The 4px of focus-ring room the track claims either side belongs INSIDE the
+   masked box: a mask is resolved against the element's own border box, so a
+   track that overflowed this wrapper would have exactly that ring masked away
+   the moment the fade came on. */
+.viewport {
+  margin: 0 calc(-1 * var(--rail-pad));
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* More to the right: fade the right edge. More to the left: fade the left. The
+   two rules compose, so a rail parked in the middle fades both. */
+.rail[data-overflowing="true"][data-at-end="false"] .viewport {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--rail-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--rail-fade)),
+    transparent 100%
+  );
+}
+
+.rail[data-overflowing="true"][data-at-start="false"] .viewport {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--rail-fade));
+  mask-image: linear-gradient(to right, transparent 0, #000 var(--rail-fade));
+}
+
+.rail[data-overflowing="true"][data-at-start="false"][data-at-end="false"] .viewport {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--rail-fade),
+    #000 calc(100% - var(--rail-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--rail-fade),
+    #000 calc(100% - var(--rail-fade)),
+    transparent 100%
+  );
+}
+
+/* A focused card must never be the faded one. The selector carries every data
+   attribute the fade rules above use, so it out-specifies all three of them
+   without reaching for `!important`. */
+.rail[data-overflowing][data-at-start][data-at-end] .viewport:focus-within {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* ── The track ─────────────────────────────────────────────────────────────── */
+
+.track {
+  display: flex;
+  gap: var(--rail-gap);
+  margin: 0;
+  padding: var(--sf-space-2) var(--rail-pad);
+  list-style: none;
+  overflow-x: auto;
+  /* `overflow-y` computes to `auto` beside an `auto` overflow-x whatever is
+     asked for here, so the lift and the focus ring are given ROOM (the padding
+     above) rather than permission to escape. */
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-padding-inline: var(--rail-pad);
+  -webkit-overflow-scrolling: touch;
+  /* The rail draws its own progress bar; a second, hairline-thin native one
+     under it is noise, and on Windows an unstyled one is a 17px grey slab. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.track[data-snap="start"] {
+  scroll-snap-type: x proximity;
+}
+
+.track[data-snap="center"] {
+  scroll-snap-type: x proximity;
+}
+
+.track[data-snap="none"] {
+  scroll-snap-type: none;
+}
+
+.track:focus-visible {
+  outline: none;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
+/* A phone is swiped, and a mandatory snap is what makes a swipe land on a card
+   rather than between two. A pointer gets `proximity`, which never fights a
+   trackpad flick that was aimed somewhere in particular. */
+@media (any-pointer: coarse) {
+  .track[data-snap="start"],
+  .track[data-snap="center"] {
+    scroll-snap-type: x mandatory;
+  }
+}
+
+/* ── A cell ────────────────────────────────────────────────────────────────── */
+
+.cell {
+  /* See the header: the clamp is the whole design. `min()` keeps the floor
+     inside the rail on the narrowest phones. */
+  flex: 0 0
+    clamp(
+      min(var(--rail-card-min), 100%),
+      calc(
+        (100% - (var(--rail-per-view) - 1) * var(--rail-gap)) / var(--rail-per-view)
+      ),
+      var(--rail-card-max)
+    );
+  min-width: 0;
+  /* The cards stretch to the tallest in the row, so a rail of cards with
+     different amounts of copy still ends on one line. */
+  display: flex;
+}
+
+.cell > * {
+  width: 100%;
+}
+
+.track[data-snap="start"] .cell {
+  scroll-snap-align: start;
+}
+
+.track[data-snap="center"] .cell {
+  scroll-snap-align: center;
+}
+
+/* ── The arrows ────────────────────────────────────────────────────────────── */
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+}
+
+/* Over the fade, on the side the fade is on: the two affordances are the same
+   answer said twice, so they sit in the same place. Hidden from a touch device,
+   which has the swipe and the progress bar instead. */
+.overlayControls {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rail[data-overflowing="true"] .overlayControls {
+    display: block;
+  }
+
+  /* Doubled, so the placement wins over the shared button's own layout rules
+     however the two stylesheets are ordered by the bundler. */
+  .overlayControls .arrow.arrow {
+    position: absolute;
+    top: var(--rail-arrow-top);
+    z-index: 2;
+    /* The press is a scale on the shared button; composing it with the centring
+       translate here would have the rail and the primitive writing one
+       property, so the centring is done by a margin the press cannot touch. */
+    margin-top: calc(var(--sf-tap-target) / -2);
+    background: var(--sf-glass-bg-strong);
+    -webkit-backdrop-filter: blur(var(--sf-glass-blur));
+    backdrop-filter: blur(var(--sf-glass-blur));
+    box-shadow: var(--sf-shadow-2);
+  }
+
+  .overlayControls .arrow.arrow:first-child {
+    inset-inline-start: 0;
+  }
+
+  .overlayControls .arrow.arrow:last-child {
+    inset-inline-end: 0;
+  }
+
+  /* Shown at rest, and firmed up when a pointer is on the rail. An arrow only
+     a hover reveals is an arrow most visitors never find, and this one sits
+     over the fade — the part of the row there is least to see. An arrow with
+     nowhere to go is not shown AT ALL: a dead control at the end of the travel
+     is worse than no control. */
+  .overlayControls .arrow.arrow:not(:disabled) {
+    opacity: 0.92;
+  }
+
+  .rail:hover .overlayControls .arrow.arrow:not(:disabled),
+  .rail:focus-within .overlayControls .arrow.arrow:not(:disabled) {
+    opacity: 1;
+    border-color: var(--sf-color-border-strong);
+  }
+
+  .overlayControls .arrow.arrow:disabled {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* `Button variant="icon"` already IS the 44px circle, the glass, the focus ring
+   and the press. All this adds is the fade the rail drives — and the doubled
+   class, which wins the opacity against the primitive's own transitions
+   whatever order the two sheets ship in. */
+.arrow.arrow {
+  transition: opacity var(--sf-transition), border-color var(--sf-transition),
+    background var(--sf-transition-fast), color var(--sf-transition-fast);
+}
+
+.arrow.arrow:disabled {
+  opacity: 0.3;
+}
+
+/* ── The progress bar ──────────────────────────────────────────────────────── */
+
+/* Touch only: a finger has no arrows to look for, and "how far along am I"
+   is the one question a swipe cannot answer by itself. It is a decoration over
+   a real scroll position, so it is inert and `aria-hidden`. */
+.progress {
+  display: none;
+  position: relative;
+  height: 2px;
+  margin-top: var(--sf-space-4);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-border);
+  overflow: hidden;
+}
+
+.progressThumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--sf-radius-pill);
+  background-image: var(--sf-gradient-gold);
+}
+
+@media (any-pointer: coarse) {
+  .rail[data-overflowing="true"] .progress {
+    display: block;
+  }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    scroll-behavior: auto;
+  }
+
+  .arrow.arrow {
+    transition: none;
+  }
+}

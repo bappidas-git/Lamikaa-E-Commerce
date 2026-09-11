@@ -162,39 +162,72 @@
   min-width: 0;
 }
 
-/* The eyebrow ROW — the ritual step, then up to two concerns, then whatever
-   marks the merchant has switched on. It wraps rather than truncates: at the
-   narrow end of the range the step and one chip cannot share a line, and the
-   card simply grows a line rather than clipping a word. */
-.eyebrowRow {
+/* The eyebrow — TWO FIXED ROWS: the ritual step (with any merchant flags), then
+   up to two concerns. Each row holds its line whether or not this product fills
+   it, and neither ever wraps.
+
+   That is the whole point. When the step and the chips shared one wrapping row,
+   the row was one line tall for a product whose labels happened to fit and two
+   lines tall for the one beside it — so in any run of cards the name, the
+   promise, the badges and the price of half the row sat a line lower than the
+   other half. Nothing else in the card could correct for it, because nothing
+   else in the card knows how long a concern is called. Two reserved rows cost a
+   card that has only a step about 22px of air and buy every rail and every grid
+   a straight set of baselines. */
+.eyebrow {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   gap: var(--sf-space-2);
+  width: 100%;
   min-width: 0;
-  max-width: 100%;
 }
 
+.stepRow,
+.concernRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  /* The chip's resting height, so an empty row still holds the line. */
+  min-height: 22px;
+  min-width: 0;
+  max-width: 100%;
+  /* A card in a two-up phone grid is narrower than a long step label, and a
+     word leaving the card is worse than a word ending in an ellipsis. */
+  overflow: hidden;
+}
+
+/* `.sf-eyebrow` is an inline-flex, and text-overflow cannot ellipsise a flex
+   item — the step goes back to inline layout for it. The numeral and the label
+   are set at the same size and share a baseline, which is what the flex
+   `align-items: center` was doing for them. */
 .step {
-  gap: var(--sf-space-1);
+  display: block;
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* The concern chips are labels, not controls: they keep the chip's resting
    height rather than the 44px a real chip control claims, and they are trimmed
-   to the eyebrow's own scale so the step and both concerns share one line on a
-   card wider than about 260px. */
+   to the eyebrow's own scale so both concerns share their line on any card the
+   rails and grids actually produce. */
 .concernChip {
   min-height: 22px;
   padding: 2px var(--sf-space-2);
   font-size: var(--sf-text-xs);
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .nameRow {
   margin: 0;
   min-width: 0;
   max-width: 100%;
+  /* Two lines of the name below, reserved: a one-line name and a two-line name
+     side by side would put their promises, badges and prices on different
+     rows. 1.25rem at --sf-leading-tight (1.25). */
+  min-height: calc(1.25rem * 1.25 * 2);
 }
 
 /* The name — Fraunces at 20px, two lines, a hairline underline on card hover. */
@@ -228,10 +261,12 @@
   border-radius: var(--sf-radius-sm);
 }
 
-/* The product's own promise. Two lines, so a long one does not push the price
-   out of alignment across a row of cards. */
+/* The product's own promise. Exactly two lines — clamped so a long one does not
+   push the price out of alignment across a row of cards, and reserved so a
+   short one does not pull the badges up. 0.875rem at --sf-leading-normal. */
 .promise {
   margin: 0;
+  min-height: calc(0.875rem * 1.5 * 2);
   font-size: var(--sf-text-sm);
   line-height: var(--sf-leading-normal);
   color: var(--sf-color-text-secondary);
@@ -242,11 +277,16 @@
   overflow: hidden;
 }
 
+/* The badges and the price are the card's FOOT, and they are pushed to it: the
+   first auto margin in a flex column eats the free space, so a card with less
+   copy than its neighbour grows the gap above its badges rather than floating
+   its badges and its price up the card. (`.price` keeps its own auto margin for
+   the case where a merchant has cleared the badge list.) */
 .badges {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sf-space-2);
-  margin: var(--sf-space-1) 0 0;
+  margin: auto 0 0;
   padding: 0;
   list-style: none;
 }

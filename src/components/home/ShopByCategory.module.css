@@ -59,8 +59,14 @@
     /* Room for a card's focus ring and its 4px hover lift, top and bottom. */
     padding-block: var(--sf-space-2);
     overflow-x: auto;
+    /* A swipe that runs past the last card belongs to the rail, not to the
+       browser's back gesture. */
+    overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    scroll-padding-left: var(--sf-space-4);
+    /* Both edges: `scroll-padding-left` alone parked the LAST card hard against
+       the right edge of the screen, with none of the margin every other card in
+       the rail is given. */
+    scroll-padding-inline: var(--sf-space-4);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
