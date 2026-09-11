@@ -9,62 +9,90 @@
  * you do not edit component code.
  *
  * HOW THEMING WORKS
- *   There is ONE theme. Every token — colour and structural alike — is declared
- *   once in the `:root` block below, and `color-scheme: dark` tells the UA to
- *   render form controls, scrollbars and the canvas to match. There is no
- *   theme class on <body>, no stored preference, no media-query branch and no
- *   toggle: the storefront and the admin are dark, always. A visitor whose OS
- *   asks for a light appearance sees exactly the same page.
+ *   There is ONE theme, and it is LIGHT: a warm cream page under espresso type,
+ *   declared once in the `:root` block below with `color-scheme: light`. There
+ *   is no stored preference, no media-query branch and no toggle — a visitor
+ *   whose OS asks for a dark appearance sees exactly the same page.
+ *
+ *   What the theme DOES have is a second, opt-in SURFACE: `.sf-on-dark`. It
+ *   re-points the same role tokens onto the near-black ground the brand's
+ *   golden lockup was drawn for, so a subtree that carries the class flips
+ *   whole — ground, type, accent, glass, shadows — without one component
+ *   knowing about it. It is applied to the CHROME and to the two places a
+ *   photograph is the subject:
+ *
+ *     AnnouncementBar · Header (+ its mega panel) · SidebarMenu · BottomNav
+ *     Footer · the PDP lightbox
+ *
+ *   That is the whole list, and it is deliberate: the gold wordmark needs a
+ *   dark plate to read on, the navigation reads as one continuous band of it
+ *   top and bottom, and a full-screen product photo pops off black. Everything
+ *   between them — every page, section, card, plate and form — is cream.
+ *
+ *   Nesting is supported in one direction only: `.sf-on-dark` inside the light
+ *   page works (that is the whole point). Do not nest a light scope inside a
+ *   dark one; there is no `.sf-on-light` and the tokens do not need one.
  *
  * RELATIONSHIP TO colors.js
  *   `src/theme/colors.js` holds the same palette for the MUI theme (the few
- *   MUI-based storefront bits: the header controls and CssBaseline). Keep the
- *   brand hexes here in sync with colors.js. The storefront CSS Modules consume
- *   the tokens below; MUI consumes colors.js.
+ *   MUI-based storefront bits: the header account menu and CssBaseline). Keep
+ *   the brand hexes here in sync with colors.js. The storefront CSS Modules
+ *   consume the tokens below; MUI consumes colors.js.
  *
  * NB: This file styles the STOREFRONT only. The admin panel builds its own MUI
  * palette in `src/theme/adminTheme.js` and is intentionally untouched by changes
  * here.
  *
  * -----------------------------------------------------------------------------
- * THE LAMIKAA PALETTE — "LUXURY SKINCARE AFTER DARK"
- * (source of truth: prompts/_reference/DESIGN_SYSTEM.md §2 and §3)
+ * THE LAMIKAA PALETTE — "BLACK RICE IN DAYLIGHT"
  * -----------------------------------------------------------------------------
- * Deep near-black grounds, warm-white type, champagne gold as the one accent
- * that may fill a button. Neon pink and violet are ambient — glows, hairlines
- * and gradient stops — and cyan is a rare micro-detail. Products and the
- * LAMIKAA lockup are the visual focus; every effect is a supporting device.
+ * Warm cream grounds, near-white plates, espresso type, and an antique gold
+ * that is DARK ENOUGH TO READ. That last point is the whole re-skin: champagne
+ * gold (#F5D76E) is 1.4:1 on cream and disappears, so on the light ground the
+ * accent role is carried by a deep amber (#8C6410) while the champagne stays
+ * exactly where it still shines — inside `.sf-on-dark`, on the chrome, beside
+ * the lockup. The pink/violet neon of the dark theme is ambient light and has
+ * no daylight equivalent; on cream it becomes berry and plum, held at ink
+ * strength so the signature gradient can still fill a headline word.
  *
- * BRAND ASSETS ARE NOT DECLARED HERE. The wordmark and the mark live in
- * src/config/brand.js (brand.logoUrl / brand.iconUrl) and reach the page
- * through <Logo>; no stylesheet, component or HTML file outside brand.js and
- * public/index.html may name their URLs.
+ * Products are the subject. Every plate is near-white, every card lifts on a
+ * warm shadow rather than a glow, and nothing is dimmed: a bottle photographed
+ * on white now sits on white, ringed by a hairline, on a cream page.
  *
- *   ROLES                                              contrast on #0B0B0D
- *   #0B0B0D  page ground (never pure #000)                              —
- *   #141416  surface — sections, cards, drawers, image plates           —
- *   #1C1C20  sunken — inputs, panels, thumbnails                        —
- *   #F7F5F0  warm-white primary type                                18.9:1
- *   #B8B5B0  secondary type                                         10.5:1
- *   rgba(247,245,240,.62)  muted type / captions                      7.4:1
- *   #F5D76E  champagne gold — accent, eyebrows, prices, links, CTA   13.4:1
- *   #FFEFA6  gold, lifted — hover/active, highlights                    —
- *   #B88924  gold, pressed — gradient stop, borders on light plates    6.2:1
- *   #FF4FD8  neon pink — glow, gradient stop, rare micro-label         6.9:1
- *   #8B5CF6  neon violet — glow, gradient stop                        4.65:1
- *   #5DE7FF  cyan — info states, at most one micro-detail per page       —
+ *   LIGHT ROLES                                       contrast on #F8F3EA
+ *   #F8F3EA  page ground — warm cream                                   —
+ *   #FFFDF9  surface — sections, cards, drawers, image plates           —
+ *   #F1E9DA  sunken — inputs, panels, thumbnails                        —
+ *   #1B1714  espresso primary type                                 16.1:1
+ *   #544C42  secondary type                                         7.6:1
+ *   rgba(27,23,20,.68)  muted type / captions                       6.6:1
+ *   #8C6410  antique gold — accent, eyebrows, prices, links, CTA     4.8:1
+ *   #6E4E0A  gold, deepened — hover/active                           6.9:1
+ *   #513707  gold, pressed — gradient stop, strong borders           9.9:1
+ *   #A63D6A  berry — gradient stop, concern accent                   5.6:1
+ *   #5B3E96  plum — gradient stop, concern accent                    7.6:1
+ *   #12626F  teal — info states, one micro-detail per page           6.5:1
  *
- * VISUAL BALANCE BUDGET (audited in Prompt 38)
- *   ≈ 60% dark grounds · 20% warm white · 10% gold · 5% pink · 3% violet ·
- *   2% cyan. Gold is the ONLY accent allowed as a solid button fill; pink and
- *   violet appear only as glows, hairlines and gradient stops; never gold text
- *   on pink or violet.
+ *   DARK ROLES (`.sf-on-dark`)                        contrast on #0B0B0D
+ *   #0B0B0D  chrome ground (never pure #000)                            —
+ *   #141416  surface — panels, drawers, plates                          —
+ *   #F7F5F0  warm-white type                                       18.9:1
+ *   #F5D76E  champagne gold — the lockup's own light               13.4:1
+ *   #FF4FD8 / #8B5CF6 / #5DE7FF   neon pink · violet · cyan, ambient   —
+ *
+ * VISUAL BALANCE BUDGET
+ *   ≈ 62% cream grounds · 18% near-white plates · 12% espresso type ·
+ *   6% gold · 2% berry/plum. Gold is the ONLY accent allowed as a solid button
+ *   fill; berry and plum appear only as gradient stops, hairlines and concern
+ *   accents; never gold text on berry or plum.
  *
  * TOKEN NAMES ARE ROLES, NOT COLOURS
  *   Every name below says what the value is FOR — `--sf-color-cta` is the
  *   primary call-to-action fill, not "the gold one" — so a re-skin changes
  *   values here and nothing else. Components consume these by name: adding a
- *   token is free, renaming one is a repo-wide edit.
+ *   token is free, renaming one is a repo-wide edit. The corollary is that
+ *   `.sf-on-dark` must declare EVERY colour token `:root` does; a token left
+ *   out would inherit the cream value into the dark scope.
  * ========================================================================== */
 
 /* =============================================================================
@@ -119,109 +147,135 @@
   size-adjust: 113.3%;
   font-display: swap;
 }
-
 :root {
-  /* Dark form controls, scrollbars and canvas, with no class on <body> and no
-     media query — this is the only theme there is. */
-  color-scheme: dark;
+  /* Light form controls, scrollbars and canvas, with no class on <body> and no
+     media query — this is the only theme there is. The `.sf-on-dark` scope
+     restates the opposite for its own subtree further down. */
+  color-scheme: light;
 
   /* ---- Brand ------------------------------------------------------------- */
-  /* Primary is the champagne gold, and its `-contrast` is the near-black label
-     that sits on it (13.4:1). Every consumer of --sf-color-primary uses the
-     pair as a fill/label couple, so the two invert together and stay legible. */
-  --sf-color-primary: #F5D76E;
-  --sf-color-primary-dark: #B88924;    /* pressed */
-  --sf-color-primary-light: #FFEFA6;   /* hover */
-  --sf-color-primary-contrast: #0B0B0D; /* near-black on gold — 13.4:1 */
-  --sf-color-primary-soft: rgba(245, 215, 110, 0.10); /* tinted fills/hovers */
-  --sf-color-secondary: #F5D76E;
-  --sf-color-accent: #F5D76E;          /* links/accents — text-safe on ground */
-  --sf-gradient-primary: linear-gradient(135deg, #FFEFA6 0%, #F5D76E 50%, #B88924 100%);
-  --sf-gradient-primary-hover: linear-gradient(135deg, #B88924 0%, #F5D76E 50%, #FFEFA6 100%);
+  /* Primary is the antique gold, and its `-contrast` is the warm-white label
+     that sits on it (5.2:1). Every consumer of --sf-color-primary uses the
+     pair as a fill/label couple, so the two invert together and stay legible.
+     NOTE THE FLIP FROM THE DARK THEME: there the fill was a pale champagne
+     under a near-black label; on cream the same pair has to run the other way
+     round, because a pale fill on a pale page is not a button. */
+  --sf-color-primary: #8C6410;
+  --sf-color-primary-dark: #513707;    /* pressed */
+  --sf-color-primary-light: #6E4E0A;   /* hover — DEEPER, not lighter */
+  --sf-color-primary-contrast: #FFFCF5; /* warm white on gold — 5.2:1 */
+  --sf-color-primary-soft: rgba(140, 100, 16, 0.10); /* tinted fills/hovers */
+  --sf-color-secondary: #8C6410;
+  --sf-color-accent: #8C6410;          /* links/accents — text-safe on cream */
+  --sf-gradient-primary: linear-gradient(135deg, #A87C14 0%, #8C6410 50%, #6E4E0A 100%);
+  --sf-gradient-primary-hover: linear-gradient(135deg, #6E4E0A 0%, #8C6410 50%, #A87C14 100%);
 
   /* ---- Surfaces & text -------------------------------------------------- */
-  --sf-color-bg: #0B0B0D;              /* page ground — never pure black */
+  --sf-color-bg: #F8F3EA;              /* page ground — warm cream */
   /* The same ground as three channels, for the one thing a hex cannot do:
      be composited at an alpha a component computes. The hero's slide scrim is
      the only consumer today — its strength is an admin slider, so the colour
      has to take a `calc()` alpha rather than a fixed one. */
-  --sf-color-bg-rgb: 11, 11, 13;
-  --sf-color-surface: #141416;         /* sections, cards, drawers, plates */
-  --sf-color-surface-2: #1C1C20;       /* inputs, sunken panels, thumbnails */
-  --sf-color-surface-hover: #222228;
-  --sf-color-text: #F7F5F0;            /* warm white */
-  --sf-color-text-secondary: #B8B5B0;
-  --sf-color-text-muted: rgba(247, 245, 240, 0.62); /* ≈ #9C9B98 — 7.4:1 */
-  --sf-color-border: rgba(255, 255, 255, 0.08);     /* hairline */
-  --sf-color-border-strong: rgba(245, 215, 110, 0.35); /* emphasised hairline */
-  --sf-color-overlay: rgba(11, 11, 13, 0.72);       /* scrims */
+  --sf-color-bg-rgb: 248, 243, 234;
+  --sf-color-surface: #FFFDF9;         /* sections, cards, drawers, plates */
+  --sf-color-surface-2: #F1E9DA;       /* inputs, sunken panels, thumbnails */
+  --sf-color-surface-hover: #EFE5D2;
+  --sf-color-text: #1B1714;            /* espresso */
+  --sf-color-text-secondary: #544C42;
+  --sf-color-text-muted: rgba(27, 23, 20, 0.68); /* ≈ #5D5954 — 6.6:1 */
+  --sf-color-border: rgba(27, 23, 20, 0.12);     /* hairline */
+  --sf-color-border-strong: rgba(140, 100, 16, 0.55); /* emphasised hairline */
+  /* THE TWO SCRIMS ARE NOT THE SAME THING, which is why there are two tokens.
+     `--sf-color-overlay` is a PLATE: it sits on a photograph with page-coloured
+     type on top of it (a stock tag across the foot of a product plate), so it
+     has to follow the type's ground and go light here. `--sf-color-scrim` is a
+     BACKDROP: it sits behind a modal or a drawer to push the page away, and it
+     stays dark in both surfaces because that is the only way a pale panel
+     separates from a pale page. Swapping one for the other makes a label
+     invisible or a dialog weightless — check which you mean. */
+  --sf-color-overlay: rgba(255, 253, 249, 0.90);
+  --sf-color-scrim: rgba(30, 24, 16, 0.52);
 
   /* ---- Semantic --------------------------------------------------------- */
-  /* Lifted for the dark ground; every one clears 4.5:1 on #0B0B0D. */
-  --sf-color-success: #7ED9A6;
-  --sf-color-success-bg: rgba(126, 217, 166, 0.12);
-  --sf-color-warning: #F5C76E;
-  --sf-color-warning-bg: rgba(245, 199, 110, 0.12);
-  --sf-color-danger: #FF8A80;
-  --sf-color-danger-bg: rgba(255, 138, 128, 0.12);
-  --sf-color-info: #5DE7FF;
-  --sf-color-info-bg: rgba(93, 231, 255, 0.10);
+  /* Deepened for the cream ground; every one clears 4.5:1 on #F8F3EA. */
+  --sf-color-success: #1D6B42;
+  --sf-color-success-bg: rgba(29, 107, 66, 0.10);
+  --sf-color-warning: #8A5B08;
+  --sf-color-warning-bg: rgba(138, 91, 8, 0.12);
+  --sf-color-danger: #B0261C;
+  --sf-color-danger-bg: rgba(176, 38, 28, 0.10);
+  --sf-color-info: #12626F;
+  --sf-color-info-bg: rgba(18, 98, 111, 0.10);
 
   /* ---- Commerce-specific ----------------------------------------------- */
-  --sf-color-star: #F5D76E;            /* rating stars */
-  --sf-color-price: #F5D76E;           /* current/sale price */
-  --sf-color-compare: #B8B5B0;         /* struck-through original price */
-  --sf-color-discount: #7ED9A6;        /* "% off" + savings */
-  --sf-color-discount-bg: rgba(126, 217, 166, 0.12);
-  --sf-color-badge-bg: rgba(255, 255, 255, 0.06); /* neutral chip */
+  --sf-color-star: #8C6410;            /* rating stars */
+  --sf-color-price: #8C6410;           /* current/sale price */
+  --sf-color-compare: #7A7168;         /* struck-through original price */
+  --sf-color-discount: #1D6B42;        /* "% off" + savings */
+  --sf-color-discount-bg: rgba(29, 107, 66, 0.10);
+  --sf-color-badge-bg: rgba(27, 23, 20, 0.06); /* neutral chip */
 
   /* ---- Accents ---------------------------------------------------------- */
-  --sf-color-gold: #F5D76E;            /* champagne gold — the one accent */
-  --sf-color-gold-light: #FFEFA6;      /* hover/active, highlights */
-  --sf-color-gold-deep: #B88924;       /* pressed, gradient stop, borders */
-  --sf-color-pink: #FF4FD8;            /* neon pink — glow, gradient stop */
-  --sf-color-violet: #8B5CF6;          /* neon violet — glow, gradient stop */
-  --sf-color-cyan: #5DE7FF;            /* rare accent: info, one per page */
+  --sf-color-gold: #8C6410;            /* antique gold — the one accent */
+  --sf-color-gold-light: #6E4E0A;      /* hover/active — deeper on cream */
+  --sf-color-gold-deep: #513707;       /* pressed, gradient stop, borders */
+  --sf-color-pink: #A63D6A;            /* berry — gradient stop, accent */
+  --sf-color-violet: #5B3E96;          /* plum — gradient stop, accent */
+  --sf-color-cyan: #12626F;            /* rare accent: info, one per page */
 
   /* The primary call-to-action: fill, hover fill, and the label that sits on
      both. The three move together, so a CTA never loses its contrast. */
-  --sf-color-cta: #F5D76E;
-  --sf-color-cta-hover: #FFEFA6;
-  --sf-color-cta-contrast: #0B0B0D;
+  --sf-color-cta: #8C6410;
+  --sf-color-cta-hover: #6E4E0A;
+  --sf-color-cta-contrast: #FFFCF5;
 
   /* ---- Gradients -------------------------------------------------------- */
   /* The signature: hairlines, eyebrow underlines, active indicators, one
-     gradient-text keyword per section, the full-page CTA wash. */
-  --sf-gradient-signature: linear-gradient(135deg, #F5D76E, #FF4FD8, #8B5CF6);
-  --sf-gradient-gold: linear-gradient(135deg, #FFEFA6, #F5D76E 50%, #B88924);
-  --sf-gradient-brand: linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330);
-  /* One wash behind the announcement bar, whichever message is showing. */
-  --sf-gradient-announce: linear-gradient(90deg, #141416 0%, #2A2330 100%);
+     gradient-text keyword per section, the full-page CTA wash. All three stops
+     are ink here, not light — `.sf-gradient-text` clips this to glyphs, so a
+     stop that fails 4.5:1 on cream would be an unreadable syllable. */
+  --sf-gradient-signature: linear-gradient(135deg, #8C6410, #A63D6A, #5B3E96);
+  --sf-gradient-gold: linear-gradient(135deg, #A87C14, #8C6410 50%, #513707);
+  --sf-gradient-brand: linear-gradient(135deg, #FFFDF9, #F4ECDD 55%, #EFE4DC);
+  /* One wash behind the announcement bar, whichever message is showing. The
+     bar lives in `.sf-on-dark`, so this value is the fallback rather than the
+     one that paints — the dark scope declares its own. */
+  --sf-gradient-announce: linear-gradient(90deg, #FFFDF9 0%, #F3E8DF 100%);
+  /* How the signature gradient BLENDS where it is laid over a photographic
+     wash (the full-page CTA). On a dark ground the stops have to be screened
+     in to show through; on a cream one screening onto near-white is a no-op,
+     so the same layer multiplies down instead. One token, both behaviours. */
+  --sf-blend-signature: multiply;
 
   /* ---- Concern accents --------------------------------------------------- */
   /* Six chip accents, used as borders and as text at ≥ 4.5:1 on the ground. */
-  --sf-concern-pink: #FF4FD8;
-  --sf-concern-violet: #8B5CF6;
-  --sf-concern-cyan: #5DE7FF;
-  --sf-concern-gold: #F5D76E;
-  --sf-concern-mint: #7ED9A6;
-  --sf-concern-rose: #F7A8C4;
+  --sf-concern-pink: #A63D6A;
+  --sf-concern-violet: #5B3E96;
+  --sf-concern-cyan: #12626F;
+  --sf-concern-gold: #8C6410;
+  --sf-concern-mint: #1B6B45;
+  --sf-concern-rose: #A03F5C;
 
   /* ---- Glass ------------------------------------------------------------- */
-  /* The `.sf-glass` primitive (Prompt 04) is built from these. Budget: at most
-     two blurred layers in view, and never on a full-page scrolling background. */
-  --sf-glass-bg: rgba(255, 255, 255, 0.06);
-  --sf-glass-bg-strong: rgba(255, 255, 255, 0.08); /* header after scroll, modals */
-  --sf-glass-border: rgba(255, 255, 255, 0.08);
+  /* The `.sf-glass` primitive is built from these. On cream the recipe inverts:
+     a MOSTLY-OPAQUE white veil over an ink hairline, rather than a whisper of
+     white over a white one. 6% white on cream is invisible; 66% is frosted.
+     Budget unchanged: at most two blurred layers in view, and never on a
+     full-page scrolling background. */
+  --sf-glass-bg: rgba(255, 255, 255, 0.66);
+  --sf-glass-bg-strong: rgba(255, 255, 255, 0.86); /* header after scroll, modals */
+  --sf-glass-border: rgba(27, 23, 20, 0.10);
   --sf-glass-blur: 20px;
-  --sf-glass-fallback: rgba(20, 20, 22, 0.92);     /* @supports not backdrop-filter */
+  --sf-glass-fallback: #FFFCF6;                    /* @supports not backdrop-filter */
 
   /* ---- Ambient glow ------------------------------------------------------ */
   /* Small blurred elements placed BEHIND products and CTAs — never another
-     backdrop filter. Driven by `GlowWrap` / `.sf-glow-*` (Prompts 04–05). */
-  --sf-glow-pink: radial-gradient(closest-side, rgba(255, 79, 216, 0.22), transparent 70%);
-  --sf-glow-violet: radial-gradient(closest-side, rgba(139, 92, 246, 0.22), transparent 70%);
-  --sf-glow-gold: radial-gradient(closest-side, rgba(245, 215, 110, 0.16), transparent 70%);
+     backdrop filter. Driven by `GlowWrap` / `.sf-glow-*`. Daylight versions:
+     warm, low-saturation haloes that lift a card off the cream instead of the
+     neon lamps the dark theme used. */
+  --sf-glow-pink: radial-gradient(closest-side, rgba(198, 122, 156, 0.30), transparent 70%);
+  --sf-glow-violet: radial-gradient(closest-side, rgba(140, 118, 190, 0.26), transparent 70%);
+  --sf-glow-gold: radial-gradient(closest-side, rgba(198, 154, 46, 0.30), transparent 70%);
 
   /* ---- Radius ----------------------------------------------------------- */
   /* Soft and modern; pills for every button. Mirrored in tokens.js TOKENS.radius. */
@@ -250,16 +304,19 @@
   /* ---- Shadows ---------------------------------------------------------- */
   /* Two tiers carry the system: --sf-shadow-1 for cards and glass, -2 for
      drawers, modals and anything that leaves the page. The xs/sm/md/lg names
-     are kept (existing consumers) and re-pointed onto the same language. */
-  --sf-shadow-1: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --sf-shadow-2: 0 20px 60px rgba(0, 0, 0, 0.5);
-  --sf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --sf-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+     are kept (existing consumers) and re-pointed onto the same language.
+     A BLACK shadow on cream reads as dirt, so every one of these is a warm
+     brown at a low alpha — on a light page the shadow IS the separation that
+     the dark theme got from a lighter surface, so it does more work here. */
+  --sf-shadow-1: 0 10px 30px rgba(74, 58, 32, 0.12);
+  --sf-shadow-2: 0 22px 60px rgba(74, 58, 32, 0.20);
+  --sf-shadow-xs: 0 1px 2px rgba(74, 58, 32, 0.10);
+  --sf-shadow-sm: 0 2px 10px rgba(74, 58, 32, 0.10);
   --sf-shadow-md: var(--sf-shadow-1);
   --sf-shadow-lg: var(--sf-shadow-2);
   /* One gold ring, everywhere something takes keyboard focus. */
-  --sf-color-focus-ring: #F5D76E;
-  --sf-shadow-focus: 0 0 0 3px rgba(245, 215, 110, 0.55);
+  --sf-color-focus-ring: #8C6410;
+  --sf-shadow-focus: 0 0 0 3px rgba(140, 100, 16, 0.45);
 
   /* ---- Typography ------------------------------------------------------- */
   /* Two families carry the whole storefront: FRAUNCES for display (the warm,
@@ -353,10 +410,152 @@
   --sf-z-toast: 1200;
 }
 
+/* =============================================================================
+ * `.sf-on-dark`  —  THE ONE DARK SURFACE
+ * =============================================================================
+ * Not a theme and not a mode: a SCOPE. The class re-points the colour half of
+ * the token set onto the near-black ground the LAMIKAA lockup was drawn for,
+ * and nothing else — the spacing, radius, type and motion tokens are declared
+ * once on `:root` and inherit straight through, so a dark subtree cannot drift
+ * structurally from the page around it.
+ *
+ * WHO WEARS IT, and why each one earns it:
+ *   AnnouncementBar   the band above the masthead, so the chrome starts dark
+ *   Header            the golden wordmark's plate — this is the whole reason
+ *   MegaPanel         it drops out of the masthead and must match it
+ *   SidebarMenu       the same masthead, opened sideways on a phone
+ *   BottomNav         the chrome closing the page at the foot of a phone
+ *   Footer            the second lockup, and the page's full stop
+ *   Lightbox          a product photograph at full screen pops off black
+ *
+ * Nothing else. A dark card in the middle of a cream page would read as an
+ * error, and a dark FORM would cost every input its contrast figures.
+ *
+ * The values below are the storefront's previous "Luxury Skincare After Dark"
+ * palette, unchanged — champagne gold at 13.4:1 on #0B0B0D, warm white type,
+ * the neon pink/violet ambience — because that palette was correct for this
+ * ground and is still exactly what the chrome needs.
+ *
+ * EVERY colour token `:root` declares is restated here. That is not redundancy:
+ * a token left out would inherit its CREAM value into the dark scope, and the
+ * failure mode is invisible text rather than a build error.
+ * ========================================================================== */
+.sf-on-dark {
+  color-scheme: dark;
+
+  /* ---- Brand ------------------------------------------------------------- */
+  --sf-color-primary: #F5D76E;
+  --sf-color-primary-dark: #B88924;
+  --sf-color-primary-light: #FFEFA6;
+  --sf-color-primary-contrast: #0B0B0D; /* near-black on gold — 13.4:1 */
+  --sf-color-primary-soft: rgba(245, 215, 110, 0.10);
+  --sf-color-secondary: #F5D76E;
+  --sf-color-accent: #F5D76E;
+  --sf-gradient-primary: linear-gradient(135deg, #FFEFA6 0%, #F5D76E 50%, #B88924 100%);
+  --sf-gradient-primary-hover: linear-gradient(135deg, #B88924 0%, #F5D76E 50%, #FFEFA6 100%);
+
+  /* ---- Surfaces & text -------------------------------------------------- */
+  --sf-color-bg: #0B0B0D;
+  --sf-color-bg-rgb: 11, 11, 13;
+  --sf-color-surface: #141416;
+  --sf-color-surface-2: #1C1C20;
+  --sf-color-surface-hover: #222228;
+  --sf-color-text: #F7F5F0;
+  --sf-color-text-secondary: #B8B5B0;
+  --sf-color-text-muted: rgba(247, 245, 240, 0.62);
+  --sf-color-border: rgba(255, 255, 255, 0.08);
+  --sf-color-border-strong: rgba(245, 215, 110, 0.35);
+  --sf-color-overlay: rgba(11, 11, 13, 0.72);
+  --sf-color-scrim: rgba(11, 11, 13, 0.72);
+
+  /* ---- Semantic --------------------------------------------------------- */
+  --sf-color-success: #7ED9A6;
+  --sf-color-success-bg: rgba(126, 217, 166, 0.12);
+  --sf-color-warning: #F5C76E;
+  --sf-color-warning-bg: rgba(245, 199, 110, 0.12);
+  --sf-color-danger: #FF8A80;
+  --sf-color-danger-bg: rgba(255, 138, 128, 0.12);
+  --sf-color-info: #5DE7FF;
+  --sf-color-info-bg: rgba(93, 231, 255, 0.10);
+
+  /* ---- Commerce-specific ----------------------------------------------- */
+  --sf-color-star: #F5D76E;
+  --sf-color-price: #F5D76E;
+  --sf-color-compare: #B8B5B0;
+  --sf-color-discount: #7ED9A6;
+  --sf-color-discount-bg: rgba(126, 217, 166, 0.12);
+  --sf-color-badge-bg: rgba(255, 255, 255, 0.06);
+
+  /* ---- Accents ---------------------------------------------------------- */
+  --sf-color-gold: #F5D76E;
+  --sf-color-gold-light: #FFEFA6;
+  --sf-color-gold-deep: #B88924;
+  --sf-color-pink: #FF4FD8;
+  --sf-color-violet: #8B5CF6;
+  --sf-color-cyan: #5DE7FF;
+
+  --sf-color-cta: #F5D76E;
+  --sf-color-cta-hover: #FFEFA6;
+  --sf-color-cta-contrast: #0B0B0D;
+
+  /* ---- Gradients -------------------------------------------------------- */
+  --sf-gradient-signature: linear-gradient(135deg, #F5D76E, #FF4FD8, #8B5CF6);
+  --sf-gradient-gold: linear-gradient(135deg, #FFEFA6, #F5D76E 50%, #B88924);
+  --sf-gradient-brand: linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330);
+  --sf-gradient-announce: linear-gradient(90deg, #141416 0%, #2A2330 100%);
+  --sf-blend-signature: screen;
+
+  /* ---- Concern accents --------------------------------------------------- */
+  --sf-concern-pink: #FF4FD8;
+  --sf-concern-violet: #8B5CF6;
+  --sf-concern-cyan: #5DE7FF;
+  --sf-concern-gold: #F5D76E;
+  --sf-concern-mint: #7ED9A6;
+  --sf-concern-rose: #F7A8C4;
+
+  /* ---- Glass ------------------------------------------------------------- */
+  --sf-glass-bg: rgba(255, 255, 255, 0.06);
+  --sf-glass-bg-strong: rgba(255, 255, 255, 0.08);
+  --sf-glass-border: rgba(255, 255, 255, 0.08);
+  --sf-glass-fallback: rgba(20, 20, 22, 0.92);
+
+  /* ---- Ambient glow ------------------------------------------------------ */
+  --sf-glow-pink: radial-gradient(closest-side, rgba(255, 79, 216, 0.22), transparent 70%);
+  --sf-glow-violet: radial-gradient(closest-side, rgba(139, 92, 246, 0.22), transparent 70%);
+  --sf-glow-gold: radial-gradient(closest-side, rgba(245, 215, 110, 0.16), transparent 70%);
+
+  /* ---- Shadows ----------------------------------------------------------- */
+  /* Black again, and heavier: on a near-black ground a warm low-alpha shadow
+     is invisible, and the chrome still has to lift off the page under it. */
+  --sf-shadow-1: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --sf-shadow-2: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --sf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sf-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  /* The md/lg aliases have to be RESTATED, not inherited. A custom property's
+     value is substituted when it is computed on the element that declares it,
+     so `--sf-shadow-md: var(--sf-shadow-1)` on `:root` computes to the CREAM
+     page's shadow there and is inherited into this scope already resolved —
+     re-pointing --sf-shadow-1 below would not reach it. Two lines, and the
+     alias follows its target on both surfaces. */
+  --sf-shadow-md: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --sf-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --sf-color-focus-ring: #F5D76E;
+  --sf-shadow-focus: 0 0 0 3px rgba(245, 215, 110, 0.55);
+
+  /* INK, BUT NOT GROUND. The scope sets `color` so that anything inside it
+     which never got a colour of its own inherits warm white rather than
+     espresso — the one failure that is invisible until it is shipped. It does
+     NOT set a background: every component that wears the class paints its own
+     ground (the masthead's is glass, and a `background-color` here would be a
+     specificity race with `.sf-glass` that depends on bundler emission order). */
+  color: var(--sf-color-text);
+}
+
 /* Blur is expensive on phones and reads as mud at full strength on a small
    panel; the glass recipe halves it below the tablet breakpoint. */
 @media (max-width: 768px) {
-  :root {
+  :root,
+  .sf-on-dark {
     --sf-glass-blur: 12px;
   }
 }
@@ -392,9 +591,15 @@
  * 1.5:1 there and would vanish). This is the same, documented exception the
  * admin's invoice stylesheet already takes — ink on paper is not a palette.
  * Effects that mean nothing on paper (glass, glow, shadow, motion) resolve away.
+ *
+ * `.sf-on-dark` IS LISTED ALONGSIDE `:root` because it has to be: the masthead
+ * and the footer are on the page a visitor prints, and a class beats `:root` on
+ * specificity — without the second selector the chrome would keep its near-black
+ * ground and its champagne gold, and print as a black slab or as nothing at all.
  * ========================================================================== */
 @media print {
-  :root {
+  :root,
+  .sf-on-dark {
     color-scheme: light;
 
     /* ---- Grounds → paper ------------------------------------------------ */
@@ -406,6 +611,7 @@
     --sf-color-badge-bg: #ffffff;
     --sf-color-primary-soft: #ffffff;
     --sf-color-overlay: transparent;
+    --sf-color-scrim: transparent;
     --sf-glass-bg: transparent;
     --sf-glass-bg-strong: transparent;
     --sf-glass-fallback: #ffffff;
@@ -480,6 +686,7 @@
     --sf-gradient-announce: none;
     --sf-gradient-primary: none;
     --sf-gradient-primary-hover: none;
+    --sf-blend-signature: normal;
 
     /* Nothing animates on paper. */
     --sf-duration-fast: 0s;

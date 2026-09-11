@@ -5,13 +5,20 @@ import { PALETTE } from "../theme/colors";
 // =============================================================================
 // THEME CONTEXT — one theme, built once
 // =============================================================================
-// The storefront has a SINGLE dark theme ("Luxury Skincare After Dark"). There
-// is no mode state, no toggle, no stored preference and no pre-mount branching:
+// The storefront has a SINGLE light theme ("Black Rice in Daylight"). There is
+// no mode state, no toggle, no stored preference and no pre-mount branching:
 // `storefront-tokens.css` declares one `:root` token set with
-// `color-scheme: dark`, `public/index.html` paints the same ground before any
-// bundle arrives, and `meta[name=theme-color]` is static in the markup. This
-// provider exists only to build the MUI theme for the handful of MUI-based
-// storefront bits (the Header controls, CssBaseline) and hand it down.
+// `color-scheme: light`, `public/index.html` paints the same cream ground
+// before any bundle arrives, and `meta[name=theme-color]` is static in the
+// markup. This provider exists only to build the MUI theme for the handful of
+// MUI-based storefront bits (the header account menu, CssBaseline) and hand it
+// down.
+//
+// The near-black chrome — masthead, mega panel, mobile nav, footer, lightbox —
+// is NOT a second MUI theme. It is the `.sf-on-dark` token scope in the CSS
+// layer, and the two MUI surfaces that float out of it (the account menu and
+// its divider) are portalled to <body>, land on the cream page rather than
+// inside the dark bar, and are correct in this palette. So there is one theme.
 //
 // MUI consumes `src/theme/colors.js`; the CSS Modules consume the `--sf-*`
 // tokens. The two are mirrors of each other — retune them together.
@@ -40,21 +47,24 @@ const iconButtonTouchOverrides = {
   },
 };
 
-// --sf-color-border — the hairline every dark surface is drawn with.
-const HAIRLINE = "rgba(255, 255, 255, 0.08)";
+// --sf-color-border — the hairline every cream surface is drawn with. Ink at a
+// low alpha, not white: white-on-cream is not a line, it is nothing.
+const HAIRLINE = "rgba(27, 23, 20, 0.12)";
+// --sf-color-border-strong — the emphasised hairline (hover, focus-within).
+const HAIRLINE_STRONG = "rgba(140, 100, 16, 0.55)";
 // --sf-ease / --sf-duration-fast, spelled out because MUI takes strings.
 const TRANSITION = "0.16s cubic-bezier(0.2, 0.7, 0.2, 1)";
 
 const theme = createTheme({
   palette: {
-    mode: "dark",
+    mode: "light",
     primary: PALETTE.primary,
     secondary: PALETTE.secondary,
     background: PALETTE.background,
     text: PALETTE.text,
     divider: HAIRLINE,
     action: {
-      hover: "rgba(245, 215, 110, 0.10)", // --sf-color-primary-soft
+      hover: "rgba(140, 100, 16, 0.10)", // --sf-color-primary-soft
     },
   },
   typography: {
@@ -112,8 +122,8 @@ const theme = createTheme({
     borderRadius: 14, // --sf-radius-md
   },
   components: {
-    // Pills everywhere, and the one solid accent is gold under a near-black
-    // label. Surfaces stay flat: no elevation tint, no coloured glow.
+    // Pills everywhere, and the one solid accent is antique gold under a warm-
+    // white label. Surfaces stay flat: no elevation tint, no coloured glow.
     MuiButton: {
       styleOverrides: {
         root: {
@@ -130,7 +140,7 @@ const theme = createTheme({
         },
         contained: {
           backgroundColor: PALETTE.primary.main,
-          color: PALETTE.primary.contrastText, // near-black on gold — 13.4:1
+          color: PALETTE.primary.contrastText, // warm white on gold — 5.2:1
           boxShadow: "none",
           "&:hover": {
             backgroundColor: PALETTE.primary.light,
@@ -138,7 +148,7 @@ const theme = createTheme({
           },
         },
         outlined: {
-          borderColor: "rgba(245, 215, 110, 0.35)", // --sf-color-border-strong
+          borderColor: HAIRLINE_STRONG, // --sf-color-border-strong
           color: PALETTE.text.primary,
         },
       },
@@ -153,7 +163,7 @@ const theme = createTheme({
           boxShadow: "none",
           transition: `border-color ${TRANSITION}`,
           "&:hover": {
-            borderColor: "rgba(245, 215, 110, 0.35)", // --sf-color-border-strong
+            borderColor: HAIRLINE_STRONG, // --sf-color-border-strong
           },
         },
       },
@@ -163,12 +173,12 @@ const theme = createTheme({
         root: {
           "& .MuiOutlinedInput-root": {
             borderRadius: 14, // --sf-radius-md
-            backgroundColor: "#1C1C20", // --sf-color-surface-2
+            backgroundColor: "#F1E9DA", // --sf-color-surface-2
             "& fieldset": {
               borderColor: HAIRLINE,
             },
             "&:hover fieldset": {
-              borderColor: "rgba(245, 215, 110, 0.35)",
+              borderColor: HAIRLINE_STRONG,
             },
             "&.Mui-focused fieldset": {
               borderColor: PALETTE.primary.main, // gold focus
@@ -184,7 +194,7 @@ const theme = createTheme({
           backgroundColor: PALETTE.background.paper,
           backgroundImage: "none",
           borderColor: HAIRLINE,
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2
+          boxShadow: "0 22px 60px rgba(74, 58, 32, 0.20)", // --sf-shadow-2
         },
       },
     },
@@ -199,8 +209,8 @@ const theme = createTheme({
         },
       },
     },
-    // MUI tints dark Paper by elevation; these surfaces stay flat and are
-    // separated by hairlines instead.
+    // MUI tints Paper by elevation; these surfaces stay flat and are separated
+    // by hairlines and a warm shadow instead.
     MuiPaper: {
       styleOverrides: {
         root: {
@@ -218,7 +228,7 @@ const theme = createTheme({
           backgroundImage: "none",
           border: `1px solid ${HAIRLINE}`,
           borderRadius: 14, // --sf-radius-md
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2
+          boxShadow: "0 22px 60px rgba(74, 58, 32, 0.20)", // --sf-shadow-2
         },
       },
     },

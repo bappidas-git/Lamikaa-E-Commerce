@@ -21,7 +21,7 @@ copy and must survive editing (`src/config/brand.js → brand.legalNote`).
 | Layer | What |
 |---|---|
 | App | Create React App 5 (`react-scripts@5.0.1`), React 18, React Router 6 |
-| Styling | CSS Modules over the `--sf-*` design tokens in `src/theme/` — **one dark theme**, no light/dark toggle, no hard-coded colours |
+| Styling | CSS Modules over the `--sf-*` design tokens in `src/theme/` — **one light theme** (warm cream page, espresso type, antique gold) with a single opt-in `.sf-on-dark` scope for the near-black chrome, no light/dark toggle, no hard-coded colours |
 | Admin | MUI 5 on its own isolated dark theme (`src/theme/adminTheme.js`) |
 | Motion | framer-motion, every animation gated on `prefers-reduced-motion` |
 | Data | `src/services/api.js` — one contract, two modes (JSON Server / Laravel) |

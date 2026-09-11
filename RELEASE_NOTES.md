@@ -1,5 +1,73 @@
 # Release notes
 
+## 1.2.0-lamikaa — 2026-09-11
+
+The storefront is light. The page is a warm cream under espresso type, the
+photographs sit on near-white plates, and the navigation — the announcement
+band, the masthead, the mobile drawer, the bottom bar and the footer — stays
+near-black, because the LAMIKAA wordmark is champagne gold and has no
+light-ground variant.
+
+### Changed
+
+- **One light theme, "Black Rice in Daylight".** `:root` in
+  `src/theme/storefront-tokens.css` is now the cream set: `#F8F3EA` ground,
+  `#FFFDF9` surfaces, `#1B1714` type, `#8C6410` antique gold. `colors.js` (the
+  MUI mirror) and `ThemeContext.js` follow it, and `html` is
+  `color-scheme: light`. There is still exactly one theme, no toggle and no
+  stored preference; no component gained a colour of its own.
+
+- **`.sf-on-dark` — a scope, not a second theme.** The same role tokens,
+  re-pointed onto the previous near-black palette, applied to the six pieces of
+  chrome and to the PDP lightbox. A subtree that wears the class flips whole —
+  ground, ink, accent, glass, glow, shadow — so the masthead keeps the
+  champagne gold the lockup was drawn for while the page under it is cream.
+  Print overrides both surfaces, so a receipt still comes out as ink on paper.
+
+- **The accent split in two.** `--sf-color-gold` is antique gold (4.9:1 on
+  cream) on the page and champagne gold (13.4:1) in the chrome; the signature
+  gradient runs gold → berry → plum on cream and gold → neon pink → violet in
+  the chrome. Every stop is ink-strength on its own ground, because
+  `.sf-gradient-text` clips that gradient to glyphs.
+
+- **Glass inverts where it is chrome.** `.sf-glass` is a veil of white and that
+  only works over a dark ground; an element carrying both `.sf-on-dark` and
+  `.sf-glass` is a dark bar floating over a cream page, so the veil becomes the
+  chrome's own near-black at 86% (94% for `--strong`). Glass CHILDREN inside the
+  chrome keep the white recipe — they sit on the bar's own ground.
+
+- **The masthead no longer disappears over the hero.** It was fully transparent
+  while the hero's opening band was on screen, which relied on the hero being
+  the page ground. It is a solid near-black bar now, at every scroll position.
+
+### Fixed
+
+- **The hero photograph was painting over the announcement band.** The backdrop
+  bled 100px upward to reach the top of the page behind a masthead that was
+  transparent over it. With the chrome opaque that bleed only ever reached the
+  band — which is not in the header's stacking context — and painted a
+  scrimmed slice of the picture across it. The hero starts where the hero
+  starts. (The bug predates this release; on a near-black storefront a
+  near-black scrim over a near-black band was invisible.)
+
+- **Two scrims that were one token.** `--sf-color-overlay` was doing two
+  opposite jobs: the plate a label sits on over a photograph (which has to
+  follow the page, so it is light now) and the backdrop behind a modal or drawer
+  (which has to stay dark, or a pale panel has nothing to separate from). The
+  backdrop is `--sf-color-scrim`.
+
+- **The gold lockup on a light surface.** The two places the wordmark appears
+  inside the cream page — the auth dialog's header and the brand hero the
+  storefront falls back to when the catalogue is empty — now set it on
+  `.sf-lockup-plate`, a patch of the chrome's own ground.
+
+### Gates
+
+- `npm test` — 369 tests, 32 suites, all passing.
+- `npm run build` — clean, no warnings.
+- Contrast swept in Chromium over 16 routes × {1440×900, 390×844}: every text
+  node on a resolvable ground meets WCAG AA (4.5:1, or 3:1 at large sizes).
+
 ## 1.1.2-lamikaa — 2026-09-11
 
 Every row of cards a visitor can swipe is now one component, and the cards in it

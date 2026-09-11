@@ -115,10 +115,20 @@ a.step::after {
 .toneDanger { --sf-chip-tone: var(--sf-color-danger); }
 .toneInfo { --sf-chip-tone: var(--sf-color-info); }
 
-/* Violet is the one accent that fails AA as 13px text on its own 10% tint
-   (4.1:1 measured on --sf-color-surface). The mix restores 5.9:1 at the same
-   hue — the same correction `.sf-flag-hot` makes in the primitives — while the
-   tint and the hairline stay pure violet. */
+/* Violet was the one accent that failed AA as 13px text on its own 10% tint
+   (4.1:1 measured on the old near-black --sf-color-surface). The mix pulls it a
+   fifth of the way toward the page's own ink — the same correction
+   `.sf-flag-hot` makes in the primitives — while the tint and the hairline stay
+   pure violet.
+
+   IT IS WRITTEN AGAINST `--sf-color-text` rather than a literal, so it survived
+   the move to the cream page by inverting with it: on the dark ground the mix
+   lifted violet toward warm white, and on cream it deepens it toward espresso.
+   Either way it moves AWAY from the ground, so the rule can only raise
+   contrast. On the light palette the plum is already 7.6:1 and does not need
+   the help; the mix is kept because it is correct in both surfaces and this
+   chip is also rendered inside `.sf-on-dark` (the mega panel's concern row),
+   where it is still doing the work it was written for. */
 .toneViolet.concern,
 .toneViolet.status {
   color: color-mix(in srgb, var(--sf-concern-violet) 78%, var(--sf-color-text));

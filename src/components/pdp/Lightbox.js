@@ -334,7 +334,9 @@ const Lightbox = ({
       showClose={false}
       closeOnBackdrop={false}
       aria-label={`${product?.name || "Product"} media viewer`}
-      className={styles.panel}
+      /* The one non-chrome dark surface: a product photograph at full screen
+         reads best off black, and this dialog is nothing but the photograph. */
+      className={`sf-on-dark ${styles.panel}`}
       onKeyDown={onKeyDown}
     >
       <div className={styles.head}>

@@ -294,6 +294,11 @@ const Header = () => {
     isCartOpen || sidebarOpen || searchModalOpen || authModalOpen;
 
   const headerClasses = [
+    // The chrome scope: the masthead keeps the near-black ground and the
+    // champagne gold the LAMIKAA wordmark was drawn for, while the page under
+    // it is cream. Nothing in this file reads a colour — the class re-points
+    // the tokens and every rule in Header.module.css follows.
+    "sf-on-dark",
     styles.header,
     overHero ? styles.transparent : "sf-glass",
     !overHero && scrolled ? "sf-glass--strong" : "",

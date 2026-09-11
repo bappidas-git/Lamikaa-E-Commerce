@@ -5,14 +5,22 @@
 // its own palette in `adminTheme.js` and is NOT affected by this file.
 //
 // This is the MUI mirror of `storefront-tokens.css`. That file is the
-// source of truth (and documents the role of every hex — see
-// prompts/_reference/DESIGN_SYSTEM.md §2); keep the two in sync.
+// source of truth (and documents the role of every hex); keep the two in
+// sync.
 //
-// There is ONE palette: "Luxury Skincare After Dark". Deep near-black
-// grounds, warm-white type, champagne gold as the single accent that may
-// fill a button — `primary` IS the gold, and `primary.contrastText` is the
-// near-black label that sits on it (13.4:1). There is no light mode, no
-// stored preference and no toggle.
+// There is ONE palette: "Black Rice in Daylight". Warm cream grounds,
+// near-white plates, espresso type, and an ANTIQUE gold as the single
+// accent that may fill a button — `primary` IS that gold, and
+// `primary.contrastText` is the warm-white label that sits on it (5.2:1).
+// There is no light/dark mode, no stored preference and no toggle.
+//
+// WHY THE GOLD IS NOT #F5D76E HERE. The champagne gold the brand's
+// lockup is drawn in measures 1.4:1 on cream — it is a colour for a
+// near-black ground and it vanishes on this one. It is still in the
+// system, but only inside the `.sf-on-dark` scope (the masthead, the
+// footer, the mobile nav, the lightbox), where the wordmark lives and
+// where it reads at 13.4:1. Everything MUI paints here is page-side, so
+// page-side is the palette it gets.
 //
 // HOW TO USE:
 //   1. Change the hex values below.
@@ -21,41 +29,41 @@
 // =====================================================================
 
 export const PALETTE = {
-  // Primary — champagne gold. Fills the contained button; its label is the
-  // page ground, which is why `contrastText` is near-black rather than white.
+  // Primary — antique gold. Fills the contained button; its label is warm
+  // white, because on a cream page the fill has to be the dark half of the
+  // pair (a pale fill on a pale ground is not a button).
   primary: {
-    main: "#F5D76E", // --sf-color-primary / --sf-color-gold
-    light: "#FFEFA6", // --sf-color-gold-light — hover
-    dark: "#B88924", // --sf-color-gold-deep — pressed
-    contrastText: "#0B0B0D", // --sf-color-primary-contrast
+    main: "#8C6410", // --sf-color-primary / --sf-color-gold
+    light: "#6E4E0A", // --sf-color-gold-light — hover (DEEPER on cream)
+    dark: "#513707", // --sf-color-gold-deep — pressed
+    contrastText: "#FFFCF5", // --sf-color-primary-contrast
   },
-  // Secondary accent — neon pink. Ambient only (glows, gradient stops, the
-  // rare micro-label); never a large fill and never under gold text.
+  // Secondary accent — berry. A gradient stop and a concern accent; never a
+  // large fill and never under gold text.
   secondary: {
-    main: "#FF4FD8", // --sf-color-pink
-    light: "#FF8AE6",
-    dark: "#C21FA4",
+    main: "#A63D6A", // --sf-color-pink
+    light: "#C4658C",
+    dark: "#7E2A4C",
   },
   // Page and component backgrounds
   background: {
-    default: "#0B0B0D", // --sf-color-bg — never pure black
-    paper: "#141416", // --sf-color-surface
+    default: "#F8F3EA", // --sf-color-bg — warm cream
+    paper: "#FFFDF9", // --sf-color-surface
   },
   // Text colors
   text: {
-    primary: "#F7F5F0", // --sf-color-text — warm white, 18.9:1
-    secondary: "#B8B5B0", // --sf-color-text-secondary — 10.5:1
+    primary: "#1B1714", // --sf-color-text — espresso, 16.1:1
+    secondary: "#544C42", // --sf-color-text-secondary — 7.6:1
   },
-  // Gradients. `primary` fills contained buttons and stays gold (a near-black
-  // label needs a light ground); `hero` mirrors --sf-gradient-brand, the deep
-  // wash behind the hero and the full-bleed bands.
+  // Gradients. `primary` fills contained buttons; `hero` mirrors
+  // --sf-gradient-brand, the pale wash behind full-bleed bands.
   gradient: {
-    primary: "linear-gradient(135deg, #FFEFA6 0%, #F5D76E 50%, #B88924 100%)",
+    primary: "linear-gradient(135deg, #A87C14 0%, #8C6410 50%, #6E4E0A 100%)",
     primaryReverse:
-      "linear-gradient(135deg, #B88924 0%, #F5D76E 50%, #FFEFA6 100%)",
-    hero: "linear-gradient(135deg, #0B0B0D 0%, #1C1C20 55%, #2A2330 100%)",
+      "linear-gradient(135deg, #6E4E0A 0%, #8C6410 50%, #A87C14 100%)",
+    hero: "linear-gradient(135deg, #FFFDF9 0%, #F4ECDD 55%, #EFE4DC 100%)",
   },
   // Body background. Static — the same ground the pre-mount markup in
   // public/index.html paints, so there is nothing to reconcile at mount.
-  bodyBackground: "#0B0B0D",
+  bodyBackground: "#F8F3EA",
 };

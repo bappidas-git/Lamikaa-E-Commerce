@@ -35,9 +35,13 @@
   padding-bottom: 0;
   padding-left: max(var(--sf-tap-target), env(safe-area-inset-left));
   padding-right: max(var(--sf-tap-target), env(safe-area-inset-right));
-  /* 4% warm white: the glass ground one step quieter than --sf-glass-bg, in the
-     brand's own white rather than a pure one. */
-  background: color-mix(in srgb, var(--sf-color-text) 4%, transparent);
+  /* 4% warm white over the chrome's near-black ground — the same value this
+     band has always had, mixed INTO the ground rather than laid over it as a
+     transparency. The band wears `.sf-on-dark` and sits at the top of a cream
+     page: 4% white over what is actually behind it would be 4% white over
+     cream, and the first thing a visitor sees would be a pale strip where the
+     dark run of navigation is supposed to start. */
+  background: color-mix(in srgb, var(--sf-color-text) 4%, var(--sf-color-bg));
   border-bottom: 1px solid var(--sf-glass-border);
   color: var(--sf-color-text-secondary);
   font-family: var(--sf-font-family);
