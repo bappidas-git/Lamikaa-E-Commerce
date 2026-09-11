@@ -12,9 +12,18 @@
  *
  * The surface is the `.sf-glass` / `.sf-glass--strong` primitive applied from
  * Header.js, under `.sf-on-dark` — which is what turns that recipe from a white
- * veil into the chrome's smoked near-black one. This module never restates the
+ * veil into the chrome's smoked espresso one. This module never restates the
  * recipe; it only says where the blur has to stop (the two-layer budget) and
  * what the over-the-hero state looks like.
+ *
+ * THE BAR IS ESPRESSO, NOT GRAPHITE, and not by anything in this file. The
+ * chrome ground moved from #0B0B0D to #17120F in storefront-tokens.css, where
+ * the reasoning lives: a neutral-to-blue black was the one element on a warm
+ * cream storefront that belonged to a different palette, so the whole dark
+ * ladder was re-cut at the page ink's own hue. Every rule below reads a token
+ * and therefore followed it — which is the point of the arrangement, and the
+ * reason a re-skin of the masthead is a palette edit rather than a sweep
+ * through six component sheets.
  *
  * Fully token-driven: no hardcoded colour, radius, shadow or duration.
  * ========================================================================== */
@@ -41,7 +50,7 @@
    photograph the admin chooses, and a transparent bar would put warm-white type
    and a gold wordmark over whatever happens to be up there.
 
-   So it keeps a ground, and the ground is the chrome's own near-black, solid.
+   So it keeps a ground, and the ground is the chrome's own espresso, solid.
    A fade to transparent was tried first and it is the wrong answer on a cream
    page: fading toward nothing means fading toward the cream, so the bottom half
    of the bar reads as a band of grey smudge under the black rather than as a
@@ -52,7 +61,29 @@
    flush continuation of the chrome above it, and `.strong` below is where it
    lifts off the page once the hero has scrolled away. */
 .transparent {
-  background: var(--sf-color-bg);
+  /* OPAQUE AT BOTH STOPS. Not a fade — see above; this is the chrome ground
+     with the surface step above it, which is a difference of about nine values
+     over 64px. You do not read it as a gradient, you read it as the bar having
+     a top edge: a full-bleed rectangle of one flat colour across a photograph
+     is the thing that makes a masthead look printed on rather than built, and
+     the fix costs nothing because both stops are already grounds this scope
+     declares.
+
+     THE COLOUR IS A LONGHAND UNDER THE IMAGE, and it is not decoration. The
+     `background` shorthand resets `background-color` to `transparent`, and
+     `.header` transitions `background` — so when the sentinel scrolls out and
+     this class is swapped for `.sf-glass`, the browser would interpolate the
+     colour up from nothing while flipping the gradient to `none` DISCRETELY at
+     the halfway mark. That is one frame of half-opaque bar with the hero
+     showing through it. Declaring the ground colour separately means the flip
+     is between the gradient and a ground that is already solid, which is the
+     same ~3% step at the top edge that nobody can see. */
+  background-color: var(--sf-color-bg);
+  background-image: linear-gradient(
+    180deg,
+    var(--sf-color-surface) 0%,
+    var(--sf-color-bg) 72%
+  );
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   border-bottom-color: transparent;
@@ -60,11 +91,23 @@
 }
 
 /* Scrolled: `.sf-glass--strong` takes the chrome veil from 86% to 94% of the
-   near-black ground (storefront-primitives.css, "glass that is also chrome"),
-   and this firms the hairline under it to the emphasised token. NOT a second shadow —
+   espresso ground (storefront-primitives.css, "glass that is also chrome"),
+   and this firms the hairline under it to the emphasised token — champagne
+   gold at 35%, which is the seam that ties the dark bar to the lockup above it
+   and to the gold running through the cream page below. NOT a second shadow —
    `.sf-glass` already carries --sf-shadow-1 at rest, so restating it here would
-   have made the scrolled state a class that changes nothing you can see. */
-.strong {
+   have made the scrolled state a class that changes nothing you can see.
+
+   TRIPLED, and it has to be. This rule was written as a bare `.strong` and in
+   that form it never painted once: `.sf-on-dark.sf-glass` sets `border-color`
+   for all four sides and is a TWO-class selector, so it outranks a one-class
+   `border-bottom-color` no matter which sheet the bundler emits last, and the
+   scrolled masthead kept the resting 12% warm-white hairline. Doubling would
+   only tie on specificity and hand the decision back to emission order, which
+   is the thing this file's other overrides (`.avatar.avatar`,
+   `.menuItem.menuItem:hover`) already refuse to depend on. Three wins
+   outright. */
+.strong.strong.strong {
   border-bottom-color: var(--sf-color-border-strong);
 }
 
@@ -140,10 +183,13 @@
 
 /* ---- Wordmark ----------------------------------------------------------- */
 /* Transparent-ground artwork directly on the ground — no plate, no glow; the
-   logo's own keyline carries it on #0B0B0D and on glass (PACKAGING_NOTES §1).
-   That near-black is why the masthead wears `.sf-on-dark` while the page under
-   it is cream: the wordmark is drawn in champagne gold and has no light-ground
-   variant, so the ground comes to it. */
+   logo's own keyline carries it on the chrome ground and on glass
+   (PACKAGING_NOTES §1). That dark ground is why the masthead wears
+   `.sf-on-dark` while the page under it is cream: the wordmark is drawn in
+   champagne gold and has no light-ground variant, so the ground comes to it.
+   It is #17120F now rather than #0B0B0D — warmer, and a couple of steps up
+   from dead black — which the artwork is indifferent to: gold still measures
+   13.1:1 there, and the keyline was always carrying the edge, not the ground. */
 .logoLink {
   display: inline-flex;
   align-items: center;

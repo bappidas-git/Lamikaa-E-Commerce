@@ -141,13 +141,15 @@
    it is dark. On the light storefront that assumption holds everywhere except
    the one place it matters most: the chrome. The masthead, the mega sheet, the
    mobile nav drawer and the bottom bar all carry `.sf-on-dark` — they are
-   near-black bars floating over a CREAM page — and 6% white over cream is
+   espresso-dark bars floating over a CREAM page — and 6% white over cream is
    cream. The bar would vanish and its warm-white type with it.
 
    So where the two classes meet, the veil inverts: the page ground of the dark
    scope at a high alpha, which reads as smoked glass over whatever scrolls
    beneath. Written as a color-mix of --sf-color-bg (which inside `.sf-on-dark`
-   IS #0B0B0D) rather than an rgba literal, per this sheet's RULES.
+   IS the chrome's #17120F) rather than an rgba literal, per this sheet's
+   RULES. That indirection is why retuning the chrome from graphite to espresso
+   needed no edit in this file: the veil followed the token.
 
    IT IS A COMPOUND SELECTOR, NOT A DESCENDANT ONE, and that is the whole
    design: only the element that IS the chrome takes the dark veil. A glass

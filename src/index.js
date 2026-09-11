@@ -20,14 +20,14 @@ import App from "./App";
 // is the resolved token from src/theme/storefront-tokens.css — re-copy them if
 // that palette moves.
 const CRASH = {
-  bg: "#0B0B0D", // --sf-color-bg
-  card: "#141416", // --sf-color-surface
-  detailsBg: "#1C1C20", // --sf-color-surface-2
-  border: "rgba(255, 255, 255, 0.08)", // --sf-color-border
+  bg: "#17120F", // --sf-color-bg
+  card: "#201A15", // --sf-color-surface
+  detailsBg: "#29221B", // --sf-color-surface-2
+  border: "rgba(247, 243, 234, 0.10)", // --sf-color-border
   heading: "#F7F5F0", // --sf-color-text
-  text: "#B8B5B0", // --sf-color-text-secondary
+  text: "#BDB5A8", // --sf-color-text-secondary
   detail: "#FF8A80", // --sf-color-danger
-  shadow: "0 20px 60px rgba(0, 0, 0, 0.5)", // --sf-shadow-2
+  shadow: "0 20px 60px rgba(23, 15, 6, 0.45)", // --sf-shadow-2
   body: '"Manrope", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif', // --sf-font-family
   display:
     '"Fraunces", "Playfair Display", Georgia, "Times New Roman", serif', // --sf-font-display

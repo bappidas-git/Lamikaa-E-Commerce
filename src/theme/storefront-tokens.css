@@ -78,11 +78,15 @@
  *   #5B3E96  plum — gradient stop, concern accent                    7.6:1
  *   #12626F  teal — info states, one micro-detail per page           6.5:1
  *
- *   DARK ROLES (`.sf-on-dark`)                        contrast on #0B0B0D
- *   #0B0B0D  chrome ground (never pure #000)                            —
- *   #141416  surface — panels, drawers, plates                          —
- *   #F7F5F0  warm-white type                                       18.9:1
- *   #F5D76E  champagne gold — the lockup's own light               13.4:1
+ *   DARK ROLES (`.sf-on-dark`)                        contrast on #17120F
+ *   (the chrome is ESPRESSO, not graphite — same hue family as the page's ink,
+ *    so the masthead and the footer read as the dark end of ONE palette rather
+ *    than as a cold slab dropped onto a warm one. See the scope's own block.)
+ *   #17120F  chrome ground — espresso (never pure #000)                  —
+ *   #201A15  surface — panels, drawers, plates                           —
+ *   #F7F5F0  warm-white type                                        17.1:1
+ *   #BDB5A8  secondary type                                          9.2:1
+ *   #F5D76E  champagne gold — the lockup's own light                13.1:1
  *   #FF4FD8 / #8B5CF6 / #5DE7FF   neon pink · violet · cyan, ambient   —
  *
  * VISUAL BALANCE BUDGET
@@ -436,10 +440,41 @@
  * Nothing else. A dark card in the middle of a cream page would read as an
  * error, and a dark FORM would cost every input its contrast figures.
  *
- * The values below are the storefront's previous "Luxury Skincare After Dark"
- * palette, unchanged — champagne gold at 13.4:1 on #0B0B0D, warm white type,
- * the neon pink/violet ambience — because that palette was correct for this
- * ground and is still exactly what the chrome needs.
+ * THE GROUND IS WARM, AND THAT IS THE POINT. It used to be #0B0B0D — the
+ * "Luxury Skincare After Dark" near-black, carried over whole when the page
+ * went cream. On its own that value is a fine dark ground; sitting inside a
+ * warm cream storefront it is the one element in the system that belongs to a
+ * different palette. #0B0B0D is a NEUTRAL-TO-BLUE black (hue 240°); the page is
+ * #F8F3EA at hue 38° and its type is #1B1714 at hue 26°. Put the two together
+ * and the masthead reads as a hard graphite slab laid ON the storefront rather
+ * than as part of it — coldest thing on the page, against the softest.
+ *
+ * So the whole dark ladder was re-cut at the ESPRESSO'S OWN HUE (~22-30°), a
+ * couple of steps up from dead black:
+ *
+ *     ground   #0B0B0D -> #17120F     surface   #141416 -> #201A15
+ *     sunken   #1C1C20 -> #29221B     hover     #222228 -> #332A21
+ *
+ * Warmer AND very slightly lighter, both deliberate: the lift is what stops the
+ * bar reading as a hole punched in the page, and at this depth it costs almost
+ * nothing in contrast. The chrome is still unambiguously dark — 9% value, black
+ * at a glance — it is simply the same KIND of dark as the ink on the page.
+ *
+ * Everything that made the old scope work is untouched: champagne gold, warm
+ * white type, the neon pink/violet ambience. Only the neutrals moved, plus the
+ * white-based hairlines and veils, which now mix from the warm white (#F7F3EA)
+ * rather than #FFFFFF — a pure-white hairline on a warm ground reads blue.
+ *
+ * WHAT IT COSTS IN CONTRAST — nothing that matters. Measured on the new ground:
+ *
+ *     #F5D76E champagne gold on #17120F     13.1:1  (was 13.4:1)
+ *     #F7F5F0 warm white    on #17120F     17.1:1  (was 18.9:1)
+ *     #BDB5A8 secondary     on #17120F      9.2:1
+ *     #F7F5F0 warm white    on #332A21     12.9:1  (the worst dark ground)
+ *     text-muted @62%       on #332A21      5.9:1
+ *
+ * Every figure clears AA large and small with room to spare, which is what buys
+ * the licence to lift the ground in the first place.
  *
  * EVERY colour token `:root` declares is restated here. That is not redundancy:
  * a token left out would inherit its CREAM value into the dark scope, and the
@@ -452,7 +487,7 @@
   --sf-color-primary: #F5D76E;
   --sf-color-primary-dark: #B88924;
   --sf-color-primary-light: #FFEFA6;
-  --sf-color-primary-contrast: #0B0B0D; /* near-black on gold — 13.4:1 */
+  --sf-color-primary-contrast: #17120F; /* espresso on gold — 13.1:1 */
   --sf-color-primary-soft: rgba(245, 215, 110, 0.10);
   --sf-color-secondary: #F5D76E;
   --sf-color-accent: #F5D76E;
@@ -460,18 +495,18 @@
   --sf-gradient-primary-hover: linear-gradient(135deg, #B88924 0%, #F5D76E 50%, #FFEFA6 100%);
 
   /* ---- Surfaces & text -------------------------------------------------- */
-  --sf-color-bg: #0B0B0D;
-  --sf-color-bg-rgb: 11, 11, 13;
-  --sf-color-surface: #141416;
-  --sf-color-surface-2: #1C1C20;
-  --sf-color-surface-hover: #222228;
+  --sf-color-bg: #17120F;
+  --sf-color-bg-rgb: 23, 18, 15;
+  --sf-color-surface: #201A15;
+  --sf-color-surface-2: #29221B;
+  --sf-color-surface-hover: #332A21;
   --sf-color-text: #F7F5F0;
-  --sf-color-text-secondary: #B8B5B0;
+  --sf-color-text-secondary: #BDB5A8;
   --sf-color-text-muted: rgba(247, 245, 240, 0.62);
-  --sf-color-border: rgba(255, 255, 255, 0.08);
+  --sf-color-border: rgba(247, 243, 234, 0.10);
   --sf-color-border-strong: rgba(245, 215, 110, 0.35);
-  --sf-color-overlay: rgba(11, 11, 13, 0.72);
-  --sf-color-scrim: rgba(11, 11, 13, 0.72);
+  --sf-color-overlay: rgba(23, 18, 15, 0.74);
+  --sf-color-scrim: rgba(23, 18, 15, 0.74);
 
   /* ---- Semantic --------------------------------------------------------- */
   --sf-color-success: #7ED9A6;
@@ -486,10 +521,10 @@
   /* ---- Commerce-specific ----------------------------------------------- */
   --sf-color-star: #F5D76E;
   --sf-color-price: #F5D76E;
-  --sf-color-compare: #B8B5B0;
+  --sf-color-compare: #BDB5A8;
   --sf-color-discount: #7ED9A6;
   --sf-color-discount-bg: rgba(126, 217, 166, 0.12);
-  --sf-color-badge-bg: rgba(255, 255, 255, 0.06);
+  --sf-color-badge-bg: rgba(247, 243, 234, 0.07);
 
   /* ---- Accents ---------------------------------------------------------- */
   --sf-color-gold: #F5D76E;
@@ -501,13 +536,13 @@
 
   --sf-color-cta: #F5D76E;
   --sf-color-cta-hover: #FFEFA6;
-  --sf-color-cta-contrast: #0B0B0D;
+  --sf-color-cta-contrast: #17120F;
 
   /* ---- Gradients -------------------------------------------------------- */
   --sf-gradient-signature: linear-gradient(135deg, #F5D76E, #FF4FD8, #8B5CF6);
   --sf-gradient-gold: linear-gradient(135deg, #FFEFA6, #F5D76E 50%, #B88924);
-  --sf-gradient-brand: linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330);
-  --sf-gradient-announce: linear-gradient(90deg, #141416 0%, #2A2330 100%);
+  --sf-gradient-brand: linear-gradient(135deg, #17120F, #29221B 55%, #352433);
+  --sf-gradient-announce: linear-gradient(90deg, #201A15 0%, #352433 100%);
   --sf-blend-signature: screen;
 
   /* ---- Concern accents --------------------------------------------------- */
@@ -519,10 +554,10 @@
   --sf-concern-rose: #F7A8C4;
 
   /* ---- Glass ------------------------------------------------------------- */
-  --sf-glass-bg: rgba(255, 255, 255, 0.06);
-  --sf-glass-bg-strong: rgba(255, 255, 255, 0.08);
-  --sf-glass-border: rgba(255, 255, 255, 0.08);
-  --sf-glass-fallback: rgba(20, 20, 22, 0.92);
+  --sf-glass-bg: rgba(247, 243, 234, 0.07);
+  --sf-glass-bg-strong: rgba(247, 243, 234, 0.09);
+  --sf-glass-border: rgba(247, 243, 234, 0.10);
+  --sf-glass-fallback: rgba(32, 26, 21, 0.94);
 
   /* ---- Ambient glow ------------------------------------------------------ */
   --sf-glow-pink: radial-gradient(closest-side, rgba(255, 79, 216, 0.22), transparent 70%);
@@ -530,20 +565,26 @@
   --sf-glow-gold: radial-gradient(closest-side, rgba(245, 215, 110, 0.16), transparent 70%);
 
   /* ---- Shadows ----------------------------------------------------------- */
-  /* Black again, and heavier: on a near-black ground a warm low-alpha shadow
-     is invisible, and the chrome still has to lift off the page under it. */
-  --sf-shadow-1: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --sf-shadow-2: 0 20px 60px rgba(0, 0, 0, 0.5);
-  --sf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --sf-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  /* Heavier than the page's, because the chrome still has to lift off what is
+     under it — but warm-black rather than neutral black, and that is not a
+     cosmetic choice. These shadows fall on the CREAM page at least as often as
+     on the chrome's own ground (the masthead casts onto the storefront, the
+     drawer onto the page it covers), and neutral black at 30% over #F8F3EA
+     resolves to a grey bruise that is visibly a different family from
+     everything it touches. Tinted toward the espresso, the same shadow reads
+     as the bar's own weight. */
+  --sf-shadow-1: 0 8px 30px rgba(23, 15, 6, 0.30);
+  --sf-shadow-2: 0 20px 60px rgba(23, 15, 6, 0.45);
+  --sf-shadow-xs: 0 1px 2px rgba(23, 15, 6, 0.32);
+  --sf-shadow-sm: 0 2px 10px rgba(23, 15, 6, 0.32);
   /* The md/lg aliases have to be RESTATED, not inherited. A custom property's
      value is substituted when it is computed on the element that declares it,
      so `--sf-shadow-md: var(--sf-shadow-1)` on `:root` computes to the CREAM
      page's shadow there and is inherited into this scope already resolved —
      re-pointing --sf-shadow-1 below would not reach it. Two lines, and the
      alias follows its target on both surfaces. */
-  --sf-shadow-md: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --sf-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --sf-shadow-md: 0 8px 30px rgba(23, 15, 6, 0.30);
+  --sf-shadow-lg: 0 20px 60px rgba(23, 15, 6, 0.45);
   --sf-color-focus-ring: #F5D76E;
   --sf-shadow-focus: 0 0 0 3px rgba(245, 215, 110, 0.55);
 
