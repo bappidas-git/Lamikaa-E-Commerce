@@ -143,13 +143,20 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
         className={`${styles.panel} sf-glass--strong`}
         {...motionProps}
       >
-        <div className={`sf-container ${styles.inner} ${styles.innerEmpty}`}>
-          <p className={styles.empty}>
-            The catalogue could not be loaded just now.
-          </p>
-          <Button variant="secondary" size="sm" to={ROUTES.SHOP} onClick={onNavigate}>
-            Go to the shop
-          </Button>
+        <div className={styles.scroll}>
+          <div className={`sf-container ${styles.inner} ${styles.innerEmpty}`}>
+            <p className={styles.empty}>
+              The catalogue could not be loaded just now.
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              to={ROUTES.SHOP}
+              onClick={onNavigate}
+            >
+              Go to the shop
+            </Button>
+          </div>
         </div>
       </motion.div>
     );
@@ -163,148 +170,159 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
       className={`${styles.panel} sf-glass--strong`}
       {...motionProps}
     >
-      <div className={`sf-container ${styles.inner}`}>
-        {/* ---- Column 1 — categories ------------------------------------ */}
-        <div className={styles.column}>
-          <p className={`sf-eyebrow ${styles.eyebrow}`}>Categories</p>
-          <ul className={styles.categoryList}>
-            {rows.map(({ cat, firstProduct, count }) => {
-              const thumb = firstProduct ? stageSrc(firstProduct, { w: 96 }) : "";
-              return (
-                <li key={cat.id}>
-                  <Link
-                    to={categoryPath(cat)}
-                    className={styles.categoryRow}
-                    onClick={onNavigate}
-                  >
-                    <span className={`sf-plate ${styles.thumb}`} aria-hidden="true">
-                      {thumb ? (
-                        <img
-                          src={thumb}
-                          alt=""
-                          width="40"
-                          height="40"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : null}
-                    </span>
-                    <span className={styles.categoryText}>
-                      <span className={styles.categoryName}>
-                        {cat.displayName || cat.name}
+      {/* The SHEET is `.panel` and the SCROLL BOX is this div, never the other
+          way round: the panel paints its own near-black ground with an
+          absolutely-positioned `::before`, and inside a scroll container that
+          pseudo-element is anchored to the scroll origin and only as tall as
+          the visible box — so a scrolled menu used to slide its own ground out
+          from under the featured card. See MegaPanel.module.css. */}
+      <div className={styles.scroll}>
+        <div className={`sf-container ${styles.inner}`}>
+          {/* ---- Column 1 — categories ---------------------------------- */}
+          <div className={styles.column}>
+            <p className={`sf-eyebrow ${styles.eyebrow}`}>Categories</p>
+            <ul className={styles.categoryList}>
+              {rows.map(({ cat, firstProduct, count }) => {
+                const thumb = firstProduct ? stageSrc(firstProduct, { w: 96 }) : "";
+                return (
+                  <li key={cat.id}>
+                    <Link
+                      to={categoryPath(cat)}
+                      className={styles.categoryRow}
+                      onClick={onNavigate}
+                    >
+                      <span className={`sf-plate ${styles.thumb}`} aria-hidden="true">
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt=""
+                            width="40"
+                            height="40"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : null}
                       </span>
-                      {cat.description ? (
-                        <span className={styles.categoryDesc}>{cat.description}</span>
-                      ) : null}
-                    </span>
-                    {count > 0 ? (
-                      <span className={styles.countChip} aria-hidden="true">
-                        {count}
+                      <span className={styles.categoryText}>
+                        <span className={styles.categoryName}>
+                          {cat.displayName || cat.name}
+                        </span>
+                        {cat.description ? (
+                          <span className={styles.categoryDesc}>{cat.description}</span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </Link>
-                </li>
-              );
-            })}
-            <li>
-              <Link
-                to={ROUTES.SHOP}
-                className={`${styles.categoryRow} ${styles.allRow}`}
-                onClick={onNavigate}
-              >
-                {/* The empty thumbnail cell keeps this label on the same x as
-                    the seven names above it. */}
-                <span aria-hidden="true" />
-                <span className={styles.categoryText}>
-                  <span className={styles.categoryName}>All products</span>
-                </span>
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* ---- Column 2 — concerns -------------------------------------- */}
-        <div className={styles.column}>
-          <p className={`sf-eyebrow ${styles.eyebrow}`}>Shop by concern</p>
-          <ul className={styles.concernList}>
-            {concerns.map((concern) => (
-              <li key={concern.id ?? concern.slug}>
-                <Chip
-                  variant="concern"
-                  as={Link}
-                  to={concernPath(concern.slug)}
-                  tone={concern.slug}
+                      {count > 0 ? (
+                        <span className={styles.countChip} aria-hidden="true">
+                          {count}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+              <li>
+                <Link
+                  to={ROUTES.SHOP}
+                  className={`${styles.categoryRow} ${styles.allRow}`}
                   onClick={onNavigate}
-                  className={styles.concernChip}
                 >
-                  {concern.name}
-                </Chip>
+                  {/* The empty thumbnail cell keeps this label on the same x as
+                      the seven names above it. */}
+                  <span aria-hidden="true" />
+                  <span className={styles.categoryText}>
+                    <span className={styles.categoryName}>All products</span>
+                  </span>
+                </Link>
               </li>
-            ))}
-          </ul>
-        </div>
+            </ul>
+          </div>
 
-        {/* ---- Column 3 — featured -------------------------------------- */}
-        <div className={styles.column}>
-          <p className={`sf-eyebrow ${styles.eyebrow}`}>Featured</p>
-          {featured ? (
-            <GlassCard
-              glow="duo"
-              interactive
-              padding="md"
-              className={styles.featured}
-            >
-              <span className={`sf-plate ${styles.featuredPlate}`}>
-                <img
-                  src={stageSrc(featured, { w: 600 })}
-                  alt={productAlt(featured, primaryImage(featured))}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </span>
-              <p className={`sf-eyebrow ${styles.featuredEyebrow}`}>
-                Black Rice Ritual · 01
-              </p>
-              <p className={styles.featuredName}>{featured.name}</p>
-              {featured.promise ? (
-                <p className={styles.featuredPromise}>{featured.promise}</p>
-              ) : null}
-              <Price product={featured} size="sm" className={styles.featuredPrice} />
-              <Button
-                variant="primary"
-                size="sm"
-                to={productPath(featured)}
-                onClick={onNavigate}
-                className={styles.featuredCta}
+          {/* ---- Column 2 — concerns -------------------------------------- */}
+          <div className={styles.column}>
+            <p className={`sf-eyebrow ${styles.eyebrow}`}>Shop by concern</p>
+            <ul className={styles.concernList}>
+              {concerns.map((concern) => (
+                <li key={concern.id ?? concern.slug}>
+                  <Chip
+                    variant="concern"
+                    as={Link}
+                    to={concernPath(concern.slug)}
+                    tone={concern.slug}
+                    onClick={onNavigate}
+                    className={styles.concernChip}
+                  >
+                    {concern.name}
+                  </Chip>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ---- Column 3 — featured -------------------------------------- */}
+          <div className={styles.column}>
+            <p className={`sf-eyebrow ${styles.eyebrow}`}>Featured</p>
+            {featured ? (
+              <GlassCard
+                glow="duo"
+                interactive
+                padding="md"
+                className={styles.featured}
               >
-                Explore
-              </Button>
-            </GlassCard>
-          ) : fallbackRitual ? (
-            /* No hero product to feature — the first ritual takes the card, so
-               the column is never an empty box. */
-            <GlassCard
-              glow="duo"
-              interactive
-              padding="md"
-              className={styles.featured}
-            >
-              <p className={`sf-eyebrow ${styles.featuredEyebrow}`}>Ritual</p>
-              <p className={styles.featuredName}>{fallbackRitual.name}</p>
-              {fallbackRitual.tagline ? (
-                <p className={styles.featuredPromise}>{fallbackRitual.tagline}</p>
-              ) : null}
-              <Button
-                variant="primary"
-                size="sm"
-                to={ritualPath(fallbackRitual)}
-                onClick={onNavigate}
-                className={styles.featuredCta}
+                <span className={`sf-plate ${styles.featuredPlate}`}>
+                  {/* `stageSrc`'s default 1:1, which is the shape the plate
+                      keeps. 600 CSS px of art for a plate that tops out at
+                      252 is the retina allowance, not a bigger picture. */}
+                  <img
+                    src={stageSrc(featured, { w: 600 })}
+                    alt={productAlt(featured, primaryImage(featured))}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </span>
+                <p className={`sf-eyebrow ${styles.featuredEyebrow}`}>
+                  Black Rice Ritual · 01
+                </p>
+                <p className={styles.featuredName}>{featured.name}</p>
+                {featured.promise ? (
+                  <p className={styles.featuredPromise}>{featured.promise}</p>
+                ) : null}
+                <Price product={featured} size="sm" className={styles.featuredPrice} />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  to={productPath(featured)}
+                  onClick={onNavigate}
+                  className={styles.featuredCta}
+                >
+                  Explore
+                </Button>
+              </GlassCard>
+            ) : fallbackRitual ? (
+              /* No hero product to feature — the first ritual takes the card, so
+                 the column is never an empty box. */
+              <GlassCard
+                glow="duo"
+                interactive
+                padding="md"
+                className={styles.featured}
               >
-                Build your ritual
-              </Button>
-            </GlassCard>
-          ) : null}
+                <p className={`sf-eyebrow ${styles.featuredEyebrow}`}>Ritual</p>
+                <p className={styles.featuredName}>{fallbackRitual.name}</p>
+                {fallbackRitual.tagline ? (
+                  <p className={styles.featuredPromise}>{fallbackRitual.tagline}</p>
+                ) : null}
+                <Button
+                  variant="primary"
+                  size="sm"
+                  to={ritualPath(fallbackRitual)}
+                  onClick={onNavigate}
+                  className={styles.featuredCta}
+                >
+                  Build your ritual
+                </Button>
+              </GlassCard>
+            ) : null}
+          </div>
         </div>
       </div>
     </motion.div>

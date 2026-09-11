@@ -20,10 +20,30 @@
   /* Above the page, below anything modal. It sits inside the header's stacking
      context, so this only orders it against the header's own children. */
   z-index: 1;
-  max-height: calc(100vh - 100px);
-  max-height: calc(100svh - 100px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+
+  /* ---- THE HEIGHT BUDGET, stated once ---------------------------------
+     Everything that has to fit on one screen subtracts from these three, and
+     the short-screen tier at the foot of the file re-tunes them rather than
+     restating any rule that reads them.
+
+     --mega-chrome  the page chrome ABOVE the sheet, which `top: 100%` has
+                    already spent before its first pixel: the announcement
+                    band plus the 64px header row. The band scrolls away and
+                    the header alone is 64px, so this is the pessimistic
+                    figure — the sheet is never taller than it claimed.
+     --mega-gutter  the strip of page left showing UNDER it. A sheet that
+                    lands exactly on the bottom edge of the screen reads as a
+                    second viewport; one with a gutter reads as a sheet.
+     --mega-sheet-text  everything in the featured column that is NOT the
+                    photograph — the sheet's own padding, the eyebrow, and
+                    the card's name, promise, price and CTA. Measured, not
+                    guessed, and carrying a few pixels of slack; the plate
+                    takes what is left of the screen after it.
+     ------------------------------------------------------------------- */
+  --mega-chrome: 100px;
+  --mega-gutter: var(--sf-space-6);
+  --mega-sheet-text: 376px;
+
   border-top: 1px solid var(--sf-glass-border);
   border-bottom: 1px solid var(--sf-glass-border);
   box-shadow: var(--sf-shadow-2);
@@ -51,6 +71,41 @@
   z-index: -1;
   background: color-mix(in srgb, var(--sf-color-bg) 97%, transparent);
   pointer-events: none;
+}
+
+/* THE SCROLL BOX IS A CHILD, NOT THE PANEL ITSELF.
+   It used to be the panel, and that put the sheet's ground inside the sheet's
+   own scroll box. `.panel::before` is absolutely positioned, and an absolutely
+   positioned box inside a scroll container is anchored to the SCROLL ORIGIN
+   and sized to the VISIBLE box — so the first scroll of the menu slid the
+   near-black wash up out from under the columns and the featured card was left
+   painting onto the live page below the sheet's bottom hairline. Nothing had
+   escaped the menu; the menu's ground had escaped its content.
+   One level down, `.panel` is never scrolled, `inset: 0` means what it says,
+   and the ground always covers exactly what the two hairlines frame. */
+.scroll {
+  max-height: calc(100vh - var(--mega-chrome) - var(--mega-gutter));
+  max-height: calc(100svh - var(--mega-chrome) - var(--mega-gutter));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The scroll itself is the safety net, not the design: the sheet is sized
+     to fit on one screen. When a viewport short enough to beat it turns up
+     anyway, the scrollbar should read as part of the menu. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--sf-color-border-strong) transparent;
+}
+
+.scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-pill);
 }
 
 .inner {
@@ -217,8 +272,59 @@
 }
 
 .featuredPlate {
-  width: 100%;
+  /* SIZED BY THE SCREEN, NOT BY THE COLUMN.
+     It used to be `width: 100%`, and with the primitive's `aspect-ratio: 1`
+     that made it 378px of photograph in a 428px column. That alone made the
+     featured column 125px TALLER than the categories list beside it, which
+     made the whole sheet taller than a 720px screen — which is how the card
+     came to hang out of the bottom of the menu.
+     So the plate takes a HEIGHT and lets its square find the width, rather
+     than taking the width and letting the square find a height nobody has
+     budgeted for. The height is whatever is left of the screen once the
+     chrome, the gutter and the card's own type have been paid for, held
+     between a floor and a ceiling: 252px is the pack shot's resting size in
+     this menu — which brings the three columns level — and under
+     140px it is not a pack shot any more, so the sheet stops shrinking it and
+     scrolls instead. The `vh` line is the fallback for a browser without
+     `svh`, in the order the panel's own budget already uses.
+     STILL SQUARE, and centred rather than stretched. A pack shot is shot
+     square; a landscape plate would either letterbox it between two strips of
+     bare plate or ask Cloudinary to pad it onto a sampled ground, and `b_auto`
+     on artwork with a pale edge lays a grey band down each side of a dark
+     card. A square plate hugs whatever it is given. */
+  position: relative;
+  width: auto;
+  max-width: 100%;
+  height: clamp(
+    140px,
+    calc(100vh - var(--mega-chrome) - var(--mega-gutter) - var(--mega-sheet-text)),
+    252px
+  );
+  height: clamp(
+    140px,
+    calc(100svh - var(--mega-chrome) - var(--mega-gutter) - var(--mega-sheet-text)),
+    252px
+  );
+  margin-inline: auto;
   margin-bottom: var(--sf-space-2);
+}
+
+/* THE IMAGE IS POSITIONED, NOT SIZED IN PERCENTAGES.
+   `.sf-plate img` is `width: 100%; height: 100%; object-fit: contain`, and the
+   height half of that does not resolve in a plate this shape: the plate is a
+   grid whose single row is auto-sized, so a percentage height against it is
+   treated as `auto` — the image takes its size from its width alone, comes out
+   SQUARE, and is cropped by the plate's own `overflow: hidden`. That is the one
+   thing a plate exists to prevent ("packaging is the product — a bottle whose
+   cap has been sliced off is a defect"), and it went unnoticed for as long as
+   every plate was square, because a square image in a square box overflows by
+   nothing. `inset: 0` against the positioned plate is a DEFINITE box on both
+   axes, so `object-fit: contain` centres the pack shot the way it promises.
+   Fixed here rather than in the primitive: the square plate is correct
+   everywhere else it is used, and this is the only plate that is not one. */
+.featuredPlate img {
+  position: absolute;
+  inset: 0;
 }
 
 .featuredEyebrow {
@@ -238,6 +344,14 @@
   font-size: 1.5rem;
   font-weight: var(--sf-font-medium);
   line-height: var(--sf-leading-tight);
+  /* Two lines, always — the same bargain `.categoryDesc` strikes one column
+     over. The sheet's height is budgeted against a MEASURED card, so a five
+     word product name must not be free to spend another line of it. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .featuredPromise {
@@ -245,6 +359,11 @@
   color: var(--sf-color-text-secondary);
   font-size: var(--sf-text-sm);
   line-height: var(--sf-leading-normal);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .featuredPrice {
@@ -262,6 +381,41 @@
   .inner {
     gap: var(--sf-space-6);
     padding-block: var(--sf-space-8);
+  }
+
+  /* 16px of that padding came back; the plate may spend it. */
+  .panel {
+    --mega-sheet-text: 360px;
+  }
+}
+
+/* ---- Short screens ------------------------------------------------------ */
+/* The menu's other axis, and the one nothing in this file used to look at. A
+   1366x768 laptop with a tab strip, a bookmarks bar and a taskbar is around
+   640px of page; the sheet is ~625px of menu before it has drawn anything the
+   viewport forced it to shrink. So above 800px the layout stays generous, and
+   under it the two tall columns give up padding — never a row, never a
+   description, never the tap target — before the sheet gives up and scrolls.
+   Height, not width: a 1920x800 window needs this and a 1100x1000 one does
+   not, and only `max-height` can tell them apart. */
+@media (max-height: 800px) {
+  .inner {
+    padding-block: var(--sf-space-8);
+  }
+
+  .panel {
+    --mega-sheet-text: 360px;
+  }
+
+  /* Half the padding, and the 44px floor is still the floor: a row is 40px of
+     thumbnail and two lines of type, so it clears the tap target on its own
+     content. */
+  .categoryRow {
+    padding-block: var(--sf-space-1);
+  }
+
+  .allRow {
+    padding-top: var(--sf-space-2);
   }
 }
 
