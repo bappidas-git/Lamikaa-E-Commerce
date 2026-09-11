@@ -77,13 +77,15 @@
 
 /* ---- The stage ----------------------------------------------------------- */
 /* Two classes deep, so these beat `.sf-plate`'s own radius and 1:1 whichever
-   order the sheets land in. */
+   order the sheets land in. The border is restated for the SAME reason and with
+   the same value the primitive now uses — the stage is a plate with a wider
+   radius, not a plate with a fainter frame. */
 .stageWrap .stage {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
   border-radius: var(--sf-radius-xl);
-  border: 1px solid var(--sf-glass-border);
+  border: 1px solid var(--sf-plate-border);
   box-shadow: var(--sf-shadow-2);
 }
 
