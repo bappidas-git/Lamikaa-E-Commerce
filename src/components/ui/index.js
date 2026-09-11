@@ -33,6 +33,7 @@ export { default as GlassCard } from "./GlassCard";
 export { default as GlowWrap } from "./GlowWrap";
 export { default as Modal } from "./Modal";
 export { default as Price } from "./Price";
+export { default as Rail } from "./Rail";
 export { default as SectionHeading } from "./SectionHeading";
 export { default as Skeleton } from "./Skeleton";
 export { default as VideoPlayer } from "./VideoPlayer";

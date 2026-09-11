@@ -62,6 +62,15 @@
   padding: 0;
   list-style: none;
   overflow-x: auto;
+  /* A sideways flick on a trackpad or a phone belongs to the bar, not to the
+     browser's back gesture — the same containment every rail on the storefront
+     now carries. `scroll-padding` keeps a pill the keyboard has just reached
+     off the very edge of the bar.
+     NO SNAP HERE, deliberately: the component centres the active pill with an
+     explicit `scrollTo` as the visitor reads down the page, and a snap point
+     would drag that pill back to an edge the moment the scroll settled. */
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--sf-space-4);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;

@@ -1,5 +1,69 @@
 # Release notes
 
+## 1.1.2-lamikaa — 2026-09-11
+
+Every row of cards a visitor can swipe is now one component, and the cards in it
+line up. The two product rails were measuring a card against the VIEWPORT rather
+than against the rail they were standing in, which is why the PDP's "You may
+also like" was rendering ninety-one-pixel cards on a laptop.
+
+### Fixed
+
+- **"You may also like" collapsed inside the PDP.** The rail sized its cards
+  with `(100% - gaps) / 4.4` under a `min-width: 1024px` query — a sound rule
+  for a page-wide rail, and the wrong question entirely for a rail inside a
+  column. On the product page that rail lives in a 537px chapter, so the
+  arithmetic resolved to **91px** cards at 1180px and **120px** at 1440px: the
+  name clipped to "Black Ric…", one concern chip per line, the promise reading
+  one word per row, and the hover Add-to-Cart button wider than the card it sat
+  on. Cards are now clamped against the rail's own width and never go under
+  248px anywhere.
+
+- **The same rail on a phone was stuck at its floor.** `minmax(150px, 62%)` on
+  a track that already overflows has no free space for the 62% maximum to grow
+  into, so every card sat on the 150px minimum. It is a clamp now, and a phone
+  gets one full card plus a real peek of the next.
+
+- **Cards in a row started at different heights.** The card's eyebrow was one
+  wrapping row of "step + up to two concerns", so it was one line tall for a
+  product whose labels happened to fit and two for the product beside it — and
+  the name, the promise, the badges and the price of half of any row inherited
+  the offset. The step and the concerns now hold a reserved line each, the name
+  and the promise hold two lines each, and the badges and price are pushed to
+  the foot of the card, so a rail, the shop wall, the search results and the
+  wishlist all read as a set.
+
+- **A long step label could leave its card.** "01 · BODY CLEANSE" overflowed the
+  card edge at the narrow end of the range; it truncates now.
+
+- **A sideways swipe could walk the phone back a page.** Every horizontal
+  scroller on the storefront — the product rails, the category and ritual rails,
+  the trust strip, the badge row, the chapter bars, the gallery thumbnails, the
+  hero's product index, the offers tabs and the FAQ contents — now contains its
+  own overscroll.
+
+- **The last card in a mobile rail kissed the right edge.** The category and
+  ritual rails padded their scroll on the left only, so the last card snapped
+  flush to the screen while every other card had a margin.
+
+### Added
+
+- **`ui/Rail`, the one horizontal card scroller.** Cards clamped against the
+  rail's own width (nothing in it reads the viewport), a peek of the next card,
+  arrows on a fine pointer that disappear when the row fits or when they have
+  nowhere left to go, an edge fade on the side that actually HAS more content,
+  a scroll progress bar on touch, snap points that are mandatory under a finger
+  and gentle under a trackpad, and a focusable track that answers the arrow
+  keys plus Home and End. The PDP rail, the home page's "Where you left off"
+  and the wishlist's recommendations are all this component.
+
+### Removed
+
+- **`RecentlyViewed`'s private copy of the rail** — a `useRail` hook with its
+  own ResizeObserver and its own pair of arrows, ported from the old home page.
+  It is `ui/Rail` now, which is how the two rails stop drifting apart: only one
+  of them had arrows, only the other had a fade, and neither contained a swipe.
+
 ## 1.1.1-lamikaa — 2026-09-11
 
 Product pictures are never cut again. Whatever a product's image is — a pack

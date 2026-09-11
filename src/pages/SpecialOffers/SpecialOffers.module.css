@@ -676,6 +676,11 @@
   flex: 1 1 auto;
   gap: var(--sf-space-8);
   overflow-x: auto;
+  /* The strip keeps a sideways flick to itself. No snap points: the component
+     centres the active tab with `scrollIntoView`, and this strip is words on a
+     rule rather than a row of cards to land on. */
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--sf-space-8);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }

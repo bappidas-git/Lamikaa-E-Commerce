@@ -1,19 +1,10 @@
 /* =============================================================================
  * RelatedProducts — the rail shell
  * =============================================================================
- * A serif heading, then the cards with air between them. Two affordances say
- * there is more to the right: the peek of the next card, and a soft fade at
- * each edge of the scroller.
- *
- * THE FADE IS A MASK, NOT A VEIL. A gradient painted over the row would sit on
- * top of a card's focus ring and dim it exactly when a keyboard visitor scrolled
- * that card to the edge. `mask-image` does the same job in the compositor and —
- * the reason it is used here — can be lifted wholesale under `:focus-within`, so
- * the keyboard visitor's ring is never touched.
- *
- * The fade is symmetrical and constant rather than driven by scroll position: a
- * rail of four to ten cards is short enough that a permanent soft edge reads as
- * a treatment, and the alternative is a scroll listener on a decoration.
+ * A serif heading, then the cards. Everything about the SCROLLER — how wide a
+ * card is, the peek of the next one, the edge fade, the arrows, the touch
+ * progress bar, the snap points — belongs to `ui/Rail` and is not restated
+ * here; this file is the heading and the band's own rhythm.
  * ========================================================================== */
 
 .section {
@@ -32,90 +23,12 @@
   color: var(--sf-color-text);
 }
 
-/* The mask lives on the wrapper rather than the scroller: a mask on a scrolling
-   box is resolved against its padding box, so the fade would travel with the
-   content instead of staying at the edges of the viewport onto it. */
-.rail {
-  --rail-fade: var(--sf-space-8);
-
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--rail-fade),
-    #000 calc(100% - var(--rail-fade)),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--rail-fade),
-    #000 calc(100% - var(--rail-fade)),
-    transparent 100%
-  );
-  /* The default is `repeat`, which would tile a second fade over the 4px of
-     focus-ring room the scroller's negative margin claims either side. */
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-
-/* A focused card must never be the faded one. */
-.rail:focus-within {
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-
-.scroller {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(220px, 1fr);
-  gap: var(--sf-space-8);
-  overflow-x: auto;
-  /* Room for the cards' focus rings, which the scroller would otherwise clip. */
-  padding: var(--sf-space-1) var(--sf-space-1) var(--sf-space-5);
-  margin: calc(var(--sf-space-1) * -1) calc(var(--sf-space-1) * -1) 0;
-  scroll-snap-type: x proximity;
-  scrollbar-width: thin;
-  scrollbar-color: var(--sf-color-border-strong) transparent;
-  -webkit-overflow-scrolling: touch;
-}
-
-.scroller::-webkit-scrollbar {
-  height: 3px;
-}
-
-.scroller::-webkit-scrollbar-track {
-  background: var(--sf-color-border);
-}
-
-.scroller::-webkit-scrollbar-thumb {
-  background: var(--sf-color-border-strong);
-}
-
-.cell {
-  scroll-snap-align: start;
-}
-
-/* Wide: four and a bit across, so the next card always peeks past the edge.
-   A plain calc, NOT minmax(0, calc(…)) — a zero floor lets an over-full row
-   shrink every track to fit, which quietly turns the rail into a squeezed
-   contact sheet instead of a scroller. */
-@media (min-width: 1024px) {
-  .scroller {
-    grid-auto-columns: calc((100% - 4 * var(--sf-space-8)) / 4.4);
-  }
-}
-
 @media (max-width: 768px) {
   .section {
     margin-top: var(--sf-space-10);
   }
 
-  .rail {
-    --rail-fade: var(--sf-space-5);
-  }
-
-  .scroller {
-    gap: var(--sf-space-5);
-    grid-auto-columns: minmax(150px, 62%);
+  .title {
+    margin-bottom: var(--sf-space-6);
   }
 }

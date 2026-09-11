@@ -220,32 +220,44 @@ const ProductCard = ({
 
         {/* ---- body ------------------------------------------------------- */}
         <div className={styles.body}>
+          {/* TWO ROWS, ALWAYS — the step (with any merchant flags) and then the
+              concerns, each holding its line whether or not this product fills
+              it. One wrapping row was the reason a rail of cards read as
+              ragged: a product whose step and chips happened to share a line
+              started its name a row above the product next to it, and the
+              promise, the badges and the price all inherited the offset.
+              Reserved space is the cost of a run of cards that line up. */}
           {(step || concerns.length > 0 || flagMarks.length > 0) && (
-            <div className={styles.eyebrowRow}>
-              {step && (
-                <span className={`sf-eyebrow ${styles.step}`}>
-                  {step.numeral && (
-                    <span className="sf-numeral">{step.numeral}</span>
-                  )}
-                  {step.numeral ? " · " : ""}
-                  {step.label}
-                </span>
-              )}
-              {concerns.map((concern) => (
-                <Chip
-                  variant="concern"
-                  tone={concern}
-                  key={concern}
-                  className={styles.concernChip}
-                >
-                  {concernLabel(concern)}
-                </Chip>
-              ))}
-              {flagMarks.map((flag) => (
-                <span key={flag.key} className={`sf-flag ${flag.className}`}>
-                  {flag.label}
-                </span>
-              ))}
+            <div className={styles.eyebrow}>
+              <span className={styles.stepRow}>
+                {step && (
+                  <span className={`sf-eyebrow ${styles.step}`}>
+                    {step.numeral && (
+                      <span className="sf-numeral">{step.numeral}</span>
+                    )}
+                    {step.numeral ? " · " : ""}
+                    {step.label}
+                  </span>
+                )}
+                {flagMarks.map((flag) => (
+                  <span key={flag.key} className={`sf-flag ${flag.className}`}>
+                    {flag.label}
+                  </span>
+                ))}
+              </span>
+
+              <span className={styles.concernRow}>
+                {concerns.map((concern) => (
+                  <Chip
+                    variant="concern"
+                    tone={concern}
+                    key={concern}
+                    className={styles.concernChip}
+                  >
+                    {concernLabel(concern)}
+                  </Chip>
+                ))}
+              </span>
             </div>
           )}
 

@@ -292,15 +292,24 @@
   color: var(--sf-color-text);
 }
 
+/* The silhouette of the rail that replaces it. The cell width is the SAME clamp
+   `ui/Rail` uses — measured against this row's own width, never the viewport's
+   — so the skeletons do not resize the moment the real cards land.
+   (`grid-auto-columns: minmax(200px, 1fr)` looked equivalent and was not: an
+   auto-flow-column grid that already overflows has no free space for a `1fr`
+   maximum to grow into, so every cell sat on its 200px floor.) */
 .recsSkeletonRail {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(200px, 1fr);
+  display: flex;
   gap: var(--sf-space-6);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   padding-bottom: var(--sf-space-2);
+}
+
+.recsSkeletonRail > * {
+  flex: 0 0 clamp(min(248px, 100%), calc((100% - 3 * var(--sf-space-6)) / 4.2), 300px);
+  min-width: 0;
 }
 
 .recsSkeletonRail::-webkit-scrollbar {
