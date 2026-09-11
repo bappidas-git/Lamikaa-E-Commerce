@@ -44,10 +44,33 @@
 /* The LOADING silhouette's plate. The gallery itself (`pdp/MediaGallery`) owns
    its own stage, its ratios and its rail — this is only the block the skeleton
    draws in the shape the gallery is about to take, so the two agree on where
-   the pack will be and the page does not jump when the data lands. */
+   the pack will be and the page does not jump when the data lands.
+
+   That agreement now includes the gallery's HEIGHT BUDGET: the plate there is
+   capped so the pack never runs past the bottom of the screen, and a
+   silhouette that ignored the cap would draw a taller box than the picture
+   replacing it. The chrome figure below and the two that restate it in the
+   bands underneath are the gallery's own (`--sf-gallery-chrome`) — retune the
+   two stylesheets together. */
 .mediaColumn .stage {
   width: 100%;
   aspect-ratio: 1;
+  --sf-stage-chrome: 196px;
+  --sf-stage-max-h: max(240px, calc(100vh - var(--sf-stage-chrome)));
+  /* 1:1 here, so the width that produces the budget IS the budget. */
+  max-width: var(--sf-stage-max-h);
+  margin-inline: auto;
+}
+
+/* `svh` is what the shopper can actually see once a mobile browser's chrome
+   has collapsed. It cannot ride on the custom property above as a second
+   declaration — a custom property accepts any tokens at parse time, so the
+   `vh` line would simply be lost where `svh` is unknown — so the feature query
+   carries it, and the per-band chrome above re-points every band at once. */
+@supports (height: 100svh) {
+  .mediaColumn .stage {
+    --sf-stage-max-h: max(240px, calc(100svh - var(--sf-stage-chrome)));
+  }
 }
 
 /* ---- The content column -------------------------------------------------- */
@@ -180,6 +203,9 @@
 
   .mediaColumn .stage {
     aspect-ratio: 4 / 5;
+    /* A 64px masthead from here up, and no BottomNav over the foot. */
+    --sf-stage-chrome: 148px;
+    max-width: calc(var(--sf-stage-max-h) * 4 / 5);
   }
 
   .benefits {
@@ -210,6 +236,19 @@
        its rail hold, one step tighter. */
     top: 96px;
     align-self: start;
+  }
+
+  .mediaColumn .stage {
+    /* The band and the masthead (100px before the first scroll), the page's
+       --sf-space-8 and the air at the foot — the gallery's own figure. */
+    --sf-stage-chrome: 164px;
+    /* And the rail stands to the LEFT of the plate from here up: the
+       silhouette gives it its 72px column and the 16px gutter rather than
+       drawing over them, which is the width the gallery's own stage takes. */
+    max-width: min(
+      calc(var(--sf-stage-max-h) * 4 / 5),
+      calc(100% - 72px - var(--sf-space-4))
+    );
   }
 
   .chapter {

@@ -6,9 +6,24 @@
  * covers are delivered into; at 1025px the strip stands up into a 72px column
  * on the left (`grid-template-columns: 72px 1fr`, 16px gutter).
  *
+ * THE PLATE NEVER RUNS PAST THE SCREEN. A 4:5 plate that simply fills the
+ * media column is 750px tall in a 1440 container — taller than the viewport of
+ * any laptop once the masthead is taken off it, so the foot of the pack sat
+ * below the fold and a shopper could not see the bottle they came for without
+ * scrolling the picture they were already looking at. The gallery therefore
+ * carries a HEIGHT BUDGET (`--sf-gallery-chrome`, restated per band because
+ * the masthead and the page's padding both change with it) and caps itself to
+ * the WIDTH that produces that height — never a `max-height`, which would
+ * break `aspect-ratio` and with it the box the plate reserves before the bytes
+ * land. The cap is on the GALLERY rather than on the stage alone, so the rail
+ * narrows with the plate and stays against it; the auto margins then centre
+ * the pair in the column. On a screen tall enough for the full plate the cap
+ * is slack and nothing about the composition changes.
+ *
  * Every value is a token. The one place a raw pixel appears is the thumbnail
- * geometry (72 / 56) and the 2px selection ring, which are the sizes the design
- * names rather than steps on the spacing scale.
+ * geometry (72 / 56), the 2px selection ring and the height budget's own
+ * numbers, which are the sizes the design names rather than steps on the
+ * spacing scale.
  * ========================================================================== */
 
 .gallery {
@@ -19,6 +34,37 @@
      rather than `hidden` so no scroll container is created and the sticky media
      column above still sticks. */
   overflow-x: clip;
+
+  /* ---- The plate's height budget ---------------------------------------- */
+  /* WHAT STANDS BETWEEN THE PLATE AND THE EDGES OF THE SCREEN at this width,
+     top to bottom: the 36px announcement band, the 56px masthead under it, the
+     page's own top padding (--sf-space-6 here), the 64px bar welded over the
+     foot of a phone screen — the BottomNav, and on this page the sticky
+     purchase bar that sits above it — and a breath of air. Both wider bands
+     restate the number, because every term in it changes with them. */
+  --sf-gallery-chrome: 196px;
+  /* The tallest the plate may be. The floor is there for a window too short
+     for any of this — a phone held sideways — which gets a small pack rather
+     than a stamp. */
+  --sf-gallery-stage-h: max(240px, calc(100vh - var(--sf-gallery-chrome)));
+  /* The cap as a WIDTH: a 1:1 plate is as wide as it is tall, so it is the
+     budget itself here. The two wider bands divide by the 4:5 ratio. */
+  max-width: var(--sf-gallery-stage-h);
+  margin-inline: auto;
+}
+
+/* `svh` — the SMALL viewport height — is the unit that survives a mobile
+   browser's chrome collapsing, and it is the honest number for "what the
+   shopper can see". It cannot be written as a second declaration on the custom
+   property above the way a plain property takes a fallback: a custom property
+   swallows any token sequence at parse time, so the `vh` line would be lost in
+   a browser that does not know `svh` and the cap would resolve to nothing. The
+   feature query is what keeps that fallback intact — and because the per-band
+   numbers live in `--sf-gallery-chrome`, ONE block re-points every band. */
+@supports (height: 100svh) {
+  .gallery {
+    --sf-gallery-stage-h: max(240px, calc(100svh - var(--sf-gallery-chrome)));
+  }
 }
 
 .stageWrap {
@@ -234,6 +280,16 @@
     aspect-ratio: 4 / 5;
   }
 
+  .gallery {
+    /* 36px band, a 64px masthead from here up, the same --sf-space-6 the page
+       opens on and the same air at the foot. Nothing is welded over the foot
+       above 768: the masthead carries the whole nav and the purchase bar is
+       gone with it. */
+    --sf-gallery-chrome: 148px;
+    /* A 4:5 plate is four fifths as wide as it is tall. */
+    max-width: calc(var(--sf-gallery-stage-h) * 4 / 5);
+  }
+
   .dots {
     display: none;
   }
@@ -246,6 +302,19 @@
   .gallery {
     grid-template-columns: 72px minmax(0, 1fr);
     gap: var(--sf-space-4);
+    /* 100px is the page's chrome before the first scroll — the band plus the
+       masthead, the same figure the hero measures its own height from — and
+       --sf-space-8 is the page's top padding at this width. THAT is the line
+       the plate has to fit under, not the 96px the media column sticks at:
+       the band scrolls away and the column then rises to 96, so budgeting for
+       the sticky line alone would leave the foot of the pack under the fold
+       for as long as the band is on screen. Sizing for the taller of the two
+       costs the pinned plate the band's 36px and is right at every scroll
+       position. */
+    --sf-gallery-chrome: 164px;
+    /* The rail stands beside the plate now, so it is part of what has to fit
+       across: the plate's width plus the 72px column and the gutter. */
+    max-width: calc(var(--sf-gallery-stage-h) * 4 / 5 + 72px + var(--sf-space-4));
   }
 
   .rail {
@@ -258,8 +327,12 @@
     overflow-y: auto;
     /* A viewport cap rather than "the height of the stage": the stage's height
        comes from its own ratio and nothing in CSS can hand that number to a
-       sibling. Ten thumbnails still stop short of the fold. */
-    max-height: 68svh;
+       sibling. Ten thumbnails still stop short of the fold — and on a window
+       short enough for the plate's own budget to bite, that budget is the
+       tighter of the two, so the rail never outruns the picture it belongs
+       to. `vh` first, `svh` refining it, as a plain property may. */
+    max-height: min(68vh, var(--sf-gallery-stage-h));
+    max-height: min(68svh, var(--sf-gallery-stage-h));
     scroll-snap-type: y proximity;
     padding-bottom: 0;
   }
