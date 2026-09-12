@@ -710,21 +710,13 @@
 }
 
 /* `.sf-plate` brings the surface, the hairline and `aspect-ratio: 1`; the layer
-   already has the right box, so the plate fills it instead.
-
-   THE HERO KEEPS THE QUIET FRAME every other plate has given up. The primitive
-   now carries a firm keyline over a 2px mat, because a plate elsewhere is a
-   product photograph on a page and needs an edge of its own. This one is not:
-   it is the largest picture on the site, it already lifts off the cream on
-   `--sf-shadow-2` and it sits inside the duo lamp, so the edge is drawn twice
-   before a keyline is asked for — and a mat would put a hard white rule between
-   the slide and its own shadow. So: the softer token, and no mat. The two
-   classes beat `.sf-plate` whichever order the sheets land in. */
+   already has the right box, so the plate fills it instead. The slide takes the
+   primitive's own keyline again — it was briefly given a softer token of its own
+   to opt out of a firmer frame and a mat, and both of those are gone, so every
+   plate on the storefront is once more framed identically. */
 .stage .plate {
   height: 100%;
   border-radius: var(--sf-radius-xl);
-  border-color: var(--sf-plate-border-soft);
-  padding: 0;
   box-shadow: var(--sf-shadow-2);
 }
 

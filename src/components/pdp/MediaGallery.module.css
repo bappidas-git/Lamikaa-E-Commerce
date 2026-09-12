@@ -96,17 +96,12 @@
 }
 
 /* One frame at a time, stacked so the outgoing one can cross-fade under the
-   incoming one without the plate ever being empty.
-
-   INSET BY THE MAT, not by nothing. An absolutely positioned child is laid out
-   against its ancestor's PADDING box, so `inset: 0` here would park every frame
-   ON the plate's mat and paint the one thing that makes the keyline visible out
-   of existence — on the largest plate on the storefront, which is the one that
-   needs it most. The stage is the only plate whose artwork is positioned rather
-   than in flow, so it is the only component stylesheet that has to say this. */
+   incoming one without the plate ever being empty. Flush to the stage's own box:
+   the plate carries a keyline and no mat, so there is no inset for the artwork
+   to respect. */
 .frame {
   position: absolute;
-  inset: var(--sf-plate-mat);
+  inset: 0;
   z-index: 0;
   display: grid;
   place-items: center;
