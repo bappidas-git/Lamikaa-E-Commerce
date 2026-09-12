@@ -107,30 +107,83 @@
    to do and the whole point of it.
 
    `.sf-glass--strong` takes the chrome veil from 86% to 94% of the espresso
-   ground (storefront-primitives.css, "glass that is also chrome"), and 94% is
-   a bar with a rumour of a page behind it: six points of backdrop is below the
-   threshold at which a 20px blur is visible at all, so the state that is
-   supposed to announce "the page has moved" announced it with a hairline and
-   nothing else. Firming the glass by going OPAQUE is a contradiction — glass
-   is what you can see through — so the scrolled masthead goes the other way on
-   all three inputs at once, and all three are needed:
+   ground (storefront-primitives.css, "glass that is also chrome"). The
+   scrolled masthead stops two points short of that and lifts the blur and the
+   saturation instead, so the state still announces "the page has moved" with
+   something other than a hairline.
 
-     GROUND   72% of the espresso, not 94% — 28 points of backdrop where there
-              were 6, which is what gives the blur something to work on.
-              Legibility is not spent to get it: measured against the worst
-              backdrop the storefront can put under the bar (a white product
-              photograph) the nav's warm white lands at 6.8:1 and its gold at
-              5.3:1, both clear of AA, and the cream page it actually scrolls
-              over is a little kinder still. The muted ink that would not clear
-              it at this alpha is not on the bar — it is in the account menu,
-              which is a portalled popover on its own ground.
+   THE ORDER BELOW IS THE ORDER OF IMPORTANCE, and it is not the order this
+   rule was originally written in. The ground is load-bearing: it is the only
+   input that actually keeps the page out of the bar. The blur and the
+   saturation are there for the way photography slides under the masthead, and
+   the blur in particular does far less than its radius suggests — measured,
+   below. An earlier version of this rule had that backwards, spent the ground
+   down to 72% to "give the blur something to work on", and shipped a bar you
+   could read the page through.
+
+     GROUND   92% of the espresso, and THE GROUND IS THE ONLY THING HOLDING
+              THE PAGE BACK — read the blur note below before you thin it.
+
+              THIS NUMBER WAS 72%, AND 72% WAS MEASURABLY WRONG. At that alpha
+              the body copy of a product chapter scrolling under the bar came
+              through and read as TEXT, tangling with the nav labels sharing
+              the strip — the masthead's own description of itself ("a rumour
+              of a page behind it") was describing a bar you could read the
+              page through.
+
+              Quantified, so the next person can re-run it: screenshot the
+              strip between the nav and the icon cluster, screenshot it again
+              with `main,footer{visibility:hidden}`, and diff. That peak delta
+              is the ghost. Desktop / phone, at 36px blur:
+
+                  72%  35 / 31   reads through — the reported bug
+                  86%  18 / 16   visible
+                  90%  12 / 11   visible
+                  92%  10 /  9   faint — imperceptible at 1:1
+                  94%   8 /  7   faint
+
+              92% is where it crosses into faint, and it is deliberately two
+              points BELOW the 94% `.sf-on-dark.sf-glass--strong` hands every
+              other chrome surface: the scrolled masthead stays a shade more
+              open than a modal, which is the distinction the state was for,
+              without being open enough to leak letters.
+
+              IT IS ALSO THE HOUSE VALUE, arrived at independently. Every other
+              bar that floats over scrolling content already sits here or near
+              it — AddToCartBar 92%, ChapterNav 88%, ChapterIndex flatly opaque
+              — and both of those sheets carry the same suspicion of the
+              compositor the blur note below now measures. The masthead at 72%
+              was the one surface out of step with its own system.
+
+              Legibility is not spent to get here — it is bought. Against the
+              worst backdrop the storefront can put under the bar (a white
+              product photograph) the nav's warm white measured 6.8:1 and its
+              gold 5.3:1 at the old 72%, both clear of AA; a deeper ground only
+              raises them. The muted ink that would not clear it at this alpha
+              is not on the bar — it is in the account menu, which is a
+              portalled popover on its own ground.
      BLUR     --sf-glass-blur-strong — 36px, or 24px on phones. Re-pointed as
               the RECIPE'S INPUT rather than restated as a filter here: see the
               note on `.sf-glass`, and `.noBlur` below, which stays able to
               withdraw the blur entirely because this rule never declares it.
+
+              AND IT IS NOT PROTECTING THE TYPE. Measured on this bar, holding
+              the ground at 50% and sweeping the radius alone, the ghost went
+              83 (0px) → 46 (8px) → 54 (20px) → 62 (36px) → 73 (80px) → 80
+              (200px). It dissolves text around 8px and then gives the ground
+              BACK: past roughly 16px Chromium stops dissolving the backdrop of
+              a bar this short and the type behind it returns nearly sharp, so
+              a bigger radius buys a worse result. Reproduced identically in
+              headless and in a real headed Chromium under Xvfb, so it is the
+              engine, not the capture.
+
+              The radius is therefore kept for the LOOK it gives the
+              photography sliding under the bar, and the alpha above is what
+              makes the type unreadable. Do not trade ground away for radius:
+              that trade is what produced the 72% bug.
      COLOUR   --sf-glass-saturate-strong keeps the backdrop's colour through
-              the veil. Without it those 22 extra points of backdrop average
-              out to grey mud and the bar reads as the 94% one it replaced.
+              the veil. Without it the backdrop that is left averages out to
+              grey mud and the bar reads as the 94% one it replaced.
 
    The hairline under it firms to the emphasised token — champagne gold at 35%,
    the seam that ties the dark bar to the lockup above it and to the gold
@@ -160,11 +213,11 @@
      layer `.transparent` paints — the two states are mutually exclusive in
      Header.js, and a longhand keeps it that way if that ever stops being
      true. */
-  background-color: color-mix(in srgb, var(--sf-color-bg) 72%, transparent);
+  background-color: color-mix(in srgb, var(--sf-color-bg) 92%, transparent);
   border-bottom-color: var(--sf-color-border-strong);
 }
 
-/* Without a backdrop filter there is no glass to be glassier about, and a 72%
+/* Without a backdrop filter there is no glass to be glassier about, and a 92%
    bar becomes a window onto whatever scrolls under the wordmark. The primitive
    already sends this browser to a solid ground, but it says so in a two-class
    rule that the tripled selector above out-ranks — so the chrome restates it
@@ -191,8 +244,10 @@
 
 /* AND THE VEIL GOES WITH IT. The withdrawal above used to be invisible because
    the scrolled bar was 94% opaque — six points of sharp backdrop is nothing.
-   At 72% it is a window: the page would sit crisply behind the wordmark for as
-   long as a drawer is open, which is both ugly and the one moment the chrome
+   At 92% it is a window: eight points of UNBLURRED page is louder than the
+   same eight behind a radius, and it would sit crisply behind the wordmark for
+   as long as a drawer is open — which is both ugly and the one
+   moment the chrome
    is meant to recede. So the state that has no blur has no translucency
    either. Same reasoning as the `@supports` fallback above, same value, and
    the selectors have to out-rank a three-class rule to say it — hence the
