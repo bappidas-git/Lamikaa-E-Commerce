@@ -245,28 +245,26 @@
    that often ends in its own near-white, and at 10% ink the edge of the
    photograph and the edge of the section were the same non-line.
 
-   THE FRAME IS TWO THINGS: the keyline, and `--sf-plate-mat` of the plate's own
-   surface left showing INSIDE it. The mat is not decoration — it is the only
-   reason the keyline can be seen. A plate crops its artwork edge to edge
-   (`fit="cover"` on the chapter's stage, the PDP's, the hero's), and this
-   catalogue is photographed near-black, so ink against the photograph is ink
-   against ink: the frame disappeared on exactly those products at 22% and would
-   have disappeared at any alpha. With the mat, the keyline always has the
-   surface on one side and the page on the other — the two grounds it was
-   measured against — so the frame reads on a black pack and a white one alike.
-   `padding`, so the artwork is inset by it and `overflow: hidden` rounds the
-   corner inside the keyline; the mat costs 2px of a 32px thumb and nothing of
-   the layout, because every box here is `border-box`.
+   THE FRAME IS A KEYLINE AND NOTHING ELSE — no mat, no inset, no second rule.
+   A mat (the plate's own surface left showing between the artwork and the line)
+   was tried here precisely because it is the one thing that makes ink visible
+   against a near-black pack, and it was taken off on the owner's instruction: on
+   this catalogue it reads as a white halo drawn around the packaging rather than
+   as a mounted print, which is a worse fault than a frame that a dark pack
+   swallows. So the artwork runs to the keyline, and the keyline does what it can
+   on the side that is always the same colour — the page. Do not reintroduce
+   padding, an inset ring or a second border here to chase contrast against the
+   photograph; the photograph is whatever colour it happens to be, and every
+   fix for that is a halo.
 
    ONE PIXEL AT EVERY WIDTH, deliberately. A hairline that thickens on a phone
-   is a frame competing with the pack inside it, and at 3x the browser paints
-   this as a crisp physical line rather than the soft half-pixel a 1px CSS
-   border gives a desktop. The mat holds at 2px for the same reason. */
+   is a frame competing with the pack inside it, and the alpha already does the
+   work the extra pixel would: at 3x the browser paints this as a crisp physical
+   line rather than the soft half-pixel a 1px CSS border gives a desktop. */
 .sf-plate {
   background: var(--sf-color-surface);
   border: 1px solid var(--sf-plate-border);
   border-radius: var(--sf-radius-lg);
-  padding: var(--sf-plate-mat);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
@@ -521,15 +519,6 @@
     color-mix(in srgb, var(--sf-color-bg) 50%, transparent)
   );
   pointer-events: none;
-}
-
-/* The wash marks a stand-in PHOTOGRAPH, so on a plate it stops at the artwork.
-   A pseudo-element is laid out against the padding box like any other absolute
-   child, so `inset: 0` would run the gradient out over the mat and hand the
-   keyline a page-coloured neighbour on both sides — the frame reading as one
-   soft smear on exactly the images that are already stand-ins. */
-.sf-plate.sf-placeholder-media::after {
-  inset: var(--sf-plate-mat);
 }
 
 /* =============================================================================
