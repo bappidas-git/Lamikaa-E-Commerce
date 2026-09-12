@@ -15,15 +15,18 @@ import styles from "./FullPageCta.module.css";
 // One screen that does nothing but hold the brand's three signature lines, the
 // two ways on from them, and the one question the storefront asks of a visitor
 // who is not buying today. It is the only full-viewport moment below the hero,
-// and it is deliberately the quietest: a photograph nobody is meant to look at,
-// under a near-opaque wash, under a card.
+// and it is deliberately the quietest: a photograph nobody is meant to read,
+// under a heavy wash, under a card.
 //
 // THE GROUND IS FOUR LAYERS, bottom to top:
 //   1. the placeholder photograph — `object-fit: cover`, `loading="lazy"`,
 //      `alt=""`. It is decorative and it is a stand-in; describing a photograph
 //      the brand has not taken would be inventing one, and a lazy background is
 //      a background that cannot become the page's LCP.
-//   2. the wash — --sf-color-bg at 82% over the top edge, 94% over the bottom.
+//   2. the wash — --sf-color-bg at 70% over the top edge, 84% over the bottom.
+//      Lower than it started: the veil is the page's own cream, so at .82/.94
+//      the photograph had all but vanished. One pair of alphas for every
+//      device — the card's ground, not the viewport, carries the contrast.
 //   3. the signature gradient at 12%, `mix-blend-mode: screen`, so the pink and
 //      the violet come through the dark rather than sitting on it.
 //   4. the card, and one duo lamp breathing behind it.

@@ -18,15 +18,16 @@
  *
  * NO BACKDROP BLUR ON THE GROUND. DESIGN_SYSTEM.md §4 forbids one on a
  * full-page scrolling background, and it would be the wrong tool anyway — the
- * wash is already near-opaque. The CARD blurs (GlassCard's own backdrop-filter)
- * and that, with the sticky masthead, is the whole two-layer budget.
+ * wash already holds the photograph back. The CARD blurs (GlassCard's own
+ * backdrop-filter) and that, with the sticky masthead, is the whole two-layer
+ * budget.
  *
  * THE CARD ALSO CARRIES `scrim` — text on glass over imagery, which is the case
  * DESIGN_SYSTEM.md §4 names it for. It is what keeps the card's ground near the
  * page ground the palette's contrast figures were measured against; the numbers
  * are at .lede below.
  *
- * NO HARD-CODED COLOUR. The wash is --sf-color-bg at two alphas (.82 -> .94),
+ * NO HARD-CODED COLOUR. The wash is --sf-color-bg at two alphas (.70 -> .84),
  * written as a color-mix() of the token that produces it — the idiom the
  * primitives sheet uses wherever a spec names a literal (see
  * storefront-primitives.css, RULES). On the cream page that resolves to a warm
@@ -86,16 +87,36 @@
 }
 
 /* ---- 2. The wash ---------------------------------------------------------
-   82% of the page ground at the top edge, 94% at the bottom: the photograph is
+   70% of the page ground at the top edge, 84% at the bottom: the photograph is
    a texture under the type, not a picture the eye is asked to read. Page
    ground, so it follows the theme — cream here, and the card's espresso type
-   keeps the contrast the palette was measured for. */
+   keeps the contrast the palette was measured for.
+
+   IT WAS .82 -> .94, AND ON THE CREAM SURFACE THAT WAS TOO MUCH WHITE. The
+   veil is nearly the page's own colour here, so those alphas did not soften
+   the photograph, they erased it — a faint smudge past the card's edges and
+   flat cream everywhere else. Twelve points off the top stop and ten off the
+   bottom roughly double what comes through (18% -> 30% at the top, 6% -> 16%
+   at the bottom) and the picture is still a ground rather than a subject.
+
+   ONE PAIR OF ALPHAS, NO BREAKPOINT OF ITS OWN — the wash is the same on a
+   360px phone as on a 1440px desktop. It can be, because what the type's
+   contrast actually rests on is the card's ground, and that does not change
+   with the viewport (see below).
+
+   WHAT IT COSTS THE TYPE: under three levels out of 255. The card is `strong`
+   glass over a scrim, so less than a tenth of this ground reaches the text at
+   all — recomputed over the darkest photograph the section can carry, the
+   card's own ground goes 247 -> 244 at the top edge and every line on it stays
+   far above its floor (headline ≈16:1, lede ≈7.5:1, the gradient keyword
+   ≈5.4:1 on its lightest stop). The scrim, not the wash, is what holds those
+   numbers up, which is why the wash had room to come down. */
 .wash {
   z-index: 1;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--sf-color-bg) 82%, transparent),
-    color-mix(in srgb, var(--sf-color-bg) 94%, transparent)
+    color-mix(in srgb, var(--sf-color-bg) 70%, transparent),
+    color-mix(in srgb, var(--sf-color-bg) 84%, transparent)
   );
 }
 
