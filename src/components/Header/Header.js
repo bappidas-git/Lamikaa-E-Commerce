@@ -38,7 +38,13 @@ import styles from "./Header.module.css";
 //                from the first pixel, which is the correct default for every
 //                route that is not the home page.
 //   glass        `.sf-glass` — the resting state.
-//   glass--strong after 24px of scroll.
+//   glass--strong after 24px of scroll. NOT "the same bar, slightly more
+//                opaque": once the page has moved, the bar thins to 72% of the
+//                chrome ground and blurs nearly twice as hard, so what is
+//                scrolling under it is visibly under it. The recipe and the
+//                contrast arithmetic are in Header.module.css `.strong`; the
+//                per-device blur radii are tokens, so a phone gets the same
+//                step at a radius a phone can afford.
 //
 // THE BLUR BUDGET (DESIGN_SYSTEM §4: two blurred layers, ever). The header
 // drops its backdrop filter while `body[data-drawer-open]` is set — the flag
@@ -64,8 +70,11 @@ const LOGO_WIDTH_MARK = 40;
 // panel, short enough that reaching for "Shop" feels like a hover, not a wait.
 const HOVER_INTENT_MS = 200;
 
-// The scroll depth at which the glass firms up. Small on purpose: the change
-// should read as "the page has moved", not as a second scroll threshold.
+// The scroll depth at which the glass thickens. Small on purpose: the change
+// should read as "the page has moved", not as a second scroll threshold — and
+// it is a threshold rather than a ramp because the two surfaces are a CSS
+// transition apart, so one class swap at 24px buys the whole crossfade without
+// a style write on every scroll frame.
 const STRONG_AT = 24;
 
 const MEGA_PANEL_ID = "mega-panel";
@@ -287,9 +296,11 @@ const Header = () => {
   ];
 
   // ---- Surface -----------------------------------------------------------
-  // Transparent wins over glass; glass--strong is glass one step firmer. The
-  // blur is dropped while any overlay this header owns is up — the drawer flag
-  // ui/Drawer sets is handled in CSS, for the drawers that already use it.
+  // Transparent wins over glass; glass--strong is glass one step MORE glass —
+  // a thinner veil over a wider blur, not a firmer wash (Header.module.css).
+  // The blur is dropped while any overlay this header owns is up — the drawer
+  // flag ui/Drawer sets is handled in CSS, for the drawers that already use
+  // it.
   const overlayOpen =
     isCartOpen || sidebarOpen || searchModalOpen || authModalOpen;
 

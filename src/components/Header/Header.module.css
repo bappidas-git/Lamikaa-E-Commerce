@@ -13,7 +13,8 @@
  * The surface is the `.sf-glass` / `.sf-glass--strong` primitive applied from
  * Header.js, under `.sf-on-dark` — which is what turns that recipe from a white
  * veil into the chrome's smoked espresso one. This module never restates the
- * recipe; it only says where the blur has to stop (the two-layer budget) and
+ * recipe: it re-points the recipe's own inputs for the scrolled state
+ * (`.strong`), says where the blur has to stop (the two-layer budget) and says
  * what the over-the-hero state looks like.
  *
  * THE BAR IS ESPRESSO, NOT GRAPHITE, and not by anything in this file. The
@@ -40,8 +41,20 @@
      under it only. */
   border-inline: 0;
   border-top: 0;
+  /* THE FILTER IS IN THE LIST, and it has to be. The scrolled state nearly
+     doubles the blur radius and lifts the backdrop's saturation (`.strong`
+     below). Landed as a step change in a single frame that reads as the bar
+     flinching; ramped over the same duration as the ground it arrives with, it
+     reads as glass thickening, which is the thing being described.
+     `backdrop-filter` animates on the element that TRANSITIONS it, whichever
+     sheet declared it, so the ramp is bought here even though the declaration
+     lives in `.sf-glass`. The prefixed name is listed too — Safari matches the
+     property it actually supports, and Safari is where this glass is at its
+     most visible. */
   transition: background var(--sf-transition), border-color var(--sf-transition),
-    box-shadow var(--sf-transition);
+    box-shadow var(--sf-transition),
+    -webkit-backdrop-filter var(--sf-transition),
+    backdrop-filter var(--sf-transition);
 }
 
 /* OVER THE HERO the masthead used to be nothing at all — no ground, no blur, no
@@ -90,25 +103,79 @@
   box-shadow: none;
 }
 
-/* Scrolled: `.sf-glass--strong` takes the chrome veil from 86% to 94% of the
-   espresso ground (storefront-primitives.css, "glass that is also chrome"),
-   and this firms the hairline under it to the emphasised token — champagne
-   gold at 35%, which is the seam that ties the dark bar to the lockup above it
-   and to the gold running through the cream page below. NOT a second shadow —
-   `.sf-glass` already carries --sf-shadow-1 at rest, so restating it here would
-   have made the scrolled state a class that changes nothing you can see.
+/* Scrolled: THE BAR BECOMES GLASS, which is a reversal of what this rule used
+   to do and the whole point of it.
+
+   `.sf-glass--strong` takes the chrome veil from 86% to 94% of the espresso
+   ground (storefront-primitives.css, "glass that is also chrome"), and 94% is
+   a bar with a rumour of a page behind it: six points of backdrop is below the
+   threshold at which a 20px blur is visible at all, so the state that is
+   supposed to announce "the page has moved" announced it with a hairline and
+   nothing else. Firming the glass by going OPAQUE is a contradiction — glass
+   is what you can see through — so the scrolled masthead goes the other way on
+   all three inputs at once, and all three are needed:
+
+     GROUND   72% of the espresso, not 94% — 28 points of backdrop where there
+              were 6, which is what gives the blur something to work on.
+              Legibility is not spent to get it: measured against the worst
+              backdrop the storefront can put under the bar (a white product
+              photograph) the nav's warm white lands at 6.8:1 and its gold at
+              5.3:1, both clear of AA, and the cream page it actually scrolls
+              over is a little kinder still. The muted ink that would not clear
+              it at this alpha is not on the bar — it is in the account menu,
+              which is a portalled popover on its own ground.
+     BLUR     --sf-glass-blur-strong — 36px, or 24px on phones. Re-pointed as
+              the RECIPE'S INPUT rather than restated as a filter here: see the
+              note on `.sf-glass`, and `.noBlur` below, which stays able to
+              withdraw the blur entirely because this rule never declares it.
+     COLOUR   --sf-glass-saturate-strong keeps the backdrop's colour through
+              the veil. Without it those 22 extra points of backdrop average
+              out to grey mud and the bar reads as the 94% one it replaced.
+
+   The hairline under it firms to the emphasised token — champagne gold at 35%,
+   the seam that ties the dark bar to the lockup above it and to the gold
+   running through the cream page below. NOT a second shadow — `.sf-glass`
+   already carries --sf-shadow-1 at rest.
+
+   THE TOKEN RE-POINT IS INHERITED, and nothing inside the bar reads it: the
+   mega sheet is a descendant but carries no `backdrop-filter` of its own by
+   design (MegaPanel.module.css — a blur inside a blurred ancestor is inert),
+   and the account menu that does read --sf-glass-blur is a portalled MUI
+   popover, so it hangs off <body> and keeps the resting radius.
 
    TRIPLED, and it has to be. This rule was written as a bare `.strong` and in
    that form it never painted once: `.sf-on-dark.sf-glass` sets `border-color`
-   for all four sides and is a TWO-class selector, so it outranks a one-class
-   `border-bottom-color` no matter which sheet the bundler emits last, and the
-   scrolled masthead kept the resting 12% warm-white hairline. Doubling would
-   only tie on specificity and hand the decision back to emission order, which
-   is the thing this file's other overrides (`.avatar.avatar`,
-   `.menuItem.menuItem:hover`) already refuse to depend on. Three wins
-   outright. */
+   for all four sides and `background` and is a TWO-class selector, so it
+   outranks one-class declarations no matter which sheet the bundler emits
+   last, and the scrolled masthead kept the resting 12% warm-white hairline.
+   Doubling would only tie on specificity and hand the decision back to
+   emission order, which is the thing this file's other overrides
+   (`.avatar.avatar`, `.menuItem.menuItem:hover`) already refuse to depend on.
+   Three wins outright. */
 .strong.strong.strong {
+  --sf-glass-blur: var(--sf-glass-blur-strong);
+  --sf-glass-saturate: var(--sf-glass-saturate-strong);
+  /* `background-color`, not the `background` shorthand: the shorthand would
+     also reset `background-image`, and this rule has no business touching the
+     layer `.transparent` paints — the two states are mutually exclusive in
+     Header.js, and a longhand keeps it that way if that ever stops being
+     true. */
+  background-color: color-mix(in srgb, var(--sf-color-bg) 72%, transparent);
   border-bottom-color: var(--sf-color-border-strong);
+}
+
+/* Without a backdrop filter there is no glass to be glassier about, and a 72%
+   bar becomes a window onto whatever scrolls under the wordmark. The primitive
+   already sends this browser to a solid ground, but it says so in a two-class
+   rule that the tripled selector above out-ranks — so the chrome restates it
+   at matching specificity. Placed after that rule: same weight, later wins,
+   and within one sheet source order is not a bundler question. */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .strong.strong.strong {
+    background-color: var(--sf-color-bg);
+  }
 }
 
 /* THE BLUR BUDGET (DESIGN_SYSTEM §4). A drawer over a blurred header is two
@@ -120,6 +187,19 @@
 .noBlur {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* AND THE VEIL GOES WITH IT. The withdrawal above used to be invisible because
+   the scrolled bar was 94% opaque — six points of sharp backdrop is nothing.
+   At 72% it is a window: the page would sit crisply behind the wordmark for as
+   long as a drawer is open, which is both ugly and the one moment the chrome
+   is meant to recede. So the state that has no blur has no translucency
+   either. Same reasoning as the `@supports` fallback above, same value, and
+   the selectors have to out-rank a three-class rule to say it — hence the
+   doubled `.strong` under the body flag and the `.noBlur` compound. */
+:global(body[data-drawer-open]) .strong.strong.strong,
+.strong.strong.strong.noBlur {
+  background-color: var(--sf-color-bg);
 }
 
 .inner {

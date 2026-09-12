@@ -122,11 +122,29 @@
    scroll-jank machine.
    The ≤768px blur reduction is NOT restated here: --sf-glass-blur itself drops
    to 12px under that breakpoint in storefront-tokens.css, which reaches every
-   consumer of the token at once. */
+   consumer of the token at once.
+
+   THE FILTER IS DECLARED ONCE, HERE, and reads two tokens rather than one.
+   That is what lets a consumer be glassier without restating the filter: the
+   scrolled masthead re-points --sf-glass-blur and --sf-glass-saturate on
+   itself (Header.module.css `.strong`) and this declaration picks the new
+   values up. Restating `backdrop-filter` in a component sheet instead would
+   have out-ranked the two withdrawals that keep the blur budget honest —
+   `.noBlur` and `body[data-drawer-open]`, both single-class selectors — and a
+   header that cannot stop blurring under a drawer is three blurred layers.
+   --sf-glass-saturate is 1 for everything that does not ask, so every other
+   glass surface on the storefront computes the identity it had before — and
+   stating that identity rather than omitting the function is what keeps the
+   masthead's firm-up ANIMATABLE. A filter list interpolates function by
+   function down two lists of the same length and order; a shorter list is only
+   reached by the spec's padding rule, which is a worse thing to hang a visible
+   transition on than one extra `saturate(1)` nobody can see. */
 .sf-glass {
   background: var(--sf-glass-bg);
-  -webkit-backdrop-filter: blur(var(--sf-glass-blur));
-  backdrop-filter: blur(var(--sf-glass-blur));
+  -webkit-backdrop-filter: blur(var(--sf-glass-blur))
+    saturate(var(--sf-glass-saturate));
+  backdrop-filter: blur(var(--sf-glass-blur))
+    saturate(var(--sf-glass-saturate));
   border: 1px solid var(--sf-glass-border);
   box-shadow: var(--sf-shadow-1);
 }
