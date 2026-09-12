@@ -198,13 +198,23 @@
      wanted. A plate is near-white artwork on a near-white surface sitting on a
      cream page: at the glass hairline's 10% the three grounds run together and
      the photograph has no edge — the pack looks printed ON the section rather
-     than framed by it. Roughly twice that alpha (≈ #CDCAC7 on --sf-color-surface)
-     is the least that reads as a frame at arm's length on a phone and still
-     disappears next to the product. It is SEPARATE from --sf-color-border
-     because every input, divider and card on the storefront shares that one and
-     none of them has this problem; firming the shared hairline to fix the plates
-     would heavy up the whole page. */
-  --sf-plate-border: rgba(27, 23, 20, 0.22);
+     than framed by it. It is SEPARATE from --sf-color-border because every
+     input, divider and card on the storefront shares that one and none of them
+     has this problem; firming the shared hairline to fix the plates would heavy
+     up the whole page.
+     50% ink, and measured where the line actually is: a border paints over its
+     own element's background, so this resolves against the plate's #FFFDF9 and
+     not against the page — ≈ #8D8A85, which is 3.1:1 against the cream page
+     outside it and 3.4:1 against the mat inside it. Both sides clear the 3:1 the
+     non-text standard asks of a boundary. The artwork is not one of those sides
+     and never can be: it is whatever colour a photograph happens to be, which
+     is what the mat (see --sf-plate-mat) exists to solve. */
+  --sf-plate-border: rgba(27, 23, 20, 0.5);
+  /* The ONE plate that keeps the old, quieter line: the hero's slide. It is a
+     full-bleed photograph carrying --sf-shadow-2 and the duo lamp, so its edge
+     is drawn by the lift rather than by a keyline, and firming it would put a
+     hard rule through the softest thing on the page. Nothing else uses this. */
+  --sf-plate-border-soft: rgba(27, 23, 20, 0.22);
   /* THE TWO SCRIMS ARE NOT THE SAME THING, which is why there are two tokens.
      `--sf-color-overlay` is a PLATE: it sits on a photograph with page-coloured
      type on top of it (a stock tag across the foot of a product plate), so it
@@ -322,6 +332,22 @@
   --sf-radius-lg: 20px;
   --sf-radius-xl: 28px;
   --sf-radius-pill: 999px;
+
+  /* ---- The plate's mat --------------------------------------------------- */
+  /* THE FRAME IS A KEYLINE AND A MAT, not a keyline alone, and the mat is the
+     half that does the work. This catalogue is photographed on near-black
+     packaging and every stage crops it edge to edge, so an ink keyline against
+     the artwork is an ink line against ink — invisible at any alpha, which is
+     what the 22% frame it replaces actually was on those products. The mat is
+     the plate's own surface left showing between the artwork and the keyline:
+     it gives the line a light neighbour on the inside at every width, on every
+     device, whatever the photograph does, and it reads as a mounted print
+     rather than as a heavier border.
+     2px, and theme-independent — it is a printed mount, not a colour, so it
+     does not change between the page and the chrome. One value at every width
+     for the same reason the keyline is 1px at every width: a frame that grows
+     on a phone competes with the pack inside it. */
+  --sf-plate-mat: 2px;
 
   /* ---- Spacing scale (4px base) ---------------------------------------- */
   --sf-space-1: 4px;
@@ -537,7 +563,8 @@
   /* Same job, mirrored: warm white at the same strength, so a plate inside the
      chrome (the drawer's category thumbs, the mega panel's featured pack) is
      framed exactly as firmly as one on the cream page. */
-  --sf-plate-border: rgba(247, 243, 234, 0.22);
+  --sf-plate-border: rgba(247, 243, 234, 0.5);
+  --sf-plate-border-soft: rgba(247, 243, 234, 0.22);
   --sf-color-overlay: rgba(23, 18, 15, 0.74);
   --sf-color-scrim: rgba(23, 18, 15, 0.74);
 
@@ -760,8 +787,11 @@
     --sf-color-border: #c8c8c8;
     --sf-color-border-strong: #8a8a8a;
     /* An alpha over a ground that is now paper would print as a near-invisible
-       tint; the plate's frame takes the same grey ink as every other rule. */
+       tint; the plate's frame takes the same grey ink as every other rule — and
+       so does the hero's, because on paper there is no shadow left to draw its
+       edge with. */
     --sf-plate-border: #c8c8c8;
+    --sf-plate-border-soft: #c8c8c8;
 
     /* ---- Effects that do not survive a sheet of paper -------------------- */
     --sf-shadow-xs: none;
