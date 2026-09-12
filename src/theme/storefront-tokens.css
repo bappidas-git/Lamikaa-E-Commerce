@@ -286,6 +286,24 @@
   --sf-glass-bg-strong: rgba(255, 255, 255, 0.86); /* header after scroll, modals */
   --sf-glass-border: rgba(27, 23, 20, 0.10);
   --sf-glass-blur: 20px;
+  /* THE SCROLLED MASTHEAD'S BLUR, and the only reason it is a second token:
+     the chrome is the one glass surface whose job is to LOOK like glass while
+     the page slides under it, so when it leaves the top of the document it
+     blurs nearly twice as hard instead of settling for the resting radius.
+     Every other consumer of `.sf-glass` keeps --sf-glass-blur; the masthead
+     re-points the recipe's input on itself (Header.module.css `.strong`), so
+     the per-device values below reach it without a second declaration. */
+  --sf-glass-blur-strong: 36px;
+  /* Blur alone is FOG, not glass. A 36px radius averages whatever is behind
+     the bar into a flat grey wash, and a flat wash is indistinguishable from
+     an opaque bar — which is exactly the "there is barely any glass here"
+     reading this pair exists to fix. Saturating the backdrop keeps the blobs
+     of colour (a product photograph, a gold price, a pink chip) legible as
+     colour through the veil, which is what says "this is glass, and the page
+     is moving under it". 1 is the identity, so glass that does not ask for a
+     lift is byte-for-byte what it was. */
+  --sf-glass-saturate: 1;
+  --sf-glass-saturate-strong: 1.7;
   --sf-glass-fallback: #FFFCF6;                    /* @supports not backdrop-filter */
 
   /* ---- Ambient glow ------------------------------------------------------ */
@@ -613,11 +631,20 @@
 }
 
 /* Blur is expensive on phones and reads as mud at full strength on a small
-   panel; the glass recipe halves it below the tablet breakpoint. */
+   panel; the glass recipe halves it below the tablet breakpoint.
+
+   THE SCROLLED MASTHEAD IS LIFTED HERE TOO, and deliberately not to the 12px
+   the resting recipe drops to: a phone is where the chrome is most of what is
+   on screen, so a bar that firms up by an amount nobody can see is a bug on
+   the device it matters most on. 24px is still double the resting radius — the
+   same step the desktop pair makes — on one 56px-tall bar rather than on the
+   hundred blurred cards the note above is about, which is the whole reason the
+   budget (DESIGN_SYSTEM §4: two blurred layers, ever) can afford it. */
 @media (max-width: 768px) {
   :root,
   .sf-on-dark {
     --sf-glass-blur: 12px;
+    --sf-glass-blur-strong: 24px;
   }
 }
 
@@ -677,6 +704,9 @@
     --sf-glass-bg-strong: transparent;
     --sf-glass-fallback: #ffffff;
     --sf-glass-blur: 0px;
+    --sf-glass-blur-strong: 0px;
+    --sf-glass-saturate: 1;
+    --sf-glass-saturate-strong: 1;
 
     /* ---- Ink: the three tiers, 16.9 / 10.9 / 8.6:1 on white ------------- */
     --sf-color-text: #111111;
