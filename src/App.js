@@ -48,6 +48,14 @@ import "./App.css";
 // =============================================================================
 import Home from "./pages/Home/Home";
 
+// The "What our customers say" band. It is site furniture — mounted once in the
+// shell below, so every storefront route carries it — but it is also the LAST
+// thing on a page, so it is a chunk of its own rather than weight on the
+// critical path, and the component defers its own read until it is within
+// 600px of the viewport. `fallback={null}`: there is nothing to hold a space
+// for until the quotes are there.
+const Testimonials = React.lazy(() => import("./components/storefront/Testimonials"));
+
 // Storefront Pages
 const Shop = React.lazy(() => import("./pages/Shop/Shop"));
 const Rituals = React.lazy(() => import("./pages/Rituals/Rituals"));
@@ -106,6 +114,16 @@ const AdminRituals = React.lazy(() => import("./pages/Admin/AdminRituals"));
 const AdminReviews = React.lazy(() => import("./pages/Admin/AdminReviews"));
 const AdminLeads = React.lazy(() => import("./pages/Admin/AdminLeads"));
 const AdminSettings = React.lazy(() => import("./pages/Admin/AdminSettings"));
+
+// =============================================================================
+// The one page the testimonial band stays off.
+//
+// Checkout is a payment, and a payment is not a place to start reading about
+// somebody else's face cream: nothing may sit between the address form and the
+// pay button. Everywhere else — home, shop, a product, the cart, the policies,
+// a 404 — carries it, which is the point of mounting it in the shell.
+// =============================================================================
+const TESTIMONIALS_HIDDEN_ON = [ROUTES.CHECKOUT];
 
 // =============================================================================
 // The storefront shell.
@@ -232,6 +250,15 @@ function StorefrontShell() {
             </motion.div>
           </AnimatePresence>
         </main>
+        {/* Outside <main>, beside the footer, because it is the same kind of
+            thing: one band that belongs to the SITE rather than to the page
+            above it. Keeping it out of the keyed route wrapper is also what
+            stops it re-mounting (and re-reading) on every navigation. */}
+        {!TESTIMONIALS_HIDDEN_ON.some((path) => location.pathname.startsWith(path)) && (
+          <Suspense fallback={null}>
+            <Testimonials />
+          </Suspense>
+        )}
         <Footer />
         <BottomNav />
       </div>

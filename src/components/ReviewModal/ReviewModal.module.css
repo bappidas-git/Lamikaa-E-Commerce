@@ -186,6 +186,133 @@
 }
 
 /* =============================================================================
+ * THE TWO PICKERS — one portrait, up to three pictures of the product
+ * =============================================================================
+ * Both are built out of the same parts as the rest of the form (a label row, a
+ * control, a quiet note) so they read as fields rather than as an upload widget
+ * bolted on. Nothing here is a fixed pixel width: the row wraps, the thumbnails
+ * are a grid of `auto-fill` cells, and the whole block survives a 320px sheet.
+ * ========================================================================== */
+
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-4);
+}
+
+/* The portrait is only ever a circle, at exactly the size the reviews list and
+   the testimonial card paint it, so what the customer approves here is what
+   everybody else sees. */
+.avatarPreview {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border: 1px solid var(--sf-color-border);
+  border-radius: 50%;
+  background: var(--sf-color-surface-2);
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarMonogram {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-gold);
+}
+
+.avatarActions,
+.pickerRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-2) var(--sf-space-3);
+  min-width: 0;
+}
+
+.pickerNote {
+  flex: 1 1 14ch;
+  margin: 0;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-muted);
+}
+
+/* Reserves its own line height so the sheet does not jump when a message
+   arrives or clears. */
+.pickerStatus {
+  min-height: 1.2em;
+  margin: var(--sf-space-2) 0 0;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: var(--sf-space-3);
+  margin: 0 0 var(--sf-space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface-2);
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 32px, not 44: it sits ON a 84px thumbnail, and a 44px disc would cover half
+   the picture it is meant to let you check. The whole tile is the affordance —
+   the control simply marks the corner. */
+.thumbRemove {
+  position: absolute;
+  top: var(--sf-space-1);
+  right: var(--sf-space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--sf-glass-border);
+  border-radius: 50%;
+  background: var(--sf-glass-bg-strong);
+  color: var(--sf-color-text);
+  cursor: pointer;
+  transition: background var(--sf-transition), color var(--sf-transition);
+}
+
+.thumbRemove:hover {
+  background: var(--sf-color-danger);
+  color: var(--sf-color-primary-contrast);
+}
+
+.thumbRemove:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* =============================================================================
  * NOTES AND ERRORS
  * ========================================================================== */
 

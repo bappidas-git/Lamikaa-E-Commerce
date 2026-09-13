@@ -247,23 +247,10 @@
   min-width: 0;
 }
 
-/* A hairline ring holding the initial in the display serif — no fill, no
-   gradient; the mark should read as a monogram, not a chat avatar. */
-.avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 38px;
-  height: 38px;
-  border: 1px solid var(--sf-color-border-strong);
-  border-radius: var(--sf-radius-pill);
-  background: transparent;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-lg);
-  line-height: 1;
-  color: var(--sf-color-gold-deep);
-}
+/* The reviewer's disc — the customer's photograph, or a hairline ring holding
+   their initial in the display serif. Both states live in `ReviewerAvatar`
+   (size="sm" is this column's 38px), which the testimonial band shares, so the
+   two surfaces can never answer "who wrote this?" differently. */
 
 .who {
   display: flex;

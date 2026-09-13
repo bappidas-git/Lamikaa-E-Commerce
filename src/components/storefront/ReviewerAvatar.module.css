@@ -1,0 +1,57 @@
+/* =============================================================================
+ * ReviewerAvatar — one circle, three sizes, two states
+ * =============================================================================
+ * The disc is a hairline ring on the page's own ground rather than a filled
+ * chip: on the reviews page it sits in a column of hairline cards, and a solid
+ * colour there would read as a chat avatar in a letters page. A PHOTOGRAPH
+ * fills the same ring edge to edge (`object-fit: cover`), so both states occupy
+ * exactly the same box and nothing moves when a picture arrives.
+ *
+ * The size is a custom property so the two states cannot drift apart and a
+ * caller can override one number instead of restating the circle.
+ * ========================================================================== */
+
+.avatar {
+  --avatar-size: 44px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  overflow: hidden;
+  border: 1px solid var(--sf-color-border-strong);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-surface-2);
+}
+
+.sm {
+  --avatar-size: 38px;
+}
+
+.md {
+  --avatar-size: 44px;
+}
+
+.lg {
+  --avatar-size: 56px;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* A portrait is nearly always cropped to this circle from something taller;
+     faces sit above the middle of a frame, so the crop is biased upward. */
+  object-position: center 35%;
+}
+
+.monogram {
+  font-family: var(--sf-font-display);
+  /* Tied to the disc so the letter is the same weight of mark at every size. */
+  font-size: calc(var(--avatar-size) * 0.42);
+  font-weight: var(--sf-font-medium);
+  line-height: 1;
+  color: var(--sf-color-gold-deep);
+}
