@@ -1955,17 +1955,6 @@
     "showProgress": true,
     "showArrows": true,
     "showPause": true,
-<<<<<<< HEAD
-    "background": {
-      "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121532/hero_image_desktop.png",
-      "mobileUrl": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121524/mobile.png",
-      "position": "center",
-      "overlay": 20,
-      "blur": 0,
-      "showContent": true
-    },
-    "updatedAt": "2026-09-12T18:27:54.689Z"
-=======
     "theme": "light",
     "height": "standard",
     "eyebrowLabel": "Black Rice Ritual",
@@ -1982,16 +1971,15 @@
       "theme": "inherit"
     },
     "background": {
-      "url": "",
-      "mobileUrl": "",
+      "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121532/hero_image_desktop.png",
+      "mobileUrl": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121524/mobile.png",
       "position": "center",
-      "overlay": 55,
+      "overlay": 20,
       "blur": 0,
       "showContent": true
     },
     "slides": [],
-    "updatedAt": "2026-09-06T00:00:00.000Z"
->>>>>>> 2253ed6e06c7758f0448d85092ebb4e31a84fca8
+    "updatedAt": "2026-09-12T18:27:54.689Z"
   },
   "settings": {
     "store": {
