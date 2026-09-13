@@ -1,5 +1,123 @@
 # Release notes
 
+## 1.3.0-lamikaa — 2026-09-13
+
+The home page's opening band stops being one composition repeated eight times.
+A slide can now be a **poster** rather than a product, its copy can sit on
+either side of the stage or on both, and the band can be composed on a dark
+ground instead of the cream one — all of it from Admin → Home & Hero, none of
+it in the stylesheet. And the copy carries its own ground, so a merchant can
+take the scrim over a photograph to zero without losing the headline.
+
+The admin panel gains a light mode. Dark stays the default.
+
+### Added
+
+- **Poster slides.** A slide no longer has to be a product. `heroConfig.slides`
+  is the ordered carousel and an entry is either `{ kind: "product",
+  productId }` or `{ kind: "custom", … }` — a picture with an eyebrow, a
+  headline, two lines, some marks, a card of its own and up to two buttons, any
+  of which may be blank. *A picture and one button* is a valid slide; so is a
+  picture and nothing at all. Posters are added, reordered, duplicated, hidden
+  and deleted in the same list the products are.
+
+- **Five compositions, per slide.** `layout.preset` is one of `text-left`
+  (the classic spread), `text-right` (mirrored), `text-center`, `split` — the
+  card centred with the headline one side and the lines and buttons the other —
+  and `poster`. Alongside it: `align` (left / centred / right, or "match the
+  layout"), `vertical` (top / middle / bottom), and three switches for whether
+  the slide draws its words, its card and its buttons at all. Held at BOTH
+  levels: `heroConfig.layout` is the default every slide inherits key by key, so
+  a slide that only wants its copy on the other side does not restate the rest.
+
+- **A dark ground for the hero, and the hero only.** `theme: "dark"` puts the
+  band in `.sf-on-dark` — the storefront's own dark token scope — so the ink,
+  the hairlines, the buttons, the chips, the scrim and the plate under the copy
+  all re-point together. Set for the section, overridable per slide, and the
+  page around the band is untouched. A dark poster can sit in a cream carousel.
+
+- **The ground under the copy (`layout.panel`).** The fix for type on an
+  unscrimmed photograph. The artwork is the merchant's and so is the scrim —
+  which goes all the way to zero — so no default veil over the PICTURE can
+  guarantee the words. The copy now carries its own: a feathered wash, a pane of
+  the storefront's frosted glass, or a solid card. At the default (`auto`) its
+  strength is computed from how much work the scrim and the blur are already
+  doing — 62% behind the words at a scrim of 0, a whisper at 55, nothing at all
+  by 80 or behind an 8px blur. A merchant who drops the scrim to 0 on a bright
+  studio frame keeps a readable headline; one who wants the picture untouched
+  says `none`.
+
+- **Band height and eyebrow, admin-managed.** `heroConfig.height` is `auto` /
+  `compact` / `standard` (the screen, less the header) / `tall`, and the eyebrow
+  over a product headline is editable copy rather than a constant.
+
+- **A light mode for the admin panel, dark by default.** One switch in the app
+  bar, stored per browser (`lamikaa-admin-theme`), applied above the whole
+  `/admin` route tree — so signing in never flashes the other mode.
+  `buildAdminTheme(mode)` builds both from one set of component overrides: same
+  radii, same density, a different ladder of neutrals and a gold re-picked for
+  a pale ground (antique `#825C0E` under a warm-white label, rather than
+  champagne under a near-black one). SweetAlert2 and the page scrollbars follow
+  by body class, since they render outside the MUI tree.
+
+### Changed
+
+- **The hero is a one-cell grid of complete slides.** Every slide sits in
+  `grid-area: 1 / 1` of the stage, so the stage is exactly as tall as its
+  tallest slide and nothing below the hero can move when the slide changes —
+  the same zero-CLS guarantee the old hidden "copy sizer" bought, by
+  construction rather than by mirroring the copy. The build this replaces
+  rendered one copy block and updated it in place, which is not possible once
+  the copy is in a different place on every slide.
+
+- **The copy fades THROUGH; the card still crossfades.** Two headlines stacked
+  in one cell at 50% each are two headlines, so the outgoing copy is gone before
+  the incoming copy starts (a fast exit, a delayed entrance). Two dissolving
+  photographs read as one becoming another, so the card keeps its full-duration
+  crossfade. `visibility` is switched at the ends of that window, which is what
+  keeps exactly one slide in the tab order and in the accessibility tree.
+
+- **The control rail is its own row under the stage**, aligned with whichever
+  composition is on screen, and one line of names rather than two wrapped rows —
+  it used to live inside the copy column, which only worked while the copy was
+  always in the same place.
+
+- **The backdrop's scrim is even, not directional.** It used to lean towards
+  wherever the copy was; the copy now carries its own plate, which is both
+  layout-aware and automatic, so the picture gets one veil at the admin's
+  strength and the words get their own ground.
+
+- **Admin → Home & Hero is one screen with one save.** The slide list, the
+  compositions, the grounds, the pictures and the poster copy are one
+  `PUT /heroConfig`; `setHeroOrder` keeps the products' own `heroOrder` in step
+  for the rest of the admin, and a product's hero headline still saves to the
+  product. The composition is picked from five wireframe tiles, and the live
+  preview paints the real thing — the picture, its scrim, the plate, the layout
+  and the band's own light or dark ground — with a desktop/phone switch, because
+  the two are different compositions.
+
+### Fixed
+
+- **A hero slide could overflow the band sideways.** The section and the stage
+  left their single grid column implicit, and an implicit `auto` track is sized
+  from its items' max-content and may overflow its container — so on a phone the
+  track resolved to the 1280px container inside a 390px viewport and the copy
+  ran off the side, invisible behind `overflow-x: clip`. Both now state
+  `grid-template-columns: minmax(0, 1fr)`.
+
+- **The mirrored composition stacked instead of sitting side by side.** Grid
+  auto-placement only moves forwards: the copy comes first in the DOM and is
+  placed in column 2, so the card could not go into column 1 of the same row and
+  started a second one. Every placed item now names its row as well as its
+  column.
+
+- **A "full screen" band was taller than the screen.** The card is the tallest
+  thing in a slide and the rail sits under it, so a fixed card width put the
+  CTAs below the fold on a 900px laptop. The card is now bounded by the height
+  left over once the chrome, the slide's padding and the rail have taken theirs,
+  and the centred composition — the one that stacks its card UNDER its copy — is
+  sized by height rather than width.
+
 ## 1.2.0-lamikaa — 2026-09-11
 
 The storefront is light. The page is a warm cream under espresso type, the

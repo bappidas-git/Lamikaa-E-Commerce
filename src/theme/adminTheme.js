@@ -5,97 +5,239 @@ import { createTheme, alpha } from "@mui/material/styles";
 // =============================================================================
 // The storefront is the showroom: glass, ambient glow, gradient hairlines, pill
 // buttons, Fraunces display type. The admin is the back office. It shares the
-// palette — the same charcoal grounds, the same champagne gold — and nothing
-// else: no glass (except the login card), no glow, 8px controls, hairline
-// borders, soft tinted status badges and uppercase table heads.
+// palette — the same champagne/antique gold, the same warm neutrals — and
+// nothing else: no glass (except the login card), no glow, 8px controls,
+// hairline borders, soft tinted status badges and uppercase table heads.
 //
-// ONE THEME, ONE MODE. The light/dark toggle went with Prompt 03; this file
-// stopped having a light half in Prompt 32. `buildAdminTheme()` still takes a
-// parameter so a caller that has not been updated (`buildAdminTheme("dark")`)
-// keeps working — the argument is ignored.
+// TWO MODES, ONE DESIGN LANGUAGE. `buildAdminTheme(mode)` takes "dark" or
+// "light" and DARK IS THE DEFAULT — a back office is looked at for eight hours
+// at a time, and this one was drawn on charcoal. The light half is the same
+// design language on the storefront's own warm paper: identical radii, identical
+// density, identical component overrides, a different ladder of neutrals and a
+// gold that has been re-picked for a pale ground.
+//
+// WHY THE GOLD IS NOT THE SAME IN BOTH. Champagne (#F5D76E) measures 13.4:1 on
+// #0B0B0D and 1.4:1 on cream — it is a colour for a near-black ground and it
+// vanishes on a pale one. So the light mode spends the storefront's ANTIQUE gold
+// (#825C0E) instead, and the fill/label pair runs the other way round: a pale
+// fill under a near-black label in the dark, a deep fill under a warm-white
+// label in the light. `primary.contrastText` moves with it, so every consumer
+// that uses the pair — and they all do — stays legible without a second rule.
 //
 // FULLY ISOLATED. Every value below is spelled out rather than read from a
 // `--sf-*` custom property: the admin never reads storefront tokens, so its
-// theme has to name its own palette. `ADMIN_PALETTE` is exported for the few
-// places that need a colour outside a React tree (a SweetAlert2
-// `confirmButtonColor`); everything inside one reads `theme.palette.*`.
+// theme has to name its own palette. The light ladder is deliberately a MIRROR
+// of `theme/storefront-tokens.css` (same hexes, same contrast figures) so the
+// two products look like one company — but it is a copy, not a reference. Keep
+// them in step.
+//
+// `ADMIN_PALETTE` is exported for the few places that need a colour outside a
+// React tree — SweetAlert2 renders under <body>, outside the ThemeProvider, so
+// its per-call `confirmButtonColor` has to be a literal from somewhere. It is a
+// LIVE object: `buildAdminTheme()` re-points its contents at the mode being
+// built, so a red confirm button is the red that reads on the ground the dialog
+// will actually land on. Every consumer reads a property off it at call time
+// (inside a click handler), which is what makes that safe; do not destructure
+// it at module scope.
 // =============================================================================
 
-/** Champagne gold ramp — the one accent the admin spends. */
+/** Champagne gold ramp — the dark mode's one accent. */
 const GOLD = "#F5D76E";
 const GOLD_LIGHT = "#FFEFA6";
 const GOLD_DEEP = "#B88924";
-/** Near-black: the label colour on a gold fill (13.4:1). */
+/** Near-black: the label colour on a champagne fill (13.4:1). */
 const INK = "#0B0B0D";
 
-/** The gold focus ring, `--sf-shadow-focus`'s admin twin. */
-export const ADMIN_FOCUS_RING = `0 0 0 3px ${alpha(GOLD, 0.55)}`;
+/** Antique gold ramp — the light mode's one accent, text-safe on paper. */
+const OCHRE = "#825C0E";
+const OCHRE_LIGHT = "#A87C14";
+const OCHRE_DEEP = "#513707";
+/** Warm white: the label colour on an antique-gold fill (5.2:1). */
+const PAPER_INK = "#FFFCF5";
+/** Espresso — the light mode's type colour (16.1:1 on the cream ground). */
+const ESPRESSO = "#1B1714";
 
-/** The gradient the active nav item and the CTA preview paint with. */
-export const ADMIN_GOLD_GRADIENT = `linear-gradient(135deg, ${GOLD_LIGHT}, ${GOLD} 50%, ${GOLD_DEEP})`;
+/** The gold focus ring, `--sf-shadow-focus`'s admin twin, per mode. */
+export const ADMIN_FOCUS_RINGS = {
+  dark: `0 0 0 3px ${alpha(GOLD, 0.55)}`,
+  light: `0 0 0 3px ${alpha(OCHRE, 0.38)}`,
+};
+
+/** LEGACY, dark. Prefer the theme's own focus ring inside a React tree. */
+export const ADMIN_FOCUS_RING = ADMIN_FOCUS_RINGS.dark;
+
+/** The gradient the active nav item and the CTA preview paint with, per mode. */
+export const ADMIN_GOLD_GRADIENTS = {
+  dark: `linear-gradient(135deg, ${GOLD_LIGHT}, ${GOLD} 50%, ${GOLD_DEEP})`,
+  light: `linear-gradient(135deg, ${OCHRE_LIGHT}, ${OCHRE} 50%, ${OCHRE_DEEP})`,
+};
+
+/** LEGACY, dark. Inside a React tree read `theme.palette.gradient.gold`. */
+export const ADMIN_GOLD_GRADIENT = ADMIN_GOLD_GRADIENTS.dark;
 
 /**
  * The ground a hero-slide preview falls back to when the slide carries no
- * gradient of its own. The admin's own copy of the brand wash — deliberately
+ * picture of its own. The admin's own copy of the brand wash — deliberately
  * not `var(--sf-gradient-brand)`: the admin never reads storefront tokens.
  */
-export const ADMIN_BRAND_WASH =
-  "linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330)";
-
-// Status hues for the soft chip variants — a translucent tint behind a light
-// label, the "badge" look modern dashboards use instead of solid pill chips.
-// Re-derived for the dark LAMIKAA palette: each foreground clears 4.5:1 on the
-// #0B0B0D ground, so violet and cyan are stepped up from their palette tone.
-export const CHIP_TONES = {
-  default: { fg: "#B8B5B0", bg: "rgba(255, 255, 255, 0.08)" },
-  primary: { fg: GOLD, bg: "rgba(245, 215, 110, 0.14)" },
-  secondary: { fg: "#C4B5FD", bg: "rgba(139, 92, 246, 0.18)" },
-  success: { fg: "#7ED9A6", bg: "rgba(126, 217, 166, 0.14)" },
-  warning: { fg: "#F5C76E", bg: "rgba(245, 199, 110, 0.14)" },
-  error: { fg: "#FF8A80", bg: "rgba(255, 138, 128, 0.14)" },
-  info: { fg: "#5DE7FF", bg: "rgba(93, 231, 255, 0.12)" },
+export const ADMIN_BRAND_WASHES = {
+  dark: "linear-gradient(135deg, #0B0B0D, #1C1C20 55%, #2A2330)",
+  light: "linear-gradient(135deg, #FFFDF9, #F4ECDD 55%, #EFE4DC)",
 };
 
+/** LEGACY, dark. */
+export const ADMIN_BRAND_WASH = ADMIN_BRAND_WASHES.dark;
+
+// Status hues for the soft chip variants — a translucent tint behind a coloured
+// label, the "badge" look modern dashboards use instead of solid pill chips.
+// Each foreground clears 4.5:1 on its own mode's ground: the dark set is
+// stepped UP from the palette tone, the light set is the storefront's own
+// deepened semantics (which were picked against #F8F3EA for exactly this).
+export const CHIP_TONE_SETS = {
+  dark: {
+    default: { fg: "#B8B5B0", bg: "rgba(255, 255, 255, 0.08)" },
+    primary: { fg: GOLD, bg: "rgba(245, 215, 110, 0.14)" },
+    secondary: { fg: "#C4B5FD", bg: "rgba(139, 92, 246, 0.18)" },
+    success: { fg: "#7ED9A6", bg: "rgba(126, 217, 166, 0.14)" },
+    warning: { fg: "#F5C76E", bg: "rgba(245, 199, 110, 0.14)" },
+    error: { fg: "#FF8A80", bg: "rgba(255, 138, 128, 0.14)" },
+    info: { fg: "#5DE7FF", bg: "rgba(93, 231, 255, 0.12)" },
+  },
+  light: {
+    default: { fg: "#544C42", bg: "rgba(27, 23, 20, 0.07)" },
+    primary: { fg: OCHRE, bg: "rgba(130, 92, 14, 0.12)" },
+    secondary: { fg: "#5B3E96", bg: "rgba(91, 62, 150, 0.12)" },
+    success: { fg: "#1D6B42", bg: "rgba(29, 107, 66, 0.12)" },
+    warning: { fg: "#8A5B08", bg: "rgba(138, 91, 8, 0.14)" },
+    error: { fg: "#B0261C", bg: "rgba(176, 38, 28, 0.10)" },
+    info: { fg: "#12626F", bg: "rgba(18, 98, 111, 0.10)" },
+  },
+};
+
+/** LEGACY, dark. */
+export const CHIP_TONES = CHIP_TONE_SETS.dark;
+
 /**
- * The admin palette, per DESIGN_SYSTEM §10. Exported so a screen can reach a
- * colour where `useTheme()` cannot follow — SweetAlert2 renders under <body>,
- * outside the ThemeProvider, so its per-call `confirmButtonColor` has to be a
- * literal from somewhere, and this is that somewhere.
+ * The two palettes, per DESIGN_SYSTEM §10.
+ *
+ * `surface` is a pair of sunken/lifted grounds the MUI palette has no name for:
+ * inputs and thumbnails sit on `sunken`, a row lifts to `hover`. Extra keys
+ * ride along on the palette untouched by augmentColor, which is exactly what we
+ * want from them — and the same is true of `gradient` and `shadow`.
  */
-export const ADMIN_PALETTE = {
-  mode: "dark",
-  primary: {
-    main: GOLD,
-    dark: GOLD_DEEP,
-    light: GOLD_LIGHT,
-    contrastText: INK,
+export const ADMIN_PALETTES = {
+  dark: {
+    mode: "dark",
+    primary: {
+      main: GOLD,
+      dark: GOLD_DEEP,
+      light: GOLD_LIGHT,
+      contrastText: INK,
+    },
+    secondary: { main: "#8B5CF6", light: "#C4B5FD", contrastText: "#FFFFFF" },
+    success: { main: "#7ED9A6", contrastText: INK },
+    warning: { main: "#F5C76E", contrastText: INK },
+    error: { main: "#FF8A80", contrastText: INK },
+    info: { main: "#5DE7FF", contrastText: INK },
+    background: {
+      default: "#0B0B0D",
+      paper: "#141416",
+    },
+    surface: {
+      sunken: "#1C1C20",
+      hover: "#222228",
+    },
+    divider: "rgba(255, 255, 255, 0.08)",
+    text: {
+      primary: "#F7F5F0",
+      secondary: "#B8B5B0",
+      disabled: "rgba(247, 245, 240, 0.62)",
+    },
+    action: {
+      hover: "rgba(255, 255, 255, 0.05)",
+      selected: "rgba(245, 215, 110, 0.12)",
+    },
+    gradient: {
+      gold: ADMIN_GOLD_GRADIENTS.dark,
+      brandWash: ADMIN_BRAND_WASHES.dark,
+    },
+    shadow: {
+      // On a charcoal ground only black reads as depth.
+      popover: "0 8px 24px rgba(0, 0, 0, 0.5)",
+      dialog: "0 12px 40px rgba(0, 0, 0, 0.5)",
+    },
+    focusRing: ADMIN_FOCUS_RINGS.dark,
+    tableHead: "rgba(255, 255, 255, 0.03)",
   },
-  secondary: { main: "#8B5CF6", light: "#C4B5FD", contrastText: "#FFFFFF" },
-  success: { main: "#7ED9A6", contrastText: INK },
-  warning: { main: "#F5C76E", contrastText: INK },
-  error: { main: "#FF8A80", contrastText: INK },
-  info: { main: "#5DE7FF", contrastText: INK },
-  background: {
-    default: "#0B0B0D",
-    paper: "#141416",
+  light: {
+    mode: "light",
+    primary: {
+      main: OCHRE,
+      // Hover goes DEEPER, not lighter: on paper the fill is the dark half of
+      // the pair, so lifting it would walk towards the ground.
+      light: OCHRE_LIGHT,
+      dark: OCHRE_DEEP,
+      contrastText: PAPER_INK,
+    },
+    secondary: { main: "#5B3E96", light: "#7A5FC0", contrastText: PAPER_INK },
+    success: { main: "#1D6B42", contrastText: PAPER_INK },
+    warning: { main: "#8A5B08", contrastText: PAPER_INK },
+    error: { main: "#B0261C", contrastText: PAPER_INK },
+    info: { main: "#12626F", contrastText: PAPER_INK },
+    background: {
+      // A step deeper than the storefront page, so a near-white card separates
+      // from it without a shadow — the admin has no elevation to spend.
+      default: "#F4EFE4",
+      paper: "#FFFDF9",
+    },
+    surface: {
+      sunken: "#F1E9DA",
+      hover: "#EAE0CD",
+    },
+    divider: "rgba(27, 23, 20, 0.12)",
+    text: {
+      primary: ESPRESSO,
+      secondary: "#544C42",
+      disabled: "rgba(27, 23, 20, 0.55)",
+    },
+    action: {
+      hover: "rgba(27, 23, 20, 0.045)",
+      selected: "rgba(130, 92, 14, 0.10)",
+    },
+    gradient: {
+      gold: ADMIN_GOLD_GRADIENTS.light,
+      brandWash: ADMIN_BRAND_WASHES.light,
+    },
+    shadow: {
+      // Warm ink rather than black: a neutral shadow on cream reads blue.
+      popover: "0 8px 24px rgba(74, 58, 32, 0.16)",
+      dialog: "0 12px 40px rgba(74, 58, 32, 0.20)",
+    },
+    focusRing: ADMIN_FOCUS_RINGS.light,
+    tableHead: "rgba(27, 23, 20, 0.035)",
   },
-  // Sunken surfaces the MUI palette has no name for: inputs and thumbnails sit
-  // on `sunken`, a row lifts to `hover`. Extra keys ride along on the palette
-  // untouched by augmentColor, which is exactly what we want from them.
-  surface: {
-    sunken: "#1C1C20",
-    hover: "#222228",
-  },
-  divider: "rgba(255, 255, 255, 0.08)",
-  text: {
-    primary: "#F7F5F0",
-    secondary: "#B8B5B0",
-    disabled: "rgba(247, 245, 240, 0.62)",
-  },
-  action: {
-    hover: "rgba(255, 255, 255, 0.05)",
-    selected: "rgba(245, 215, 110, 0.12)",
-  },
+};
+
+/** The two modes, for a toggle's own labels. */
+export const ADMIN_THEME_MODES = ["dark", "light"];
+
+/** Dark unless a signed-in administrator has asked for the other one. */
+export const ADMIN_DEFAULT_MODE = "dark";
+
+/**
+ * THE LIVE PALETTE. Outside a React tree there is no `useTheme()` to ask, and
+ * SweetAlert2 is exactly that case. Its contents are re-pointed by
+ * `buildAdminTheme()` so a dialog fired from a light admin gets light-mode
+ * colours; it starts as the dark palette, which is the default mode, so nothing
+ * that reads it before a theme is built sees an empty object.
+ */
+export const ADMIN_PALETTE = { ...ADMIN_PALETTES.dark };
+
+const applyLivePalette = (palette) => {
+  Object.keys(ADMIN_PALETTE).forEach((key) => {
+    delete ADMIN_PALETTE[key];
+  });
+  Object.assign(ADMIN_PALETTE, palette);
 };
 
 /**
@@ -109,12 +251,27 @@ export const ADMIN_PALETTE = {
  */
 export const ADMIN_MAIN_ID = "admin-main";
 
-const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */) => {
-  const palette = ADMIN_PALETTE;
+/** "dark" | "light", tolerant of anything else. */
+export const adminThemeMode = (mode) =>
+  mode === "light" ? "light" : ADMIN_DEFAULT_MODE;
+
+/**
+ * Build the admin's MUI theme.
+ *
+ * @param {"dark"|"light"} [mode]  defaults to dark
+ */
+const buildAdminTheme = (mode) => {
+  const resolved = adminThemeMode(mode);
+  const palette = ADMIN_PALETTES[resolved];
+  const focusRing = palette.focusRing;
+  const tones = CHIP_TONE_SETS[resolved];
+
+  // Keep the out-of-tree palette pointed at the mode actually on screen.
+  applyLivePalette(palette);
 
   // One soft-badge override per chip color, for both filled and outlined.
   const chipColorOverrides = Object.fromEntries(
-    Object.entries(CHIP_TONES).flatMap(([key, tone]) => {
+    Object.entries(tones).flatMap(([key, tone]) => {
       const cap = key.charAt(0).toUpperCase() + key.slice(1);
       return [
         [`filled${cap}`, { backgroundColor: tone.bg, color: tone.fg }],
@@ -142,6 +299,22 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
       subtitle2: { fontWeight: 600 },
     },
     components: {
+      // Every admin tooltip portals into the shell's <main> rather than into
+      // document.body — see ADMIN_MAIN_ID above. `container` is read at mount;
+      // a null return (the sign-in screen, which has no shell) makes MUI fall
+      // back to document.body exactly as before.
+      MuiTooltip: {
+        defaultProps: {
+          slotProps: {
+            popper: {
+              container: () =>
+                typeof document === "undefined"
+                  ? null
+                  : document.getElementById(ADMIN_MAIN_ID),
+            },
+          },
+        },
+      },
       // ------------------------------------------------------------------
       // TYPE SIZE IS NOT DOCUMENT STRUCTURE (Prompt 38)
       // ------------------------------------------------------------------
@@ -159,22 +332,6 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
       // `<Typography variant="h5" component="h1">` for a page title,
       // `component="h2"` for a panel. Visual output is unchanged: `variant`
       // still picks the size, `component` only picks the tag.
-      // Every admin tooltip portals into the shell's <main> rather than into
-      // document.body — see ADMIN_MAIN_ID above. `container` is read at mount;
-      // a null return (the sign-in screen, which has no shell) makes MUI fall
-      // back to document.body exactly as before.
-      MuiTooltip: {
-        defaultProps: {
-          slotProps: {
-            popper: {
-              container: () =>
-                typeof document === "undefined"
-                  ? null
-                  : document.getElementById(ADMIN_MAIN_ID),
-            },
-          },
-        },
-      },
       MuiTypography: {
         defaultProps: {
           variantMapping: {
@@ -200,7 +357,7 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
           root: {
             "&.Mui-focusVisible": {
               outline: "none",
-              boxShadow: ADMIN_FOCUS_RING,
+              boxShadow: focusRing,
             },
           },
         },
@@ -218,9 +375,12 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
             "&:hover": { boxShadow: "none", transform: "none" },
             // Repeated here so the ring still wins on a focused control that is
             // also hovered (MuiButton's own rule is later in the cascade).
-            "&.Mui-focusVisible": { boxShadow: ADMIN_FOCUS_RING },
+            "&.Mui-focusVisible": { boxShadow: focusRing },
           },
           containedPrimary: {
+            // Champagne lifts towards the light on charcoal; antique gold has
+            // to go the other way on paper. `primary.light` carries whichever
+            // direction the mode's ramp runs, so this is one rule.
             "&:hover": { backgroundColor: palette.primary.light },
           },
           outlined: {
@@ -261,6 +421,7 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
             borderRadius: 8,
             border: `1px solid ${palette.divider}`,
             backgroundImage: "none",
+            boxShadow: palette.shadow.dialog,
           },
         },
       },
@@ -269,7 +430,7 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
           paper: {
             borderRadius: 8,
             border: `1px solid ${palette.divider}`,
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
+            boxShadow: palette.shadow.popover,
           },
         },
       },
@@ -278,7 +439,7 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
           paper: {
             borderRadius: 8,
             border: `1px solid ${palette.divider}`,
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
+            boxShadow: palette.shadow.popover,
           },
         },
       },
@@ -323,7 +484,7 @@ const buildAdminTheme = (/* mode — ignored, one dark theme since Prompt 32 */)
             letterSpacing: "0.05em",
             color: palette.text.secondary,
             whiteSpace: "nowrap",
-            backgroundColor: "rgba(255, 255, 255, 0.03)",
+            backgroundColor: palette.tableHead,
           },
         },
       },

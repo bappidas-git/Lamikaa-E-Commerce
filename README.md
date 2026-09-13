@@ -22,7 +22,7 @@ copy and must survive editing (`src/config/brand.js → brand.legalNote`).
 |---|---|
 | App | Create React App 5 (`react-scripts@5.0.1`), React 18, React Router 6 |
 | Styling | CSS Modules over the `--sf-*` design tokens in `src/theme/` — **one light theme** (warm cream page, espresso type, antique gold) with a single opt-in `.sf-on-dark` scope for the near-black chrome, no light/dark toggle, no hard-coded colours |
-| Admin | MUI 5 on its own isolated dark theme (`src/theme/adminTheme.js`) |
+| Admin | MUI 5 on its own isolated theme (`src/theme/adminTheme.js`) — **two modes, dark by default**, chosen per administrator in the app bar and stored in their browser |
 | Motion | framer-motion, every animation gated on `prefers-reduced-motion` |
 | Data | `src/services/api.js` — one contract, two modes (JSON Server / Laravel) |
 | Mock API | `json-server` via `server.js` over `db.json` |
@@ -129,7 +129,7 @@ policies, the FAQs, the announcement bar — is edited here, not deployed.
 ## Data model, in one page
 
 `db.json` holds 23 collections (`prompts/_reference/REPO_MAP.md` §4 is the full
-schema). Five things are worth knowing before you touch it:
+schema). A few things are worth knowing before you touch it:
 
 - **`media[]`** is the product gallery: an ordered list of
   `{ type: "image"|"video", url, alt?, primary?, poster?, title?, placeholder? }`.
@@ -141,17 +141,39 @@ schema). Five things are worth knowing before you touch it:
   mirrors** kept in step by `normalizeProduct`/`syncProductMedia`, because cart
   lines, wishlist snapshots and order items keep a copy of `images[0]` that
   cannot be re-derived later. Edit `media[]`; never edit the mirrors by hand.
-- **`heroOrder`** (1…n, or `null`) drives the home hero: the slides *are* the
-  products, ordered by this field, with `heroHeadline`/`heroSubtext` per slide.
-  There is no `banners` collection any more — it became `announcements`.
-- **`heroBackground`** is the picture behind one slide —
+- **`heroConfig.slides[]`** is the home carousel, in order. An entry is either
+  `{ kind: "product", productId }` or `{ kind: "custom", … }` — a **poster**: a
+  picture with as much or as little on it as the merchant wants (an eyebrow, a
+  headline, two lines, some marks, a card of its own, up to two buttons, or
+  none of them). Every entry may carry its own `background`, its own `layout`
+  and its own ground, and the list is saved with the rest of the section in one
+  `PUT /heroConfig`.
+- **`heroOrder`** (1…n, or `null`) is how a product joins that carousel from
+  the Products screen, and it is still what `products.getHeroProducts()`
+  returns. `heroConfig.slides` is the authority on order and composition; a
+  hero product the list does not name is **appended** rather than dropped, so
+  the two screens can never disagree about what is on the home page.
+  (`buildHeroSlides()` is that reconciliation.) There is no `banners`
+  collection any more — it became `announcements`.
+- **`layout`** is the composition, held at both levels
+  (`heroConfig.layout` is the default every slide inherits, key by key):
+  `{ preset, align, vertical, panel, panelStrength, showCopy, showMedia,
+  showActions, theme }`. `preset` is one of `text-left` · `text-right` ·
+  `text-center` · `split` (card centred, copy either side) · `poster`, and
+  `theme` is `light` | `dark` | `inherit` — the hero is the one CONTENT section
+  that may wear the `.sf-on-dark` scope, and it wears it alone.
+- **`background`** is the picture behind one slide —
   `{ url, mobileUrl, position, overlay, blur, showContent }`, all optional but
-  the URL, and `null`/absent when the slide has none. `heroConfig.background`
-  holds the same shape for the whole section, and a slide falls back to it.
-  Pasting one link in Admin → Home & Hero → Section settings therefore dresses
-  every slide at once; `showContent: false` makes a slide the picture alone.
-  Every rule about them (the fallbacks, the clamps, the scrim) lives in
-  `src/utils/heroConfig.js`.
+  the URL, and `null`/absent when the slide has none. A slide falls back to
+  `product.heroBackground` (where every slide background lived before the slide
+  list existed) and then to `heroConfig.background`, so pasting one link in
+  Admin → Home & Hero → Section settings dresses every slide at once.
+  `showContent: false` is the legacy spelling of the `poster` preset and is
+  still read. **The scrim is not what keeps the copy readable** — the layout's
+  `panel` is, and at its default (`auto`) it is computed from how much work the
+  scrim and the blur are already doing, so a scrim of 0 cannot cost a merchant
+  their headline. Every rule about all of this — the fallbacks, the clamps, the
+  inheritance, the legibility floor — lives in `src/utils/heroConfig.js`.
 - **`priceTBA`** with `price: null` is the honest unpriced state: the card and
   the PDP show "Price on launch", Add to Cart and Buy now are disabled, and the
   product is excluded from ritual bundles. Five of the eight products ship this
