@@ -203,6 +203,24 @@ schema). A few things are worth knowing before you touch it:
   alternativeProductId?, note, frequency }]` resolved against the live catalogue
   at read time, so a product going to Draft degrades a step instead of breaking
   the page.
+- **`reviews`** carry both halves of the store's social proof in ONE
+  collection. A row holds the words (`rating`, `title`, `body`), who wrote them
+  (`userName`, plus `avatar` — their own photograph, always optional), what they
+  photographed (`photos[]`, up to three pictures of the product), whether the
+  purchase was verified, the moderation `status`, and `featured`. The product
+  page prints every approved row for that product; the **"What our customers
+  say"** band at the foot of every other storefront page reads the same rows
+  without a productId and leads with the featured ones
+  (`src/utils/testimonials.js` decides which, and a product's own reviews are
+  dropped from the band on its own page so nothing appears twice on one screen).
+  **A testimonial is therefore never written twice** — there is no second
+  collection and no second admin screen; Admin → Reviews is where one is typed,
+  photographed and featured. `avatar` and `photos[]` are ordinary image links,
+  except that a picture chosen from a phone or a laptop — by the customer in
+  My Orders, or by the owner in the admin — is resized in the browser and stored
+  inline as a data URL (`src/utils/imageFile.js`). That is the one place in the
+  app that does not point at Cloudinary, and it exists because the person
+  writing a review has a photograph and no asset pipeline.
 - **`siteContent`** is one keyed record (`about`, `whyLamikaa`, `impact`,
   `home`, `contact`, `policies`, `faqPage`) of markdown-lite prose — `##`, `-`,
   `1.`, `>`, `---`, `::callout`, `::steps`, `**bold**`, `[label](/href)` —

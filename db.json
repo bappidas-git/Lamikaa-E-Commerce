@@ -2620,6 +2620,8 @@
       "isSample": true,
       "isVerifiedPurchase": false,
       "helpfulCount": 0,
+      "avatar": null,
+      "featured": false,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-11T11:24:35.944Z"
@@ -2637,6 +2639,8 @@
       "isSample": true,
       "isVerifiedPurchase": false,
       "helpfulCount": 0,
+      "avatar": null,
+      "featured": false,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-06T00:00:00.000Z"

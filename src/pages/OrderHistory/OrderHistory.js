@@ -340,7 +340,7 @@ const OrderHistory = () => {
 
   const closeReviewModal = () => setReviewModal((m) => ({ ...m, open: false }));
 
-  const handleSubmitReview = async ({ rating, title, body }) => {
+  const handleSubmitReview = async ({ rating, title, body, avatar, photos }) => {
     const { product, existing, orderId, orderNumber } = reviewModal;
     await apiService.reviews.submit({
       productId: product.productId,
@@ -349,6 +349,13 @@ const OrderHistory = () => {
       rating,
       title,
       body,
+      // The pictures are part of the same submission as the words: `avatar` is
+      // the face beside the name (on the product page AND in "What our
+      // customers say", which reads these same rows), `photos[]` the strip of
+      // the product itself. Both are sent as the dialog currently has them, so
+      // a removed photo is really removed.
+      avatar,
+      photos,
       orderId,
       orderNumber,
       isVerifiedPurchase: true,
@@ -1105,12 +1112,17 @@ const OrderHistory = () => {
         </div>
       </section>
 
+      {/* `authorName` is the name the review publishes under — the dialog
+          draws its monogram from it while no photo has been picked — and
+          `defaultAvatar` offers the picture already on the account. */}
       <ReviewModal
         open={reviewModal.open}
         onClose={closeReviewModal}
         product={reviewModal.product}
         existing={reviewModal.existing}
         onSubmit={handleSubmitReview}
+        authorName={reviewDisplayName(user)}
+        defaultAvatar={user?.avatar || null}
       />
     </div>
   );

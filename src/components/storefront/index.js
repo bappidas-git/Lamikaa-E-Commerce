@@ -18,4 +18,6 @@ export { default as ProductCard } from "./ProductCard";
 export { default as RelatedProducts } from "./RelatedProducts";
 export { default as FrequentlyBoughtTogether } from "./FrequentlyBoughtTogether";
 export { default as ReviewsSection } from "./ReviewsSection";
+export { default as ReviewerAvatar } from "./ReviewerAvatar";
+export { default as Testimonials } from "./Testimonials";
 export * from "./variantUtils";

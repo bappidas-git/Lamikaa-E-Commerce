@@ -1,0 +1,280 @@
+/* =============================================================================
+ * Testimonials — "What our customers say"
+ * =============================================================================
+ * `.sf-section` supplies the vertical rhythm, `.sf-container` the measure and
+ * `.sf-card` the surface; none of them is restated here. What IS this file's
+ * own: the band's ground (it closes every page, so it has to separate itself
+ * from whatever the page ended on), the quote card's internal rhythm, and the
+ * one rule that keeps a rail of quotes of different lengths looking deliberate
+ * — the attribution is pushed to the bottom of every card by `margin-top: auto`,
+ * so the faces line up across the row however long the words above them are.
+ *
+ * NO GLOW. The design system's glass budget is two blurred layers in view, and
+ * this band appears under EVERY page — including the three home sections that
+ * already spend their share. A hairline and a two-stop tint give it its own
+ * ground for nothing.
+ *
+ * DEVICES
+ *   1025+   a rail showing about three cards, arrows on a fine pointer
+ *   769+    the same rail, two-and-a-bit cards (the clamp does this, not a
+ *           media query — `Rail` measures its own track, never the viewport)
+ *   <=768   one card and a peek, swiped, with the progress bar under it
+ *   <=480   the card's padding and the portrait step down; the quote stays at
+ *           16px, which is the body floor this store does not go under
+ * ========================================================================== */
+
+/* The element the in-view probe watches while there is no band to draw. 1px,
+   because a zero-area target is not reliably reported as intersecting. */
+.probe {
+  height: 1px;
+}
+
+.section {
+  position: relative;
+  /* It closes the page, so it owns the seam: a hairline above, and a ground
+     that lifts a shade off the page's cream and settles back into it. */
+  border-top: 1px solid var(--sf-color-border);
+  background: linear-gradient(
+    180deg,
+    var(--sf-color-surface) 0%,
+    var(--sf-color-bg) 78%
+  );
+}
+
+.rail {
+  margin-top: var(--sf-space-8);
+}
+
+/* The reveal animates a wrapper; the card inside still fills its cell. */
+.cell {
+  display: flex;
+  width: 100%;
+}
+
+/* ── One quote ─────────────────────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-3);
+  width: 100%;
+  padding: var(--sf-space-6);
+  /* `.sf-card` brings the surface, the hairline and the radius. The card is a
+     stacking context there, which is what keeps the quote mark below the text
+     instead of over it. */
+  background: var(--sf-color-surface);
+}
+
+/* The big serif comma, set as a mark rather than as punctuation: it sits in the
+   corner, behind everything, at an opacity where it reads as texture.
+   `top: 0` and a line-height of 1 put the glyph's ink just below the card's top
+   edge — the card clips its own overflow (`.sf-card`), so a mark hung above
+   that edge would be sliced rather than bled. */
+.quoteMark {
+  position: absolute;
+  top: 0;
+  right: var(--sf-space-4);
+  z-index: 0;
+  font-family: var(--sf-font-display);
+  font-size: 6.5rem;
+  line-height: 1;
+  color: var(--sf-color-gold);
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.cardHead {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+}
+
+.sampleMark {
+  padding: 2px var(--sf-space-2);
+  border: 1px solid var(--sf-color-warning);
+  border-radius: var(--sf-radius-pill);
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sf-color-warning);
+}
+
+.quote {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.quoteTitle {
+  margin: 0 0 var(--sf-space-2);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-lg);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+/* Held to six lines so a rail of quotes reads as a row rather than as a wall.
+   The clamp is a visual crop only — the product page prints every review in
+   full, which is where a long one belongs. */
+.quoteBody {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+  font-size: var(--sf-text-base);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* ── Their photographs of the product ──────────────────────────────────────── */
+
+.shots {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: var(--sf-space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shot {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface-2);
+}
+
+/* ── Who said it ───────────────────────────────────────────────────────────── */
+
+.person {
+  position: relative;
+  z-index: 1;
+  /* THE LINE-UP: whatever the quote above it does, the face sits on the floor
+     of the card, so a row of cards shares one baseline of portraits. */
+  margin-top: auto;
+  padding-top: var(--sf-space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-3);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-semibold);
+  color: var(--sf-color-text);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-1) var(--sf-space-3);
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+}
+
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--sf-font-semibold);
+  color: var(--sf-color-success);
+}
+
+.verifiedMark {
+  font-size: 0.9em;
+}
+
+.date {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The product it is about ───────────────────────────────────────────────── */
+
+.product {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sf-space-2);
+  /* A whole-card link would swallow the rail's own swipe; this is one target,
+     at the foot of the card, sized for a thumb. */
+  min-height: var(--sf-tap-target);
+  align-content: center;
+  flex-wrap: wrap;
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-accent);
+  text-decoration: none;
+}
+
+.productLabel {
+  font-size: var(--sf-text-xs);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sf-color-text-muted);
+}
+
+.productName {
+  font-weight: var(--sf-font-semibold);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--sf-color-accent) 40%, transparent);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.product:hover .productName {
+  text-decoration-color: currentColor;
+}
+
+.product:focus-visible {
+  outline: 2px solid transparent;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ── Phones ────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .card {
+    padding: var(--sf-space-5);
+    gap: var(--sf-space-3);
+  }
+
+  .quoteMark {
+    font-size: 5rem;
+  }
+
+  /* Two lines shorter: the same card is a taller box on a narrow screen, and a
+     ten-line quote there is a page, not a card. */
+  .quoteBody {
+    -webkit-line-clamp: 5;
+  }
+
+  .shot {
+    width: 46px;
+    height: 46px;
+  }
+
+  .rail {
+    margin-top: var(--sf-space-6);
+  }
+}

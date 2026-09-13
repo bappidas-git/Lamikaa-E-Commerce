@@ -118,7 +118,8 @@
 | `cart` | `getCart(userId)` · `addToCart(item)` · `updateCartItem(id, updates)` · `removeFromCart(id)` · `clearCart()` | `/cart` (+`?userId`) | `/cart` |
 | `orders` | `create(orderData)` (mock: seeds `statusHistory`, creates the payment row, bumps coupon `usedCount`, debits wallet) · `getByUserId(userId)` · `getById(id)` · `getByOrderNumber(orderNumber)` · `cancel(id, reason)` (shared `performCancel` cascade) | `/orders` | `/orders`, `/orders/number/:n`, `POST /orders/:id/cancel` |
 | `wallet` | `getBalance(userId)` · `getTransactions(userId)` | `/walletTransactions` ledger | `/wallet/balance`, `/wallet/transactions` |
-| `reviews` | `getMine(userId)` · `submit({productId,userId,userName,rating,title,body,orderId,orderNumber,isVerifiedPurchase})` (one per user+product, re-enters `pending`) | `/reviews` | `/reviews/mine`, `POST /products/:id/reviews` |
+| `reviews` *(changed — testimonials)* | `getMine(userId)` · `submit({productId,userId,userName,rating,title,body,orderId,orderNumber,isVerifiedPurchase,photos,avatar})` (one per user+product, re-enters `pending`; `photos[]` are the customer's pictures of the product and `avatar` is their own photograph — both sent on every submission, so removing one in the dialog removes it from the row) | `/reviews` | `/reviews/mine`, `POST /products/:id/reviews` |
+| `reviews` *(new — testimonials)* | `getPublished({ limit = 60, includeSample = brand.flags.showSampleReviews } = {})` — approved rows across the WHOLE catalogue, newest first, sample rows gated exactly as in `products.getReviews`. The one read behind the storefront's "What our customers say" band; `utils/testimonials.selectTestimonials()` picks and orders what it shows. **Never throws** (`[]`), because the band is furniture on every route. | `GET /reviews?status=approved&_sort=createdAt&_order=desc&_limit=` then filter | `GET /reviews/testimonials?limit=&includeSample=0\|1` |
 | `returns` | `create(data)` · `getByUserId(userId)` · `getById(id)` | `/returns` | `/returns` |
 | `coupons` | `getActive(params)` · `validate(code, orderAmount)` (expiry, `usageLimit`, `perUserLimit` counted from the user's orders, `minOrderAmount`; rejects with code `COUPON_INVALID`) | `/coupons?code&isActive=true` | `POST /coupons/validate` |
 | `wishlist` | `get(userId)` · `add(item)` · `remove(id)` | `/wishlist` | `/wishlist` |
@@ -170,6 +171,7 @@ Everything below is what the **live branch of `api.js` already calls**. Mock mod
 | 8 | `GET /rituals/slug/{slug}` | — | `Ritual` | 404 for an unknown slug. `steps[]` = `{ order, productId, alternativeProductId?, note, frequency }`. |
 | 9 | `GET /content` | — | `SiteContent` | The whole keyed record (`about`, `whyLamikaa`, `impact`, `home`, `contact`, `policies`, `faqPage`). |
 | 10 | `GET /content/{key}` | — | `object` | One section. |
+| 11 | `GET /reviews/testimonials` | `limit`, `includeSample=0\|1` | `Review[]` | Approved reviews across every product, newest first, capped at `limit` (default 60). `includeSample=0` (the storefront default) drops rows flagged `isSample`. Each row must carry `avatar` (string\|null), `photos[]` and `featured` (bool) alongside the usual review fields — the band renders the writer's photograph and leads with the featured rows. |
 | 11 | `GET /announcements` | — | `Announcement[]` | `{ id, text, link, isActive, sortOrder, startsAt, endsAt }`. Serve the live, in-window rows; the client applies the same gate. |
 | 12 | `GET /hero/config` | — | `HeroConfig` | `{ enabled, source: "products", autoplay, intervalMs, transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, showPause, background, updatedAt }`. `background` is the section-wide slide picture: `{ url, mobileUrl, position, overlay (0–100), blur (0–24), showContent }`, every key optional and the whole object optional — an absent or partial record resolves to the defaults in `src/utils/heroConfig.js`. |
 | 13 | `GET/POST /admin/concerns`, `PUT/DELETE /admin/concerns/{id}` | — | `Concern` / `Concern[]` | Full CRUD. `slug` is the key products point at — renaming a concern must not change it. |
@@ -284,7 +286,8 @@ difference for settings and site content.
 | `GET /wallet/transactions` | `userId` | `WalletTransaction[]` | Ledger; the sum must equal `users[].storeCredit`. |
 | `GET /wishlist` · `POST /wishlist` · `DELETE /wishlist/{id}` | `{ userId, productId, … }` | `WishlistItem[]` / `WishlistItem` / `true` | |
 | `GET /reviews/mine` | `userId` | `Review[]` | |
-| `POST /reviews` · `POST /products/{productId}/reviews` | `{ productId, orderId?, rating, title, comment }` | `Review` | Created `pending`; publication is an admin action. |
+| `GET /reviews/testimonials` | `limit`, `includeSample=0\|1` | `Review[]` | Approved rows across every product, newest first. Same sample gate as `/products/{id}/reviews`. Must include `avatar`, `photos[]` and `featured`. |
+| `POST /reviews` · `POST /products/{productId}/reviews` | `{ productId, orderId?, rating, title, comment, photos[], avatar }` | `Review` | Created `pending`; publication is an admin action. `photos[]` (≤3) and `avatar` arrive as image URLs **or** as `data:image/jpeg;base64,…` strings already resized in the browser (≤ ~250 KB each); store them as given, or move them to object storage and store the resulting URLs. |
 | `POST /returns` · `GET /returns` · `GET /returns/{id}` | return payload / `userId` | `Return` / `Return[]` | Statuses: `requested → approved → pickup_scheduled → in_transit → received → refunded`, plus `rejected`. |
 
 #### Admin
@@ -319,7 +322,7 @@ difference for settings and site content.
 | `GET/POST /admin/coupons`, `PUT/DELETE /admin/coupons/{id}` | coupon | `Coupon[]` / `Coupon` / `true` | |
 | `GET/POST /admin/shipping-methods`, `PUT/DELETE /admin/shipping-methods/{id}` | shipping method | `ShippingMethod[]` / `ShippingMethod` / `true` | Note the hyphen: the mock collection is `shipping_methods`, the live route is `/admin/shipping-methods`. |
 | `POST /admin/shipping/shiprocket/order` · `GET /admin/shipping/shiprocket/track/{trackingNumber}` | `{ orderId }` | provider payload | Optional integration; the admin degrades gracefully without it. |
-| `GET /admin/reviews` · `POST /admin/reviews` · `PATCH /admin/reviews/{id}` · `DELETE /admin/reviews/{id}` | review | `Review[]` / `Review` / `true` | `PATCH { status: "approved"\|"rejected" }` is approve/reject. Preserve `isSample`. |
+| `GET /admin/reviews` · `POST /admin/reviews` · `PATCH /admin/reviews/{id}` · `DELETE /admin/reviews/{id}` | review | `Review[]` / `Review` / `true` | `PATCH { status: "approved"\|"rejected" }` is approve/reject and `PATCH { featured }` is the testimonial curation mark. A created/updated row carries `avatar`, `photos[]` and `featured` beside the words. Preserve `isSample`. |
 | `GET /admin/users` · `GET /admin/users/{id}` · `PATCH /admin/users/{id}` | user | `User[]` / `User` | `PATCH { isActive: false }` must make `POST /auth/login` refuse that user. |
 | `GET /admin/leads` · `GET /admin/leads/{id}` · `PATCH /admin/leads/{id}` | lead | `Lead[]` / `Lead` | |
 | `GET /admin/settings` | — | `Settings` | |
@@ -384,7 +387,7 @@ Rewritten for LAMIKAA NATURALS. **23 collections in this order**; `banners` is g
 | `refunds` | 1 | `id, refundNumber, type, orderId, orderNumber, returnId (null), returnNumber (null), paymentId, amount, method, reason, reference (null), status, couponRestored, initiatedAt, settledAt, by, createdAt, updatedAt` | `REF-20260903-C001`, `type: "order_cancellation"`, `method: "store_credit"`, `status: "completed"` — the ledger row behind order C. |
 | `walletTransactions` | 1 | `id, userId, type, amount, reason, orderId, orderNumber, refundId, refundNumber, balanceBefore, balanceAfter, createdAt` | The ₹390 credit from that refund; `balanceAfter` equals `users[0].storeCredit`. |
 | `returns` | 0 | — | Empty: nothing has been returned. |
-| `reviews` | 2 | `id, productId, userId (null), userName, rating, title, body, status, source ("admin"), isSample (true), isVerifiedPurchase, helpfulCount, photos[], createdAt, updatedAt` | Products 1 and 7, 5 stars, text marked "Sample review — replace before launch". Hidden from the storefront by `brand.flags.showSampleReviews === false`; the null `userId` is exactly the null-FK case `server.js`'s safe DELETE exists for. |
+| `reviews` | 2 | `id, productId, userId (null), userName, rating, title, body, status, source ("admin"), isSample (true), isVerifiedPurchase, helpfulCount, avatar (null), featured (false), photos[], createdAt, updatedAt` | Products 1 and 7, 5 stars, text marked "Sample review — replace before launch". Hidden from the storefront by `brand.flags.showSampleReviews === false`; the null `userId` is exactly the null-FK case `server.js`'s safe DELETE exists for. |
 | `wishlist` | 0 | — | Empty. |
 | `cart` | 0 | — | Empty. |
 | `leads` | 2 | `id, type (contact/newsletter), name, email, phone, orderNumber, category, subject, message, status, notes, createdAt, updatedAt` | One `contact` "Sample enquiry" (`new`), one `newsletter` `sample.subscriber@example.com` (`subscribed`). |

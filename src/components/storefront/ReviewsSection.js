@@ -1,5 +1,6 @@
 import React from "react";
 import StarRating from "./StarRating";
+import ReviewerAvatar from "./ReviewerAvatar";
 import { formatDate, onImageError } from "../../utils/helpers";
 import styles from "./ReviewsSection.module.css";
 
@@ -7,10 +8,16 @@ import styles from "./ReviewsSection.module.css";
 // ReviewsSection — what buyers actually wrote
 // =============================================================================
 // Renders ONLY the real, approved reviews it is handed (the API already filters
-// to status="approved"). It shows verified-purchase marks, titles, bodies and
-// customer photos (UGC) when present — and HONEST empty / error / loading states
-// otherwise. The summary average + count are passed in by the parent (a blend of
-// the store's recorded aggregate and approved reviews), never invented here.
+// to status="approved"). It shows verified-purchase marks, titles, bodies, the
+// writer's own photograph and their pictures of the product (UGC) when present
+// — and HONEST empty / error / loading states otherwise. The summary average +
+// count are passed in by the parent (a blend of the store's recorded aggregate
+// and approved reviews), never invented here.
+//
+// THE SAME ROWS ARE THE TESTIMONIALS. The "What our customers say" band reads
+// this very collection without a productId (`reviews.getPublished`), so a
+// review is written ONCE and can be read in both places — and both use
+// `ReviewerAvatar`, so the face beside a name is identical on either surface.
 //
 // EDITORIAL SET
 //   The section is a letters page, not a stack of cards. One glass summary
@@ -163,11 +170,12 @@ const ReviewsSection = ({
                   .filter(Boolean)
                   .join(" ")}
               >
-                {/* Who wrote it — the narrow left column of the letters page */}
+                {/* Who wrote it — the narrow left column of the letters page.
+                    The customer's own photograph when the row carries one,
+                    their monogram when it does not; the same component (and so
+                    the same answer) as the "What our customers say" band. */}
                 <header className={styles.reviewAside}>
-                  <span className={styles.avatar} aria-hidden="true">
-                    {name.charAt(0).toUpperCase()}
-                  </span>
+                  <ReviewerAvatar name={name} src={review.avatar} size="sm" />
                   <span className={styles.who}>
                     <span className={styles.userName}>{name}</span>
                     {review.createdAt && (
