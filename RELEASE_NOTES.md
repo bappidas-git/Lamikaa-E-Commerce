@@ -1,5 +1,99 @@
 # Release notes
 
+## 1.3.2-lamikaa — 2026-09-13
+
+The hero's live preview is a picture of the home page again — the same crop of
+the same product card, on each of the three devices the composition is drawn
+for — and the section's default composition is something a merchant can watch
+work. And three of the storefront's own hero rules — the ground under the copy
+among them — turn out never to have reached the page at all.
+
+### Added
+
+- **A tablet in the live preview.** Admin → Home & Hero previewed a desktop and
+  a phone; the card's size has been set per device on three sliders since 1.3.1,
+  and the tablet's was the one nobody could see. The preview's device switch is
+  now built from the same three devices those sliders are (`HERO_MEDIA_DEVICES`)
+  — desktop (1025px and wider), tablet (769–1024px), phone (768px and narrower)
+  — and each draws that device's own composition: the tablet lays the spreads
+  out at the 420px they are drawn at there, the phone stacks one column with a
+  SQUARE card, and the desktop takes the full 560px.
+
+- **The band's height, in the preview.** Compact, Full screen and Tall are set
+  on the same screen and changed nothing in the picture beside them. The preview
+  now holds the band's own proportion for the device it is showing, and grows
+  past it when the slide's content needs the room — which is what `min-height`
+  does to the band itself.
+
+### Fixed
+
+- **The live preview was showing the old crop of every product card.** When the
+  eight covers became lifestyle photographs, the editorial stages — the hero's
+  card, the home chapters and the PDP — moved from `c_pad,b_auto` (the whole
+  shot letterboxed onto a band of sampled brown) to `c_fill,g_center`. The
+  admin's preview kept asking for `stageSrc`, so a merchant arranging the
+  carousel was shown a pack sitting small in a padded frame while the home page
+  drew it filling the plate. The preview asks for `stageFillSrc` now — 1:1 on a
+  phone, 4:5 above it — and paints it with `object-fit: cover`: the same file
+  and the same fit the storefront requests. (`fillSrc`/`stageFillSrc` are the
+  named twins of `plateSrc`/`stageSrc`, so there is one place to read the rule.)
+
+- **Section settings → Default composition did nothing you could see.** The
+  preview beside it was drawing a SLIDE, and a slide that has its own
+  composition, picture or ground is exactly the slide the defaults do not
+  reach — so an editor could change the default composition, watch nothing move,
+  and reasonably conclude the control was broken. That preview is now composed
+  from the section's own layout, picture and ground (on the first slide's words
+  and card), which is what those controls actually write; when the slide it
+  borrowed its words from overrides something, it says so under the frame.
+
+- **A slide's composition overrode everything, not the one key it was given.**
+  `normalizeHeroSlide` filled a slide's `layout` in on the way through, so a
+  slide stored as `{ preset: "split" }` came back holding all ten keys with the
+  DEFAULTS standing in for the nine nobody touched — and the section's
+  composition could never move that slide again. Opening one slide in the admin
+  and changing one field was enough to freeze it. A slide's layout is a PATCH
+  now (`normalizeHeroLayoutPatch`), the editor diffs what it is holding against
+  the section before storing it (`diffHeroLayout`), and `mediaScale` is per
+  device inside that — so a slide that wants a bigger card on the desktop keeps
+  the section's phone and tablet sizes. Which is what the line above the editor
+  has always promised.
+
+- **`--sf-space-7` does not exist, and four hero rules asked for it.** The
+  spacing scale runs 1–6, 8, 10, 12, 16, 20, 24, 32; an undefined custom
+  property is invalid at computed-value time, which UNSETS the property rather
+  than falling back, so three of those rules were silently doing nothing on the
+  storefront:
+  - **the ground under the copy was never painted.** `.panelScrim::before` — the
+    plate `resolveHeroPanel` computes, the thing that lets a merchant take the
+    scrim to 0 without losing the headline — resolved to `inset: auto` and came
+    out a 0×0 box, at every width, on every slide. The admin preview drew it;
+    the page did not.
+  - **the phone's slide had no gap at all** between the card and the copy
+    (`gap: normal`), on every composition.
+  - **the glass and solid plates had no padding** below 1025px, so the pane
+    hugged the words on every phone and tablet.
+
+- **The mirrored spread put the card under the copy in the preview.** Grid
+  auto-placement only moves forwards, and on `text-right` the copy is written
+  first and sits in column 2 — so the card could not go back into column 1 of
+  the same row and started a second one. Every column in the preview is now
+  placed by row AND column, which is the rule the stylesheet states for itself.
+
+- **The admin fetched hero masters at full size.** The preview's backdrop and
+  the two picture wells in the background editor pointed `<img>` straight at the
+  uploaded URL — the one thing the delivery rule forbids. All three go through
+  `cld()` now, at the width they are actually drawn at.
+
+### Changed
+
+- The preview's phone view stacks the buttons full-width and keeps a split
+  slide's two copy blocks as two plates, both of which is what the band does
+  there; its measures (16/18/26ch headline, 42/34/56ch subtext) and its
+  card's share of the stage are now the stylesheet's own numbers rather than
+  approximations, so a card set to 130% moves in the preview by the proportion
+  it moves on the page.
+
 ## 1.3.1-lamikaa — 2026-09-13
 
 The hero's product card is the size it was drawn at again — and how big it is

@@ -26,6 +26,7 @@ import {
   HERO_OVERLAY_MAX,
   HERO_PANEL_FLOOR,
   buildHeroSlides,
+  diffHeroLayout,
   hasHeroBackground,
   hasHeroCta,
   heroBackgroundSrc,
@@ -38,6 +39,7 @@ import {
   normalizeHeroBackground,
   normalizeHeroConfig,
   normalizeHeroLayout,
+  normalizeHeroLayoutPatch,
   normalizeHeroMediaScale,
   normalizeHeroSlide,
   normalizeHeroSlides,
@@ -375,6 +377,88 @@ describe("resolveHeroLayout", () => {
   });
 });
 
+describe("normalizeHeroLayoutPatch", () => {
+  it("keeps only the keys that were set, and validates each one", () => {
+    expect(
+      normalizeHeroLayoutPatch({ preset: "split", align: "sideways", vertical: "top" })
+    ).toEqual({ preset: "split", vertical: "top" });
+  });
+
+  it("clamps a number it keeps and drops one it cannot read", () => {
+    expect(normalizeHeroLayoutPatch({ panelStrength: 400 })).toEqual({ panelStrength: 100 });
+    expect(normalizeHeroLayoutPatch({ panelStrength: null })).toBeNull();
+  });
+
+  it("keeps the card's size per device — one device overridden is one stored", () => {
+    expect(normalizeHeroLayoutPatch({ mediaScale: { tablet: 80 } })).toEqual({
+      mediaScale: { tablet: 80 },
+    });
+    // A bare number is still all three, exactly as a record reads one.
+    expect(normalizeHeroLayoutPatch({ mediaScale: 120 })).toEqual({
+      mediaScale: { desktop: 120, tablet: 120, mobile: 120 },
+    });
+  });
+
+  it("is null for anything that is not a composition at all", () => {
+    expect(normalizeHeroLayoutPatch(null)).toBeNull();
+    expect(normalizeHeroLayoutPatch("text-left")).toBeNull();
+    expect(normalizeHeroLayoutPatch({})).toBeNull();
+  });
+});
+
+describe("diffHeroLayout", () => {
+  const section = normalizeHeroLayout({ preset: "text-right", vertical: "bottom" });
+
+  it("keeps only what the slide asks for that the section does not give it", () => {
+    expect(diffHeroLayout({ ...section, preset: "split" }, section)).toEqual({
+      preset: "split",
+    });
+  });
+
+  it("is null when the slide is asking for exactly the section's composition", () => {
+    expect(diffHeroLayout(section, section)).toBeNull();
+  });
+
+  it("compares the card's size device by device", () => {
+    expect(
+      diffHeroLayout({ ...section, mediaScale: { desktop: 120, tablet: 100, mobile: 100 } }, section)
+    ).toEqual({ mediaScale: { desktop: 120 } });
+  });
+
+  // Both sides are compared as DRAWN, so a slide agreeing with a poster section
+  // does not store the two switches the preset already implies.
+  it("reads the poster preset the way the storefront draws it", () => {
+    const poster = normalizeHeroLayout({ preset: "poster" });
+    expect(diffHeroLayout({ ...poster, showCopy: true, showMedia: true }, poster)).toBeNull();
+  });
+
+  // The round trip the admin actually does: resolve for the editor, diff on the
+  // way back, normalise into the record, resolve again for the storefront.
+  it("survives the round trip the editor makes, and still inherits", () => {
+    const config = normalizeHeroConfig({
+      layout: { preset: "text-right", vertical: "bottom", panel: "glass" },
+      slides: [{ id: "a", kind: "custom", headline: "Poster" }],
+    });
+    const resolved = resolveHeroLayout(config.slides[0], config, null);
+    const stored = normalizeHeroSlide({
+      ...config.slides[0],
+      layout: diffHeroLayout({ ...resolved, preset: "split" }, config.layout),
+    });
+    expect(stored.layout).toEqual({ preset: "split" });
+
+    // And the section can still move everything the slide did not claim.
+    const moved = normalizeHeroConfig({
+      ...config,
+      layout: { preset: "text-left", vertical: "top", panel: "solid" },
+      slides: [stored],
+    });
+    const after = resolveHeroLayout(moved.slides[0], moved, null);
+    expect(after.preset).toBe("split");
+    expect(after.vertical).toBe("top");
+    expect(after.panel).toBe("solid");
+  });
+});
+
 describe("resolveHeroTheme", () => {
   it("takes the section's ground by default", () => {
     expect(resolveHeroTheme(normalizeHeroLayout(null), { theme: "dark" })).toBe("dark");
@@ -552,6 +636,25 @@ describe("normalizeHeroSlide", () => {
       "Farmer-owned",
     ]);
     expect(normalizeHeroSlide({ badges: "Farmer-owned" }).badges).toEqual([]);
+  });
+
+  // THE BUG THIS PINS DOWN. A slide's layout used to be filled in on the way
+  // through — one key overridden came back as ten — so the section's default
+  // composition could never reach a slide that had been edited once, and
+  // changing it in the admin appeared to do nothing at all.
+  it("keeps a slide's composition SPARSE, so the section still answers the rest", () => {
+    const slide = normalizeHeroSlide({
+      kind: "custom",
+      layout: { preset: "split", mediaScale: { desktop: 130 } },
+    });
+    expect(slide.layout).toEqual({ preset: "split", mediaScale: { desktop: 130 } });
+  });
+
+  it("drops a composition that says nothing, and one that says nothing legible", () => {
+    expect(normalizeHeroSlide({ layout: {} }).layout).toBeNull();
+    expect(normalizeHeroSlide({ layout: { preset: "diagonal" } }).layout).toBeNull();
+    // A value out of range inherits rather than overruling with a default.
+    expect(normalizeHeroSlide({ layout: { panelStrength: "soon" } }).layout).toBeNull();
   });
 
   it("drops a product slide with no product from the stored list", () => {

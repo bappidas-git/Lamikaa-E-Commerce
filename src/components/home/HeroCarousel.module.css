@@ -445,7 +445,14 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: var(--sf-space-7);
+  /* THE SPACING SCALE HAS NO 7 (…5, 6, 8, 10…), and four rules in this file
+     asked for one. `var()` on an undefined property is invalid at computed-value
+     time, which does not fall back to the declaration underneath — it unsets the
+     property — so this gap was `normal` (nothing) on every phone, the plate
+     under the copy had no size at all, and the glass pane had no padding below
+     1025px. Every one of them is a real token now. Keep it that way: if a value
+     is not on the scale in `theme/storefront-tokens.css`, it is not a token. */
+  gap: var(--sf-space-6);
   width: 100%;
   min-width: 0;
 }
@@ -523,7 +530,9 @@
 .panelScrim::before {
   content: "";
   position: absolute;
-  inset: calc(-1 * var(--sf-space-6)) calc(-1 * var(--sf-space-7));
+  /* Wider than it is tall: the bloom has to clear the ends of a headline, and
+     a line of type is longer than a column of them is deep. */
+  inset: calc(-1 * var(--sf-space-6)) calc(-1 * var(--sf-space-8));
   z-index: -1;
   border-radius: var(--sf-radius-xl);
   background: radial-gradient(
@@ -538,7 +547,9 @@
 /* A real pane of the storefront's glass, behind the words. */
 .panelGlass,
 .panelSolid {
-  padding: var(--sf-space-7);
+  /* The desktop takes this to --sf-space-8; a phone's pane is one step in, so
+     the words keep their column. */
+  padding: var(--sf-space-6);
   border-radius: var(--sf-radius-lg);
   background-color: rgba(var(--sf-color-bg-rgb), var(--sf-hero-panel));
 }
@@ -784,7 +795,8 @@
   grid-area: 1 / 1;
   display: grid;
   align-items: center;
-  gap: var(--sf-space-7);
+  /* The slide's own gap — the skeleton holds the shape the first slide lands in. */
+  gap: var(--sf-space-6);
   width: 100%;
   padding-top: var(--sf-space-6);
   padding-bottom: var(--sf-space-8);

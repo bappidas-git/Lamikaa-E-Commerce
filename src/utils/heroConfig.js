@@ -610,6 +610,86 @@ export const normalizeHeroLayout = (raw, fallback = DEFAULT_HERO_LAYOUT) => {
   };
 };
 
+/** The three devices a card is sized for, as stored keys. */
+const MEDIA_DEVICES = Object.keys(DEFAULT_HERO_MEDIA_SCALE);
+
+/** A value validated against a vocabulary, or `undefined` — which is a PATCH's
+    way of saying "this key was never set", where a record says "the default". */
+const someOf = (value, allowed) =>
+  allowed.some((o) => o.value === value) ? value : undefined;
+
+/**
+ * ONE SLIDE'S COMPOSITION, AS A PATCH — only the keys it actually overrides.
+ *
+ * `normalizeHeroLayout` above fills EVERY key, which is what a section record
+ * wants and precisely what a slide's must not have. A slide stored as
+ * `{ preset: "split" }` and read back holding all ten keys is no longer
+ * overriding one of them — it is overriding the lot, with the DEFAULTS standing
+ * in for the nine the merchant never touched, and the section's own composition
+ * can never reach that slide again. Which is how "change the default
+ * composition" came to do nothing to a carousel whose slides had each been
+ * opened once.
+ *
+ * So a slide's layout is validated key by key and an ABSENT key stays absent:
+ * `resolveHeroLayout` layers the patch over the section's resolved composition,
+ * and every key the patch is silent about is still the section's to answer. A
+ * value that is not one of the vocabulary's is dropped rather than defaulted,
+ * for the same reason — an unreadable answer inherits instead of overruling.
+ *
+ * `mediaScale` is a patch within a patch: a slide that wants a bigger card on
+ * the desktop alone stores that one device and keeps the section's other two.
+ *
+ * @param {object|null} raw
+ * @returns {object|null} the patch, or `null` when it says nothing
+ */
+export const normalizeHeroLayoutPatch = (raw) => {
+  if (!raw || typeof raw !== "object") return null;
+  const patch = {};
+  const put = (key, value) => {
+    if (value !== undefined) patch[key] = value;
+  };
+
+  put("preset", someOf(raw.preset, HERO_LAYOUTS));
+  put("align", someOf(raw.align, HERO_TEXT_ALIGNMENTS));
+  put("vertical", someOf(raw.vertical, HERO_VERTICAL_ALIGNMENTS));
+  put("panel", someOf(raw.panel, HERO_PANELS));
+  put(
+    "panelStrength",
+    clampInt(raw.panelStrength, HERO_PANEL_MIN, HERO_PANEL_MAX, undefined)
+  );
+  put("showCopy", typeof raw.showCopy === "boolean" ? raw.showCopy : undefined);
+  put("showMedia", typeof raw.showMedia === "boolean" ? raw.showMedia : undefined);
+  put(
+    "showActions",
+    typeof raw.showActions === "boolean" ? raw.showActions : undefined
+  );
+  put("theme", someOf(raw.theme, HERO_SLIDE_THEMES));
+
+  // A bare number is all three devices, exactly as `normalizeHeroMediaScale`
+  // reads one; an object names only the devices it carries.
+  const flat =
+    typeof raw.mediaScale === "number" || typeof raw.mediaScale === "string"
+      ? raw.mediaScale
+      : null;
+  const stored =
+    raw.mediaScale && typeof raw.mediaScale === "object" ? raw.mediaScale : null;
+  if (flat != null || stored) {
+    const scale = {};
+    MEDIA_DEVICES.forEach((device) => {
+      const size = clampInt(
+        flat ?? stored?.[device],
+        HERO_MEDIA_SCALE_MIN,
+        HERO_MEDIA_SCALE_MAX,
+        undefined
+      );
+      if (size !== undefined) scale[device] = size;
+    });
+    if (Object.keys(scale).length > 0) patch.mediaScale = scale;
+  }
+
+  return Object.keys(patch).length > 0 ? patch : null;
+};
+
 /**
  * Everything a `poster` preset implies, applied.
  *
@@ -643,6 +723,57 @@ export const resolveHeroLayout = (slide, config, background) => {
     return { ...layout, showCopy: false, showMedia: false };
   }
   return layout;
+};
+
+/**
+ * WHAT THIS COMPOSITION SAYS THAT THE SECTION'S DOES NOT — the patch a slide
+ * stores, and the inverse of `resolveHeroLayout` above.
+ *
+ * An editor is shown a slide's RESOLVED composition (every key filled, so the
+ * screen has something to put in every field) and hands back a complete record
+ * when they change one field of it. Written down whole, that record is a slide
+ * that has overridden all ten keys — so it is diffed against the section's
+ * first, and only the keys that genuinely differ are kept. That is what makes
+ * the helper text on that screen true: change the preset, and the alignment,
+ * the plate and the card's size still follow Section settings.
+ *
+ * Both sides are compared as DRAWN (`applyPoster`), so a slide agreeing with a
+ * poster section stores nothing rather than storing the two switches the preset
+ * already implies.
+ *
+ * @param {object} layout         the composition the editor is holding
+ * @param {object} sectionLayout  the section's default composition
+ * @returns {object|null} the patch, or `null` when the slide asks for exactly
+ *          the section's composition and should simply follow it
+ */
+export const diffHeroLayout = (layout, sectionLayout) => {
+  const section = applyPoster(normalizeHeroLayout(sectionLayout));
+  const own = applyPoster(normalizeHeroLayout(layout, section));
+  const patch = {};
+
+  [
+    "preset",
+    "align",
+    "vertical",
+    "panel",
+    "panelStrength",
+    "showCopy",
+    "showMedia",
+    "showActions",
+    "theme",
+  ].forEach((key) => {
+    if (own[key] !== section[key]) patch[key] = own[key];
+  });
+
+  const scale = {};
+  MEDIA_DEVICES.forEach((device) => {
+    if (own.mediaScale[device] !== section.mediaScale[device]) {
+      scale[device] = own.mediaScale[device];
+    }
+  });
+  if (Object.keys(scale).length > 0) patch.mediaScale = scale;
+
+  return Object.keys(patch).length > 0 ? patch : null;
 };
 
 /** Is this composition the picture and nothing but the picture? */
@@ -848,7 +979,9 @@ const normalizeSlideMedia = (raw) => {
  * blank and carries a `productId` instead. `background` and `layout` stay
  * `null` when the slide has none of its own, because `null` is what
  * `resolveSlideBackground`/`resolveHeroLayout` read as "inherit" — a shelf of
- * defaults stored on every slide would make every slide an override.
+ * defaults stored on every slide would make every slide an override. The layout
+ * goes further and stays SPARSE where it exists: one key overridden is one key
+ * stored, so the section's composition still reaches the other nine.
  */
 export const normalizeHeroSlide = (raw) => {
   const s = raw && typeof raw === "object" ? raw : {};
@@ -868,7 +1001,11 @@ export const normalizeHeroSlide = (raw) => {
     primaryCta: normalizeCta(s.primaryCta),
     secondaryCta: normalizeCta(s.secondaryCta),
     background: s.background ? normalizeHeroBackground(s.background) : null,
-    layout: s.layout ? normalizeHeroLayout(s.layout) : null,
+    // A PATCH, not a record: only the keys this slide actually overrides, so
+    // everything else still follows the section's composition however often
+    // this slide is read back and written out again. See
+    // `normalizeHeroLayoutPatch`.
+    layout: normalizeHeroLayoutPatch(s.layout),
     theme: oneOf(s.theme, HERO_SLIDE_THEMES, "inherit"),
   };
 };

@@ -349,6 +349,39 @@ export const plateSrc = (url, { w = 900, ar = "1:1" } = {}) => {
 /** The delivery URL for a product's hero/stage image, or "" when it has none. */
 export const stageSrc = (product, opts) => plateSrc(primaryImage(product)?.url, opts);
 
+/**
+ * The delivery URL for a picture that FILLS its frame — the twin of
+ * `plateSrc()` above, and the other half of one rule.
+ *
+ * A LABEL is padded, because on a label the artwork is the product and a sliced
+ * line of type is a defect. A photographed SCENE has margin to give, and the
+ * same pad spends a fifth of a 4:5 stage on a band of sampled brown across the
+ * top and the foot of it — so the editorial stages (the hero's product card,
+ * the home chapters, the PDP) fill instead: `c_fill,g_center` at the server and
+ * `object-fit: cover` in the browser. Pass both together; the delivered file and
+ * the CSS box have to agree on which one is happening.
+ *
+ * `g_center` rather than `g_auto` because it is deterministic — eight products
+ * in a row crop the same way, which is what makes a carousel of them read as a
+ * range rather than as eight photographs.
+ *
+ * It takes a URL, not a record, for the reason `plateSrc()` does: a product's
+ * primary image and an admin-typed poster link are not the same shape, and the
+ * delivery rule is the same for both.
+ */
+export const fillSrc = (url, { w = 900, ar = "4:5" } = {}) => {
+  const clean = trimmedUrl(url);
+  if (!clean) return "";
+  if (!isCloudinary(clean)) return cld(clean, { w });
+  return cld(clean, { ar, gravity: "center", w });
+};
+
+/** The same, for a product's primary image — what the hero's card and the
+    editorial chapters fill their frames with, and what a picture OF either
+    (the admin's hero preview) has to ask for to be telling the truth. */
+export const stageFillSrc = (product, opts) =>
+  fillSrc(primaryImage(product)?.url, opts);
+
 /** Alt text for one media row: the row's own, then the product name. */
 export const productAlt = (product, media) =>
   media?.alt || media?.title || product?.name || "";
@@ -405,6 +438,8 @@ const product = {
   productVideos,
   plateSrc,
   stageSrc,
+  fillSrc,
+  stageFillSrc,
   productAlt,
   isPriceKnown,
   resolvePrice,

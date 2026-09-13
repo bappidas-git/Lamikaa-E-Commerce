@@ -167,6 +167,12 @@ schema). A few things are worth knowing before you touch it:
   admin's Ground select used to write the band's answer onto it) is lifted into
   `heroConfig.theme` by `normalizeHeroConfig`, so the record never says it
   twice and the storefront paints exactly what it painted before.
+  A SLIDE stores only the keys it actually overrides — `{ preset: "split" }` is
+  a complete, legal slide layout — and every key it is silent about is still the
+  section's to answer. That is what "key by key" means, and it is enforced on
+  the way in (`normalizeHeroLayoutPatch`) and on the way out of the editor
+  (`diffHeroLayout`), so a slide opened once in the admin does not quietly stop
+  listening to the default composition.
 - **`layout.mediaScale`** is how big the card is, per device:
   `{ desktop, tablet, mobile }` as percentages of the size each composition was
   drawn at (50–150, `100` = the drawing), matching the stylesheet's own
