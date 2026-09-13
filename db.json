@@ -1978,8 +1978,235 @@
       "blur": 0,
       "showContent": true
     },
-    "slides": [],
-    "updatedAt": "2026-09-12T18:27:54.689Z"
+    "slides": [
+      {
+        "id": "product-1",
+        "kind": "product",
+        "productId": 1,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": {
+          "preset": "text-left",
+          "align": "auto",
+          "vertical": "center",
+          "panel": "auto",
+          "panelStrength": 0,
+          "showCopy": true,
+          "showMedia": true,
+          "showActions": true,
+          "theme": "inherit"
+        },
+        "theme": "inherit"
+      },
+      {
+        "id": "product-2",
+        "kind": "product",
+        "productId": 2,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
+      },
+      {
+        "id": "product-3",
+        "kind": "product",
+        "productId": 3,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
+      },
+      {
+        "id": "product-4",
+        "kind": "product",
+        "productId": 4,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
+      },
+      {
+        "id": "product-5",
+        "kind": "product",
+        "productId": 5,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
+      },
+      {
+        "id": "product-6",
+        "kind": "product",
+        "productId": 6,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
+      },
+      {
+        "id": "product-8",
+        "kind": "product",
+        "productId": 8,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
+      },
+      {
+        "id": "product-7",
+        "kind": "product",
+        "productId": 7,
+        "enabled": true,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
+      }
+    ],
+    "updatedAt": "2026-09-13T19:37:36.002Z"
   },
   "settings": {
     "store": {
@@ -1988,8 +2215,8 @@
       "email": "{{LAMIKAA_EMAIL}}",
       "phone": "{{LAMIKAA_PHONE}}",
       "address": "{{LAMIKAA_ADDRESS}}",
-      "currency": "INR",
-      "currencySymbol": "₹",
+      "currency": "USD",
+      "currencySymbol": "$",
       "timezone": "Asia/Kolkata",
       "logo": null,
       "favicon": null,
@@ -2622,7 +2849,7 @@
       "helpfulCount": 0,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T11:24:35.944Z"
+      "updatedAt": "2026-09-13T22:00:24.563Z"
     },
     {
       "id": 2,
@@ -2640,6 +2867,21 @@
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-06T00:00:00.000Z"
+    },
+    {
+      "productId": 1,
+      "userId": null,
+      "userName": "shubendu",
+      "rating": 5,
+      "title": "test",
+      "body": "testhsbdhdhd",
+      "status": "approved",
+      "isVerifiedPurchase": true,
+      "helpfulCount": 0,
+      "source": "admin",
+      "createdAt": "2026-09-13T21:59:53.126Z",
+      "updatedAt": "2026-09-13T21:59:53.126Z",
+      "id": 3
     }
   ],
   "wishlist": [
