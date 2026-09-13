@@ -382,6 +382,15 @@ describe("resolveHeroTheme", () => {
     expect(resolveHeroTheme(null, null)).toBe("light");
   });
 
+  // The band's ground is `config.theme` and the section's layout says
+  // `inherit` — which is the shape `normalizeHeroConfig` guarantees, and the
+  // reason the admin's section-level Ground select is bound to the config.
+  it("reads a normalised section's ground from the config, not from its layout", () => {
+    const cfg = normalizeHeroConfig({ theme: "dark" });
+    expect(cfg.layout.theme).toBe("inherit");
+    expect(resolveHeroTheme(cfg.layout, cfg)).toBe("dark");
+  });
+
   it("reads a ground spelled on the slide record as a fallback", () => {
     const inherit = normalizeHeroLayout(null);
     expect(resolveHeroTheme(inherit, { theme: "light" }, "dark")).toBe("dark");
@@ -663,5 +672,44 @@ describe("normalizeHeroConfig — the new section keys", () => {
       DEFAULT_HERO_EYEBROW
     );
     expect(normalizeHeroConfig({ eyebrowLabel: " New in " }).eyebrowLabel).toBe("New in");
+  });
+
+  // The band's ground is `theme`; `layout.theme` is a SLIDE's override of it.
+  // A record that carries the band's ground on the section LAYOUT — which is
+  // what the admin's Ground select used to write — says it twice, and the
+  // storefront was painting the layout's answer. So the layout's answer is the
+  // one that survives, in the key that owns it.
+  it("lifts a ground left on the section's layout into the band's own key", () => {
+    const cfg = normalizeHeroConfig({ theme: "light", layout: { theme: "dark" } });
+    expect(cfg.theme).toBe("dark");
+    expect(cfg.layout.theme).toBe("inherit");
+    // The same band, before and after the lift: nothing a visitor sees moves.
+    expect(resolveHeroTheme(cfg.layout, cfg)).toBe("dark");
+    expect(resolveHeroTheme(normalizeHeroLayout({ theme: "dark" }), { theme: "light" })).toBe(
+      "dark"
+    );
+  });
+
+  it("leaves the section layout's `inherit` alone, so `theme` stays the answer", () => {
+    const cfg = normalizeHeroConfig({ theme: "dark" });
+    expect(cfg.layout.theme).toBe("inherit");
+    expect(cfg.theme).toBe("dark");
+    // And a section that has never said anything is the light storefront.
+    expect(normalizeHeroConfig({}).theme).toBe("light");
+    expect(normalizeHeroConfig({}).layout.theme).toBe("inherit");
+  });
+
+  it("carries the lifted ground down to every slide that has not overruled it", () => {
+    const cfg = normalizeHeroConfig({
+      theme: "light",
+      layout: { theme: "dark" },
+      slides: [
+        { id: "a", kind: "custom", headline: "Follows the band" },
+        { id: "b", kind: "custom", headline: "Its own ground", layout: { theme: "light" } },
+      ],
+    });
+    const [follows, own] = buildHeroSlides([], cfg);
+    expect(follows.theme).toBe("dark");
+    expect(own.theme).toBe("light");
   });
 });

@@ -169,8 +169,11 @@ export const HERO_PANELS = [
   { value: "solid", label: "Solid card", hint: "An opaque card behind the copy" },
 ];
 
-/** The two grounds the hero may be composed on. The section picks one; a slide
-    may overrule it. `inherit` is the slide-level answer, never the section's. */
+/** The two grounds the hero may be composed on. The section picks one — in
+    `heroConfig.theme`, the band's own key — and a slide may overrule it from
+    its composition. `inherit` is the slide-level answer, never the section's:
+    the section layout's `theme` is `inherit` by construction, which is why the
+    section's Ground select is bound to `heroConfig.theme` instead. */
 export const HERO_THEMES = [
   { value: "light", label: "Light", hint: "Cream ground, espresso ink — the storefront's own" },
   { value: "dark", label: "Dark", hint: "Near-black ground, warm white ink and gold" },
@@ -653,10 +656,13 @@ export const heroLayoutDrawsContent = (layout) =>
 /**
  * The ground the slide is composed on: its own answer, else the section's.
  *
- * The ground is part of the COMPOSITION, so `layout.theme` is where the admin
- * writes it and it wins. `slideTheme` is the same decision spelled on the slide
- * record itself — which is where a hand-written `db.json` or an older build
- * would put it — and it is read as a fallback rather than ignored.
+ * TWO LEVELS, ONE KEY EACH. The band's ground is `config.theme` and a slide
+ * overrules it from its own composition (`layout.theme`, `inherit` until a
+ * merchant says otherwise) — so the section's answer is never written onto a
+ * layout, and `normalizeHeroConfig` lifts one out again if a record carries it
+ * there. `slideTheme` is the same slide decision spelled on the slide record
+ * itself — which is where a hand-written `db.json` or an older build would put
+ * it — and it is read as a fallback rather than ignored.
  */
 export const resolveHeroTheme = (layout, config, slideTheme) => {
   const own = layout?.theme;
@@ -975,6 +981,18 @@ export const buildHeroSlides = (products, config) => {
 // complete shape, even on an older db.json or a partial API response.
 export const normalizeHeroConfig = (raw) => {
   const cfg = raw && typeof raw === "object" ? raw : {};
+  // THE BAND'S GROUND LIVES IN ONE PLACE, and this is where a record that says
+  // it twice is settled. `theme` is the SECTION's ground; `layout.theme` is a
+  // SLIDE's override of it and reads `inherit` at the section level by
+  // construction — but the admin's one Ground control used to write the
+  // section's answer onto the section LAYOUT, so a record saved by that screen
+  // can carry `layout.theme: "dark"` while `theme` still says `light`. The
+  // layout's answer is the one the storefront was painting (`resolveHeroTheme`
+  // reads it first), so it is LIFTED into `theme` and the layout returns to
+  // `inherit`: the same band, from one key, and the admin's Ground select now
+  // shows the ground actually in force.
+  const layout = normalizeHeroLayout(cfg.layout);
+  const grounded = layout.theme === "light" || layout.theme === "dark";
   return {
     // Every toggle defaults to ON unless explicitly false, so a config written
     // by an older build never silently hides part of the hero.
@@ -1002,16 +1020,21 @@ export const normalizeHeroConfig = (raw) => {
     // make the hero quieter, never make it unstoppable.
     showPause: cfg.showPause !== false,
     // The ground the band is composed on. Light unless a merchant asked for the
-    // dark one, so a record written before themes existed looks unchanged.
-    theme: oneOf(cfg.theme, HERO_THEMES, DEFAULT_HERO_CONFIG.theme),
+    // dark one, so a record written before themes existed looks unchanged — and
+    // a ground found on the section's layout wins, because that is the one the
+    // band was being painted with (see the lift above).
+    theme: grounded
+      ? layout.theme
+      : oneOf(cfg.theme, HERO_THEMES, DEFAULT_HERO_CONFIG.theme),
     height: oneOf(cfg.height, HERO_HEIGHTS, DEFAULT_HERO_CONFIG.height),
     eyebrowLabel:
       trimmed(cfg.eyebrowLabel) || DEFAULT_HERO_CONFIG.eyebrowLabel,
     showEyebrow: cfg.showEyebrow !== false,
     // The composition every slide inherits. Always complete, so the admin form
     // and the carousel can read `config.layout.preset` without asking whether
-    // a layout was ever configured.
-    layout: normalizeHeroLayout(cfg.layout),
+    // a layout was ever configured — and `inherit` at the section, always,
+    // because a ground here is the band's and has just been lifted out of it.
+    layout: grounded ? { ...layout, theme: "inherit" } : layout,
     // The section-wide picture. Always a complete record, for the same reason.
     background: normalizeHeroBackground(cfg.background),
     // The ordered slide list, posters included.

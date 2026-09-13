@@ -36,6 +36,20 @@ the stylesheet takes on their behalf.
 
 ### Fixed
 
+- **The hero's Section settings showed an empty Ground.** The one Ground select
+  was bound to `layout.theme` at both levels — but a section layout reads
+  `inherit`, which is not one of the two grounds a section is offered, so the
+  field rendered blank until somebody picked something. Worse, picking one wrote
+  the band's ground onto the section's LAYOUT, where `resolveHeroTheme` reads it
+  first and it silently shadowed `heroConfig.theme`: the record then carried the
+  band's ground in two places, disagreeing. The section's select is bound to
+  `heroConfig.theme` now — the band's own key, with `layout.theme` left as the
+  per-slide override it is documented to be — and `normalizeHeroConfig` LIFTS a
+  ground found on a section layout into it, returning the layout to `inherit`.
+  A record written by the old screen therefore opens showing the ground it is
+  actually painting, and saves back with one source of truth; nothing a visitor
+  sees moves.
+
 - **The hero card had quietly become a fifth smaller.** 1.3.0 bounded it by the
   height left over once the chrome, the slide's padding AND the control rail had
   taken theirs — which cost a 900px-tall laptop 96px of card (464px where the

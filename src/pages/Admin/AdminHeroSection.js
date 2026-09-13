@@ -520,6 +520,15 @@ const LayoutEditor = ({
   scope = "slide",
   kind = "product",
   background,
+  // The SECTION's ground, and the setter for it. The band's ground is
+  // `heroConfig.theme`, not a key of any composition — `layout.theme` is the
+  // per-slide override and reads `inherit` at this level — so at section scope
+  // this one field is bound to the record above rather than to `value`. Bound
+  // to `value.theme` it showed an empty box (`inherit` is not one of the two
+  // options a section is offered) and wrote the band's ground into the layout,
+  // where it shadowed `heroConfig.theme` and left the record saying it twice.
+  sectionTheme = DEFAULT_HERO_CONFIG.theme,
+  onSectionTheme,
 }) => {
   const isSection = scope === "section";
   const set = (patch) => onChange({ ...value, ...patch });
@@ -603,9 +612,13 @@ const LayoutEditor = ({
             fullWidth
             size="small"
             label="Ground"
-            value={value.theme}
+            value={isSection ? sectionTheme : value.theme}
             disabled={disabled}
-            onChange={(e) => set({ theme: e.target.value })}
+            onChange={(e) =>
+              isSection
+                ? onSectionTheme?.(e.target.value)
+                : set({ theme: e.target.value })
+            }
             helperText={
               isSection
                 ? "The band's own ground — the rest of the page is untouched"
@@ -2820,6 +2833,8 @@ const AdminHeroSection = () => {
                       scope="section"
                       kind="product"
                       background={sectionBackground}
+                      sectionTheme={config.theme}
+                      onSectionTheme={(theme) => setCfg({ theme })}
                     />
                     <Divider sx={{ my: 2.5 }} />
                     <Grid container spacing={2.5}>

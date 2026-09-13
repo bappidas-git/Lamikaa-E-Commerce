@@ -162,6 +162,11 @@ schema). A few things are worth knowing before you touch it:
   `text-right` · `text-center` · `split` (card centred, copy either side) ·
   `poster`, and `theme` is `light` | `dark` | `inherit` — the hero is the one
   CONTENT section that may wear the `.sf-on-dark` scope, and it wears it alone.
+  `layout.theme` is a SLIDE's ground; the BAND's is `heroConfig.theme`, and the
+  section layout's own is `inherit` by construction — a ground found there (the
+  admin's Ground select used to write the band's answer onto it) is lifted into
+  `heroConfig.theme` by `normalizeHeroConfig`, so the record never says it
+  twice and the storefront paints exactly what it painted before.
 - **`layout.mediaScale`** is how big the card is, per device:
   `{ desktop, tablet, mobile }` as percentages of the size each composition was
   drawn at (50–150, `100` = the drawing), matching the stylesheet's own
