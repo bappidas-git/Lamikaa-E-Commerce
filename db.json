@@ -1926,6 +1926,30 @@
     "showProgress": true,
     "showArrows": true,
     "showPause": true,
+    "theme": "light",
+    "height": "standard",
+    "eyebrowLabel": "Black Rice Ritual",
+    "showEyebrow": true,
+    "layout": {
+      "preset": "text-left",
+      "align": "auto",
+      "vertical": "center",
+      "panel": "auto",
+      "panelStrength": 0,
+      "showCopy": true,
+      "showMedia": true,
+      "showActions": true,
+      "theme": "inherit"
+    },
+    "background": {
+      "url": "",
+      "mobileUrl": "",
+      "position": "center",
+      "overlay": 55,
+      "blur": 0,
+      "showContent": true
+    },
+    "slides": [],
     "updatedAt": "2026-09-06T00:00:00.000Z"
   },
   "settings": {
