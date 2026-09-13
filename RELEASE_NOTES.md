@@ -1,5 +1,53 @@
 # Release notes
 
+## 1.3.1-lamikaa — 2026-09-13
+
+The hero's product card is the size it was drawn at again — and how big it is
+became a decision the owner makes, on each of the three devices, rather than one
+the stylesheet takes on their behalf.
+
+### Added
+
+- **How big the card is, per device (`layout.mediaScale`).** Admin → Home & Hero
+  → Composition: three sliders — desktop (1025px and wider), tablet
+  (769–1024px) and phone (768px and narrower) — each a percentage of the size
+  the composition was drawn at, 50–150%, with 100% being the drawing.
+  `Match the desktop size` copies one answer to all three. Held at BOTH levels
+  like every other composition key, so the section sets the default and a single
+  slide may carry a bigger pack than the rest of the carousel; the live preview
+  paints the change on the device it is showing.
+
+  What is stored is the PERCENTAGE, never a width. Six compositions × three
+  breakpoints is eighteen designed widths, none of them a merchant's decision to
+  make, so they stay in the stylesheet and the stored number scales whichever
+  one the visitor's screen lands on — which is how one setting keeps a
+  composition's proportions on a monitor, a tablet and a phone at once.
+
+### Changed
+
+- **The card's column is now the card's own width**, not an `fr` share of the
+  spread. A proportional track answers "how big is the card?" with "half of
+  whatever the spread is", so a card asked to be larger than its share would
+  have had nowhere to grow — and one asked to be smaller would have left a hole
+  beside the copy rather than giving the room back. The track is sized from the
+  card, capped at the share each composition was drawn with (scaled by the same
+  percentage) and at a ceiling that always leaves the copy a column to be read
+  in. At 100% every composition is laid out exactly as before, at every width.
+
+### Fixed
+
+- **The hero card had quietly become a fifth smaller.** 1.3.0 bounded it by the
+  height left over once the chrome, the slide's padding AND the control rail had
+  taken theirs — which cost a 900px-tall laptop 96px of card (464px where the
+  composition is drawn at 560px), 176px on an 800px window, and nearly half of
+  it at 650px. It also did not buy what it was for: what makes a full-screen
+  band overflow is the copy column and the rail under it, not the width of the
+  pack, and the band on that laptop was taller than the screen either way. The
+  ceiling is the band's OWN height now, so the card is the designed size
+  wherever there is room for it and gives way only on a genuinely short screen —
+  and the size set in the admin multiplies that answer rather than being
+  overruled by it.
+
 ## 1.3.0-lamikaa — 2026-09-13
 
 The home page's opening band stops being one composition repeated eight times.

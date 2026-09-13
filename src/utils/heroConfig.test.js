@@ -19,7 +19,10 @@ import {
   DEFAULT_HERO_CONFIG,
   DEFAULT_HERO_EYEBROW,
   DEFAULT_HERO_LAYOUT,
+  DEFAULT_HERO_MEDIA_SCALE,
   HERO_BLUR_MAX,
+  HERO_MEDIA_SCALE_MAX,
+  HERO_MEDIA_SCALE_MIN,
   HERO_OVERLAY_MAX,
   HERO_PANEL_FLOOR,
   buildHeroSlides,
@@ -28,12 +31,14 @@ import {
   heroBackgroundSrc,
   heroBackgroundVars,
   heroLinkProps,
+  heroMediaVars,
   heroSlideVars,
   isHeroBackgroundOnly,
   isHeroPoster,
   normalizeHeroBackground,
   normalizeHeroConfig,
   normalizeHeroLayout,
+  normalizeHeroMediaScale,
   normalizeHeroSlide,
   normalizeHeroSlides,
   resolveHeroAlign,
@@ -256,6 +261,73 @@ describe("normalizeHeroLayout", () => {
     expect(normalizeHeroLayout({ panelStrength: 400 }).panelStrength).toBe(100);
     expect(normalizeHeroLayout({ panelStrength: -5 }).panelStrength).toBe(0);
   });
+
+  it("carries the card's three sizes, and layers them over the fallback too", () => {
+    expect(normalizeHeroLayout({}).mediaScale).toEqual(DEFAULT_HERO_MEDIA_SCALE);
+
+    const section = normalizeHeroLayout({ mediaScale: { desktop: 130, mobile: 90 } });
+    // A slide that only changes the preset keeps the section's card sizes.
+    const slide = normalizeHeroLayout({ preset: "text-right" }, section);
+    expect(slide.mediaScale).toEqual({ desktop: 130, tablet: 100, mobile: 90 });
+    // …and one that resizes a single device keeps the section's other two.
+    const resized = normalizeHeroLayout({ mediaScale: { tablet: 75 } }, section);
+    expect(resized.mediaScale).toEqual({ desktop: 130, tablet: 75, mobile: 90 });
+  });
+});
+
+// The card is the hero's subject, and its size is the one measurement whose
+// right answer is different on a monitor, a tablet and a phone — so it is three
+// numbers, tolerantly read, and clamped where a hand-edited db.json could
+// otherwise put a 400% pack over the headline.
+describe("normalizeHeroMediaScale", () => {
+  it("fills in the designed size from nothing at all", () => {
+    expect(normalizeHeroMediaScale(undefined)).toEqual(DEFAULT_HERO_MEDIA_SCALE);
+    expect(normalizeHeroMediaScale(null)).toEqual(DEFAULT_HERO_MEDIA_SCALE);
+    expect(normalizeHeroMediaScale({ desktop: "wide" })).toEqual(DEFAULT_HERO_MEDIA_SCALE);
+  });
+
+  it("reads a bare number as every device", () => {
+    expect(normalizeHeroMediaScale(120)).toEqual({
+      desktop: 120,
+      tablet: 120,
+      mobile: 120,
+    });
+  });
+
+  it("clamps every device, whatever was stored", () => {
+    expect(normalizeHeroMediaScale({ desktop: 400, tablet: 5, mobile: 0 })).toEqual({
+      desktop: HERO_MEDIA_SCALE_MAX,
+      tablet: HERO_MEDIA_SCALE_MIN,
+      mobile: HERO_MEDIA_SCALE_MIN,
+    });
+    // A fallback out of range is clamped too, rather than passed through.
+    expect(
+      normalizeHeroMediaScale(undefined, { desktop: 900, tablet: 900, mobile: 900 })
+    ).toEqual({
+      desktop: HERO_MEDIA_SCALE_MAX,
+      tablet: HERO_MEDIA_SCALE_MAX,
+      mobile: HERO_MEDIA_SCALE_MAX,
+    });
+  });
+});
+
+describe("heroMediaVars", () => {
+  it("hands the stylesheet a multiplier per device, not a width", () => {
+    const vars = heroMediaVars(normalizeHeroLayout({ mediaScale: { desktop: 130 } }));
+    expect(vars).toEqual({
+      "--sf-hero-card-desktop": "1.3",
+      "--sf-hero-card-tablet": "1",
+      "--sf-hero-card-mobile": "1",
+    });
+  });
+
+  it("is the designed size for a slide rendered without a layout", () => {
+    expect(heroMediaVars(undefined)).toEqual({
+      "--sf-hero-card-desktop": "1",
+      "--sf-hero-card-tablet": "1",
+      "--sf-hero-card-mobile": "1",
+    });
+  });
 });
 
 describe("resolveHeroLayout", () => {
@@ -411,6 +483,17 @@ describe("resolveHeroPanel — the ground under the copy", () => {
     const vars = heroSlideVars(withBg(0), resolveHeroPanel(withBg(0), layout));
     expect(vars["--sf-hero-panel"]).toBe("0.62");
     expect(vars["--sf-hero-bg-overlay"]).toBe("0");
+    // A slide rendered before the card had a size of its own is drawn at the
+    // designed one rather than at nothing.
+    expect(vars["--sf-hero-card-desktop"]).toBe("1");
+  });
+
+  it("carries the card's size onto the slide with the picture's own values", () => {
+    const sized = normalizeHeroLayout({ mediaScale: { desktop: 85, mobile: 140 } });
+    const vars = heroSlideVars(withBg(55), resolveHeroPanel(withBg(55), sized), sized);
+    expect(vars["--sf-hero-card-desktop"]).toBe("0.85");
+    expect(vars["--sf-hero-card-mobile"]).toBe("1.4");
+    expect(vars["--sf-hero-bg-overlay"]).toBe("0.55");
   });
 });
 
