@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button, Modal } from "../ui";
 import CloudinaryImage from "../ui/CloudinaryImage";
+import {
+  readImageFile,
+  IMAGE_ACCEPT,
+  REVIEW_PHOTO_LIMIT,
+  REVIEW_PHOTO_MAX_EDGE,
+  AVATAR_MAX_EDGE,
+} from "../../utils/imageFile";
 import styles from "./ReviewModal.module.css";
 
 // =============================================================================
-// ReviewModal — rate and review a product you actually bought
+// ReviewModal — rate, review and SHOW a product you actually bought
 // =============================================================================
 //
 // ON THE SHARED PRIMITIVE (Prompt 30). The hand-rolled overlay, focus trap,
@@ -19,6 +26,22 @@ import styles from "./ReviewModal.module.css";
 // THE RATING IS NEVER THE GOLD ALONE. The stars are a radiogroup, each star a
 // real radio, and the score is repeated in words beside them, so the value
 // survives a colour-blind reading and a keyboard-only one.
+//
+// TWO KINDS OF PICTURE, and they are not interchangeable:
+//
+//   YOUR PHOTO   one portrait, the face that sits beside the name — on the
+//                product page's reviews and in the "What our customers say"
+//                band, which reads the same review rows. Optional, always: a
+//                monogram stands in, and nobody is asked for a face to be heard.
+//   YOUR PHOTOS  up to three pictures OF THE PRODUCT, the strip under the
+//                review. This is the evidence half — the texture, the shade,
+//                the pack on a real shelf.
+//
+// The reviews list has rendered `photos[]` since it was built and the band puts
+// `avatar` beside every quote; until now there was simply no way for a customer
+// to fill either in. Both are read through `utils/imageFile`, which resizes the
+// picture in a canvas before it is ever attached, so a 5 MB phone photograph
+// travels as a ~200 KB data URL.
 // =============================================================================
 
 const TITLE_MAX = 80;
@@ -81,21 +104,122 @@ const StarInput = ({ value, onChange }) => {
   );
 };
 
-const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
+/**
+ * A file input that never shows itself, plus the button that opens it.
+ *
+ * The input is `display: none` rather than visually hidden on purpose: a
+ * sr-only input is still in the tab order, and a keyboard visitor would land on
+ * a control they cannot see and cannot tell the state of. The BUTTON is the
+ * control — it is focusable, it is labelled, and it is 44px.
+ */
+const FilePickButton = ({ id, label, onPick, disabled }) => {
+  const inputRef = useRef(null);
+  return (
+    <>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        disabled={disabled}
+        onClick={() => inputRef.current?.click()}
+      >
+        {label}
+      </Button>
+      <input
+        id={id}
+        ref={inputRef}
+        type="file"
+        accept={IMAGE_ACCEPT}
+        multiple
+        hidden
+        onChange={(event) => {
+          const files = Array.from(event.target.files || []);
+          // The same file picked twice in a row must still fire `change`.
+          event.target.value = "";
+          if (files.length) onPick(files);
+        }}
+      />
+    </>
+  );
+};
+
+/** First letter of the name the review is published under. */
+const monogram = (name) => (name || "?").trim().charAt(0).toUpperCase() || "?";
+
+const ReviewModal = ({
+  open,
+  onClose,
+  product,
+  existing,
+  onSubmit,
+  authorName = "",
+  defaultAvatar = null,
+}) => {
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [avatar, setAvatar] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [reading, setReading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [photoNote, setPhotoNote] = useState("");
 
   useEffect(() => {
     if (open) {
       setRating(existing?.rating || 0);
       setTitle(existing?.title || "");
       setBody(existing?.body || "");
+      // An edit shows what is already on the row; a first review starts from
+      // the picture on the account, when there is one.
+      setAvatar(existing?.avatar || defaultAvatar || null);
+      setPhotos(Array.isArray(existing?.photos) ? existing.photos.filter(Boolean) : []);
       setError("");
+      setPhotoNote("");
     }
-  }, [open, existing]);
+  }, [open, existing, defaultAvatar]);
+
+  // ── The two pickers ───────────────────────────────────────────────────────
+  // Both read through `utils/imageFile`, which resizes in a canvas and answers
+  // `{ dataUrl }` or `{ error }` — a refused file always says why, in words.
+
+  const pickAvatar = async (files) => {
+    setPhotoNote("");
+    setReading(true);
+    const result = await readImageFile(files[0], { maxEdge: AVATAR_MAX_EDGE, quality: 0.82 });
+    setReading(false);
+    if (result.error) setPhotoNote(result.error);
+    else setAvatar(result.dataUrl);
+  };
+
+  const pickPhotos = async (files) => {
+    setPhotoNote("");
+    const room = REVIEW_PHOTO_LIMIT - photos.length;
+    if (room <= 0) {
+      setPhotoNote(`You can add up to ${REVIEW_PHOTO_LIMIT} photos.`);
+      return;
+    }
+    setReading(true);
+    const picked = files.slice(0, room);
+    const results = [];
+    for (const file of picked) {
+      // Sequential on purpose: three 4000px decodes in parallel is how a
+      // mid-range phone drops the whole dialog.
+      // eslint-disable-next-line no-await-in-loop
+      results.push(await readImageFile(file, { maxEdge: REVIEW_PHOTO_MAX_EDGE }));
+    }
+    setReading(false);
+    const added = results.filter((r) => r.dataUrl).map((r) => r.dataUrl);
+    const refused = results.find((r) => r.error);
+    if (added.length) setPhotos((current) => [...current, ...added].slice(0, REVIEW_PHOTO_LIMIT));
+    if (refused) setPhotoNote(refused.error);
+    else if (files.length > room) {
+      setPhotoNote(`Only the first ${room} ${room === 1 ? "photo was" : "photos were"} added — the limit is ${REVIEW_PHOTO_LIMIT}.`);
+    }
+  };
+
+  const removePhoto = (index) =>
+    setPhotos((current) => current.filter((_, i) => i !== index));
 
   const handleSubmit = async () => {
     if (!rating) {
@@ -104,7 +228,13 @@ const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
     }
     setSubmitting(true);
     try {
-      await onSubmit({ rating, title: title.trim(), body: body.trim() });
+      await onSubmit({
+        rating,
+        title: title.trim(),
+        body: body.trim(),
+        avatar: avatar || null,
+        photos,
+      });
     } catch (e) {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -122,7 +252,7 @@ const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
       <Button
         variant="primary"
         onClick={handleSubmit}
-        disabled={submitting}
+        disabled={submitting || reading}
         aria-busy={submitting || undefined}
       >
         {submitting && <span className={styles.btnSpinner} aria-hidden="true" />}
@@ -177,6 +307,48 @@ const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
         <StarInput value={rating} onChange={setRating} />
       </div>
 
+      {/* ── Your photo — the face beside the name ───────────────────────────
+          Optional, and said so twice: in the label and in the note. */}
+      <div className={styles.field}>
+        <div className={styles.labelRow}>
+          <span className={styles.label}>Your photo</span>
+          <span className={styles.counter}>Optional</span>
+        </div>
+        <div className={styles.avatarRow}>
+          <span className={styles.avatarPreview}>
+            {avatar ? (
+              <img className={styles.avatarImg} src={avatar} alt="" />
+            ) : (
+              <span className={styles.avatarMonogram} aria-hidden="true">
+                {monogram(authorName)}
+              </span>
+            )}
+          </span>
+          <div className={styles.avatarActions}>
+            <FilePickButton
+              id="review-avatar-input"
+              label={avatar ? "Change photo" : "Add your photo"}
+              onPick={pickAvatar}
+              disabled={reading || submitting}
+            />
+            {avatar && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={reading || submitting}
+                onClick={() => setAvatar(null)}
+              >
+                Remove
+              </Button>
+            )}
+            <p className={styles.pickerNote}>
+              Shown beside your name here and in “What our customers say”.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className={styles.field}>
         <div className={styles.labelRow}>
           <label className={styles.label} htmlFor="review-title">
@@ -214,6 +386,65 @@ const ReviewModal = ({ open, onClose, product, existing, onSubmit }) => {
           rows={4}
           maxLength={BODY_MAX}
         />
+      </div>
+
+      {/* ── Photos of the product — the evidence half ───────────────────────── */}
+      <div className={styles.field}>
+        <div className={styles.labelRow}>
+          <span className={styles.label}>Add photos</span>
+          <span className={styles.counter}>
+            {photos.length}/{REVIEW_PHOTO_LIMIT}
+          </span>
+        </div>
+
+        {photos.length > 0 && (
+          <ul className={styles.thumbs}>
+            {photos.map((src, index) => (
+              <li key={`${index}-${src.slice(-24)}`} className={styles.thumb}>
+                <img src={src} alt={`Your upload ${index + 1}`} className={styles.thumbImg} />
+                <button
+                  type="button"
+                  className={styles.thumbRemove}
+                  onClick={() => removePhoto(index)}
+                  aria-label={`Remove photo ${index + 1}`}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className={styles.pickerRow}>
+          <FilePickButton
+            id="review-photos-input"
+            label={photos.length ? "Add another photo" : "Add photos"}
+            onPick={pickPhotos}
+            disabled={reading || submitting || photos.length >= REVIEW_PHOTO_LIMIT}
+          />
+          <p className={styles.pickerNote}>
+            Up to {REVIEW_PHOTO_LIMIT} pictures of the product, straight from your camera roll.
+          </p>
+        </div>
+
+        {/* One live region for both pickers: a resize is quick but not free, and
+            a refused file has to be heard, not just seen. */}
+        <p className={styles.pickerStatus} role="status">
+          {reading ? "Adding your photo…" : photoNote}
+        </p>
       </div>
 
       <p className={styles.moderationNote}>

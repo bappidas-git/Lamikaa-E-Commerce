@@ -1,5 +1,99 @@
 # Release notes
 
+## 1.4.0-lamikaa — 2026-09-13
+
+Customers can now show what they are talking about — a photograph of themselves
+beside their name, and up to three pictures of the product — and the store has
+a **"What our customers say"** band at the foot of every page. The band is not a
+second place to write anything: it reads the same approved reviews the product
+pages print, so a review is written once and read wherever it belongs.
+
+### Added
+
+- **"What our customers say", on every storefront page.** One band, mounted
+  once in the shell (`src/components/storefront/Testimonials.js`), so it rides
+  every route and reads once per visit rather than once per page: the eyebrow,
+  the headline with its one gradient word, and a rail of quote cards — stars,
+  the title, the words, the customer's pictures, then their photograph, name,
+  verified mark and date, and a link to the product the review is about. It is
+  a `<figure>` with a `<blockquote>` and a `<figcaption>`, which is what a
+  quotation with an attribution is.
+
+- **The same reviews, never written twice.** There is no `testimonials`
+  collection and no second admin screen. `reviews.getPublished()` reads the
+  approved rows across the whole catalogue and `src/utils/testimonials.js`
+  decides which of them the band carries — the owner's featured rows first,
+  then the ones with a face on them, then the most recent. A review needs WORDS
+  to qualify (a bare five stars is a rating, not a quote) and, unless it is
+  featured, four stars or better; the product page still prints every approved
+  review it has, unfiltered, so that is curation rather than concealment.
+
+- **And never twice on one screen.** On a product page the band drops the
+  reviews of THAT product — they are printed in full a few hundred pixels above
+  — and carries what other customers said about the rest of the range. If that
+  leaves nothing, the band takes itself off the page.
+
+- **A photograph with your review.** The review dialog (My Orders → a delivered
+  order → Write a review) now takes two kinds of picture, and says which is
+  which: YOUR PHOTO, the face that sits beside your name on the product page
+  and in the band, and up to three pictures OF THE PRODUCT. Both are optional —
+  a monogram stands in for the portrait, and nobody is asked for a face to be
+  heard.
+
+- **Pictures that fit in a row.** `src/utils/imageFile.js` draws a picked file
+  into a canvas before it is attached: a 5 MB phone photograph travels as a
+  ~200 KB JPEG data URL (1200px on its longest edge; a portrait is 320px).
+  Transparency is flattened onto white rather than onto black, a file that is
+  already smaller than its re-encode is kept as it is, and every refusal is a
+  sentence the picker prints under the field. This is the one place in the app
+  that stores an image instead of pointing at Cloudinary, and it exists because
+  the person writing a review has a photograph and no asset pipeline.
+
+- **Admin → Reviews grew the other half of the job.** Every row can now carry a
+  customer photo and up to three review photos — pasted as links, exactly as
+  `MediaManager` works, or picked off this computer through the same resizer the
+  storefront dialog uses — and a **"Feature in What our customers say"** mark,
+  which is the curation the band sorts on (togglable from the table with one
+  press, and only on an approved row). The table shows the photograph, the
+  featured mark and the picture count; the detail dialog shows the pictures
+  themselves.
+
+- **Editing a review.** The Add dialog opens on an existing row now, so a review
+  can be corrected — or given the photograph the customer sent afterwards —
+  instead of only being approved or deleted.
+
+### Changed
+
+- **The reviewer's disc is a photograph when there is one.** The product page's
+  reviews and the new band share `ReviewerAvatar`, so "who wrote this?" is
+  answered identically on both surfaces: the customer's own picture, or their
+  initial in the display serif on the hairline ring that was already there. A
+  dead link falls back to the monogram rather than to the landscape placeholder.
+
+- **Every write in Admin → Reviews tells the storefront.** Approving, featuring,
+  editing or deleting fires `reviews:updated`, so a storefront open in the same
+  tab refreshes its band without a reload; one in another tab picks it up on
+  focus.
+
+### Notes
+
+- **Nothing is fabricated.** Every card in the band is a real approved review
+  with a real name (BRAND.md §3.9 rule 6): the two seeded rows are still
+  `isSample` and still hidden behind `brand.flags.showSampleReviews`, and a
+  store with no approved reviews shows no band at all. To fill it: Admin →
+  Reviews → Add Review (or approve what a customer wrote), add the photo, tick
+  Feature.
+
+- **It costs nothing until it is nearly on screen.** The band is a lazy chunk
+  (the main bundle grew 298 B) and fetches nothing until it is within 600px of
+  the viewport; while it waits it draws no skeleton and reserves no space, so a
+  store with nothing to show has nothing to look at. Checkout is the one route
+  it stays off — a payment is not a place to start reading about face cream.
+
+- **Backend.** `GET /reviews/testimonials?limit=&includeSample=` is a new live
+  endpoint, and `POST /products/{id}/reviews` now carries `photos[]` and
+  `avatar`. Both are specified in `prompts/_reference/REPO_MAP.md` §3.4/§3.5.
+
 ## 1.3.2-lamikaa — 2026-09-13
 
 The hero's live preview is a picture of the home page again — the same crop of

@@ -1767,6 +1767,58 @@ const apiService = {
   // Reviews (Storefront — purchase-gated)
   // ===========================================================================
   reviews: {
+    /**
+     * Approved reviews across the WHOLE catalogue — the one read behind the
+     * "What our customers say" band (components/storefront/Testimonials).
+     *
+     * THIS IS WHY A TESTIMONIAL IS NEVER WRITTEN TWICE. The band is not a
+     * second collection of quotes to keep in step with the product pages: it
+     * is the same `reviews` rows the PDP renders, read without a productId.
+     * A review written once — by a customer from My Orders, or by the owner in
+     * Admin → Reviews — is therefore already both a product review and a
+     * candidate testimonial, and `utils/testimonials` decides which of them the
+     * band shows (curated `featured` rows first).
+     *
+     * Sample rows are gated here exactly as they are in products.getReviews:
+     * nothing fabricated reaches a shopper (BRAND.md §3.9 rule 6).
+     *
+     * THE POOL IS BOUNDED, not paged. `limit` is the number of rows fetched,
+     * newest first — many more than any band shows, so the curation below has
+     * something to choose from without this becoming a read of every review
+     * the store has ever taken.
+     *
+     * @param {{limit?: number, includeSample?: boolean}} [options]
+     */
+    getPublished: async ({
+      limit = 60,
+      includeSample = brand.flags.showSampleReviews,
+    } = {}) => {
+      try {
+        if (IS_MOCK_API) {
+          const response = await api.get("/reviews", {
+            params: {
+              status: "approved",
+              _sort: "createdAt",
+              _order: "desc",
+              _limit: limit,
+            },
+          });
+          const rows = Array.isArray(response.data) ? response.data : [];
+          return includeSample ? rows : rows.filter((row) => row?.isSample !== true);
+        }
+        const response = await api.get("/reviews/testimonials", {
+          params: { limit, includeSample: includeSample ? 1 : 0 },
+        });
+        const rows = extractData(response);
+        return Array.isArray(rows) ? rows : [];
+      } catch (error) {
+        // The band is furniture on every page: a failed read takes it off the
+        // page rather than putting an error panel under twenty-odd routes.
+        console.error("Get published reviews error:", error);
+        return [];
+      }
+    },
+
     // Every review authored by a customer (any status) — drives the
     // order-history "your review" state (Pending / Approved / Rejected) and the
     // edit flow. Storefront product pages read only APPROVED ones via
@@ -1786,8 +1838,16 @@ const apiService = {
     // a repeat submission for the same product updates the existing row. Every
     // create/edit (re)enters the `pending` state for admin moderation, so an
     // edited approved review drops off the storefront until re-approved.
-    submit: async ({ productId, userId, userName, rating, title = "", body = "", orderId = null, orderNumber = null, isVerifiedPurchase = true }) => {
+    //
+    // PICTURES TRAVEL WITH THE WORDS. `photos[]` is what the customer shot of
+    // the product (the UGC strip under their review) and `avatar` is the
+    // customer's own photograph — the face the "What our customers say" band
+    // puts beside their name. Both are sent on EVERY submission, including an
+    // edit, because the form always posts the state the customer is looking at:
+    // removing a photo in the dialog has to remove it from the row.
+    submit: async ({ productId, userId, userName, rating, title = "", body = "", orderId = null, orderNumber = null, isVerifiedPurchase = true, photos = [], avatar = null }) => {
       try {
+        const images = Array.isArray(photos) ? photos.filter(Boolean) : [];
         if (IS_MOCK_API) {
           const now = new Date().toISOString();
           const existingRes = await api.get("/reviews", { params: { userId, productId } });
@@ -1796,6 +1856,7 @@ const apiService = {
             productId: Number(productId), userId, userName,
             rating: Number(rating), title, body,
             status: "pending", isVerifiedPurchase,
+            photos: images, avatar: avatar || null,
             orderId, orderNumber, updatedAt: now,
           };
           if (existing) {
@@ -1805,7 +1866,9 @@ const apiService = {
           const response = await api.post("/reviews", { ...base, helpfulCount: 0, createdAt: now });
           return response.data;
         }
-        const response = await api.post(`/products/${productId}/reviews`, { rating, title, body, orderId });
+        const response = await api.post(`/products/${productId}/reviews`, {
+          rating, title, body, orderId, photos: images, avatar: avatar || null,
+        });
         return extractData(response);
       } catch (error) { console.error("Submit review error:", error); throw error; }
     },
@@ -2879,10 +2942,15 @@ const apiService = {
       } catch (error) { console.error("Admin get reviews error:", error); throw error; }
     },
 
-    // Admin-authored review for any product, under a (mock) customer name. These
+    // Admin-authored review for any product, under a real customer's name. These
     // behave like normal reviews: default to "approved" so they surface on the
     // storefront immediately, but the status is caller-controlled. userId is
     // null (not tied to a real account) and the row is flagged source: "admin".
+    //
+    // `avatar`, `photos[]` and `featured` are part of the same record as the
+    // words, which is the whole reason a testimonial is written once: the row
+    // the owner types here is the review the product page shows AND the
+    // testimonial the "What our customers say" band can carry.
     createReview: async (data) => {
       try {
         if (IS_MOCK_API) {
@@ -2896,6 +2964,9 @@ const apiService = {
             body: data.body || "",
             status: data.status || "approved",
             isVerifiedPurchase: !!data.isVerifiedPurchase,
+            featured: !!data.featured,
+            avatar: data.avatar || null,
+            photos: Array.isArray(data.photos) ? data.photos.filter(Boolean) : [],
             helpfulCount: 0,
             source: "admin",
             createdAt: now,

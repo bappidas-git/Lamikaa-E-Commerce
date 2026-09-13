@@ -2847,6 +2847,8 @@
       "isSample": true,
       "isVerifiedPurchase": false,
       "helpfulCount": 0,
+      "avatar": null,
+      "featured": false,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-13T22:00:24.563Z"
@@ -2864,6 +2866,8 @@
       "isSample": true,
       "isVerifiedPurchase": false,
       "helpfulCount": 0,
+      "avatar": null,
+      "featured": false,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-06T00:00:00.000Z"
