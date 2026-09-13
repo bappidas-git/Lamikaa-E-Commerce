@@ -33,8 +33,15 @@ import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
 import { ADMIN_PALETTE } from "../../theme/adminTheme";
+import { cld } from "../../utils/cloudinary";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
-import { primaryImage, resolvePrice, stageSrc } from "../../utils/product";
+import {
+  fillSrc,
+  primaryImage,
+  resolvePrice,
+  stageFillSrc,
+  stageSrc,
+} from "../../utils/product";
 import ListEditor from "./components/ListEditor";
 import {
   DEFAULT_HERO_BACKGROUND,
@@ -60,6 +67,7 @@ import {
   HERO_TRANSITIONS,
   HERO_VERTICAL_ALIGNMENTS,
   clampInt,
+  diffHeroLayout,
   hasHeroBackground,
   hasHeroCta,
   heroBackgroundSrc,
@@ -252,8 +260,10 @@ const newPoster = (count) =>
     label: `Poster ${count + 1}`,
     // A poster inherits the section composition like any other slide, and the
     // one thing it almost certainly wants changed is that there is no product
-    // card to put on one side. Centred is the honest starting point.
-    layout: normalizeHeroLayout({ preset: "text-center", showMedia: false }),
+    // card to put on one side. Centred is the honest starting point — and it is
+    // stored as those TWO keys, so everything else about a new poster is still
+    // the section's to answer.
+    layout: { preset: "text-center", showMedia: false },
   });
 
 /**
@@ -884,7 +894,10 @@ const BackgroundEditor = ({
       {url ? (
         <Box
           component="img"
-          src={url}
+          // The delivery rule is the storefront's: a raw upload URL is never
+          // served at full size. This well is 84px wide and a hero master is
+          // measured in megabytes.
+          src={cld(url, { w: 200 })}
           alt=""
           sx={{ width: "100%", height: "100%", objectFit: "cover" }}
           onError={(e) => {
@@ -1074,6 +1087,140 @@ const CtaFields = ({ value, onChange, disabled, label, helper }) => {
   );
 };
 
+// ─── The stage, as the stylesheet draws it ───────────────────────────────────
+//
+// THE SAME LICENCE `STOREFRONT_INK` HAS, and for the same reason. The admin
+// does not borrow the storefront's measurements — except in a PICTURE OF the
+// storefront, which is what the preview below is, and a picture drawn to the
+// admin's own proportions would answer "how big is the card?" with a number
+// nobody can act on.
+//
+// Three devices, because the card's size is set per device and the compositions
+// themselves change at the two breakpoints: a phone is one column with a square
+// card, a tablet has the spreads at 420px, a desktop has them at 560px. Every
+// figure here is `HeroCarousel.module.css`'s own — keep them in step.
+//
+//   viewport  the width the composition is being drawn for
+//   screen    that device's viewport HEIGHT, which is what the band's height
+//             and the card's ceiling are measured from
+//   gap       the slide's column gap at that breakpoint
+//   card      the width each composition's card was drawn at
+const PREVIEW_STAGE = {
+  desktop: {
+    viewport: 1440,
+    screen: 900,
+    gap: 48,
+    card: {
+      "text-left": 560,
+      "text-right": 560,
+      split: 420,
+      "text-center": 380,
+      poster: 380,
+    },
+  },
+  tablet: {
+    viewport: 900,
+    screen: 1024,
+    gap: 40,
+    card: {
+      "text-left": 420,
+      "text-right": 420,
+      split: 360,
+      "text-center": 340,
+      poster: 340,
+    },
+  },
+  // A phone is one column and the preset does not change the card: it is the
+  // designed 420px, bounded by the 80vw the stylesheet gives it there.
+  mobile: {
+    viewport: 390,
+    screen: 844,
+    gap: 24,
+    card: {
+      "text-left": 420,
+      "text-right": 420,
+      split: 420,
+      "text-center": 420,
+      poster: 420,
+    },
+  },
+};
+
+// `.sf-container`'s ceiling and its gutter, and the masthead the band's height
+// is measured under (`--sf-hero-chrome`).
+const PREVIEW_CONTAINER_MAX = 1280;
+const PREVIEW_CONTAINER_PAD = 20;
+const PREVIEW_CHROME = 100;
+
+/** The icon each device wears in the preview's switch. The devices themselves
+    are `HERO_MEDIA_DEVICES` — the same three the card-size sliders are set per,
+    so "the tablet" means one thing on this screen. */
+const DEVICE_ICON = {
+  desktop: "mdi:monitor",
+  tablet: "mdi:tablet",
+  mobile: "mdi:cellphone",
+};
+
+const isCentred = (preset) => preset === "text-center" || preset === "poster";
+
+/**
+ * HOW TALL THE BAND IS, in that device's pixels — `.heightCompact` and friends.
+ *
+ * `null` is "as tall as its content", which is what `auto` asks for and what a
+ * PHONE always gets: the two full-screen floors are stated at 769px and up,
+ * because a phone's viewport is shorter than the card plus its copy and a
+ * `100svh` floor there would only ever be dead air under the slide.
+ */
+const previewBandHeight = (height, device) => {
+  if (device === "mobile" || height === "auto") return null;
+  const { screen } = PREVIEW_STAGE[device];
+  const full = screen - PREVIEW_CHROME;
+  if (height === "compact") return Math.min(screen * 0.72, 640);
+  if (height === "tall") return Math.max(full, 860);
+  return full;
+};
+
+/**
+ * THE CARD'S WIDTH, as a percentage of the stage — the stylesheet's own sum.
+ *
+ * `min(the width this composition was drawn at, the room the band has for it)
+ * × the merchant's percentage`, then capped by the share of the spread the
+ * composition gives the card and by the share it may never pass. A percentage
+ * rather than a pixel width is what makes this picture of the composition scale
+ * with the panel it is drawn in and still be the right SHAPE.
+ */
+const previewCardWidth = ({ preset, device, scale, height }) => {
+  const stage = PREVIEW_STAGE[device];
+  const inner =
+    Math.min(stage.viewport, PREVIEW_CONTAINER_MAX) - PREVIEW_CONTAINER_PAD * 2;
+  const size = (scale ?? HERO_MEDIA_SCALE_DEFAULT) / 100;
+  const asPct = (px) => Math.max(8, Math.min(100, (px / inner) * 100));
+  const designed = stage.card[preset] ?? stage.card["text-left"];
+
+  // One column, and the ceiling is the screen's own width (80vw).
+  if (device === "mobile") {
+    return asPct(Math.min(designed, stage.viewport * 0.8) * size);
+  }
+
+  // The centred card is the one sized from its HEIGHT — a third of the band,
+  // turned back into a width by the 4:5 ratio — because it is stacked UNDER the
+  // copy rather than set beside it.
+  if (isCentred(preset)) {
+    const tall = Math.min(300, (stage.screen - PREVIEW_CHROME) * 0.3) * size;
+    return asPct(tall * 0.8);
+  }
+
+  // A card is never taller than a band asked to be one screen tall; a band left
+  // to fit its content has no height to run out of.
+  const fit =
+    height === "standard" || height === "compact"
+      ? (stage.screen - PREVIEW_CHROME) * 0.8
+      : stage.viewport;
+  const share = preset === "split" ? 28 : 47;
+  const shareMax = preset === "split" ? 50 : 66;
+  return Math.min(asPct(Math.min(designed, fit) * size), share * size, shareMax);
+};
+
 // ─── Live slide preview ──────────────────────────────────────────────────────
 //
 // The REAL composition, painted in the storefront's own ink. Everything it
@@ -1082,10 +1229,18 @@ const CtaFields = ({ value, onChange, disabled, label, helper }) => {
 // alignment and the ground are what the home page will paint, not an
 // impression of them.
 //
-// `device` switches between the desktop composition and the phone's single
-// column (which also swaps in the phone's own picture, if one was given),
-// because the two are genuinely different compositions and a merchant choosing
-// "card centred, copy either side" should see what a phone does with it.
+// `device` is one of the three the card is sized for, because they are three
+// genuinely different compositions: the phone stacks everything into one column
+// with a SQUARE card, the tablet lays the spreads out at 420px, and the desktop
+// gives them 560px and a wider gap. A merchant choosing "card centred, copy
+// either side" is entitled to see what each of them does with it.
+//
+// THE PRODUCT CARD IS DELIVERED THE WAY THE HERO DELIVERS IT — `stageFillSrc`
+// (`c_fill,g_center`) and `object-fit: cover`, at 1:1 on the phone and 4:5
+// above it. It used to ask for `stageSrc`, which PADS the whole shot onto a
+// band of sampled brown: the rule the storefront left behind when the covers
+// became photographs, so the preview was quietly showing every merchant the old
+// crop of their own product.
 const SlidePreview = ({
   entry,
   index,
@@ -1094,21 +1249,31 @@ const SlidePreview = ({
   eyebrowLabel,
   showEyebrow,
   device = "desktop",
+  height = DEFAULT_HERO_CONFIG.height,
 }) => {
   const { kind, slide, product, background, layout, panel, theme } = entry;
   const ink = STOREFRONT_INK[theme] || STOREFRONT_INK.light;
   const mobile = device === "mobile";
   const isProduct = kind === "product";
+  const stage = PREVIEW_STAGE[device] || PREVIEW_STAGE.desktop;
 
-  const backdropSrc = heroBackgroundSrc(background, mobile);
+  // Delivered, not raw: the storefront runs every background through
+  // `CloudinaryImage` (f_auto/q_auto and a srcset), and a picture OF it has no
+  // business fetching the master to paint a 400px panel.
+  const backdropSrc = cld(heroBackgroundSrc(background, mobile), { w: 900 });
+  const onArt = Boolean(backdropSrc);
   const scrim = (weight) =>
     `rgba(${ink.bgRgb}, ${Math.min(1, (background.overlay / 100) * weight)})`;
   const plateAlpha = panel.strength / 100;
 
+  // The card's ratio is the device's: a phone plate is square, every wider one
+  // is the 4:5 the spreads were drawn with. The delivered file carries the same
+  // ratio, so the browser's `cover` has nothing left to cut.
+  const cardRatio = mobile ? "1:1" : "4:5";
   const media = isProduct ? primaryImage(product) : null;
   const cardSrc = isProduct
-    ? stageSrc(product, { w: 520, ar: "4:5" })
-    : heroBackgroundSrc(slide.media, mobile);
+    ? stageFillSrc(product, { w: 520, ar: cardRatio })
+    : fillSrc(heroBackgroundSrc(slide.media, mobile), { w: 520, ar: cardRatio });
   const drawCard = layout.showMedia && Boolean(cardSrc);
 
   const { known, price } = resolvePrice(product);
@@ -1123,51 +1288,81 @@ const SlidePreview = ({
       : []
     : slide.badges;
 
-  const split = !mobile && layout.preset === "split";
-  // On a phone the split's two blocks are stacked rather than either side of the
-  // card, so both take the second column's alignment — exactly as the storefront
-  // does (see `alignOf` in HeroCarousel).
+  // The split is a split at every width — on a phone its two blocks are stacked
+  // rather than set either side of the card, exactly as the storefront stacks
+  // them, so a merchant sees the two plates a phone will actually draw.
+  const split = layout.preset === "split";
+  // Both blocks take the second column's alignment on a phone, so the slide
+  // reads as one piece of copy instead of one block flush right above another
+  // flush left (see `alignOf` in HeroCarousel).
   const alignA = resolveHeroAlign(layout, mobile ? "b" : "a");
   const alignB = resolveHeroAlign(layout, "b");
   const flexAlign = (a) =>
     a === "center" ? "center" : a === "end" ? "flex-end" : "flex-start";
   const textAlign = (a) => (a === "center" ? "center" : a === "end" ? "right" : "left");
 
-  const centred = layout.preset === "text-center" || layout.preset === "poster";
+  const centred = isCentred(layout.preset);
 
-  // THE CARD AT THE SIZE THE MERCHANT SET, in the preview's own scale. The
-  // storefront multiplies each composition's designed width by the percentage
-  // for the device; so does this, against the width this small picture of the
-  // composition was drawn at — which is what makes dragging the slider visible
-  // here rather than only on the live page.
-  const cardScale =
-    ((mobile ? layout.mediaScale?.mobile : layout.mediaScale?.desktop) ??
-      HERO_MEDIA_SCALE_DEFAULT) / HERO_MEDIA_SCALE_DEFAULT;
-  const cardWidth =
-    Math.round((mobile ? 150 : centred ? 120 : split ? 130 : 180) * cardScale);
+  // THE CARD AT THE SIZE THE MERCHANT SET FOR THIS DEVICE, as its share of the
+  // stage — the same sum `--sf-hero-card-track` does, so dragging the slider
+  // moves the card here by exactly the proportion it moves it on the page.
+  const cardWidth = previewCardWidth({
+    preset: layout.preset,
+    device,
+    scale: layout.mediaScale?.[device],
+    height,
+  });
 
-  // The grid, mirroring the stylesheet's presets. One column on the phone
-  // preview, whatever the preset asks for on the desktop one — and the card's
-  // column is the card's own width, capped at its share of the spread, exactly
-  // as `--sf-hero-card-track` caps it on the storefront.
-  const cardTrack = `min(${cardWidth}px, ${((split ? 28 : 47) * cardScale).toFixed(
-    1
-  )}%, ${split ? 50 : 66}%)`;
+  // The grid, mirroring the stylesheet's presets: one column on a phone,
+  // whatever the preset asks for above it, with the card's column sized from
+  // the card. Percentages throughout, so the picture stays proportional at
+  // whatever width the panel gives it.
+  const gap = `${((stage.gap / (Math.min(stage.viewport, PREVIEW_CONTAINER_MAX) - PREVIEW_CONTAINER_PAD * 2)) * 100).toFixed(1)}%`;
+  const track = `minmax(0, ${cardWidth.toFixed(1)}%)`;
   const columns = mobile
     ? "minmax(0, 1fr)"
     : {
-        "text-left": `minmax(0, 1fr) minmax(0, ${cardTrack})`,
-        "text-right": `minmax(0, ${cardTrack}) minmax(0, 1fr)`,
+        "text-left": `minmax(0, 1fr) ${track}`,
+        "text-right": `${track} minmax(0, 1fr)`,
         "text-center": "minmax(0, 1fr)",
-        split: `minmax(0, 1fr) minmax(0, ${cardTrack}) minmax(0, 1fr)`,
+        split: `minmax(0, 1fr) ${track} minmax(0, 1fr)`,
         poster: "minmax(0, 1fr)",
-      }[layout.preset] || `minmax(0, 1fr) minmax(0, ${cardTrack})`;
+      }[layout.preset] || `minmax(0, 1fr) ${track}`;
+
+  // EVERY COLUMN IS PLACED BY NAME, AND NAMES ITS ROW — the stylesheet's own
+  // rule, for the stylesheet's own two reasons. A slide with its card switched
+  // off has one child, and auto-placement would put that child in column one
+  // and quietly turn "card left · copy right" into "copy left". And on that
+  // mirrored composition the copy comes FIRST in the DOM and sits in column 2,
+  // so the card behind it cannot go back into column 1 of the same row —
+  // auto-placement only ever moves forwards — and would start a second row,
+  // dropping the pack underneath the words.
+  const place = (which) => {
+    if (mobile || centred) return undefined;
+    const column =
+      layout.preset === "text-right"
+        ? which === "media"
+          ? 1
+          : 2
+        : split
+        ? which === "copyA"
+          ? 1
+          : which === "media"
+          ? 2
+          : 3
+        : which === "media"
+        ? 2
+        : 1;
+    return `1 / ${column}`;
+  };
+
+  // Where the content sits in the band — `.verticalTop` and its two siblings.
   const verticalAlign =
-    layout.vertical === "top"
-      ? "flex-start"
-      : layout.vertical === "bottom"
-      ? "flex-end"
-      : "center";
+    layout.vertical === "top" ? "start" : layout.vertical === "bottom" ? "end" : "center";
+
+  // Over a photograph the controls carry their own contrast, the way the band
+  // does (the stylesheet's "controls over a photograph" block).
+  const lift = onArt ? "0 1px 6px rgba(20, 14, 6, 0.3)" : "none";
 
   const button = (text, filled) => (
     <Box
@@ -1177,7 +1372,10 @@ const SlidePreview = ({
         fontSize: 11,
         fontWeight: 700,
         borderRadius: 999,
-        whiteSpace: "nowrap",
+        boxShadow: lift,
+        whiteSpace: mobile ? "normal" : "nowrap",
+        textAlign: "center",
+        ...(mobile ? { width: "100%", maxWidth: 200 } : {}),
         ...(filled
           ? { color: ink.goldInk, backgroundColor: ink.gold }
           : {
@@ -1191,12 +1389,23 @@ const SlidePreview = ({
     </Box>
   );
 
-  const actionRow = layout.showActions && (
+  const hasPrimary = isProduct ? Boolean(product) : hasHeroCta(slide.primaryCta);
+  const hasSecondary = isProduct
+    ? Boolean(product)
+    : hasHeroCta(slide.secondaryCta);
+  const actions = layout.showActions && (hasPrimary || hasSecondary);
+
+  // Stacked and full-width on a phone, side by side above it — the same two
+  // states `.actions` has.
+  const actionRow = actions && (
     <Box
       sx={{
         display: "flex",
-        gap: 1,
+        gap: mobile ? 0.75 : 1,
+        flexDirection: mobile ? "column" : "row",
         flexWrap: "wrap",
+        width: "100%",
+        alignItems: mobile ? flexAlign(split ? alignB : alignA) : "stretch",
         justifyContent: flexAlign(split ? alignB : alignA),
       }}
     >
@@ -1223,7 +1432,7 @@ const SlidePreview = ({
         justifyContent: flexAlign(split ? alignB : alignA),
       }}
     >
-      {badges.slice(0, 4).map((badge) => (
+      {badges.map((badge) => (
         <Box
           key={badge}
           sx={{
@@ -1234,7 +1443,8 @@ const SlidePreview = ({
             borderRadius: 999,
             color: ink.gold,
             border: `1px solid ${ink.gold}`,
-            backgroundColor: backdropSrc ? ink.bg : "transparent",
+            backgroundColor: onArt ? ink.bg : "transparent",
+            boxShadow: onArt ? "0 1px 5px rgba(20, 14, 6, 0.22)" : "none",
           }}
         >
           {badge}
@@ -1243,17 +1453,21 @@ const SlidePreview = ({
     </Box>
   );
 
-  // The plate under the copy — the same three kinds the stylesheet draws.
+  // The plate under the copy — the same three kinds the stylesheet draws, at the
+  // strength `resolveHeroPanel` computed from the scrim and the blur.
   const panelSx =
     panel.kind === "glass" || panel.kind === "solid"
       ? {
           p: 1.5,
           borderRadius: 1.5,
           border: `1px solid ${ink.border}`,
-          backgroundColor: `rgba(${ink.bgRgb}, ${Math.max(
-            plateAlpha,
-            panel.kind === "glass" ? 0.4 : plateAlpha
-          )})`,
+          backgroundColor: `rgba(${ink.bgRgb}, ${plateAlpha})`,
+          ...(panel.kind === "glass"
+            ? {
+                backdropFilter: "blur(9px) saturate(1.08)",
+                WebkitBackdropFilter: "blur(9px) saturate(1.08)",
+              }
+            : { boxShadow: "0 6px 18px rgba(20, 14, 6, 0.16)" }),
         }
       : panel.kind === "scrim"
       ? {
@@ -1261,7 +1475,7 @@ const SlidePreview = ({
           "&::before": {
             content: '""',
             position: "absolute",
-            inset: "-10px -14px",
+            inset: "-12px -16px",
             borderRadius: 3,
             zIndex: -1,
             background: `radial-gradient(124% 104% at 50% 50%, rgba(${ink.bgRgb}, ${plateAlpha}) 0%, rgba(${ink.bgRgb}, ${
@@ -1271,6 +1485,12 @@ const SlidePreview = ({
         }
       : {};
 
+  // A line of type over a photograph carries its own shadow on the storefront;
+  // without it here a preview on a pale picture reads better than the page does.
+  const onArtInk = onArt
+    ? { textShadow: `0 1px 10px rgba(${ink.bgRgb}, 0.55)` }
+    : {};
+
   const copyColumn = (which) => {
     const first = !split || which === "a";
     const second = !split || which === "b";
@@ -1278,10 +1498,12 @@ const SlidePreview = ({
     return (
       <Box
         sx={{
+          gridArea: place(which === "b" ? "copyB" : "copyA"),
           display: "flex",
           flexDirection: "column",
           gap: 0.75,
           minWidth: 0,
+          width: "100%",
           isolation: "isolate",
           alignItems: flexAlign(align),
           textAlign: textAlign(align),
@@ -1296,38 +1518,47 @@ const SlidePreview = ({
               textTransform: "uppercase",
               color: ink.gold,
               fontWeight: 700,
+              ...onArtInk,
             }}
           >
             {eyebrow}
           </Typography>
         )}
-        {first && layout.showCopy && (
+        {first && layout.showCopy && (headline || isProduct) && (
           <Typography
             sx={{
               fontWeight: 500,
               lineHeight: 1.15,
               fontSize: mobile ? 17 : 21,
               color: ink.text,
-              maxWidth: centred ? "26ch" : "18ch",
+              fontStyle: headline ? "normal" : "italic",
+              opacity: headline ? 1 : 0.6,
+              maxWidth: centred ? "26ch" : split ? "18ch" : "16ch",
+              ...onArtInk,
             }}
           >
-            {headline || (isProduct ? product?.name : slide.label) || "No headline"}
+            {headline || "No headline on this product yet"}
           </Typography>
         )}
         {first && layout.showCopy && isProduct && (
           known ? (
-            <Typography sx={{ fontWeight: 700, fontSize: 13, color: ink.gold }}>
+            <Typography sx={{ fontWeight: 700, fontSize: 13, color: ink.gold, ...onArtInk }}>
               {formatPrice(price)}
             </Typography>
           ) : (
-            <Typography sx={{ fontSize: 11, color: ink.secondary }}>
+            <Typography sx={{ fontSize: 11, color: ink.secondary, ...onArtInk }}>
               Price on launch
             </Typography>
           )
         )}
         {second && layout.showCopy && subtext && (
           <Typography
-            sx={{ fontSize: 11.5, color: ink.secondary, maxWidth: centred ? "56ch" : "40ch" }}
+            sx={{
+              fontSize: 11.5,
+              color: ink.secondary,
+              maxWidth: centred ? "56ch" : split ? "34ch" : "42ch",
+              ...onArtInk,
+            }}
           >
             {subtext}
           </Typography>
@@ -1338,28 +1569,39 @@ const SlidePreview = ({
     );
   };
 
+  // A column is only drawn when it has something in it — an empty plate over a
+  // poster is a grey rectangle nobody asked for. HeroCarousel's own two tests.
+  const columnA =
+    (layout.showCopy && (eyebrow || headline || isProduct || (!split && subtext))) ||
+    (!split && layout.showCopy && badges.length > 0) ||
+    (!split && actions);
+  const columnB =
+    split && ((layout.showCopy && (subtext || badges.length > 0)) || actions);
+
   const cardNode = drawCard && (
     <Box
       sx={{
+        gridArea: place("media"),
         position: "relative",
-        width: "100%",
-        maxWidth: cardWidth,
-        mx: mobile || centred || split ? "auto" : layout.preset === "text-right" ? "0 auto" : 0,
+        width: mobile || centred ? `${cardWidth.toFixed(1)}%` : "100%",
+        // The mirrored spread hugs the left of its own column (`margin-inline:
+        // 0 auto`); everything else is centred in the room it has.
+        ml: mobile || centred || split ? "auto" : 0,
+        mr:
+          mobile || centred || split || layout.preset === "text-right" ? "auto" : 0,
         aspectRatio: mobile ? "1 / 1" : "4 / 5",
         borderRadius: 1.5,
         overflow: "hidden",
         border: `1px solid ${ink.border}`,
         backgroundColor: ink.plate,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        boxShadow: "0 8px 24px rgba(20, 14, 6, 0.18)",
       }}
     >
       <Box
         component="img"
         src={cardSrc}
         alt=""
-        sx={{ width: "100%", height: "100%", objectFit: isProduct ? "contain" : "cover" }}
+        sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         onError={(e) => {
           e.currentTarget.style.display = "none";
         }}
@@ -1369,6 +1611,11 @@ const SlidePreview = ({
 
   const nothingDrawn =
     !layout.showCopy && !layout.showMedia && !layout.showActions;
+
+  // How tall the band is, as this device's own proportion. `null` — `auto`, and
+  // every phone — is as tall as the slide's content, which is exactly what the
+  // band does there.
+  const band = previewBandHeight(height, device);
 
   return (
     <Box>
@@ -1382,11 +1629,28 @@ const SlidePreview = ({
           backgroundColor: ink.bg,
           width: mobile ? 300 : "100%",
           mx: mobile ? "auto" : 0,
-          minHeight: mobile ? 380 : 240,
-          display: "flex",
-          alignItems: verticalAlign,
+          minHeight: band ? 0 : mobile ? 380 : 240,
+          // The spacer and the content share one cell, so the frame is the
+          // TALLER of the two — which is what `min-height` does to the band
+          // itself. A hard `aspect-ratio` here cropped a compact band's own
+          // card off the bottom of the preview.
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr)",
         }}
       >
+        {/* How tall the band is, as a proportion of its own width: percentage
+            padding is resolved against the container's WIDTH, which is the one
+            way to hold a ratio open without capping what is inside it. */}
+        {band && (
+          <Box
+            aria-hidden
+            sx={{
+              gridArea: "1 / 1",
+              width: 0,
+              pt: `${((band / stage.viewport) * 100).toFixed(1)}%`,
+            }}
+          />
+        )}
         {backdropSrc && (
           <>
             <Box
@@ -1425,18 +1689,20 @@ const SlidePreview = ({
 
         <Box
           sx={{
+            gridArea: "1 / 1",
             position: "relative",
+            alignSelf: verticalAlign,
             width: "100%",
             display: "grid",
             gridTemplateColumns: columns,
-            justifyItems: centred || mobile ? "center" : "stretch",
+            justifyItems: centred && !mobile ? "center" : "stretch",
             alignItems: "center",
-            gap: mobile ? 1.5 : 2,
+            gap,
             p: { xs: 1.75, sm: 2.25 },
           }}
         >
           {nothingDrawn ? (
-            <Box sx={{ textAlign: "center", py: 3 }}>
+            <Box sx={{ textAlign: "center", py: 3, justifySelf: "center" }}>
               <Chip
                 size="small"
                 variant="outlined"
@@ -1445,25 +1711,18 @@ const SlidePreview = ({
               />
             </Box>
           ) : mobile ? (
+            // The card leads on a phone, whatever the composition is: it is the
+            // hook, and the copy reads better under it than beside a square plate.
             <>
               {cardNode}
-              {copyColumn("a")}
-            </>
-          ) : layout.preset === "text-right" ? (
-            <>
-              {cardNode}
-              {copyColumn("a")}
-            </>
-          ) : split ? (
-            <>
-              {copyColumn("a")}
-              {cardNode}
-              {copyColumn("b")}
+              {columnA && copyColumn("a")}
+              {columnB && copyColumn("b")}
             </>
           ) : (
             <>
-              {copyColumn("a")}
+              {columnA && copyColumn("a")}
               {cardNode}
+              {columnB && copyColumn("b")}
             </>
           )}
         </Box>
@@ -1489,6 +1748,7 @@ const SlideRow = ({
   busy,
   expanded,
   sectionHasBackground,
+  sectionLayout,
   onToggle,
   onPatch,
   onCopyChange,
@@ -1499,9 +1759,15 @@ const SlideRow = ({
   const { kind, slide, product, background, layout, panel, theme } = entry;
   const isProduct = kind === "product";
   const media = isProduct ? primaryImage(product) : null;
+  // A 64px well: the product's square plate, or the poster's own card falling
+  // back to the picture behind it — all three delivered at that size rather
+  // than as the master they were uploaded as.
   const thumbSrc = isProduct
     ? stageSrc(product, { w: 200, ar: "1:1" })
-    : heroBackgroundSrc(slide.media, false) || heroBackgroundSrc(background, false);
+    : cld(
+        heroBackgroundSrc(slide.media, false) || heroBackgroundSrc(background, false),
+        { w: 200 }
+      );
   const label = isProduct
     ? product?.name || `Product #${slide.productId}`
     : slide.label || slide.headline || `Poster ${index + 1}`;
@@ -1516,7 +1782,16 @@ const SlideRow = ({
     background.overlay < 25 &&
     background.blur === 0;
 
-  const setLayout = (next) => onPatch(slide.id, { layout: next });
+  // WHAT THIS SLIDE OVERRIDES, not what it draws. The editor below is handed
+  // the RESOLVED composition — every field filled, because a form has to put
+  // something in every field — and hands a complete record back the moment one
+  // of them is touched. Stored whole, that record is a slide that has overridden
+  // all ten keys, and the section's default composition can never move it
+  // again; diffed against the section first, changing the preset changes the
+  // preset and the other nine still follow Section settings, which is what the
+  // line above the editor promises.
+  const setLayout = (next) =>
+    onPatch(slide.id, { layout: diffHeroLayout(next, sectionLayout) });
   const setBackground = (next) => onPatch(slide.id, { background: next });
   const setSlide = (patch) => onPatch(slide.id, patch);
 
@@ -2238,6 +2513,40 @@ const AdminHeroSection = () => {
     ? entries.findIndex((e) => e.slide.id === previewEntry.slide.id)
     : 0;
 
+  /**
+   * THE SAME SLIDE, COMPOSED BY THE SECTION — what the preview shows while the
+   * DEFAULT composition is the thing being edited.
+   *
+   * On the Section tab the preview was drawing a SLIDE, and a slide that has
+   * been given a composition, a picture or a ground of its own is exactly the
+   * slide the section's defaults do not reach: an editor could change the
+   * default composition, watch nothing move, and conclude the control was
+   * broken. So this strips the overrides off and composes the slide's CONTENT
+   * with the section's own layout, picture and ground — which is what "the
+   * defaults every slide inherits" means, and what the tab is for.
+   */
+  const sectionEntry = useMemo(() => {
+    if (!previewEntry) return null;
+    const layout = resolveHeroLayout(null, config, sectionBackground);
+    return {
+      ...previewEntry,
+      background: sectionBackground,
+      layout,
+      theme: resolveHeroTheme(layout, config),
+      panel: sectionPanel,
+    };
+  }, [previewEntry, config, sectionBackground, sectionPanel]);
+
+  /** Does the previewed slide overrule any of the defaults below it? The
+      Section tab says so rather than letting a merchant wonder why the slide
+      they can see on the Slides tab looks like something else. */
+  const previewOverrides = Boolean(
+    previewEntry &&
+      (previewEntry.slide.layout ||
+        previewEntry.slide.theme !== "inherit" ||
+        hasHeroBackground(normalizeHeroBackground(previewEntry.slide.background)))
+  );
+
   // ── Slide list edits ──────────────────────────────────────────────────────
   const patchSlide = (id, patch) =>
     setConfig((prev) => ({
@@ -2457,6 +2766,16 @@ const AdminHeroSection = () => {
     </Box>
   );
 
+  // THE PREVIEW, IN WHICHEVER OF THE TWO THINGS IS BEING EDITED. On the Slides
+  // tab it is the slide — its own composition, its own picture, its own ground.
+  // On Section settings it is the DEFAULTS: the same slide's words and card,
+  // composed by the section's layout, picture and ground, because that is the
+  // record those controls write and a slide with overrides of its own would sit
+  // there ignoring every one of them.
+  const sectionScope = tab === 1;
+  const shown = sectionScope ? sectionEntry : previewEntry;
+  const deviceHint = HERO_MEDIA_DEVICES.find((d) => d.value === device);
+
   const previewPanel = (
     <Paper
       elevation={0}
@@ -2475,45 +2794,64 @@ const AdminHeroSection = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Icon icon="mdi:eye-outline" style={{ fontSize: 20 }} />
           <Typography variant="subtitle2" fontWeight={700}>
-            Live preview
+            {sectionScope ? "Live preview — the defaults" : "Live preview"}
           </Typography>
         </Box>
+        {/* The three devices the card is sized for, and the three the
+            compositions themselves are drawn for — one vocabulary, so "the
+            tablet" means the same thing here as it does on the sliders. */}
         <ToggleButtonGroup
           size="small"
           exclusive
           value={device}
           onChange={(e, next) => next && setDevice(next)}
-          aria-label="Preview width"
+          aria-label="Preview device"
         >
-          <ToggleButton value="desktop" aria-label="Desktop preview" sx={{ gap: 0.5, px: 1.25 }}>
-            <Icon icon="mdi:monitor" />
-            <Typography variant="caption" fontWeight={600}>
-              Desktop
-            </Typography>
-          </ToggleButton>
-          <ToggleButton value="mobile" aria-label="Phone preview" sx={{ gap: 0.5, px: 1.25 }}>
-            <Icon icon="mdi:cellphone" />
-            <Typography variant="caption" fontWeight={600}>
-              Phone
-            </Typography>
-          </ToggleButton>
+          {HERO_MEDIA_DEVICES.map((d) => (
+            <ToggleButton
+              key={d.value}
+              value={d.value}
+              aria-label={`${d.label} preview`}
+              sx={{ gap: 0.5, px: 1.25 }}
+            >
+              <Icon icon={DEVICE_ICON[d.value]} />
+              <Typography variant="caption" fontWeight={600}>
+                {d.label}
+              </Typography>
+            </ToggleButton>
+          ))}
         </ToggleButtonGroup>
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
-        The slide as the home page composes it — the picture and its scrim, the ground under
-        the copy, the layout, the buttons and the band's own light or dark ground. On a phone
-        every composition becomes one column, which is what the phone view shows.
+        {sectionScope
+          ? "The composition, picture and ground below, drawn on the first slide's words and card — what a slide that has been given none of its own will look like. "
+          : "The slide as the home page composes it — the picture and its scrim, the ground under the copy, the layout, the buttons and the band's own light or dark ground. "}
+        Each device is its own composition: a phone is one column with a square card, and the
+        card is drawn at the size set for that device.
       </Typography>
-      {previewEntry ? (
-        <SlidePreview
-          entry={previewEntry}
-          index={previewIndex < 0 ? 0 : previewIndex}
-          total={entries.length}
-          formatPrice={formatPrice}
-          eyebrowLabel={config.eyebrowLabel}
-          showEyebrow={config.showEyebrow}
-          device={device}
-        />
+      {shown ? (
+        <>
+          <SlidePreview
+            entry={shown}
+            index={previewIndex < 0 ? 0 : previewIndex}
+            total={entries.length}
+            formatPrice={formatPrice}
+            eyebrowLabel={config.eyebrowLabel}
+            showEyebrow={config.showEyebrow}
+            device={device}
+            height={config.height}
+          />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mt: 1.5 }}
+          >
+            {deviceHint ? `${deviceHint.label} · ${deviceHint.hint}` : ""}
+            {sectionScope && previewOverrides
+              ? " — the slide these words come from has a composition, a picture or a ground of its own, so the storefront will draw it from those. Open it on the Slides tab to see the difference."
+              : ""}
+          </Typography>
+        </>
       ) : (
         <Box
           sx={{
@@ -2775,6 +3113,7 @@ const AdminHeroSection = () => {
                           busy={saving}
                           expanded={expandedId === entry.slide.id}
                           sectionHasBackground={hasHeroBackground(sectionBackground)}
+                          sectionLayout={sectionLayout}
                           onToggle={(id) => {
                             setExpandedId((prev) => (prev === id ? null : id));
                             setPreviewId(id);

@@ -6,6 +6,8 @@ import {
   primaryImage,
   productVideos,
   stageSrc,
+  stageFillSrc,
+  fillSrc,
   resolvePrice,
   isPriceKnown,
 } from "./product";
@@ -254,6 +256,31 @@ describe("stageSrc", () => {
 
   it("leaves a non-Cloudinary URL untouched", () => {
     expect(stageSrc(normalizeProduct({ name: "X", images: [SHOT_2] }))).toBe(SHOT_2);
+  });
+});
+
+describe("stageFillSrc", () => {
+  // The other half of one rule: a label is padded because the artwork IS the
+  // product; a photographed scene is cropped to the frame, because the same pad
+  // spends a fifth of the stage on a band of sampled brown. The hero's card and
+  // the editorial chapters fill — and so must any picture OF them.
+  it("fills the frame from its centre, deterministically", () => {
+    const src = stageFillSrc(normalizeProduct(mediaProduct()), { w: 520, ar: "4:5" });
+    expect(src).toContain("c_fill,g_center,ar_4:5");
+    expect(src).not.toContain("c_pad");
+    expect(src).toContain("f_auto,q_auto,w_520");
+  });
+
+  it("takes the phone's square without a second rule", () => {
+    expect(stageFillSrc(normalizeProduct(mediaProduct()), { ar: "1:1" })).toContain(
+      "c_fill,g_center,ar_1:1"
+    );
+  });
+
+  it("leaves a non-Cloudinary URL untouched, and answers \"\" for nothing", () => {
+    expect(fillSrc(SHOT_2)).toBe(SHOT_2);
+    expect(fillSrc("")).toBe("");
+    expect(stageFillSrc(normalizeProduct({ name: "X" }))).toBe("");
   });
 });
 
