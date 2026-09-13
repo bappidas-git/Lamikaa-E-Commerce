@@ -93,19 +93,19 @@
       "media": [
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
           "alt": "Black Rice Face Wash by LAMIKAA Naturals — label",
           "primary": true
         },
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080337/balck_rice_face_wash_v2.png",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139044/lamikaa_face_wash_2000x2000.png",
           "alt": "Black Rice Face Wash — placeholder lifestyle image",
           "placeholder": true
         },
         {
           "type": "image",
-          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080334/balck_rice_face_wash_v3.png",
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139036/lamikaa_face_wash_2000x2000_v2.png",
           "alt": "Black Rice Face Wash — placeholder texture image",
           "placeholder": true
         },
@@ -125,9 +125,9 @@
         }
       ],
       "images": [
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080337/balck_rice_face_wash_v2.png",
-        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080334/balck_rice_face_wash_v3.png"
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139044/lamikaa_face_wash_2000x2000.png",
+        "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139036/lamikaa_face_wash_2000x2000_v2.png"
       ],
       "faqs": [
         {
@@ -164,16 +164,9 @@
       "metaTitle": "Black Rice Face Wash · LAMIKAA NATURALS",
       "metaDescription": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T05:12:33.316Z",
-      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
-      "heroBackground": {
-        "url": "https://images.unsplash.com/photo-1526779259212-939e64788e3c?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZnJlZSUyMGltYWdlc3xlbnwwfHwwfHx8MA%3D%3D",
-        "mobileUrl": "https://images.unsplash.com/photo-1526779259212-939e64788e3c?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZnJlZSUyMGltYWdlc3xlbnwwfHwwfHx8MA%3D%3D",
-        "position": "left",
-        "overlay": 55,
-        "blur": 24,
-        "showContent": true
-      }
+      "updatedAt": "2026-09-11T16:10:02.800Z",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
+      "heroBackground": null
     },
     {
       "id": 2,
@@ -329,7 +322,7 @@
       "metaTitle": "Black Rice Goat Milk Soap · LAMIKAA NATURALS",
       "metaDescription": "Black rice and goat milk, pressed into a bar that treats your skin the way tradition always meant to. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-10T22:57:01.370Z",
+      "updatedAt": "2026-09-11T16:15:00.214Z",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v3.png"
     },
     {
@@ -422,7 +415,13 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v2.png",
           "alt": "Black Rice Body Wash by LAMIKAA Naturals — label",
-          "primary": true
+          "primary": true,
+          "crop": {
+            "x": 716,
+            "y": 43,
+            "w": 391,
+            "h": 688
+          }
         },
         {
           "type": "image",
@@ -577,7 +576,13 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080356/face_mask_v1.png",
           "alt": "Black Rice Face Mask by LAMIKAA Naturals — label",
-          "primary": true
+          "primary": true,
+          "crop": {
+            "x": 478,
+            "y": 12,
+            "w": 356,
+            "h": 382
+          }
         },
         {
           "type": "image",
@@ -740,7 +745,13 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080344/black_rice_face_mist_v1.png",
           "alt": "Black Rice Face Mist by LAMIKAA Naturals — label",
-          "primary": true
+          "primary": true,
+          "crop": {
+            "x": 320,
+            "y": 20,
+            "w": 410,
+            "h": 710
+          }
         },
         {
           "type": "image",
@@ -895,7 +906,13 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080362/face_scrub_v1.png",
           "alt": "Black Rice Exfoliating Face Scrub by LAMIKAA Naturals — label",
-          "primary": true
+          "primary": true,
+          "crop": {
+            "x": 1767,
+            "y": 2,
+            "w": 1428,
+            "h": 740
+          }
         },
         {
           "type": "image",
@@ -1055,7 +1072,13 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080346/Black_rice_face_serum_v1.png",
           "alt": "Black Rice Face Serum by LAMIKAA Naturals — label",
-          "primary": true
+          "primary": true,
+          "crop": {
+            "x": 432,
+            "y": 12,
+            "w": 464,
+            "h": 534
+          }
         },
         {
           "type": "image",
@@ -1218,7 +1241,13 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080370/moisturizer_gel_v3.png",
           "alt": "Black Rice Moisturizer Gel by LAMIKAA Naturals — label",
-          "primary": true
+          "primary": true,
+          "crop": {
+            "x": 240,
+            "y": 40,
+            "w": 330,
+            "h": 680
+          }
         },
         {
           "type": "image",
@@ -1292,8 +1321,8 @@
       "name": "Face Care",
       "displayName": "Face Care",
       "description": "Cleanse, refresh, treat and moisturise — the Black Rice face routine.",
-      "image": "https://picsum.photos/seed/lamikaa-cat-face-care/1600/1000",
-      "heroImage": "https://picsum.photos/seed/lamikaa-cat-face-care/1600/1000",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080365/face_scrub_v3.png",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080365/face_scrub_v3.png",
       "kind": "products",
       "parentId": null,
       "isActive": true,
@@ -1301,7 +1330,7 @@
       "showInMainMenu": true,
       "menuOrder": 1,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:04:45.914Z"
     },
     {
       "id": 2,
@@ -1309,8 +1338,8 @@
       "name": "Body Care",
       "displayName": "Body Care",
       "description": "Everyday cleansing bars and washes with black rice and sandalwood.",
-      "image": "https://picsum.photos/seed/lamikaa-cat-body-care/1600/1000",
-      "heroImage": "https://picsum.photos/seed/lamikaa-cat-body-care/1600/1000",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080355/black_rice_goat_milk_soap_v2.png",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080355/black_rice_goat_milk_soap_v2.png",
       "kind": "products",
       "parentId": null,
       "isActive": true,
@@ -1318,7 +1347,7 @@
       "showInMainMenu": true,
       "menuOrder": 2,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:50:30.067Z"
     },
     {
       "id": 3,
@@ -1326,8 +1355,8 @@
       "name": "Cleansers",
       "displayName": "Cleansers",
       "description": "Face wash, body wash and the goat milk bar.",
-      "image": "https://picsum.photos/seed/lamikaa-cat-cleansers/1600/1000",
-      "heroImage": "https://picsum.photos/seed/lamikaa-cat-cleansers/1600/1000",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080337/balck_rice_face_wash_v2.png",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080337/balck_rice_face_wash_v2.png",
       "kind": "products",
       "parentId": null,
       "isActive": true,
@@ -1335,7 +1364,7 @@
       "showInMainMenu": true,
       "menuOrder": 3,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:50:56.806Z"
     },
     {
       "id": 4,
@@ -1343,8 +1372,8 @@
       "name": "Serums",
       "displayName": "Serums",
       "description": "Concentrated daily care for a rested, even-looking complexion.",
-      "image": "https://picsum.photos/seed/lamikaa-cat-serums/1600/1000",
-      "heroImage": "https://picsum.photos/seed/lamikaa-cat-serums/1600/1000",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/back_rice_face_serum_v3.png",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/back_rice_face_serum_v3.png",
       "kind": "products",
       "parentId": null,
       "isActive": true,
@@ -1352,7 +1381,7 @@
       "showInMainMenu": true,
       "menuOrder": 4,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:51:19.483Z"
     },
     {
       "id": 5,
@@ -1360,8 +1389,8 @@
       "name": "Moisturizers",
       "displayName": "Moisturizers & Mists",
       "description": "Featherlight gel and an instant mist.",
-      "image": "https://picsum.photos/seed/lamikaa-cat-moisturizers/1600/1000",
-      "heroImage": "https://picsum.photos/seed/lamikaa-cat-moisturizers/1600/1000",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080367/moisturizer_gel_v2.png",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080367/moisturizer_gel_v2.png",
       "kind": "products",
       "parentId": null,
       "isActive": true,
@@ -1369,7 +1398,7 @@
       "showInMainMenu": true,
       "menuOrder": 5,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:51:44.414Z"
     },
     {
       "id": 6,
@@ -1377,8 +1406,8 @@
       "name": "Masks",
       "displayName": "Masks & Scrubs",
       "description": "Weekly treats: a clay mask and a fine rice scrub.",
-      "image": "https://picsum.photos/seed/lamikaa-cat-masks/1600/1000",
-      "heroImage": "https://picsum.photos/seed/lamikaa-cat-masks/1600/1000",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080356/face_mask_v1.png",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080356/face_mask_v1.png",
       "kind": "products",
       "parentId": null,
       "isActive": true,
@@ -1386,7 +1415,7 @@
       "showInMainMenu": true,
       "menuOrder": 6,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:52:07.627Z"
     },
     {
       "id": 7,
@@ -1394,8 +1423,8 @@
       "name": "Rituals",
       "displayName": "Rituals",
       "description": "Curated routines, step by step.",
-      "image": "https://picsum.photos/seed/lamikaa-cat-rituals/1600/1000",
-      "heroImage": "https://picsum.photos/seed/lamikaa-cat-rituals/1600/1000",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121893/body_rituals.png",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121893/body_rituals.png",
       "kind": "rituals",
       "parentId": null,
       "isActive": true,
@@ -1403,7 +1432,7 @@
       "showInMainMenu": true,
       "menuOrder": 7,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:52:35.395Z"
     }
   ],
   "concerns": [
@@ -1478,10 +1507,10 @@
     {
       "id": 1,
       "slug": "morning-glow",
-      "name": "The Morning Glow Ritual",
+      "name": "The Morning Glow Ritual outcome",
       "tagline": "Clear, refreshed, quietly radiant.",
       "story": "Four unhurried steps to start the day clear, refreshed and quietly radiant — the Black Rice range in the order it was designed to be used. Black rice is the thread running through all four, paired each time with botanicals chosen for that step of your routine.",
-      "image": "https://picsum.photos/seed/lamikaa-ritual-morning/1200/1500",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121775/morning.png",
       "duration": "About five minutes",
       "steps": [
         {
@@ -1512,7 +1541,7 @@
       "isActive": true,
       "sortOrder": 1,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T11:24:00.756Z"
     },
     {
       "id": 2,
@@ -1520,7 +1549,7 @@
       "name": "The Evening Renewal Ritual",
       "tagline": "Undo the day, one unhurried step at a time.",
       "story": "Five steps to undo the day: cleanse, polish, treat, then finish with the serum and the gel. The scrub and the mask are weekly pleasures rather than nightly ones — the rest belongs to every evening.",
-      "image": "https://picsum.photos/seed/lamikaa-ritual-evening/1200/1500",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121775/eve.png",
       "duration": "About fifteen minutes",
       "steps": [
         {
@@ -1557,7 +1586,7 @@
       "isActive": true,
       "sortOrder": 2,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:17:36.689Z"
     },
     {
       "id": 3,
@@ -1565,7 +1594,7 @@
       "name": "The Black Rice Body Ritual",
       "tagline": "The same black rice, from the shower out.",
       "story": "The same hero ingredient, carried from the face to the rest of you. Choose the bar or the wash, then finish with a mist — everyday care that takes no longer than it already does.",
-      "image": "https://picsum.photos/seed/lamikaa-ritual-body/1200/1500",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121893/body_rituals.png",
       "duration": "About five minutes",
       "steps": [
         {
@@ -1585,7 +1614,7 @@
       "isActive": true,
       "sortOrder": 3,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T10:18:30.527Z"
     }
   ],
   "faqs": [
@@ -1720,8 +1749,8 @@
   ],
   "siteContent": {
     "about": {
-      "heroImage": "https://picsum.photos/seed/lamikaa-assam-landscape/1920/1080",
-      "image2": "https://picsum.photos/seed/lamikaa-farmers/1600/1000",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789122309/background_v2.1.png",
+      "image2": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789122917/beauty_brand_rooted_in_indigenous_wisdom_modern_science_responsible_beauty_and_farmer_ownership..png",
       "eyebrow": "Our Story",
       "title": "A beauty brand owned by farmers",
       "lede": "LAMIKAA Naturals is a farmer-owned beauty brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company (FPC) established to create greater value and better opportunities for farmers.",
@@ -1730,7 +1759,7 @@
       "ctaTo": "/shop"
     },
     "whyLamikaa": {
-      "heroImage": "https://picsum.photos/seed/lamikaa-why/1920/1080",
+      "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789122310/background_v1.png",
       "eyebrow": "Why LAMIKAA",
       "title": "Indigenous Wisdom. Modern Science. Responsible Beauty.",
       "body": "LAMIKAA Naturals believes that the future of beauty can be inspired by the wisdom of the past. For generations, communities across Assam and Northeast India have developed knowledge of plants, herbs and natural resources and their traditional uses. LAMIKAA seeks to respect this heritage and bring it into the modern world through contemporary cosmetic science, responsible sourcing and quality-focused product development.\n\nOur philosophy is built on four pillars:",
@@ -1767,7 +1796,7 @@
         {
           "key": "financial",
           "title": "Financial — From Raw Produce to Shared Value",
-          "image": "https://picsum.photos/seed/lamikaa-impact-financial/1200/900",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121966/financial.png",
           "points": [
             "Greater value realization from agricultural produce.",
             "Farmers participate in value addition, not only in supply.",
@@ -1778,7 +1807,7 @@
         {
           "key": "social",
           "title": "Social — When Farmers Prosper, Families Prosper",
-          "image": "https://picsum.photos/seed/lamikaa-impact-social/1200/900",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121967/social.png",
           "points": [
             "Better educational opportunities for farmer children.",
             "Improved access to healthcare and family wellbeing.",
@@ -1789,7 +1818,7 @@
         {
           "key": "environmental",
           "title": "Environmental — Beauty That Gives Back to Nature",
-          "image": "https://picsum.photos/seed/lamikaa-impact-environmental/1200/900",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121971/Environmental.png",
           "points": [
             "Supporting organic and sustainable agriculture.",
             "Promoting healthier agro-ecosystems and biodiversity-friendly farming.",
@@ -1804,7 +1833,7 @@
         "eyebrow": "About LAMIKAA",
         "title": "When LAMIKAA grows, our farmers grow with us.",
         "text": "LAMIKAA Naturals is a farmer-owned beauty brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company established to create greater value and better opportunities for farmers.\n\nRooted in the indigenous knowledge and rich natural heritage of Assam and Northeast India, we combine traditional wisdom with modern cosmetic science. Every product carries a bigger purpose — to create value from nature, strengthen the farmer-owned value chain and contribute to a better quality of life for farming families.",
-        "image": "https://picsum.photos/seed/lamikaa-farm/1600/1000",
+        "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121642/when_lamikaa_grows.png",
         "ctaLabel": "Our Story",
         "ctaTo": "/about"
       },
@@ -1816,7 +1845,7 @@
           "The one ingredient every product in the range is built around.",
           "Paired with botanicals chosen for each step of your routine."
         ],
-        "image": "https://picsum.photos/seed/lamikaa-black-rice/1200/1200"
+        "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121641/why_black_rice.png"
       },
       "fullPageCta": {
         "lines": [
@@ -1828,7 +1857,7 @@
         "primaryTo": "/shop",
         "secondaryLabel": "Meet the farmer-owners",
         "secondaryTo": "/about",
-        "image": "https://picsum.photos/seed/lamikaa-cta/1920/1080"
+        "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789122311/background_v2.png"
       }
     },
     "contact": {
@@ -1926,7 +1955,15 @@
     "showProgress": true,
     "showArrows": true,
     "showPause": true,
-    "updatedAt": "2026-09-06T00:00:00.000Z"
+    "background": {
+      "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121532/hero_image_desktop.png",
+      "mobileUrl": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121524/mobile.png",
+      "position": "center",
+      "overlay": 20,
+      "blur": 0,
+      "showContent": true
+    },
+    "updatedAt": "2026-09-12T18:27:54.689Z"
   },
   "settings": {
     "store": {
@@ -1979,15 +2016,15 @@
       "facebookPixelId": ""
     },
     "social": {
-      "facebook": "{{LAMIKAA_FACEBOOK_URL}}",
-      "instagram": "{{LAMIKAA_INSTAGRAM_URL}}",
-      "twitter": "",
-      "youtube": "{{LAMIKAA_YOUTUBE_URL}}",
-      "whatsapp": "{{LAMIKAA_WHATSAPP_URL}}"
+      "facebook": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "instagram": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "twitter": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "youtube": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "whatsapp": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51"
     }
   },
   "dealsConfig": {
-    "enabled": false,
+    "enabled": true,
     "hero": {
       "tag": "Offers",
       "title": "Offers",
@@ -2001,7 +2038,7 @@
     "featuredCouponIds": [],
     "dealOfTheDayIds": [],
     "featuredProductIds": [],
-    "updatedAt": "2026-09-06T00:00:00.000Z"
+    "updatedAt": "2026-09-11T19:42:50.083Z"
   },
   "admins": [
     {
@@ -2044,6 +2081,32 @@
       "storeCredit": 390,
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-06T00:00:00.000Z"
+    },
+    {
+      "firstName": "Shubendu",
+      "lastName": "Das",
+      "email": "shubendu@assamdigital.com",
+      "phone": "+916901608721",
+      "password": "Shuben123",
+      "avatar": null,
+      "addresses": [],
+      "isActive": true,
+      "createdAt": "2026-09-11T10:54:41.987Z",
+      "updatedAt": "2026-09-11T10:54:41.987Z",
+      "id": 2
+    },
+    {
+      "firstName": "Shubendu",
+      "lastName": "Das",
+      "email": "Shubendu@assamdigital.com",
+      "phone": "+916901602854",
+      "password": "Shuben123@",
+      "avatar": null,
+      "addresses": [],
+      "isActive": true,
+      "createdAt": "2026-09-11T11:13:56.176Z",
+      "updatedAt": "2026-09-11T11:13:56.176Z",
+      "id": 3
     }
   ],
   "shipping_methods": [
@@ -2329,6 +2392,81 @@
       ],
       "createdAt": "2026-09-03T08:40:00.000Z",
       "updatedAt": "2026-09-03T12:30:00.000Z"
+    },
+    {
+      "items": [
+        {
+          "productId": 1,
+          "variantId": null,
+          "name": "Black Rice Face Wash",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
+          "sku": "",
+          "price": 390,
+          "quantity": 1,
+          "subtotal": 390
+        }
+      ],
+      "shippingAddress": {
+        "firstName": "Shubendu",
+        "lastName": "Das",
+        "phone": "+916901602854",
+        "addressLine1": "barpeta",
+        "addressLine2": "barpeta moutupuri",
+        "city": "Barpeta",
+        "state": "Assam",
+        "postalCode": "783354",
+        "country": "India"
+      },
+      "billingAddress": {
+        "firstName": "Shubendu",
+        "lastName": "Das",
+        "phone": "+916901602854",
+        "addressLine1": "barpeta",
+        "addressLine2": "barpeta moutupuri",
+        "city": "Barpeta",
+        "state": "Assam",
+        "postalCode": "783354",
+        "country": "India"
+      },
+      "subtotal": 390,
+      "discountAmount": 0,
+      "couponCode": null,
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "codFee": 0,
+      "total": 390,
+      "storeCreditUsed": 0,
+      "amountPayable": 390,
+      "paymentMethod": "cod",
+      "paymentStatus": "paid",
+      "fulfillmentStatus": "fulfilled",
+      "shippingStatus": "shipped",
+      "trackingNumber": null,
+      "notes": "",
+      "userId": 3,
+      "orderNumber": "ORD-MTWV5I8V-O93P",
+      "shiprocketOrderId": null,
+      "createdAt": "2026-09-11T11:19:00.511Z",
+      "updatedAt": "2026-09-11T11:26:33.356Z",
+      "statusHistory": [
+        {
+          "at": "2026-09-11T11:19:00.512Z",
+          "by": "Customer",
+          "action": "Order placed"
+        },
+        {
+          "at": "2026-09-11T11:26:23.505Z",
+          "by": "Store Admin",
+          "action": "Fulfilled & shipped"
+        },
+        {
+          "at": "2026-09-11T11:26:33.385Z",
+          "by": "Store Admin",
+          "action": "Payment marked as paid"
+        }
+      ],
+      "id": 4,
+      "trackingUrl": null
     }
   ],
   "payments": [
@@ -2393,6 +2531,23 @@
       ],
       "createdAt": "2026-09-03T08:41:00.000Z",
       "updatedAt": "2026-09-03T12:30:00.000Z"
+    },
+    {
+      "orderId": 4,
+      "orderNumber": "ORD-MTWV5I8V-O93P",
+      "userId": 3,
+      "amount": 390,
+      "currency": "INR",
+      "paymentMethod": "cod",
+      "gateway": "cod",
+      "transactionId": null,
+      "gatewayOrderId": null,
+      "status": "pending",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "createdAt": "2026-09-11T11:19:00.560Z",
+      "updatedAt": "2026-09-11T11:19:00.560Z",
+      "id": 4
     }
   ],
   "refunds": [
@@ -2444,14 +2599,14 @@
       "rating": 5,
       "title": "Sample review — replace before launch",
       "body": "Sample review — replace before launch. This placeholder row exists only so the admin Reviews screen has data to show; it is flagged isSample and never reaches the storefront.",
-      "status": "approved",
+      "status": "rejected",
       "source": "admin",
       "isSample": true,
       "isVerifiedPurchase": false,
       "helpfulCount": 0,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-11T11:24:35.944Z"
     },
     {
       "id": 2,
@@ -2471,7 +2626,46 @@
       "updatedAt": "2026-09-06T00:00:00.000Z"
     }
   ],
-  "wishlist": [],
+  "wishlist": [
+    {
+      "productId": 1,
+      "slug": "black-rice-face-wash",
+      "name": "Black Rice Face Wash",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
+      "brand": "LAMIKAA Naturals",
+      "price": 390,
+      "comparePrice": 0,
+      "rating": 0,
+      "totalReviews": 0,
+      "shortDescription": "A gentle daily cleanse that leaves skin clean, refreshed and quietly bright.",
+      "variants": [],
+      "stock": 100,
+      "trending": false,
+      "hot": false,
+      "addedAt": "2026-09-11T11:14:53.376Z",
+      "userId": 3,
+      "id": 1
+    },
+    {
+      "productId": 3,
+      "slug": "black-rice-body-wash",
+      "name": "Black Rice Body Wash",
+      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v2.png",
+      "brand": "LAMIKAA Naturals",
+      "price": 500,
+      "comparePrice": 0,
+      "rating": 0,
+      "totalReviews": 0,
+      "shortDescription": "A nourishing wash that turns a quick shower into a slow, fragrant ritual.",
+      "variants": [],
+      "stock": 100,
+      "trending": false,
+      "hot": false,
+      "addedAt": "2026-09-11T11:15:04.752Z",
+      "userId": 3,
+      "id": 2
+    }
+  ],
   "cart": [],
   "leads": [
     {
