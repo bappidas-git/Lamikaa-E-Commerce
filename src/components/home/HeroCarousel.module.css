@@ -16,11 +16,18 @@
  * only ever contain one slide.
  *
  * WHAT IS DATA-DRIVEN (and therefore lives in custom properties)
- *   `utils/heroConfig` writes five values onto each slide and each backdrop
- *   layer — the focal point, the scrim, the blur, the blur's overscan and
- *   `--sf-hero-panel`, the strength of the plate under the copy. Every rule
- *   below reads them, and the designed defaults are declared on the elements
- *   themselves so a layer rendered without them is still framed correctly.
+ *   `utils/heroConfig` writes eight values onto each slide and each backdrop
+ *   layer — the focal point, the scrim, the blur, the blur's overscan,
+ *   `--sf-hero-panel` (the strength of the plate under the copy) and the card's
+ *   size on each of the three devices. Every rule below reads them, and the
+ *   designed defaults are declared on the elements themselves so a layer
+ *   rendered without them is still framed correctly.
+ *
+ *   THE CARD'S SIZE IS A PERCENTAGE, NEVER A WIDTH. What the admin stores is
+ *   how much BIGGER or smaller than the drawing the merchant wants it; the
+ *   widths themselves stay here, because "how wide is the card" has a different
+ *   answer for each of the six compositions at each of the three breakpoints
+ *   and none of those eighteen numbers is a merchant's decision to make.
  *
  * THE TWO GROUNDS. The band may be composed light (the cream storefront) or
  * dark (the near-black chrome ladder). The dark one is `.sf-on-dark`, the
@@ -46,15 +53,39 @@
   --sf-hero-chrome: 100px;
   --sf-hero-parallax-x: 0px;
   --sf-hero-parallax-y: 0px;
-  /* How wide the card is allowed to be. Re-pointed per breakpoint AND per
+  /* THE SIZE THE CARD WAS DRAWN AT. Re-pointed per breakpoint AND per
      composition (a card centred under its copy is not the same object as one
-     filling half a spread), and read once by `.media` — which is what lets the
-     height budget below bound the same value without restating six rules. */
+     filling half a spread), and read in exactly one place — `.slide`'s
+     `--sf-hero-card-width` below — so the merchant's percentage and the band's
+     own ceiling apply to all six compositions without restating a rule. */
   --sf-hero-card: 420px;
-  /* What the band spends on everything BUT the card: the slide's own padding,
-     the control rail and its padding. Subtracted from the viewport to keep a
-     full-screen hero actually full-screen — see `.heightStandard .media`. */
-  --sf-hero-rail: 220px;
+  /* THE MERCHANT'S CARD SIZE, one multiplier per device: Admin → Home & Hero →
+     Composition → "How big the card is". Written onto each SLIDE by
+     `heroMediaVars()`, so one slide may carry a bigger pack than the section it
+     sits in; declared here too, so a slide rendered without them — an older
+     record, a unit test — is drawn at exactly the designed size. */
+  --sf-hero-card-mobile: 1;
+  --sf-hero-card-tablet: 1;
+  --sf-hero-card-desktop: 1;
+  /* THE CEILING THE BAND ITSELF PUTS ON THE CARD, as a width — the card is 4:5,
+     so a height budget × 0.8 is a width budget. On a phone the band is as tall
+     as its content, so the only ceiling is the screen's width; on a band asked
+     to be one screen tall it is that screen (see `.hero.heightStandard`), which
+     is what stops a big card turning a "full screen" hero into a screen and a
+     half. The merchant's percentage multiplies the ANSWER, so asking for 130%
+     is still honoured on a short laptop — it is a decision, not a mistake. */
+  --sf-hero-card-fit: 80vw;
+  /* THE SHARE OF THE SPREAD THE CARD TAKES, and where that stops.
+     `--sf-hero-card-share` is the proportion the compositions were drawn with —
+     the card's column used to be an `fr` share of exactly this size, so at the
+     designed 100% nothing about the balance of any composition changes at any
+     width. The merchant's percentage scales THIS as well as the card's width,
+     which is what lets a bigger card actually be bigger on a narrow screen; the
+     `-max` is where the scaling stops, so the copy beside it always keeps a
+     column to be read in. Re-pointed per composition — the split has TWO
+     columns of copy to leave room for. */
+  --sf-hero-card-share: 47%;
+  --sf-hero-card-share-max: 66%;
   /* The plate under the copy, as a fraction. Overwritten per slide by
      `heroSlideVars()`; declared here so a slide rendered without it is unlit
      rather than opaque. */
@@ -297,6 +328,37 @@
 }
 
 .slide {
+  /* WHICHEVER OF THE THREE DEVICE SIZES THIS SCREEN IS — re-pointed at the two
+     breakpoints below and nowhere else, so every rule that sizes a card reads
+     one property. It is resolved HERE, on the slide, and not on the section:
+     `var()` is substituted against the element the declaration sits on, so a
+     `--sf-hero-card-scale` declared up on `.hero` would read the section's
+     placeholder `1` and the merchant's number — written onto the SLIDE — would
+     never be seen. */
+  --sf-hero-card-scale: var(--sf-hero-card-mobile);
+  /* THE WIDTH THIS SLIDE'S CARD ASKS FOR — the one figure every rule that sizes
+     a card reads. Three decisions in one value: the width the composition was
+     drawn at, bounded by the room the band has for it, times the percentage the
+     merchant set for this device. Derived HERE because a slide is the element
+     that carries both the composition's class and the admin's custom
+     properties, so the answer is already per-slide. */
+  --sf-hero-card-width: calc(
+    min(var(--sf-hero-card), var(--sf-hero-card-fit)) * var(--sf-hero-card-scale)
+  );
+  /* THE SAME CARD, AS A GRID TRACK — the smallest of three answers: the width
+     it asks for, the share of the spread its composition gives it (scaled by
+     the same percentage, so a bigger card is bigger on a narrow screen too),
+     and the share it may never pass. Both caps are PERCENTAGES of the grid, so
+     the card plus the gap can never be wider than the spread however the two
+     length terms are set. Sizing the track from the card — rather than leaving
+     it an `fr` share — is what makes the size control honest in both
+     directions: a card set larger has somewhere to grow, and one set smaller
+     gives the room back to the copy instead of leaving a hole. */
+  --sf-hero-card-track: min(
+    var(--sf-hero-card-width),
+    calc(var(--sf-hero-card-share) * var(--sf-hero-card-scale)),
+    var(--sf-hero-card-share-max)
+  );
   /* EVERY slide in the same cell: the stage is as tall as the tallest of them
      and nothing below the hero moves when the slide changes. */
   grid-area: 1 / 1;
@@ -667,8 +729,12 @@
 
 .media {
   position: relative;
-  width: 80vw;
-  max-width: var(--sf-hero-card);
+  /* The phone's card: the designed size — the narrower of 420px and the 80vw
+     this breakpoint sets `--sf-hero-card-fit` to — scaled by the merchant's
+     phone percentage, and never wider than the column it is in, so a card set
+     to 150% on a 390px screen stops at the gutter rather than scrolling the
+     page sideways. */
+  width: min(100%, var(--sf-hero-card-width));
   margin-inline: auto;
   aspect-ratio: 1 / 1;
   min-width: 0;
@@ -1029,6 +1095,37 @@
   .slide {
     padding-top: var(--sf-space-8);
     padding-bottom: var(--sf-space-10);
+    /* The tablet's own size from here up. */
+    --sf-hero-card-scale: var(--sf-hero-card-tablet);
+  }
+
+  /* A card beside the copy is bounded by its column, not by the screen's
+     width, so the phone's 80vw ceiling comes off. A band left to fit its
+     content — `auto`, `tall` — has no height to run out of either. */
+  .hero {
+    --sf-hero-card-fit: 100vw;
+  }
+
+  /* A CARD IS NEVER TALLER THAN THE BAND IT SITS IN. On a band asked to be one
+     screen tall the card is bounded by that screen as well as by its designed
+     width (× 0.8, because it is 4:5), so a short laptop gets a card that fits
+     rather than one that has to be scrolled past.
+
+     THE RAIL IS NOT SUBTRACTED FROM IT, and that is the fix for a card that had
+     quietly become small: the budget used to take the control rail and the
+     slide's padding off the screen FIRST, which cost a 900px laptop a fifth of
+     its card (464px where the composition was drawn at 560) — and did not buy
+     what it was for, because the band on that laptop was taller than the screen
+     anyway. What makes a full-screen band overflow is the copy column and the
+     rail under it, not the width of the pack; paying for it in card is paying
+     the wrong account. The band's own height is the honest ceiling, and the
+     merchant's percentage multiplies it: asking for a bigger card on a short
+     screen is a decision this honours, not a mistake it corrects. `auto` and
+     `tall` are exempt — both are asking for a band taller than the screen. */
+  .hero.heightStandard,
+  .hero.heightCompact {
+    --sf-hero-card-fit: calc((100vh - var(--sf-hero-chrome)) * 0.8);
+    --sf-hero-card-fit: calc((100svh - var(--sf-hero-chrome)) * 0.8);
   }
 
   .slideInner {
@@ -1036,33 +1133,15 @@
   }
 
   /* The phone's "card first" is a phone rule; from here the explicit grid
-     placement below decides where the card goes. */
+     placement below decides where the card goes. The card fills the track the
+     composition gives it, and `max-width` is what keeps a card SMALLER than its
+     share from being stretched to fill it. */
   .slide .media {
     order: 0;
     width: 100%;
+    max-width: var(--sf-hero-card-width);
     margin-inline: 0;
     aspect-ratio: 4 / 5;
-  }
-
-  /* THE BAND MUST NOT OUTGROW THE SCREEN. The card is the tallest thing in a
-     slide and the control rail sits under it, so a fixed card width made a
-     "full screen" hero 150px taller than the screen on a 900px laptop — the
-     CTAs fell below the fold on the one band that exists to be seen without
-     scrolling. The card is therefore bounded twice: by the composition's own
-     width above, and by the HEIGHT left over once the chrome, the slide's
-     padding and the rail have taken theirs (× 0.8, because the card is 4:5).
-     `auto` and `tall` are exempt: both are asking for a band taller than the
-     screen. */
-  .heightStandard .slide .media,
-  .heightCompact .slide .media {
-    max-width: min(
-      var(--sf-hero-card),
-      calc((100vh - var(--sf-hero-chrome) - var(--sf-hero-rail)) * 0.8)
-    );
-    max-width: min(
-      var(--sf-hero-card),
-      calc((100svh - var(--sf-hero-chrome) - var(--sf-hero-rail)) * 0.8)
-    );
   }
 
   .skeletonInner {
@@ -1077,14 +1156,22 @@
     aspect-ratio: 4 / 5;
   }
 
-  /* ---- COPY LEFT · CARD RIGHT — the classic spread ---------------------- */
+  /* ---- COPY LEFT · CARD RIGHT — the classic spread ----------------------
+     THE CARD'S COLUMN IS THE CARD'S OWN WIDTH, and the copy takes what is left.
+     It was a second `fr` share until the card became something a merchant sets:
+     a proportional track answers "how big is the card?" with "half of whatever
+     the spread is", which would have left any size above about 105% with
+     nothing to show for it — the card had already filled its share and the
+     extra width had nowhere to go. Sized from the card, the control is honest
+     in both directions, and a card set SMALLER gives its room back to the
+     copy. */
   .presetTextLeft .slideInner {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, var(--sf-hero-card-track));
   }
 
   /* ---- CARD LEFT · COPY RIGHT — the spread mirrored --------------------- */
   .presetTextRight .slideInner {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(0, var(--sf-hero-card-track)) minmax(0, 1fr);
   }
 
   .presetTextRight .media {
@@ -1120,8 +1207,18 @@
   .presetPoster .media {
     width: auto;
     max-width: 100%;
-    height: min(300px, calc((100vh - var(--sf-hero-chrome)) * 0.3));
-    height: min(300px, calc((100svh - var(--sf-hero-chrome)) * 0.3));
+    /* The one card sized from its HEIGHT, so the merchant's percentage is
+       applied there rather than to a width — the 4:5 ratio turns it back into
+       one, and a centred card set to 130% grows the way a merchant expects
+       instead of hitting a ceiling the other compositions do not have. */
+    height: min(
+      calc(300px * var(--sf-hero-card-scale)),
+      calc((100vh - var(--sf-hero-chrome)) * 0.3 * var(--sf-hero-card-scale))
+    );
+    height: min(
+      calc(300px * var(--sf-hero-card-scale)),
+      calc((100svh - var(--sf-hero-chrome)) * 0.3 * var(--sf-hero-card-scale))
+    );
     margin-inline: auto;
   }
 
@@ -1139,12 +1236,17 @@
 
   /* ---- SPLIT — the card centred, the copy either side of it ------------- */
   .presetSplit .slideInner {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr) minmax(0, 1fr);
+    grid-template-columns:
+      minmax(0, 1fr) minmax(0, var(--sf-hero-card-track)) minmax(0, 1fr);
     gap: var(--sf-space-8);
   }
 
   .presetSplit {
     --sf-hero-card: 360px;
+    /* Two columns of copy to leave room for rather than one, so a narrower
+       share and a lower ceiling than the spreads have. */
+    --sf-hero-card-share: 28%;
+    --sf-hero-card-share-max: 50%;
   }
 
   .presetSplit .media {
@@ -1230,6 +1332,14 @@
 @media (min-width: 1025px) {
   .hero .groundGlow {
     display: block;
+  }
+
+  /* The desktop's own card size. The SHARE is unchanged from the tablet's: it
+     is the proportion every composition was drawn with, and what grows here is
+     the card's designed width below — 560px rather than 420px — which the wider
+     spread has room for. */
+  .slide {
+    --sf-hero-card-scale: var(--sf-hero-card-desktop);
   }
 
   .slideInner {

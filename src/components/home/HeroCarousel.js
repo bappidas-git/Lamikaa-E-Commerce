@@ -87,6 +87,12 @@ import styles from "./HeroCarousel.module.css";
 // carry their own contrast too — see the stylesheet's "controls over a
 // photograph" block.
 //
+// HOW BIG THE CARD IS is the admin's answer, not this component's: each slide
+// carries three multipliers (`heroMediaVars` — one for the desktop, one for the
+// tablet, one for the phone) and the stylesheet multiplies the width the
+// composition was drawn at by whichever one the screen matches. Nothing here
+// measures a card; a percentage is all that crosses over.
+//
 // MOTION is CSS, not a timeline, so the first slide is painted at full strength
 // on the first frame: crossfade + 1.02 -> 1 scale over --sf-duration-slow. Under
 // `prefers-reduced-motion` the token layer zeroes that duration, autoplay never
@@ -487,7 +493,7 @@ const HeroSlide = ({
         onArt && styles.slideOnArt,
         themeClass(theme)
       )}
-      style={heroSlideVars(background, panel)}
+      style={heroSlideVars(background, panel, layout)}
       role="group"
       aria-roledescription="slide"
       aria-label={`${index + 1} of ${total}: ${heroSlideName(entry, index)}`}

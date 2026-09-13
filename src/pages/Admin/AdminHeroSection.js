@@ -47,6 +47,10 @@ import {
   HERO_INTERVAL_MAX_MS,
   HERO_INTERVAL_MIN_MS,
   HERO_LAYOUTS,
+  HERO_MEDIA_DEVICES,
+  HERO_MEDIA_SCALE_DEFAULT,
+  HERO_MEDIA_SCALE_MAX,
+  HERO_MEDIA_SCALE_MIN,
   HERO_OVERLAY_MAX,
   HERO_PANELS,
   HERO_PANEL_MAX,
@@ -516,12 +520,32 @@ const LayoutEditor = ({
   scope = "slide",
   kind = "product",
   background,
+  // The SECTION's ground, and the setter for it. The band's ground is
+  // `heroConfig.theme`, not a key of any composition — `layout.theme` is the
+  // per-slide override and reads `inherit` at this level — so at section scope
+  // this one field is bound to the record above rather than to `value`. Bound
+  // to `value.theme` it showed an empty box (`inherit` is not one of the two
+  // options a section is offered) and wrote the band's ground into the layout,
+  // where it shadowed `heroConfig.theme` and left the record saying it twice.
+  sectionTheme = DEFAULT_HERO_CONFIG.theme,
+  onSectionTheme,
 }) => {
   const isSection = scope === "section";
   const set = (patch) => onChange({ ...value, ...patch });
   const panel = resolveHeroPanel(background, value);
   const poster = value.preset === "poster";
   const onArt = hasHeroBackground(background);
+
+  // The card's size is only a question while there IS a card: the `poster`
+  // composition switches it off, and so can the switch below.
+  const scale = value.mediaScale || {};
+  const drawsCard = !poster && value.showMedia;
+  const sizeOn = (device) => scale[device] ?? HERO_MEDIA_SCALE_DEFAULT;
+  const sizedAlike = HERO_MEDIA_DEVICES.every(
+    (d) => sizeOn(d.value) === sizeOn("desktop")
+  );
+  const setScale = (device, size) =>
+    set({ mediaScale: { ...scale, [device]: size } });
 
   return (
     <Box sx={{ display: "grid", gap: 2.5 }}>
@@ -588,9 +612,13 @@ const LayoutEditor = ({
             fullWidth
             size="small"
             label="Ground"
-            value={value.theme}
+            value={isSection ? sectionTheme : value.theme}
             disabled={disabled}
-            onChange={(e) => set({ theme: e.target.value })}
+            onChange={(e) =>
+              isSection
+                ? onSectionTheme?.(e.target.value)
+                : set({ theme: e.target.value })
+            }
             helperText={
               isSection
                 ? "The band's own ground — the rest of the page is untouched"
@@ -655,6 +683,91 @@ const LayoutEditor = ({
           </Grid>
         )}
       </Grid>
+
+      {/* ---- HOW BIG THE CARD IS, per device -------------------------------
+          Three numbers rather than one, because the card is the element whose
+          right size is a genuinely different answer on a 27" monitor, on a
+          tablet and on a phone — and a single figure would have a merchant
+          choosing which of the three to get wrong. What is stored is a
+          PERCENTAGE of the size each composition was drawn at, so the
+          storefront keeps its own widths (six compositions × three
+          breakpoints) and a slide set to 120% is 120% of whichever of those
+          eighteen numbers the visitor's screen lands on. */}
+      {drawsCard && (
+        <Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            <Typography variant="body2" fontWeight={600}>
+              How big the card is
+            </Typography>
+            <Button
+              size="small"
+              disabled={disabled || sizedAlike}
+              startIcon={<Icon icon="mdi:link-variant" />}
+              onClick={() =>
+                set({
+                  mediaScale: {
+                    desktop: sizeOn("desktop"),
+                    tablet: sizeOn("desktop"),
+                    mobile: sizeOn("desktop"),
+                  },
+                })
+              }
+            >
+              Match the desktop size
+            </Button>
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+            100% is the size this composition was drawn at on that device. Above it
+            the card takes room from the copy beside it; below it, the copy takes
+            the room back.
+          </Typography>
+          <Grid container spacing={2.5}>
+            {HERO_MEDIA_DEVICES.map((device) => {
+              const size = sizeOn(device.value);
+              return (
+                <Grid item xs={12} sm={4} key={device.value}>
+                  <Typography variant="caption" color="text.secondary">
+                    {device.label} · {device.hint}
+                  </Typography>
+                  <Slider
+                    size="small"
+                    value={size}
+                    min={HERO_MEDIA_SCALE_MIN}
+                    max={HERO_MEDIA_SCALE_MAX}
+                    step={5}
+                    marks={[{ value: HERO_MEDIA_SCALE_DEFAULT }]}
+                    disabled={disabled}
+                    valueLabelDisplay="auto"
+                    valueLabelFormat={(v) => `${v}%`}
+                    onChange={(e, v) => setScale(device.value, v)}
+                    aria-label={`Card size on ${device.label.toLowerCase()}`}
+                  />
+                  <Typography
+                    variant="caption"
+                    color={
+                      size === HERO_MEDIA_SCALE_DEFAULT ? "text.secondary" : "text.primary"
+                    }
+                  >
+                    {size === HERO_MEDIA_SCALE_DEFAULT
+                      ? "The designed size"
+                      : `${size}% — ${
+                          size > HERO_MEDIA_SCALE_DEFAULT ? "bigger" : "smaller"
+                        } than designed`}
+                  </Typography>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Box>
+      )}
 
       <Divider />
 
@@ -1020,19 +1133,35 @@ const SlidePreview = ({
     a === "center" ? "center" : a === "end" ? "flex-end" : "flex-start";
   const textAlign = (a) => (a === "center" ? "center" : a === "end" ? "right" : "left");
 
+  const centred = layout.preset === "text-center" || layout.preset === "poster";
+
+  // THE CARD AT THE SIZE THE MERCHANT SET, in the preview's own scale. The
+  // storefront multiplies each composition's designed width by the percentage
+  // for the device; so does this, against the width this small picture of the
+  // composition was drawn at — which is what makes dragging the slider visible
+  // here rather than only on the live page.
+  const cardScale =
+    ((mobile ? layout.mediaScale?.mobile : layout.mediaScale?.desktop) ??
+      HERO_MEDIA_SCALE_DEFAULT) / HERO_MEDIA_SCALE_DEFAULT;
+  const cardWidth =
+    Math.round((mobile ? 150 : centred ? 120 : split ? 130 : 180) * cardScale);
+
   // The grid, mirroring the stylesheet's presets. One column on the phone
-  // preview, whatever the preset asks for on the desktop one.
+  // preview, whatever the preset asks for on the desktop one — and the card's
+  // column is the card's own width, capped at its share of the spread, exactly
+  // as `--sf-hero-card-track` caps it on the storefront.
+  const cardTrack = `min(${cardWidth}px, ${((split ? 28 : 47) * cardScale).toFixed(
+    1
+  )}%, ${split ? 50 : 66}%)`;
   const columns = mobile
     ? "minmax(0, 1fr)"
     : {
-        "text-left": "minmax(0, 1.05fr) minmax(0, 1fr)",
-        "text-right": "minmax(0, 1fr) minmax(0, 1.05fr)",
+        "text-left": `minmax(0, 1fr) minmax(0, ${cardTrack})`,
+        "text-right": `minmax(0, ${cardTrack}) minmax(0, 1fr)`,
         "text-center": "minmax(0, 1fr)",
-        split: "minmax(0, 1fr) minmax(0, 0.82fr) minmax(0, 1fr)",
+        split: `minmax(0, 1fr) minmax(0, ${cardTrack}) minmax(0, 1fr)`,
         poster: "minmax(0, 1fr)",
-      }[layout.preset] || "minmax(0, 1.05fr) minmax(0, 1fr)";
-
-  const centred = layout.preset === "text-center" || layout.preset === "poster";
+      }[layout.preset] || `minmax(0, 1fr) minmax(0, ${cardTrack})`;
   const verticalAlign =
     layout.vertical === "top"
       ? "flex-start"
@@ -1214,7 +1343,7 @@ const SlidePreview = ({
       sx={{
         position: "relative",
         width: "100%",
-        maxWidth: mobile ? 150 : centred ? 120 : split ? 130 : 180,
+        maxWidth: cardWidth,
         mx: mobile || centred || split ? "auto" : layout.preset === "text-right" ? "0 auto" : 0,
         aspectRatio: mobile ? "1 / 1" : "4 / 5",
         borderRadius: 1.5,
@@ -2704,6 +2833,8 @@ const AdminHeroSection = () => {
                       scope="section"
                       kind="product"
                       background={sectionBackground}
+                      sectionTheme={config.theme}
+                      onSectionTheme={(theme) => setCfg({ theme })}
                     />
                     <Divider sx={{ my: 2.5 }} />
                     <Grid container spacing={2.5}>

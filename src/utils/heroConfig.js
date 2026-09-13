@@ -52,6 +52,15 @@
 // drops the scrim to 0 does not lose the headline; the plate under it comes up
 // to meet them.
 //
+// THE CARD'S SIZE IS THREE NUMBERS, AND THEY ARE PERCENTAGES. `layout.
+// mediaScale` holds one for the desktop, one for the tablet and one for the
+// phone, because a pack that reads on a 27" monitor can dominate a 13" laptop
+// and drown a 390px screen. Each is a percentage of the size that composition
+// was DRAWN at rather than a width: six compositions at three breakpoints is
+// eighteen widths, none of them a merchant's decision, so they stay in
+// `HeroCarousel.module.css` and what crosses over from here is how much bigger
+// or smaller than the drawing the merchant wants it (`heroMediaVars`).
+//
 // THEMES. The hero is the one section of a cream storefront that may be dark:
 // `theme: "dark"` puts the band in the `.sf-on-dark` token scope, so the ink,
 // the hairlines, the buttons, the chips and the scrim all re-point to the
@@ -160,8 +169,11 @@ export const HERO_PANELS = [
   { value: "solid", label: "Solid card", hint: "An opaque card behind the copy" },
 ];
 
-/** The two grounds the hero may be composed on. The section picks one; a slide
-    may overrule it. `inherit` is the slide-level answer, never the section's. */
+/** The two grounds the hero may be composed on. The section picks one — in
+    `heroConfig.theme`, the band's own key — and a slide may overrule it from
+    its composition. `inherit` is the slide-level answer, never the section's:
+    the section layout's `theme` is `inherit` by construction, which is why the
+    section's Ground select is bound to `heroConfig.theme` instead. */
 export const HERO_THEMES = [
   { value: "light", label: "Light", hint: "Cream ground, espresso ink — the storefront's own" },
   { value: "dark", label: "Dark", hint: "Near-black ground, warm white ink and gold" },
@@ -184,6 +196,21 @@ export const HERO_HEIGHTS = [
 export const HERO_SLIDE_KINDS = [
   { value: "product", label: "Product" },
   { value: "custom", label: "Poster" },
+];
+
+/**
+ * THE THREE DEVICES THE CARD IS SIZED FOR, and the breakpoints they mean.
+ *
+ * The card's size is the one measurement a merchant cannot take from the
+ * preview alone — a pack that reads on a 27" monitor can dominate a 13" laptop
+ * and drown a phone — so it is set per device rather than once. The values are
+ * the stylesheet's own breakpoints: nothing here is a fourth number that CSS
+ * would then have to be taught.
+ */
+export const HERO_MEDIA_DEVICES = [
+  { value: "desktop", label: "Desktop", hint: "1025px and wider" },
+  { value: "tablet", label: "Tablet", hint: "769–1024px" },
+  { value: "mobile", label: "Phone", hint: "768px and narrower" },
 ];
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
@@ -233,6 +260,30 @@ export const HERO_PANEL_MIN = 0;
 export const HERO_PANEL_MAX = 100;
 
 /**
+ * THE CARD'S SIZE, as a percentage of the composition's designed width.
+ *
+ * 100 is the size the composition was drawn at, per device and per preset —
+ * 560px for a classic spread on a desktop, 420px on a tablet, 80vw on a phone.
+ * The percentage scales THAT number rather than replacing it, so one setting
+ * keeps the proportions the compositions were drawn with on every screen.
+ *
+ * The floor is a card that still reads as the hero's subject; the ceiling is
+ * the point past which the copy beside it has no column left. Both are shared
+ * by the admin slider and the runtime, so a hand-edited `db.json` cannot put a
+ * 400% pack over the headline.
+ */
+export const HERO_MEDIA_SCALE_MIN = 50;
+export const HERO_MEDIA_SCALE_MAX = 150;
+export const HERO_MEDIA_SCALE_DEFAULT = 100;
+
+/** The designed size, on all three devices. */
+export const DEFAULT_HERO_MEDIA_SCALE = {
+  desktop: HERO_MEDIA_SCALE_DEFAULT,
+  tablet: HERO_MEDIA_SCALE_DEFAULT,
+  mobile: HERO_MEDIA_SCALE_DEFAULT,
+};
+
+/**
  * THE COMPOSITION RECORD — the section default, and one slide's override.
  *
  * Held at both levels with one shape. A slide's record is layered ON TOP of the
@@ -252,6 +303,11 @@ export const DEFAULT_HERO_LAYOUT = {
   // 0 = let the panel choose (automatic for `auto`, the designed weight for the
   // named kinds); 1–100 sets it by hand.
   panelStrength: 0,
+  // How big the card is on each device, as a percentage of the size the
+  // composition was drawn at. One number per breakpoint, because the card is
+  // the one element whose right size is a different answer on a monitor, a
+  // tablet and a phone.
+  mediaScale: { ...DEFAULT_HERO_MEDIA_SCALE },
   // What is drawn. All three on is a full slide; all three off is the picture
   // and nothing else. A poster with one button is `showActions` alone.
   showCopy: true,
@@ -486,6 +542,46 @@ export const heroBackgroundVars = (background) => {
 // ─── Layout ──────────────────────────────────────────────────────────────────
 
 /**
+ * Fill in the card's three sizes, layered over `fallback`.
+ *
+ * Tolerant in the two directions a stored record can be thin:
+ *
+ *   • a BARE NUMBER is all three devices — `mediaScale: 120` is a legal,
+ *     complete answer for a merchant hand-editing `db.json`, and it is what a
+ *     single-number future record would mean anyway;
+ *   • a partial object keeps the fallback's answer for the devices it does not
+ *     name, which is what makes a SLIDE's override per-device rather than
+ *     all-or-nothing: a slide that only wants a bigger card on the desktop
+ *     inherits the section's phone and tablet sizes untouched.
+ *
+ * @param {object|number|null} raw
+ * @param {object} [fallback]  the section's sizes, when normalising a slide's
+ * @returns {typeof DEFAULT_HERO_MEDIA_SCALE}
+ */
+export const normalizeHeroMediaScale = (raw, fallback = DEFAULT_HERO_MEDIA_SCALE) => {
+  const base = { ...DEFAULT_HERO_MEDIA_SCALE, ...(fallback || {}) };
+  const flat = typeof raw === "number" || typeof raw === "string" ? raw : null;
+  const scale = raw && typeof raw === "object" ? raw : {};
+  const read = (device) =>
+    clampInt(
+      flat ?? scale[device],
+      HERO_MEDIA_SCALE_MIN,
+      HERO_MEDIA_SCALE_MAX,
+      clampInt(
+        base[device],
+        HERO_MEDIA_SCALE_MIN,
+        HERO_MEDIA_SCALE_MAX,
+        HERO_MEDIA_SCALE_DEFAULT
+      )
+    );
+  return {
+    desktop: read("desktop"),
+    tablet: read("tablet"),
+    mobile: read("mobile"),
+  };
+};
+
+/**
  * Fill in a composition record, layered over `fallback`.
  *
  * `fallback` is what makes a slide's override PARTIAL: the section's resolved
@@ -506,6 +602,7 @@ export const normalizeHeroLayout = (raw, fallback = DEFAULT_HERO_LAYOUT) => {
       HERO_PANEL_MAX,
       base.panelStrength
     ),
+    mediaScale: normalizeHeroMediaScale(l.mediaScale, base.mediaScale),
     showCopy: bool(l.showCopy, base.showCopy),
     showMedia: bool(l.showMedia, base.showMedia),
     showActions: bool(l.showActions, base.showActions),
@@ -559,10 +656,13 @@ export const heroLayoutDrawsContent = (layout) =>
 /**
  * The ground the slide is composed on: its own answer, else the section's.
  *
- * The ground is part of the COMPOSITION, so `layout.theme` is where the admin
- * writes it and it wins. `slideTheme` is the same decision spelled on the slide
- * record itself — which is where a hand-written `db.json` or an older build
- * would put it — and it is read as a fallback rather than ignored.
+ * TWO LEVELS, ONE KEY EACH. The band's ground is `config.theme` and a slide
+ * overrules it from its own composition (`layout.theme`, `inherit` until a
+ * merchant says otherwise) — so the section's answer is never written onto a
+ * layout, and `normalizeHeroConfig` lifts one out again if a record carries it
+ * there. `slideTheme` is the same slide decision spelled on the slide record
+ * itself — which is where a hand-written `db.json` or an older build would put
+ * it — and it is read as a fallback rather than ignored.
  */
 export const resolveHeroTheme = (layout, config, slideTheme) => {
   const own = layout?.theme;
@@ -662,11 +762,29 @@ export const resolveHeroPanel = (background, layout) => {
 };
 
 /**
- * Every custom property one slide's layers are styled with: the picture's four,
- * and the plate's strength as a fraction.
+ * The card's three sizes as MULTIPLIERS — `120` is written out as `1.2`.
+ *
+ * The stylesheet keeps the designed width (it is a different number per preset
+ * and per breakpoint, and that is a design decision, not a stored one) and
+ * multiplies it by whichever of these three the device matches. So the only
+ * value that crosses over from the admin's record is the merchant's percentage.
  */
-export const heroSlideVars = (background, panel) => ({
+export const heroMediaVars = (layout) => {
+  const scale = normalizeHeroMediaScale(layout?.mediaScale);
+  return {
+    "--sf-hero-card-desktop": String(scale.desktop / 100),
+    "--sf-hero-card-tablet": String(scale.tablet / 100),
+    "--sf-hero-card-mobile": String(scale.mobile / 100),
+  };
+};
+
+/**
+ * Every custom property one slide's layers are styled with: the picture's four,
+ * the plate's strength as a fraction, and the card's size on each device.
+ */
+export const heroSlideVars = (background, panel, layout) => ({
   ...heroBackgroundVars(background),
+  ...heroMediaVars(layout),
   "--sf-hero-panel": String(
     clampInt(panel?.strength, HERO_PANEL_MIN, HERO_PANEL_MAX, 0) / 100
   ),
@@ -863,6 +981,18 @@ export const buildHeroSlides = (products, config) => {
 // complete shape, even on an older db.json or a partial API response.
 export const normalizeHeroConfig = (raw) => {
   const cfg = raw && typeof raw === "object" ? raw : {};
+  // THE BAND'S GROUND LIVES IN ONE PLACE, and this is where a record that says
+  // it twice is settled. `theme` is the SECTION's ground; `layout.theme` is a
+  // SLIDE's override of it and reads `inherit` at the section level by
+  // construction — but the admin's one Ground control used to write the
+  // section's answer onto the section LAYOUT, so a record saved by that screen
+  // can carry `layout.theme: "dark"` while `theme` still says `light`. The
+  // layout's answer is the one the storefront was painting (`resolveHeroTheme`
+  // reads it first), so it is LIFTED into `theme` and the layout returns to
+  // `inherit`: the same band, from one key, and the admin's Ground select now
+  // shows the ground actually in force.
+  const layout = normalizeHeroLayout(cfg.layout);
+  const grounded = layout.theme === "light" || layout.theme === "dark";
   return {
     // Every toggle defaults to ON unless explicitly false, so a config written
     // by an older build never silently hides part of the hero.
@@ -890,16 +1020,21 @@ export const normalizeHeroConfig = (raw) => {
     // make the hero quieter, never make it unstoppable.
     showPause: cfg.showPause !== false,
     // The ground the band is composed on. Light unless a merchant asked for the
-    // dark one, so a record written before themes existed looks unchanged.
-    theme: oneOf(cfg.theme, HERO_THEMES, DEFAULT_HERO_CONFIG.theme),
+    // dark one, so a record written before themes existed looks unchanged — and
+    // a ground found on the section's layout wins, because that is the one the
+    // band was being painted with (see the lift above).
+    theme: grounded
+      ? layout.theme
+      : oneOf(cfg.theme, HERO_THEMES, DEFAULT_HERO_CONFIG.theme),
     height: oneOf(cfg.height, HERO_HEIGHTS, DEFAULT_HERO_CONFIG.height),
     eyebrowLabel:
       trimmed(cfg.eyebrowLabel) || DEFAULT_HERO_CONFIG.eyebrowLabel,
     showEyebrow: cfg.showEyebrow !== false,
     // The composition every slide inherits. Always complete, so the admin form
     // and the carousel can read `config.layout.preset` without asking whether
-    // a layout was ever configured.
-    layout: normalizeHeroLayout(cfg.layout),
+    // a layout was ever configured — and `inherit` at the section, always,
+    // because a ground here is the band's and has just been lifted out of it.
+    layout: grounded ? { ...layout, theme: "inherit" } : layout,
     // The section-wide picture. Always a complete record, for the same reason.
     background: normalizeHeroBackground(cfg.background),
     // The ordered slide list, posters included.
