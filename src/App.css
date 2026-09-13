@@ -137,7 +137,8 @@ body {
 }
 
 /* Firefox equivalent. `scrollbar-*` inherits, so setting it on <body> reaches
-   every scroll container. Storefront only — admin keeps the UA default. */
+   every scroll container. Scoped away from the admin, which declares its own
+   pair per mode further down. */
 body:not(.admin-area) {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--sf-color-text) 22%, var(--sf-color-bg))
@@ -145,10 +146,16 @@ body:not(.admin-area) {
 }
 
 /* Pin the page background to the admin ground while an admin screen is
-   mounted, so the storefront surface cannot show wherever the charcoal peeks
-   through (overscroll, drawer edges). `body.admin-area` already out-ranks the
-   base layer's `body` rule on specificity, so no importance override is needed
-   and the pin unwinds with the class. The admin has one palette, so this is one rule.
+   mounted, so the storefront surface cannot show wherever the admin ground
+   peeks through (overscroll, drawer edges). `body.admin-area` already out-ranks
+   the base layer's `body` rule on specificity, so no importance override is
+   needed and the pin unwinds with the class.
+
+   THE ADMIN HAS TWO MODES and this ground is one of the few surfaces outside
+   the MUI tree, so it follows them by class: `.admin-area` is the dark default
+   and `.admin-area.admin-light` is the light one. `hooks/useAdminBodyClass`
+   sets both from the mode the AdminThemeProvider holds.
+
    The literals in this block are the admin's own — src/theme/adminTheme.js is
    a JS module and cannot be read from CSS, and the admin never reads the
    storefront's --sf-* tokens. Keep the two in step. */
@@ -156,8 +163,12 @@ body.admin-area {
   background-color: #0b0b0d;
 }
 
-/* Admin scrollbars: charcoal, one step above the ground, no gold — a scrollbar
-   is chrome, not an accent. */
+body.admin-area.admin-light {
+  background-color: #f4efe4;
+}
+
+/* Admin scrollbars: one step off the ground, no gold — a scrollbar is chrome,
+   not an accent. */
 body.admin-area::-webkit-scrollbar-track,
 body.admin-area *::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.04);
@@ -171,6 +182,32 @@ body.admin-area *::-webkit-scrollbar-thumb {
 body.admin-area::-webkit-scrollbar-thumb:hover,
 body.admin-area *::-webkit-scrollbar-thumb:hover {
   background: #3a3a42;
+}
+
+body.admin-area.admin-light::-webkit-scrollbar-track,
+body.admin-area.admin-light *::-webkit-scrollbar-track {
+  background: rgba(27, 23, 20, 0.05);
+}
+
+body.admin-area.admin-light::-webkit-scrollbar-thumb,
+body.admin-area.admin-light *::-webkit-scrollbar-thumb {
+  background: #dcd1bc;
+}
+
+body.admin-area.admin-light::-webkit-scrollbar-thumb:hover,
+body.admin-area.admin-light *::-webkit-scrollbar-thumb:hover {
+  background: #c6b79a;
+}
+
+/* Firefox has no pseudo-elements for this; `scrollbar-*` inherits, so the pair
+   set on <body> reaches every scroll container in the panel. */
+body.admin-area {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a30 rgba(255, 255, 255, 0.04);
+}
+
+body.admin-area.admin-light {
+  scrollbar-color: #dcd1bc rgba(27, 23, 20, 0.05);
 }
 
 /* =============================================================================
@@ -392,6 +429,34 @@ body.admin-area .swal2-styled {
 
 body.admin-area .swal2-html-container {
   color: #b8b5b0;
+}
+
+/* The same dialog on paper. Only the values move: the radii, the type and the
+   sentence-case actions above are the design language and are shared. The
+   confirm button's LABEL is set here rather than per call, so a destructive
+   confirm that overrides only --swal2-confirm-button-background-color
+   (error.main, #b0261c in this mode) still gets readable ink on it. */
+body.admin-area.admin-light .swal2-popup {
+  --swal2-background: #fffdf9;
+  --swal2-color: #1b1714;
+  --swal2-border: 1px solid rgba(27, 23, 20, 0.12);
+  --swal2-confirm-button-background-color: #825c0e;
+  --swal2-confirm-button-color: #fffcf5;
+  --swal2-cancel-button-background-color: rgba(27, 23, 20, 0.07);
+  --swal2-cancel-button-color: #1b1714;
+  --swal2-close-button-color: #544c42;
+  --swal2-action-button-focus-box-shadow: 0 0 0 3px rgba(130, 92, 14, 0.38);
+  --swal2-timer-progress-bar-background: #825c0e;
+  --swal2-toast-border: 1px solid rgba(27, 23, 20, 0.12);
+  --swal2-toast-box-shadow: 0 8px 24px rgba(74, 58, 32, 0.16);
+}
+
+body.admin-area.admin-light .swal2-popup:not(.swal2-toast) {
+  box-shadow: 0 12px 40px rgba(74, 58, 32, 0.2);
+}
+
+body.admin-area.admin-light .swal2-html-container {
+  color: #544c42;
 }
 
 /* -----------------------------------------------------------------------------

@@ -1,25 +1,36 @@
 /* =============================================================================
  * HeroCarousel  —  the home page's opening spread
  * =============================================================================
- * MOBILE FIRST. The base rules are the ≤768px composition: the label card
- * first (80vw on a 1:1 plate), then the copy, then the control rail, with the
- * section's height decided by its content. Everything else is an addition at
- * 769px and 1025px.
+ * MOBILE FIRST. The base rules are the ≤768px composition: one column, the card
+ * first, the copy under it, the control rail last. Every layout the admin can
+ * choose collapses to that column on a phone; the compositions themselves
+ * arrive at 769px, where there is a second column to put them in.
  *
- * WHAT RESERVES SPACE (and so keeps CLS out of the hero)
- *   • `.stage` carries the aspect-ratio, not the image — the plate is filled by
- *     an absolutely positioned layer, so the box exists before the bytes do.
- *   • `.headline` and `.subtext` carry min-heights in their OWN em, so a slide
- *     whose copy is one line shorter cannot move the CTAs under a thumb.
+ * THE STAGE IS A ONE-CELL GRID. Every slide is placed in `grid-area: 1 / 1`, so
+ * the stage is exactly as tall as its TALLEST slide and every slide is in flow.
+ * That is what makes a different composition per slide free: no absolutely
+ * positioned layer to measure, no hidden mirror of the copy to keep in step,
+ * and nothing below the hero can move when the slide changes. Only the active
+ * slide is visible — `visibility` is transitioned with a delay on the way out,
+ * so the crossfade still runs while the tab order and the accessibility tree
+ * only ever contain one slide.
  *
- * THE BACKDROP is the admin's picture, and it is the one layer here that is
- * DATA-DRIVEN: `utils/heroConfig.heroBackgroundVars()` writes four custom
- * properties onto each layer (focal point, scrim strength, blur, overscan) and
- * every rule below reads them. The defaults are declared on `.backdropLayer`
- * itself, so a layer rendered without them still looks the way it was designed.
+ * WHAT IS DATA-DRIVEN (and therefore lives in custom properties)
+ *   `utils/heroConfig` writes five values onto each slide and each backdrop
+ *   layer — the focal point, the scrim, the blur, the blur's overscan and
+ *   `--sf-hero-panel`, the strength of the plate under the copy. Every rule
+ *   below reads them, and the designed defaults are declared on the elements
+ *   themselves so a layer rendered without them is still framed correctly.
+ *
+ * THE TWO GROUNDS. The band may be composed light (the cream storefront) or
+ * dark (the near-black chrome ladder). The dark one is `.sf-on-dark`, the
+ * storefront's own token scope, put on the SECTION by the component and
+ * following the slide on screen — so the ink, the hairlines, the buttons, the
+ * chips, the scrim and the plate all re-point together, and the page around the
+ * hero is untouched. Nothing in this file hardcodes a colour for either.
  *
  * WHAT THE STYLESHEET DOES NOT DO
- *   • It never crops the label artwork. The pack is pulled out of the cover
+ *   • It never crops the card artwork. The pack is pulled out of the cover
  *     photograph by the Cloudinary crop rectangle and padded to the ratio
  *     (`c_pad,b_auto`); CSS only ever contains it.
  *   • It never re-states a primitive. The buttons are `.sf-btn*`, the chips
@@ -35,12 +46,33 @@
   --sf-hero-chrome: 100px;
   --sf-hero-parallax-x: 0px;
   --sf-hero-parallax-y: 0px;
+  /* How wide the card is allowed to be. Re-pointed per breakpoint AND per
+     composition (a card centred under its copy is not the same object as one
+     filling half a spread), and read once by `.media` — which is what lets the
+     height budget below bound the same value without restating six rules. */
+  --sf-hero-card: 420px;
+  /* What the band spends on everything BUT the card: the slide's own padding,
+     the control rail and its padding. Subtracted from the viewport to keep a
+     full-screen hero actually full-screen — see `.heightStandard .media`. */
+  --sf-hero-rail: 220px;
+  /* The plate under the copy, as a fraction. Overwritten per slide by
+     `heroSlideVars()`; declared here so a slide rendered without it is unlit
+     rather than opaque. */
+  --sf-hero-panel: 0;
 
   position: relative;
-  display: flex;
-  align-items: center;
-  padding-top: var(--sf-space-6);
-  padding-bottom: var(--sf-space-12);
+  display: grid;
+  /* The stage takes the slack, the rail sits on the floor of the band. ONE
+     COLUMN, STATED, for the same reason the stage states its own: an implicit
+     `auto` track is sized from its items' max-content and may overflow its
+     container, and the items here each hold a 1280px `.sf-container`. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  /* The band paints its own ground, so the dark theme is a real dark band on a
+     cream page rather than light type on cream. On the light theme this is the
+     page's own colour, which costs nothing and lets the two cross-fade. */
+  background-color: var(--sf-color-bg);
+  transition: background-color var(--sf-duration-slow) var(--sf-ease);
   /* The lamps bleed past their boxes by design; a full-width section that let
      that bleed through would scroll the document sideways (DESIGN_SYSTEM §6).
      `clip`, not `hidden`: no scroll container, so sticky still works inside. */
@@ -59,27 +91,71 @@
   pointer-events: none;
 }
 
+/* ─── How tall the band is ─────────────────────────────────────────────────
+   A SECTION decision, because the slides share one stage: the tallest slide
+   already sets the floor, and these raise it. `auto` is that floor on its own.
+   The two full-screen answers are stated at 769px and up — a phone's viewport
+   is shorter than the card plus its copy, so a `100svh` floor there would only
+   ever be the content height with dead air under it. */
+
+.heightAuto {
+  min-height: 0;
+}
+
+@media (min-width: 769px) {
+  .heightCompact {
+    min-height: min(72vh, 640px);
+    min-height: min(72svh, 640px);
+  }
+
+  .heightStandard {
+    /* svh first with a vh fallback underneath, so a browser without the small
+       viewport unit still gets a full-height hero rather than none. */
+    min-height: calc(100vh - var(--sf-hero-chrome));
+    min-height: calc(100svh - var(--sf-hero-chrome));
+  }
+
+  /* Taller than the screen on purpose: an editorial poster wants the visitor to
+     scroll INTO it. `max()` rather than a flat figure so a short laptop gets a
+     genuinely tall band instead of one that happens to fit. */
+  .heightTall {
+    min-height: max(calc(100vh - var(--sf-hero-chrome)), 860px);
+    min-height: max(calc(100svh - var(--sf-hero-chrome)), 860px);
+  }
+}
+
+/* ─── The two grounds ─────────────────────────────────────────────────────
+   The colour work is NOT here: `.sf-on-dark` (theme/storefront-tokens.css) is
+   the storefront's own dark token scope and the component puts it on the
+   section, so the ink, the hairlines, the buttons, the chips, the scrim and the
+   plate all re-point together. These two classes carry only what a token set
+   cannot: the weight of the edges the controls wear over a photograph, which is
+   the one thing that is not a colour swap — a warm drop shadow separates a
+   button from a PALE frame and is invisible on a dark one, where the light ring
+   has to do the work instead. */
+
+.themeLight {
+  color-scheme: light;
+}
+
+.themeDark .slideOnArt {
+  --sf-hero-control-lift: 0 1px 2px rgba(0, 0, 0, 0.5),
+    0 12px 30px rgba(0, 0, 0, 0.42);
+  --sf-hero-control-ring: 0 0 0 1px rgba(247, 243, 234, 0.26);
+  --sf-hero-mark-lift: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
 /* ─── The backdrop ─────────────────────────────────────────────────────────
-   One layer per slide, crossfaded with the plate, behind everything. Rendered
+   One layer per slide, crossfaded with the slide, behind everything. Rendered
    only where a merchant uploaded a picture — a hero with no artwork has no
-   backdrop element at all and opens on the page's own ground, as it always
-   did. */
+   backdrop element at all and opens on the band's own ground. */
 
 .backdrop {
   position: absolute;
-  /* NO UPWARD BLEED. The picture used to start at `-1 * --sf-hero-chrome`,
-     reaching the top of the page behind a masthead that was transparent over
-     the hero — without it the image began on a hard line under the header and
-     read as a banner dropped into the page.
-
-     The masthead is not transparent any more. It is the chrome: a solid
-     near-black bar carrying the golden lockup over a cream page, and the
-     announcement band above it is the same. So the bleed no longer passes
-     behind anything — it passes UNDER the band, which is only 36px tall and is
-     not part of the header's stacking context, and paints a cream-scrimmed
-     slice of the photograph across it. (It always did; while the whole
-     storefront was near-black, a near-black scrim over a near-black band was
-     invisible.) The hero now starts where the hero starts. */
+  /* NO UPWARD BLEED. The masthead is the chrome — a solid near-black bar
+     carrying the golden lockup — so a bleed under it would only paint a
+     scrimmed slice of the photograph across the 36px announcement band above
+     it. The hero starts where the hero starts. */
   top: 0;
   right: 0;
   bottom: 0;
@@ -112,7 +188,7 @@
 }
 
 /* `transition: "none"` in the hero config, and reduced motion, both land here —
-   the same contract `.stageInstant` has for the plate. */
+   the same contract `.heroInstant` has for the slides. */
 .backdropInstant .backdropLayer {
   transition: none;
 }
@@ -132,164 +208,190 @@
   object-position: var(--sf-hero-bg-position);
 }
 
-/* THE SCRIM — three grounds in one element, so a photograph can never cost the
-   copy its contrast (WCAG 1.4.3):
-     1. a short FIXED wash at the top edge — it no longer has a transparent
-        masthead to serve (the chrome is opaque now), and it stays because it
-        softens the seam where the near-black bar meets the photograph;
-     2. the directional one over the copy — the foot of the frame on a phone,
-        the left column from the tablet up — at the admin's own strength;
-     3. a flat wash across the whole picture, at a little over half that
-        strength, which is what keeps the plate side legible too.
-   Every alpha is a multiple of `--sf-hero-bg-overlay`, so the admin's slider
-   moves all of it together and 0 really is "no scrim at all". */
+/* THE SCRIM — the veil over the whole picture, and nothing more.
+     1. a short wash at the top edge, which softens the seam where the solid
+        near-black masthead meets the photograph. It keeps a small FIXED
+        component (0.2) so the seam is served even at a scrim of zero, and
+        grows with the admin's slider from there;
+     2. a flat wash across the whole frame at the admin's own strength;
+     3. a soft lift off the bottom edge, so the control rail always has a ground.
+   It is deliberately NOT directional any more. The old build leaned the scrim
+   towards wherever the copy was — the foot of the frame on a phone, the left
+   column on a desktop — which only works while the copy is always in the same
+   place. The copy now carries its own plate (`.panelScrim` and its siblings),
+   which is both layout-aware and automatic, so the picture gets an even veil
+   and the words get their own ground. */
 .backdropScrim {
   position: absolute;
   inset: 0;
   background-color: rgba(
     var(--sf-color-bg-rgb),
-    calc(var(--sf-hero-bg-overlay) * 0.55)
+    calc(var(--sf-hero-bg-overlay) * 0.86)
   );
   background-image: linear-gradient(
       to bottom,
-      rgba(var(--sf-color-bg-rgb), 0.6) 0%,
+      rgba(var(--sf-color-bg-rgb), calc(0.2 + var(--sf-hero-bg-overlay) * 0.4)) 0%,
       rgba(var(--sf-color-bg-rgb), 0) 24%
     ),
     linear-gradient(
       to top,
-      rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.95)) 0%,
-      rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.45)) 58%,
-      rgba(var(--sf-color-bg-rgb), 0) 100%
+      rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.45)) 0%,
+      rgba(var(--sf-color-bg-rgb), 0) 40%
     );
 }
 
 /* With a picture behind it the gold ground light reads as a lens flare rather
-   than as light, and the display type wants an edge of its own. Written as a
-   compound selector because the desktop rule that turns the lamp ON is further
-   down the file: this has to win on specificity, not on order. */
+   than as light. Written as a compound selector because the desktop rule that
+   turns the lamp ON is further down the file: this has to win on specificity,
+   not on order. */
 .hero.heroBackdrop .groundGlow {
   display: none;
 }
 
-.heroBackdrop .eyebrow,
-.heroBackdrop .headline,
-.heroBackdrop .subtext,
-.heroBackdrop .brandTagline {
-  text-shadow: 0 2px 18px rgba(var(--sf-color-bg-rgb), 0.55);
-}
-
-/* THE CONTROLS OVER A PHOTOGRAPH ─────────────────────────────────────────────
-   The words above survive any frame on that text-shadow. The CONTROLS under
-   them do not, because two of the three are made of glass and the third is a
-   flat ochre:
-
-     • the trust marks are a 55%-alpha hairline and gold ink on NOTHING, so on
-       a busy frame the pill has no edge and the ink has no ground — they are
-       the first thing to disappear, and they disappear completely;
-     • `Add to Cart` fills with `--sf-glass-bg`, 66% white, so the picture reads
-       straight through the button and takes the espresso label with it;
-     • the `Explore …` fill IS opaque, but it is antique gold on a range whose
-       photography is all warm browns and golds, and a shape the same colour as
-       its ground is not a button.
-
-   And the admin owns BOTH free variables: which picture, and a scrim that goes
-   all the way to zero. So no stronger default scrim could fix this — whatever
-   this stylesheet leans on, the next upload is entitled to undo. The controls
-   have to carry their own contrast instead, so over a backdrop they stop being
-   glass: a solid ground, a full-strength hairline, and the pair of edges below
-   — a warm lift for a PALE frame, a light ring for a DARK one, because the
-   picture is one the stylesheet has never seen and either may be underneath.
-
-   Outside every media query on purpose. The phone is handed the same picture
-   (often its own file, at the admin's `mobileUrl`) under the same three
-   controls, and its scrim is the softest of the three, so the phone, the tablet
-   and the desktop all take this. */
-.hero.heroBackdrop {
-  /* Warm ink, not neutral black: the same family the shadow tokens are mixed
-     from, so this reads as light falling on cream rather than as a UI drop
-     shadow borrowed from another system. */
-  --sf-hero-control-lift: 0 1px 2px rgba(20, 14, 6, 0.26),
-    0 10px 26px rgba(20, 14, 6, 0.26);
-  --sf-hero-control-ring: 0 0 0 1px rgba(255, 252, 245, 0.4);
-  /* A mark is not a control. Same move, a quarter of the weight, so the three
-     badges do not come forward as three more buttons. */
-  --sf-hero-mark-lift: 0 2px 10px rgba(20, 14, 6, 0.2);
-}
-
-.hero.heroBackdrop .cta {
-  box-shadow: var(--sf-hero-control-ring), var(--sf-hero-control-lift);
-}
-
-/* `Add to Cart` — the glass becomes a card ground and the hairline goes to full
-   gold. That is what puts the espresso label back on the surface it was
-   measured against — 17.5:1, rather than whatever a photograph leaves of it
-   (WCAG 1.4.3). */
-.hero.heroBackdrop .cta:global(.sf-btn--outline-gold) {
-  background-color: var(--sf-color-surface);
-  border-color: var(--sf-color-gold);
-  color: var(--sf-color-text);
-}
-
-/* Hover and focus are restated because the two rules above out-specify the
-   primitives' own `.sf-btn--primary:hover` and `.sf-btn:focus-visible`, and
-   both set the same property. The hover tint has to be opaque here for the
-   same reason the resting one is; the focus rule matches the hover rule's
-   specificity and follows it, which is exactly how the primitives keep the
-   champagne ring on a button that is hovered and focused at once. */
-.hero.heroBackdrop .cta:global(.sf-btn--primary):hover {
-  box-shadow: var(--sf-hero-control-ring), var(--sf-hero-control-lift),
-    0 8px 24px color-mix(in srgb, var(--sf-color-gold) 25%, transparent);
-}
-
-.hero.heroBackdrop .cta:global(.sf-btn--outline-gold):hover {
-  background-color: var(--sf-color-surface-hover);
-  border-color: var(--sf-color-gold-deep);
-}
-
-.hero.heroBackdrop .cta:global(.sf-btn--primary):focus-visible,
-.hero.heroBackdrop .cta:global(.sf-btn--outline-gold):focus-visible {
-  box-shadow: var(--sf-shadow-focus), var(--sf-hero-control-lift);
-}
-
-/* The trust marks. `.sf-chip` rather than the module's own class because the
-   chip is a primitive the hero composes, and this is the one place the badges
-   are asked to sit on a photograph.
-
-   The ground is the PAGE's cream, not the card white the button above takes:
-   cream is the colour `.trust` was drawn on (its own `background: transparent`
-   over this hero's ground), so this is the mark put back on the ground it was
-   designed for rather than restyled. It also keeps the hierarchy the row needs
-   — three near-white pills under a near-white `Add to Cart` would read as a
-   second row of buttons. The gold ink is untouched: 5.5:1 here, and it is the
-   missing GROUND, not the ink, that this fixes. */
-.hero.heroBackdrop .badges :global(.sf-chip) {
-  background-color: var(--sf-color-bg);
-  border-color: var(--sf-color-gold);
-  box-shadow: var(--sf-hero-mark-lift);
-}
-
-/* Desktop-only ground light behind the copy column — faint, and NOT breathing:
-   the plate owns the single breathing glow above the fold. */
+/* Desktop-only ground light behind the copy — faint, and NOT breathing: the
+   card owns the single breathing glow above the fold. It follows the active
+   slide's copy, so a right-hand composition is not lit from the left. */
 .hero .groundGlow {
   display: none;
   position: absolute;
   top: 0;
-  left: 0;
   width: 46%;
   height: 62%;
   /* Below GlowWrap's own 0.15 floor, which is why it is set here rather than
      passed as `intensity`: this is ground light, not a lamp on an object. */
   --sf-glow-opacity: 0.12;
   pointer-events: none;
+  transition: left var(--sf-duration-slow) var(--sf-ease);
 }
 
-.inner {
+.glowStart {
+  left: 0;
+}
+
+.glowCenter {
+  left: 27%;
+}
+
+.glowEnd {
+  left: 54%;
+}
+
+/* ─── The stage and its slides ─────────────────────────────────────────────── */
+
+.stage {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1fr;
+  /* ONE COLUMN, STATED. Left implicit, the stage's single track is an `auto`
+     track — and an `auto` track is sized from its items' max-content and is
+     allowed to OVERFLOW its container. Every slide holds an `.sf-container`
+     with a 1100px max-width, so the track resolved to 1093px inside a 390px
+     phone and the copy ran off the side of the band (hidden by `overflow-x:
+     clip`, which is worse than visible: the words were simply gone). `1fr`
+     against a definite width is the fix, and `minmax(0, …)` keeps a long
+     unbroken word from re-inflating it. */
+  grid-template-columns: minmax(0, 1fr);
+  /* A vertical drag is always the page's; only a horizontal one is ours. */
+  touch-action: pan-y;
+  min-width: 0;
+}
+
+.slide {
+  /* EVERY slide in the same cell: the stage is as tall as the tallest of them
+     and nothing below the hero moves when the slide changes. */
+  grid-area: 1 / 1;
+  display: flex;
   align-items: center;
-  gap: var(--sf-space-8);
+  min-width: 0;
+  padding-top: var(--sf-space-6);
+  padding-bottom: var(--sf-space-8);
+  visibility: hidden;
+  /* An off-screen slide is not merely transparent: `visibility` is what takes
+     it out of the tab order and out of the accessibility tree. It cannot be
+     interpolated, so it is switched at the END of the outgoing slide's fade
+     (the delay here) and at the START of the incoming one's (the rule below) —
+     which is what lets the two fade at all while only one of them is ever
+     reachable. `pointer-events` follows it so a button on the way out cannot
+     be clicked during the handover. */
+  pointer-events: none;
+  transition: visibility 0s linear var(--sf-duration-slow);
+}
+
+.slideActive {
+  visibility: visible;
+  pointer-events: auto;
+  transition: visibility 0s;
+}
+
+/* ─── THE HANDOVER ────────────────────────────────────────────────────────
+   The two halves of a slide change differently, and deliberately.
+
+   THE COPY FADES THROUGH. Two headlines stacked in one grid cell at 50% each
+   are not a dissolve, they are two headlines — display type is opaque enough to
+   read straight through itself, so a true crossfade of the words is unreadable
+   for a third of a second on every advance. So the outgoing copy is GONE before
+   the incoming copy starts: a fast exit, then a delayed, longer entrance. The
+   picture behind it is briefly the whole slide, which is the moment the band
+   was composed for anyway.
+
+   THE CARD CROSSFADES, both at full duration and overlapping, because two
+   dissolving photographs read as one photograph becoming another — which is the
+   effect this hero has always had between two packs.
+
+   Both are expressed as fractions of `--sf-duration-slow`, so the token layer
+   zeroing that under `prefers-reduced-motion` stops all of it at once, and the
+   `visibility` window above is always the longest of the three. */
+.copy {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity calc(var(--sf-duration-slow) * 0.34) var(--sf-ease),
+    transform calc(var(--sf-duration-slow) * 0.34) var(--sf-ease);
+}
+
+.slideActive .copy {
+  opacity: 1;
+  transform: none;
+  transition: opacity calc(var(--sf-duration-slow) * 0.6) var(--sf-ease)
+      calc(var(--sf-duration-slow) * 0.34),
+    transform calc(var(--sf-duration-slow) * 0.6) var(--sf-ease)
+      calc(var(--sf-duration-slow) * 0.34);
+}
+
+/* `transition: "none"` in the hero config, and reduced motion, both land here. */
+.heroInstant .slide,
+.heroInstant .slide .copy,
+.heroInstant .slide .media {
+  transition: none;
+}
+
+.verticalTop {
+  align-items: flex-start;
+}
+
+.verticalCenter {
+  align-items: center;
+}
+
+.verticalBottom {
+  align-items: flex-end;
+}
+
+/* The composition's grid. One column on a phone, whatever the preset asks for
+   from the tablet up. `minmax(0, …)` on every track: a long unbroken word in a
+   headline must not be able to widen a column past its share. */
+.slideInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sf-space-7);
+  width: 100%;
+  min-width: 0;
+}
+
+/* The card leads on a phone, whatever the desktop composition is: it is the
+   hook, and the copy reads better under it than beside a 1:1 plate. */
+.slide .media {
+  order: -1;
 }
 
 /* ─── Copy ─────────────────────────────────────────────────────────────── */
@@ -299,79 +401,109 @@
   flex-direction: column;
   gap: var(--sf-space-5);
   min-width: 0;
+  /* The plate under the copy is a `::before` at a negative z-index; isolating
+     here keeps it inside this column's own stacking context, behind the words
+     and above the picture — the same device `.sf-glow` uses for its lamp. */
+  isolation: isolate;
 }
 
-/* The copy block is exactly as tall as its tallest slide, because the sizer
-   (every slide's copy, invisible, all in one grid cell) is the only thing in
-   its flow; the visible copy is laid over it. Nothing below it can move when a
-   slide changes — which is the whole CLS budget of a carousel that swaps text
-   every few seconds. */
-.copyText {
-  position: relative;
-  display: grid;
-  min-width: 0;
-}
-
-.copySizer {
-  display: grid;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.copySizer > * {
-  grid-area: 1 / 1;
-}
-
-.copyBlock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sf-space-5);
-  min-width: 0;
-}
-
-/* Eyebrow, headline, price, subtext — the part that becomes a live region. */
+/* Eyebrow, headline, price, subtext. */
 .copyLines {
   display: flex;
   flex-direction: column;
   gap: var(--sf-space-4);
   min-width: 0;
+  width: 100%;
 }
 
-/* The one real copy block sits on top of the sizer. */
-.copyText > .copyBlock {
+.alignStart {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.alignCenter {
+  align-items: center;
+  text-align: center;
+}
+
+.alignEnd {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* The column's own alignment cascades to the lines inside it, so a centred
+   composition centres its eyebrow, headline, price and subtext together. */
+.alignStart .copyLines {
+  align-items: flex-start;
+}
+
+.alignCenter .copyLines {
+  align-items: center;
+}
+
+.alignEnd .copyLines {
+  align-items: flex-end;
+}
+
+/* ─── THE GROUND UNDER THE COPY ───────────────────────────────────────────
+   The fix for type on an unscrimmed photograph. The artwork is the merchant's
+   and so is the scrim — which goes all the way to zero — so no default veil
+   over the PICTURE can guarantee the words. These give the words their own
+   ground instead, at a strength `resolveHeroPanel()` computes from how much
+   work the picture's scrim and blur are already doing: strong at a scrim of 0,
+   a whisper at 55, absent by 80.
+
+   Every one of them mixes from `--sf-color-bg-rgb`, so the plate is cream on
+   the light theme and espresso on the dark one without a second rule. */
+
+/* A feathered bloom rather than a box: it has no edge to read as a panel, so a
+   picture chosen for its composition is still the thing you see. */
+.panelScrim::before {
+  content: "";
   position: absolute;
-  inset: 0;
+  inset: calc(-1 * var(--sf-space-6)) calc(-1 * var(--sf-space-7));
+  z-index: -1;
+  border-radius: var(--sf-radius-xl);
+  background: radial-gradient(
+    124% 104% at 50% 50%,
+    rgba(var(--sf-color-bg-rgb), var(--sf-hero-panel)) 0%,
+    rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-panel) * 0.74)) 48%,
+    rgba(var(--sf-color-bg-rgb), 0) 100%
+  );
+  pointer-events: none;
 }
 
-/* BACKGROUND ONLY. The merchant asked for this slide to be its picture and
-   nothing else, so everything the copy column draws steps out of the way —
-   `visibility: hidden`, which also takes the two CTAs out of the tab order, and
-   which the SIZER underneath makes free: the column keeps its height, so
-   nothing below the hero moves when the slide changes.
-
-   The headline is the exception. It is the page's only `h1`, and a page that
-   loses its heading between two slides is a document that changes shape under a
-   screen reader. So it is hidden the way `.sf-visually-hidden` hides things —
-   off-screen but still spoken — rather than with `visibility`, which would take
-   it out of the accessibility tree along with the rest. */
-.copyBackdropOnly > .copyLines > *:not(.headline),
-.copyBackdropOnly > .actions,
-.copyBackdropOnly > .badges {
-  visibility: hidden;
+/* A real pane of the storefront's glass, behind the words. */
+.panelGlass,
+.panelSolid {
+  padding: var(--sf-space-7);
+  border-radius: var(--sf-radius-lg);
+  background-color: rgba(var(--sf-color-bg-rgb), var(--sf-hero-panel));
 }
 
-.copyBackdropOnly .headline {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  min-height: 0;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
+.panelGlass {
+  border: 1px solid var(--sf-glass-border);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+  backdrop-filter: blur(18px) saturate(1.08);
+  box-shadow: var(--sf-shadow-1);
+}
+
+/* Without backdrop-filter the pane would simply be a translucent rectangle with
+   the picture reading straight through it; take it to the ground colour. */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .panelGlass {
+    background-color: rgba(
+      var(--sf-color-bg-rgb),
+      calc(0.4 + var(--sf-hero-panel) * 0.6)
+    );
+  }
+}
+
+.panelSolid {
+  border: 1px solid var(--sf-color-border);
+  box-shadow: var(--sf-shadow-2);
 }
 
 .eyebrow {
@@ -380,44 +512,19 @@
 
 .headline {
   margin: 0;
-  max-width: 12ch;
+  /* A display measure, not a hard cap: `ch` keeps the line length editorial at
+     every type size, and the copy column's own width takes over on a phone. */
+  max-width: 16ch;
   color: var(--sf-color-text);
   font-family: var(--sf-font-display);
   font-size: var(--sf-text-4xl);
   font-weight: 500;
   line-height: var(--sf-leading-display);
   letter-spacing: var(--sf-tracking-tight);
-  /* Three lines is the worst case across the eight seeded headlines at every
-     breakpoint (measured 360 → 1440), so the box is reserved for exactly three
-     — computed from the leading token rather than written as a flat em, because
-     a reservation that is a hair under one full line is a layout shift with
-     extra steps: a two-line slide and a three-line slide must put the CTAs in
-     the same place, or the buttons move under a thumb mid-carousel. */
-  min-height: calc(3em * var(--sf-leading-display));
-  /* The slack in that reservation collects ABOVE the words, not below them: a
-     two-line headline then sits tight against its price and subtext, and the
-     extra air falls under the eyebrow where editorial space belongs. */
-  display: flex;
-  align-items: flex-end;
-}
-
-.skeletonLine {
-  display: block;
-  width: 82%;
-  height: 0.7em;
-  border-radius: var(--sf-radius-sm);
 }
 
 .price {
   margin: 0;
-  /* An amount and the "Price on launch" chip are not the same height, and the
-     range mixes both. Reserve the chip's 36px so the swap costs nothing.
-     PriceBlock is already a COLUMN flex container, so it is `justify-content`
-     that centres it in the reserved height — `align-items: center` would have
-     pushed the amount into the middle of the copy column. */
-  min-height: 36px;
-  justify-content: center;
-  align-items: flex-start;
 }
 
 .subtext {
@@ -426,11 +533,6 @@
   color: var(--sf-color-text-secondary);
   font-size: var(--sf-text-base);
   line-height: var(--sf-leading-relaxed);
-  /* Two lines on a wide column, three on a phone — the measured worst case at
-     each. This floor only has to carry the moment BEFORE the products land
-     (the sizer above owns every frame after it), so it is set to the height the
-     copy actually resolves to rather than to a round number. */
-  min-height: calc(3em * var(--sf-leading-relaxed));
 }
 
 /* ─── CTAs ─────────────────────────────────────────────────────────────── */
@@ -439,6 +541,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sf-space-3);
+  width: 100%;
   /* Full-width, but only up to a readable measure: a 728px-wide pill at the top
      of the mobile bracket is a banner, not a button. */
   max-width: 30rem;
@@ -458,22 +561,228 @@
   list-style: none;
 }
 
+.alignCenter .badges,
+.alignCenter .actions {
+  justify-content: center;
+}
+
+.alignEnd .badges,
+.alignEnd .actions {
+  justify-content: flex-end;
+}
+
+/* ─── THE CONTROLS OVER A PHOTOGRAPH ──────────────────────────────────────
+   The words above survive any frame on their plate and their text shadow. The
+   CONTROLS under them do not, because two of the three are made of glass and
+   the third is a flat ochre:
+
+     • the trust marks are a 55%-alpha hairline and gold ink on NOTHING, so on
+       a busy frame the pill has no edge and the ink has no ground;
+     • `Add to Cart` fills with `--sf-glass-bg`, so the picture reads straight
+       through the button and takes the espresso label with it;
+     • the `Explore …` fill IS opaque, but it is antique gold on a range whose
+       photography is all warm browns and golds, and a shape the same colour as
+       its ground is not a button.
+
+   And the admin owns BOTH free variables: which picture, and a scrim that goes
+   all the way to zero. So the controls carry their own contrast: over a
+   backdrop they stop being glass — a solid ground, a full-strength hairline,
+   and the pair of edges below (a warm lift for a PALE frame, a light ring for a
+   DARK one, because the picture is one the stylesheet has never seen and either
+   may be underneath).
+
+   Outside every media query on purpose: the phone is handed the same picture
+   under the same controls. */
+.slideOnArt {
+  /* Warm ink, not neutral black: the same family the shadow tokens are mixed
+     from, so this reads as light falling on the page rather than as a UI drop
+     shadow borrowed from another system. */
+  --sf-hero-control-lift: 0 1px 2px rgba(20, 14, 6, 0.26),
+    0 10px 26px rgba(20, 14, 6, 0.26);
+  --sf-hero-control-ring: 0 0 0 1px rgba(255, 252, 245, 0.4);
+  /* A mark is not a control. Same move, a quarter of the weight, so the three
+     badges do not come forward as three more buttons. */
+  --sf-hero-mark-lift: 0 2px 10px rgba(20, 14, 6, 0.2);
+}
+
+.slideOnArt .eyebrow,
+.slideOnArt .headline,
+.slideOnArt .subtext {
+  text-shadow: 0 2px 18px rgba(var(--sf-color-bg-rgb), 0.55);
+}
+
+.heroBackdrop .brandTagline {
+  text-shadow: 0 2px 18px rgba(var(--sf-color-bg-rgb), 0.55);
+}
+
+.slideOnArt .cta,
+.heroBackdrop .brandInner .cta {
+  box-shadow: var(--sf-hero-control-ring), var(--sf-hero-control-lift);
+}
+
+/* `Add to Cart` and the poster's secondary button — the glass becomes a card
+   ground and the hairline goes to full gold. That is what puts the espresso
+   label back on the surface it was measured against — 17.5:1, rather than
+   whatever a photograph leaves of it (WCAG 1.4.3). */
+.slideOnArt .cta:global(.sf-btn--outline-gold) {
+  background-color: var(--sf-color-surface);
+  border-color: var(--sf-color-gold);
+  color: var(--sf-color-text);
+}
+
+/* Hover and focus are restated because the two rules above out-specify the
+   primitives' own `.sf-btn--primary:hover` and `.sf-btn:focus-visible`, and
+   both set the same property. The hover tint has to be opaque here for the same
+   reason the resting one is; the focus rule matches the hover rule's
+   specificity and follows it, which is exactly how the primitives keep the
+   champagne ring on a button that is hovered and focused at once. */
+.slideOnArt .cta:global(.sf-btn--primary):hover {
+  box-shadow: var(--sf-hero-control-ring), var(--sf-hero-control-lift),
+    0 8px 24px color-mix(in srgb, var(--sf-color-gold) 25%, transparent);
+}
+
+.slideOnArt .cta:global(.sf-btn--outline-gold):hover {
+  background-color: var(--sf-color-surface-hover);
+  border-color: var(--sf-color-gold-deep);
+}
+
+.slideOnArt .cta:global(.sf-btn--primary):focus-visible,
+.slideOnArt .cta:global(.sf-btn--outline-gold):focus-visible {
+  box-shadow: var(--sf-shadow-focus), var(--sf-hero-control-lift);
+}
+
+/* The trust marks. `.sf-chip` rather than the module's own class because the
+   chip is a primitive the hero composes, and this is the one place the badges
+   are asked to sit on a photograph. The ground is the BAND's own colour, which
+   is the colour `.trust` was drawn on — so this is the mark put back on the
+   ground it was designed for rather than restyled. The gold ink is untouched:
+   it is the missing GROUND, not the ink, that this fixes. */
+.slideOnArt .badges :global(.sf-chip) {
+  background-color: var(--sf-color-bg);
+  border-color: var(--sf-color-gold);
+  box-shadow: var(--sf-hero-mark-lift);
+}
+
+/* ─── The card ─────────────────────────────────────────────────────────── */
+
+.media {
+  position: relative;
+  width: 80vw;
+  max-width: var(--sf-hero-card);
+  margin-inline: auto;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity var(--sf-duration-slow) var(--sf-ease),
+    transform var(--sf-duration-slow) var(--sf-ease);
+}
+
+.slideActive .media {
+  opacity: 1;
+  transform: none;
+}
+
+/* A mouse drag across the card is a swipe, so the browser's own image drag —
+   which fires pointercancel and leaves a ghost under the cursor — is off. */
+.media img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* The lamp pair behind the card — pink off the top-right shoulder, violet off
+   the bottom-left. Only the ACTIVE slide breathes (the component passes
+   `breathe` on that slide alone), so a carousel of eight cards runs one
+   animation rather than eight. */
+.media .mediaGlow {
+  height: 100%;
+  transform: translate3d(
+    var(--sf-hero-parallax-x),
+    var(--sf-hero-parallax-y),
+    0
+  );
+  transition: transform var(--sf-transition-fast);
+}
+
+/* `.sf-plate` brings the surface, the hairline and `aspect-ratio: 1`; the layer
+   already has the right box, so the plate fills it instead. */
+.media .plate {
+  height: 100%;
+  border-radius: var(--sf-radius-xl);
+  box-shadow: var(--sf-shadow-2);
+}
+
+/* ─── The first paint, before the catalogue answers ───────────────────────── */
+
+.skeletonInner {
+  grid-area: 1 / 1;
+  display: grid;
+  align-items: center;
+  gap: var(--sf-space-7);
+  width: 100%;
+  padding-top: var(--sf-space-6);
+  padding-bottom: var(--sf-space-8);
+}
+
+.skeletonCopy {
+  display: block;
+  width: min(100%, 26rem);
+  height: 12rem;
+  border-radius: var(--sf-radius-lg);
+}
+
+.skeletonPlate {
+  display: block;
+  order: -1;
+  width: 80vw;
+  max-width: 420px;
+  margin-inline: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--sf-radius-xl);
+}
+
 /* ─── The control rail (HeroIndex) ─────────────────────────────────────── */
+
+/* Its own row on the floor of the band, aligned with whichever composition is
+   on screen — so it reads as part of the slide rather than as furniture bolted
+   to one corner. */
+.railWrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  padding-bottom: var(--sf-space-8);
+}
+
+.railWrap.alignStart {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.railWrap.alignCenter {
+  justify-content: center;
+  align-items: flex-start;
+  text-align: center;
+}
+
+.railWrap.alignEnd {
+  justify-content: flex-end;
+  align-items: flex-start;
+  text-align: left;
+}
 
 .rail {
   display: flex;
   flex-direction: column;
   gap: var(--sf-space-4);
   min-width: 0;
-  padding-top: var(--sf-space-2);
-  /* The rail is the one part of the copy column the sizer cannot measure — it
-     does not exist until the products do. Its height is pure geometry though:
-     the padding, one 44px control row, the gap, one 44px row of names and the
+  max-width: 100%;
+  /* Pure geometry: one 44px control row, the gap, one 44px row of names and the
      rail's own scroll padding. Reserving it means the page below the hero does
      not jump when the index arrives. */
   min-height: calc(
-    var(--sf-space-2) + var(--sf-tap-target) + var(--sf-space-4) +
-      var(--sf-tap-target) + var(--sf-space-1)
+    var(--sf-tap-target) + var(--sf-space-4) + var(--sf-tap-target) +
+      var(--sf-space-1)
   );
 }
 
@@ -481,6 +790,16 @@
   display: flex;
   align-items: center;
   gap: var(--sf-space-3);
+}
+
+.alignCenter .railControls,
+.alignCenter .names {
+  justify-content: center;
+}
+
+.alignEnd .railControls,
+.alignEnd .names {
+  justify-content: flex-end;
 }
 
 /* 44px glass circles — the arrows and the pause button are the same object. */
@@ -512,6 +831,14 @@
 .stepper:focus-visible {
   outline: none;
   box-shadow: var(--sf-shadow-focus);
+}
+
+/* Over a photograph the glass circles lose their edge for the same reason the
+   buttons do, so they take a real ground and the light ring with them. */
+.heroBackdrop .stepper {
+  background-color: var(--sf-color-surface);
+  border-color: var(--sf-color-border-strong);
+  box-shadow: 0 2px 10px rgba(20, 14, 6, 0.22);
 }
 
 .counter {
@@ -564,8 +891,8 @@
   }
 }
 
-/* The product-name index. A scrolling, snapping rail on a phone; two wrapped
-   rows once there is room for them. */
+/* The slide-name index. A scrolling, snapping rail on a phone; two wrapped rows
+   once there is room for them. */
 .names {
   display: flex;
   gap: var(--sf-space-2);
@@ -632,103 +959,29 @@
   transform: scaleX(1);
 }
 
-/* ─── Media stage ──────────────────────────────────────────────────────── */
-
-.stage {
-  order: -1;
-  position: relative;
-  width: 80vw;
-  max-width: 420px;
-  margin-inline: auto;
-  aspect-ratio: 1 / 1;
-  /* A vertical drag is always the page's; only a horizontal one is ours. */
-  touch-action: pan-y;
-  /* Declared here rather than on `.stageBackdropOnly` so the plate fades BOTH
-     ways: a class that carries its own transition has none left to run with
-     when it is removed. */
-  transition: opacity var(--sf-duration-slow) var(--sf-ease);
+/* Over a photograph the muted ink and the hairline both thin out; the labels
+   take the text shadow the copy has and the active one goes to full ink. */
+.heroBackdrop .name {
+  text-shadow: 0 1px 10px rgba(var(--sf-color-bg-rgb), 0.6);
 }
 
-/* BACKGROUND ONLY: the plate and its lamp give the frame up to the picture.
-   `opacity`, not `visibility` — this box is the swipe target, and a hidden
-   element stops receiving the pointer events a phone changes slides with. */
-.stageBackdropOnly {
-  opacity: 0;
-}
-
-/* A mouse drag across the card is a swipe, so the browser's own image drag —
-   which fires pointercancel and leaves a ghost under the cursor — is off. */
-.stage img {
-  -webkit-user-drag: none;
-  user-select: none;
-}
-
-/* The lamp pair behind the plate — pink off the top-right shoulder, violet off
-   the bottom-left. ONE wrapper for the whole stack rather than one per layer:
-   the layers are identically sized and only one is ever opaque, so eight lamps
-   would be eight blurred compositing layers to paint the same picture — and the
-   breathe loop would restart on every slide change. */
-.stage .stageGlow {
-  height: 100%;
-  transform: translate3d(
-    var(--sf-hero-parallax-x),
-    var(--sf-hero-parallax-y),
-    0
-  );
-  transition: transform var(--sf-transition-fast);
-}
-
-.stageSkeleton {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: var(--sf-radius-lg);
-}
-
-.layer {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transform: scale(1.02);
-  transition: opacity var(--sf-duration-slow) var(--sf-ease),
-    transform var(--sf-duration-slow) var(--sf-ease);
-}
-
-.layerActive {
-  opacity: 1;
-  transform: none;
-}
-
-/* `transition: "none"` in the hero config, and reduced motion, both land here. */
-.stageInstant,
-.stageInstant .layer {
-  transition: none;
-}
-
-.stageInstant .layer {
-  transform: none;
-}
-
-/* `.sf-plate` brings the surface, the hairline and `aspect-ratio: 1`; the layer
-   already has the right box, so the plate fills it instead. The slide takes the
-   primitive's own keyline again — it was briefly given a softer token of its own
-   to opt out of a firmer frame and a mat, and both of those are gone, so every
-   plate on the storefront is once more framed identically. */
-.stage .plate {
-  height: 100%;
-  border-radius: var(--sf-radius-xl);
-  box-shadow: var(--sf-shadow-2);
+.heroBackdrop .counter {
+  color: var(--sf-color-text-secondary);
+  text-shadow: 0 1px 10px rgba(var(--sf-color-bg-rgb), 0.6);
 }
 
 /* ─── The brand slide ──────────────────────────────────────────────────── */
-/* No products resolved, or the hero is switched off. Wordmark, tagline, one
-   way in — and no photography, because an offline storefront must not be the
-   one surface that invents an image. */
+/* No slides resolved, or the hero is switched off. Wordmark, tagline, one way
+   in — and no photography, because an offline storefront must not be the one
+   surface that invents an image. */
 
 .heroBrand {
+  grid-template-rows: 1fr;
   min-height: 60vh;
   min-height: 60svh;
   text-align: center;
+  align-items: center;
+  padding-block: var(--sf-space-12);
 }
 
 .brandInner {
@@ -745,8 +998,8 @@
   width: auto;
 }
 
-/* The lockup's plate. Generous padding because the artwork has no margin of
-   its own and a wordmark crowded to the edge of a card reads as a crop. */
+/* The lockup's plate. Generous padding because the artwork has no margin of its
+   own and a wordmark crowded to the edge of a card reads as a crop. */
 .brandPlate {
   padding: var(--sf-space-6) var(--sf-space-8);
   max-width: 100%;
@@ -768,54 +1021,190 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TABLET — 769px and up. The two-column split arrives, and with it the height
-   budget: the hero fills the viewport minus the chrome above it.
+   TABLET — 769px and up. The compositions arrive: there is a second column to
+   put a card in, so the presets stop collapsing.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (min-width: 769px) {
-  .hero {
-    /* svh first with a vh fallback underneath, so a browser without the small
-       viewport unit still gets a full-height hero rather than none. */
-    min-height: calc(100vh - var(--sf-hero-chrome));
-    min-height: calc(100svh - var(--sf-hero-chrome));
-    padding-bottom: var(--sf-space-16);
+  .slide {
+    padding-top: var(--sf-space-8);
+    padding-bottom: var(--sf-space-10);
   }
 
-  /* The copy has moved from the foot of the frame to the left column, so the
-     directional half of the scrim turns with it and the plate side of the
-     picture is left open. The masthead's fixed top wash is unchanged. */
-  .backdropScrim {
-    background-image: linear-gradient(
-        to bottom,
-        rgba(var(--sf-color-bg-rgb), 0.6) 0%,
-        rgba(var(--sf-color-bg-rgb), 0) 22%
-      ),
-      linear-gradient(
-        to right,
-        rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.95)) 0%,
-        rgba(var(--sf-color-bg-rgb), calc(var(--sf-hero-bg-overlay) * 0.5)) 46%,
-        rgba(var(--sf-color-bg-rgb), 0) 82%
-      );
-  }
-
-  .inner {
-    grid-template-columns: 1.05fr 1fr;
+  .slideInner {
     gap: var(--sf-space-10);
   }
 
-  .stage {
+  /* The phone's "card first" is a phone rule; from here the explicit grid
+     placement below decides where the card goes. */
+  .slide .media {
     order: 0;
     width: 100%;
-    max-width: 420px;
-    margin-inline: 0 auto;
+    margin-inline: 0;
     aspect-ratio: 4 / 5;
   }
 
+  /* THE BAND MUST NOT OUTGROW THE SCREEN. The card is the tallest thing in a
+     slide and the control rail sits under it, so a fixed card width made a
+     "full screen" hero 150px taller than the screen on a 900px laptop — the
+     CTAs fell below the fold on the one band that exists to be seen without
+     scrolling. The card is therefore bounded twice: by the composition's own
+     width above, and by the HEIGHT left over once the chrome, the slide's
+     padding and the rail have taken theirs (× 0.8, because the card is 4:5).
+     `auto` and `tall` are exempt: both are asking for a band taller than the
+     screen. */
+  .heightStandard .slide .media,
+  .heightCompact .slide .media {
+    max-width: min(
+      var(--sf-hero-card),
+      calc((100vh - var(--sf-hero-chrome) - var(--sf-hero-rail)) * 0.8)
+    );
+    max-width: min(
+      var(--sf-hero-card),
+      calc((100svh - var(--sf-hero-chrome) - var(--sf-hero-rail)) * 0.8)
+    );
+  }
+
+  .skeletonInner {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+
+  .skeletonPlate {
+    order: 0;
+    width: 100%;
+    max-width: 420px;
+    margin-inline: 0;
+    aspect-ratio: 4 / 5;
+  }
+
+  /* ---- COPY LEFT · CARD RIGHT — the classic spread ---------------------- */
+  .presetTextLeft .slideInner {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+
+  /* ---- CARD LEFT · COPY RIGHT — the spread mirrored --------------------- */
+  .presetTextRight .slideInner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  }
+
+  .presetTextRight .media {
+    margin-inline: 0 auto;
+  }
+
+  /* ---- CENTRED — words over the picture, the card beneath them ---------- */
+  .presetTextCenter .slideInner,
+  .presetPoster .slideInner {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: var(--sf-space-8);
+  }
+
+  .presetTextCenter .copy,
+  .presetPoster .copy {
+    max-width: 46rem;
+  }
+
+  .presetTextCenter,
+  .presetPoster {
+    --sf-hero-card: 340px;
+  }
+
+  /* THE CENTRED CARD IS SIZED BY ITS HEIGHT, not by its width, and it is the
+     one card that is. Every other composition puts the card BESIDE the copy, so
+     the slide is as tall as the taller of the two and a wide card costs
+     nothing. This one stacks it UNDER the copy, so its height is added to the
+     copy's — and a card sized like the others turned a full-screen band into a
+     screen and a half, with the buttons below the fold. A third of the band,
+     and the 4:5 ratio sets the width from that. */
+  .presetTextCenter .media,
+  .presetPoster .media {
+    width: auto;
+    max-width: 100%;
+    height: min(300px, calc((100vh - var(--sf-hero-chrome)) * 0.3));
+    height: min(300px, calc((100svh - var(--sf-hero-chrome)) * 0.3));
+    margin-inline: auto;
+  }
+
+  /* A centred headline is read as a block, so it is allowed a wider measure
+     than the 16ch a left-hand column wants. */
+  .presetTextCenter .headline,
+  .presetPoster .headline {
+    max-width: 26ch;
+  }
+
+  .presetTextCenter .subtext,
+  .presetPoster .subtext {
+    max-width: 56ch;
+  }
+
+  /* ---- SPLIT — the card centred, the copy either side of it ------------- */
+  .presetSplit .slideInner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr) minmax(0, 1fr);
+    gap: var(--sf-space-8);
+  }
+
+  .presetSplit {
+    --sf-hero-card: 360px;
+  }
+
+  .presetSplit .media {
+    margin-inline: auto;
+  }
+
+  .presetSplit .headline {
+    max-width: 18ch;
+  }
+
+  .presetSplit .subtext {
+    max-width: 34ch;
+  }
+
+  /* ---- EXPLICIT PLACEMENT ---------------------------------------------
+     Every column a preset defines is placed by NAME rather than left to
+     auto-placement, because which columns exist is a merchant decision: a
+     slide with its copy switched off has one child, and auto-placement would
+     put that child in column one and quietly turn "card centred" into "card
+     left". With the placement stated, switching a column off leaves a gap
+     where it was — which is what was asked for. */
+  /* EVERY PLACED ITEM NAMES ITS ROW TOO. Auto-placement only ever moves
+     forwards: on the mirrored composition the copy comes first in the DOM and
+     is placed in column 2, so the card behind it could not go into column 1 of
+     the same row and started a second one — the card ended up UNDER the copy
+     and the band grew by its whole height. Stating `grid-row: 1` is what keeps
+     a composition one row whatever order its parts are written in. */
+  .presetTextLeft .copyA {
+    grid-area: 1 / 1;
+  }
+
+  .presetTextLeft .media {
+    grid-area: 1 / 2;
+  }
+
+  .presetTextRight .media {
+    grid-area: 1 / 1;
+  }
+
+  .presetTextRight .copyA {
+    grid-area: 1 / 2;
+  }
+
+  .presetSplit .copyA {
+    grid-area: 1 / 1;
+  }
+
+  .presetSplit .media {
+    grid-area: 1 / 2;
+  }
+
+  .presetSplit .copyB {
+    grid-area: 1 / 3;
+  }
+
+  /* ---- Type and controls at this width --------------------------------- */
   .subtext {
     /* 18px. The lede tier sits between --sf-text-base and --sf-text-lg, and a
        hero's one quiet line is the case the tier was described for. */
     font-size: 1.125rem;
-    min-height: calc(2em * var(--sf-leading-relaxed));
   }
 
   .actions {
@@ -843,7 +1232,7 @@
     display: block;
   }
 
-  .inner {
+  .slideInner {
     gap: var(--sf-space-12);
   }
 
@@ -851,23 +1240,50 @@
     font-size: var(--sf-text-5xl);
   }
 
-  .stage {
-    max-width: 560px;
+  .presetTextLeft,
+  .presetTextRight {
+    --sf-hero-card: 560px;
   }
 
-  /* Two wrapped rows, not a scrolling line: the measure is chosen so the eight
-     launch products fall into exactly two. */
+  .presetSplit {
+    --sf-hero-card: 420px;
+  }
+
+  .presetTextCenter,
+  .presetPoster {
+    --sf-hero-card: 380px;
+  }
+
+  /* Centred display type reads a size larger than the same type set left, and
+     it is the one composition whose copy is stacked above a card rather than
+     beside it — so it stays one step down the scale on the widest screens
+     while every other composition steps up. */
+  .presetTextCenter .headline,
+  .presetPoster .headline {
+    font-size: var(--sf-text-4xl);
+  }
+
+  /* THE SPLIT'S HEADLINE IS NOT A FULL-WIDTH HEADLINE. Its column is a third of
+     the spread rather than half, so the display tier that reads as editorial
+     across a wide column breaks a five-word line into five lines here. One step
+     down the scale and a shorter measure is the same headline, set for the
+     column it is actually in. */
+  .presetSplit .headline {
+    font-size: var(--sf-text-4xl);
+    max-width: 14ch;
+  }
+
+  .panelGlass,
+  .panelSolid {
+    padding: var(--sf-space-8);
+  }
+
+  /* ONE ROW OF NAMES, at every width. The rail used to wrap to two rows because
+     it lived inside the copy column and was only ~32rem wide; it is a full-width
+     band under the stage now, where ten names fit on one line — and the second
+     row was 88px of band height that the slides needed more. */
   .names {
-    flex-wrap: wrap;
-    overflow-x: visible;
-    max-width: 32rem;
-  }
-
-  .rail {
-    min-height: calc(
-      var(--sf-space-2) + var(--sf-tap-target) + var(--sf-space-4) +
-        (2 * var(--sf-tap-target)) + var(--sf-space-2) + var(--sf-space-1)
-    );
+    max-width: 100%;
   }
 
   .name {
@@ -876,28 +1292,38 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   REDUCED MOTION. The token layer already zeroes every --sf-duration, and the
+   REDUCED MOTION. The token layer already zeroes every --sf-duration, the
    component never starts autoplay, hides the pause control and does not attach
-   the parallax. What is left to stop here is the scale on the crossfade, the
+   the parallax. What is left to stop here is the entrance transforms, the
    progress fill and the rail's snap.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  .layer {
+  .slide,
+  .slide .copy,
+  .slide .media {
     transform: none;
-    transition: opacity var(--sf-duration-slow) var(--sf-ease);
+  }
+
+  .slide .copy,
+  .slide .media,
+  .hero {
+    transition: none;
   }
 
   /* The backdrop is the largest moving thing on the page; the token layer has
      already zeroed the duration, and the component passes `instant`, but the
      rule is restated here so reduced motion holds even if a layer is rendered
      without it. */
-  .backdropLayer,
-  .stage {
+  .backdropLayer {
     transition: none;
   }
 
-  .stage .stageGlow {
+  .slide {
+    transition: visibility 0s;
+  }
+
+  .media .mediaGlow {
     transform: none;
     transition: none;
   }
@@ -916,42 +1342,60 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    PRINT. A full-bleed photograph is ink a visitor did not ask for, and the
    token layer has already re-pointed the scrim to paper white — so the backdrop
-   comes off the sheet entirely. With the picture gone, a slide that was showing
-   nothing but that picture has to print its words instead, or the hero prints
-   as a blank band.
+   comes off the sheet entirely, and with it the plate under the copy and the
+   lift under the controls. The stacked slides cannot all print, so only the one
+   that was on screen does.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media print {
-  .backdrop {
+  .hero {
+    background-color: transparent;
+  }
+
+  .backdrop,
+  .groundGlow {
     display: none;
   }
 
-  /* With the picture gone the lift under the controls is ink spent separating
-     them from paper, and the ring is a white line on white. Both come off; the
-     solid grounds above resolve to the print tokens' paper white anyway. */
-  .hero.heroBackdrop .cta,
-  .hero.heroBackdrop .badges :global(.sf-chip) {
-    box-shadow: none;
+  .slide:not(.slideActive) {
+    display: none;
   }
 
-  .copyBackdropOnly > .copyLines > *,
-  .copyBackdropOnly > .actions,
-  .copyBackdropOnly > .badges {
+  .slide {
     visibility: visible;
   }
 
-  .copyBackdropOnly .headline {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
-    clip-path: none;
-    white-space: normal;
+  .slide .copy,
+  .slide .media {
+    opacity: 1;
+    transform: none;
   }
 
-  .stageBackdropOnly {
-    opacity: 1;
+  .panelScrim::before {
+    display: none;
+  }
+
+  .panelGlass,
+  .panelSolid {
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .slideOnArt .eyebrow,
+  .slideOnArt .headline,
+  .slideOnArt .subtext,
+  .heroBackdrop .brandTagline {
+    text-shadow: none;
+  }
+
+  .slideOnArt .cta,
+  .heroBackdrop .brandInner .cta,
+  .slideOnArt .badges :global(.sf-chip),
+  .heroBackdrop .stepper {
+    box-shadow: none;
   }
 }

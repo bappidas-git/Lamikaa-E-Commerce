@@ -13,13 +13,18 @@ import { ROUTES } from "../../utils/constants";
 import { buildCartItem, productPath } from "../../utils/helpers";
 import { primaryImage, productAlt } from "../../utils/product";
 import {
+  buildHeroSlides,
   hasHeroBackground,
+  hasHeroCta,
   heroBackgroundSrc,
-  heroBackgroundVars,
-  isHeroBackgroundOnly,
+  heroLinkProps,
+  heroSlideVars,
   normalizeHeroBackground,
   normalizeHeroConfig,
-  resolveHeroBackground,
+  normalizeHeroLayout,
+  resolveHeroAlign,
+  resolveHeroPanel,
+  resolveHeroTheme,
 } from "../../utils/heroConfig";
 import { Button, Chip, CloudinaryImage, GlowWrap, Price } from "../ui";
 import Logo from "../brand/Logo";
@@ -27,52 +32,60 @@ import HeroIndex from "./HeroIndex";
 import styles from "./HeroCarousel.module.css";
 
 // =============================================================================
-// HeroCarousel — the home page opens on the products, not on a banner
+// HeroCarousel — the home page's opening spread, composed by the admin
 // =============================================================================
 //
-// One slide per HERO PRODUCT (eight at launch): the label card on a glowing
-// plate on one side, and on the other the product's own emotional headline, its
-// price, one or two quiet lines, two CTAs and its trust badges. There is no
-// slide store and no admin artwork any more — a product joins the carousel by
-// carrying a `heroOrder`, and it prints the `heroHeadline`/`heroSubtext` seeded
-// from PRODUCTS.md. Nothing here hard-codes a word of product copy.
+// A STAGE OF SLIDES, AND EVERY SLIDE IS ITS OWN COMPOSITION. Two kinds share
+// the stage:
+//
+//   • a PRODUCT slide — the label card on its glowing plate, the product's own
+//     headline, its price, two quiet lines, its trust marks and two CTAs;
+//   • a POSTER (`kind: "custom"`) — a picture with nothing on it but what the
+//     merchant switched on: an eyebrow, a headline, two lines, some marks, up
+//     to two buttons, a card of its own, or none of the above.
+//
+// and each slide carries its own LAYOUT (copy left, copy right, centred, or
+// split either side of a centred card), its own GROUND (light or dark), its own
+// ARTWORK and its own legibility PLATE. `utils/heroConfig` owns every one of
+// those rules; this file stacks the layers and crossfades them.
+//
+// WHY THE SLIDES ARE A CSS GRID, ALL IN ONE CELL
+//   Every slide is placed in `grid-area: 1 / 1` of the stage, so the stage is
+//   exactly as tall as the TALLEST slide and every slide is in flow. That is
+//   what buys arbitrary per-slide layouts for nothing: there is no absolutely
+//   positioned layer to measure, no invisible mirror of the copy to keep in
+//   step with it, and nothing below the hero can move when the slide changes.
+//   (The build this replaces rendered the copy once and stacked a hidden
+//   "sizer" of every slide's copy behind it to reserve the height. With the
+//   copy in a different place on every slide, one shared copy block was no
+//   longer possible — and the grid does the sizer's job by construction.)
+//
+//   Only the ACTIVE slide is visible: `visibility: hidden` takes the other
+//   slides out of the tab order and out of the accessibility tree, and is
+//   delayed on the way out so the crossfade still runs. The page keeps ONE
+//   `h1` — the active slide's headline, or a visually hidden wordmark on a
+//   slide that prints no headline at all.
 //
 // DATA (both api modes)
-//   • `heroProducts` PROP         the slides, already in `heroOrder`. Prompt 22
-//     lifted this read into `home/useHomeData` — four sections wanted the same
-//     collection, so the page reads it once and hands out the slice.
-//   • hero.getConfig()            section behaviour only, through
-//     normalizeHeroConfig(): enabled, autoplay, intervalMs, transition,
-//     pauseOnHover and which chrome shows. Read HERE: no other section wants it.
-//   Fallbacks, in order: hero products → products.getFeatured(8) → the BRAND
-//   SLIDE (wordmark, tagline, one CTA). Never a fabricated product: an
+//   • `heroProducts` PROP     the hero-ordered range, from `useHomeData`.
+//   • hero.getConfig()        the section record: the master toggle, autoplay,
+//     the timer, the transition, the chrome, the height, the theme, the default
+//     layout, the default background AND the slide list itself. Read HERE: no
+//     other section wants it.
+//   `buildHeroSlides()` reconciles the two — the stored list is the authority
+//   on order and composition, and any hero product it does not name is
+//   appended, so a product added to the hero from the Products screen still
+//   opens the page without anybody rebuilding the list.
+//   Fallbacks, in order: the resolved slides → products.getFeatured(8) → the
+//   BRAND SLIDE (wordmark, tagline, one CTA). Never a fabricated product: an
 //   unreachable catalogue must not be the one surface that invents a listing.
 //
-// THE COPY IS RENDERED ONCE and updated in place — the pattern the banner hero
-// this replaced used. Only the MEDIA is stacked. That is what keeps the page to
-// a single `h1` and stops eight off-screen CTAs being tabbed into. The copy
-// block becomes an `aria-live="polite"` region only while autoplay is paused or
-// stopped: a change the visitor asked for is worth announcing, one the timer
-// made would talk over whatever they were reading.
-//
-// BACKGROUNDS are the admin's, per slide. Behind everything the section draws
-// there is one crossfading layer per slide, painted from the picture Admin ->
-// Home & Hero resolved for it: the product's own `heroBackground`, else the
-// section-wide `heroConfig.background`, else nothing at all — which is the
-// composition this carousel shipped with, and still the answer until a merchant
-// uploads something. `utils/heroConfig` owns every rule about which picture,
-// how hard the scrim, which focal point and how much blur; this file only
-// stacks the layers and crossfades them with the slide.
-//
-//   ONE URL IS A COMPLETE BACKGROUND. Nothing else has to be filled in for a
-//   slide to be backed by a picture, and a slide may also be told to show
-//   NOTHING BUT that picture (`showContent: false`) — the copy is then hidden
-//   from view but its `h1` stays in the accessibility tree, and the plate for
-//   that slide is not drawn at all.
-//
-//   The phone may be handed its own file (`mobileUrl`). The choice is made in
-//   JS, off the same 768px media flag the plate's ratio already reads, so the
-//   browser is never asked to download both.
+// LEGIBILITY. The copy never depends on the scrim alone. Each slide's plate
+// (`resolveHeroPanel`) is a wash, a pane of glass or a card behind the words
+// whose strength rises as the scrim falls, so a merchant who sets the scrim to
+// 0 on a bright photograph still has a readable headline. The controls under it
+// carry their own contrast too — see the stylesheet's "controls over a
+// photograph" block.
 //
 // MOTION is CSS, not a timeline, so the first slide is painted at full strength
 // on the first frame: crossfade + 1.02 -> 1 scale over --sf-duration-slow. Under
@@ -84,8 +97,9 @@ import styles from "./HeroCarousel.module.css";
 // than leaving it unstoppable.
 // =============================================================================
 
-// The eyebrow's fixed half. The variable half is the slide's position, and the
-// headline/subtext under it are the product's own words.
+// The eyebrow's fixed half, when the admin has not renamed it. The variable
+// half is the slide's position, and the headline/subtext under it are the
+// product's own words.
 const EYEBROW_LABEL = "Black Rice Ritual";
 
 // How many products the featured fallback may borrow — the launch range.
@@ -109,9 +123,9 @@ const PARALLAX_QUERY = "(min-width: 1025px) and (pointer: fine)";
 /** "3" -> "03". The counter, the eyebrow and the index rail all read this. */
 export const padIndex = (value) => String(value).padStart(2, "0");
 
-/** "Black Rice Ritual · 03 / 08" */
-export const heroEyebrow = (index, total) =>
-  `${EYEBROW_LABEL} · ${padIndex(index + 1)} / ${padIndex(total)}`;
+/** "Black Rice Ritual · 03 / 08" — the label is the admin's, the position ours. */
+export const heroEyebrow = (index, total, label = EYEBROW_LABEL) =>
+  `${label} · ${padIndex(index + 1)} / ${padIndex(total)}`;
 
 /** The slide's headline: the product's hero line, else its promise. */
 export const heroHeadline = (product) =>
@@ -145,10 +159,73 @@ export const resolveHeroSlides = (heroProducts, featured) => {
   return backup.slice(0, FALLBACK_LIMIT);
 };
 
+/** What the index rail and a screen reader call one resolved slide. */
+export const heroSlideName = (entry, index) => {
+  if (!entry) return "";
+  if (entry.kind === "product") return entry.product?.name || "";
+  return entry.slide.label || entry.slide.headline || `Slide ${index + 1}`;
+};
+
+/** The same, shortened for the rail's chips. */
+export const heroSlideShortName = (entry, index) => {
+  if (!entry) return "";
+  if (entry.kind === "product") {
+    return entry.product?.shortName || entry.product?.name || "";
+  }
+  return entry.slide.label || entry.slide.headline || `Slide ${index + 1}`;
+};
+
+// ─── Class-name helpers ─────────────────────────────────────────────────────
+
+const cx = (...parts) => parts.filter(Boolean).join(" ");
+
+const PRESET_CLASS = {
+  "text-left": styles.presetTextLeft,
+  "text-right": styles.presetTextRight,
+  "text-center": styles.presetTextCenter,
+  split: styles.presetSplit,
+  poster: styles.presetPoster,
+};
+
+const ALIGN_CLASS = {
+  start: styles.alignStart,
+  center: styles.alignCenter,
+  end: styles.alignEnd,
+};
+
+const VERTICAL_CLASS = {
+  top: styles.verticalTop,
+  center: styles.verticalCenter,
+  bottom: styles.verticalBottom,
+};
+
+const GLOW_CLASS = {
+  start: styles.glowStart,
+  center: styles.glowCenter,
+  end: styles.glowEnd,
+};
+
+const PANEL_CLASS = {
+  scrim: styles.panelScrim,
+  glass: styles.panelGlass,
+  solid: styles.panelSolid,
+};
+
+const HEIGHT_CLASS = {
+  auto: styles.heightAuto,
+  compact: styles.heightCompact,
+  standard: styles.heightStandard,
+  tall: styles.heightTall,
+};
+
+/** The token scope a slide's ground is painted in. `.sf-on-dark` is global. */
+const themeClass = (theme) =>
+  theme === "dark" ? cx("sf-on-dark", styles.themeDark) : styles.themeLight;
+
 // ─── The backdrop ───────────────────────────────────────────────────────────
 //
 // One absolutely positioned layer per slide, crossfaded by the same `index` the
-// plate is, plus its scrim. Rendered ONCE for the carousel and once (single
+// slides are, plus its scrim. Rendered ONCE for the carousel and once (single
 // layer) for the brand slide, which is why it is a component rather than a
 // branch inside the JSX below.
 //
@@ -159,21 +236,16 @@ export const resolveHeroSlides = (heroProducts, featured) => {
 //
 // A layer only exists where a picture resolved, so a carousel where one slide
 // has art and seven do not costs seven nothing.
-const HeroBackdrop = ({ backgrounds, index, isMobile, instant, mounted }) => {
-  const layers = backgrounds
-    .map((background, i) => ({ background, i, src: heroBackgroundSrc(background, isMobile) }))
+const HeroBackdrop = ({ layers, index, isMobile, instant, mounted }) => {
+  const drawn = layers
+    .map((layer, i) => ({ ...layer, i, src: heroBackgroundSrc(layer.background, isMobile) }))
     .filter((layer) => layer.src);
 
-  if (layers.length === 0) return null;
+  if (drawn.length === 0) return null;
 
   return (
-    <div
-      className={[styles.backdrop, instant ? styles.backdropInstant : ""]
-        .filter(Boolean)
-        .join(" ")}
-      aria-hidden="true"
-    >
-      {layers.map(({ background, i, src }) => {
+    <div className={cx(styles.backdrop, instant && styles.backdropInstant)} aria-hidden="true">
+      {drawn.map(({ background, panel, theme, i, src }) => {
         // Same first-paint rule as the plate: everything past the opening slide
         // waits for the idle pass, so one background image competes for the
         // connection that paints the LCP rather than eight.
@@ -181,10 +253,15 @@ const HeroBackdrop = ({ backgrounds, index, isMobile, instant, mounted }) => {
         return (
           <div
             key={i}
-            className={[styles.backdropLayer, i === index ? styles.backdropLayerActive : ""]
-              .filter(Boolean)
-              .join(" ")}
-            style={heroBackgroundVars(background)}
+            className={cx(
+              styles.backdropLayer,
+              i === index && styles.backdropLayerActive,
+              // The scrim mixes from the ground token, so the layer has to sit
+              // in the same scope its slide is composed in — a dark slide's
+              // picture is veiled in espresso, a light one's in cream.
+              theme === "dark" ? "sf-on-dark" : ""
+            )}
+            style={heroSlideVars(background, panel)}
           >
             <CloudinaryImage
               src={src}
@@ -202,6 +279,253 @@ const HeroBackdrop = ({ backgrounds, index, isMobile, instant, mounted }) => {
           </div>
         );
       })}
+    </div>
+  );
+};
+
+// ─── One slide ──────────────────────────────────────────────────────────────
+//
+// The whole composition for one entry of the stage: the card, the words, the
+// buttons and the plate under them, arranged by the entry's own layout.
+//
+// `split` is the one layout with TWO copy columns — the eyebrow, the headline
+// and the price on one side of the centred card, the lines, the marks and the
+// buttons on the other. Every other layout puts all of it in one column; the
+// DOM order (copy A, card, copy B) is the reading order in both cases.
+const HeroSlide = ({
+  entry,
+  index,
+  total,
+  active,
+  mounted,
+  isMobile,
+  eyebrowLabel,
+  showEyebrow,
+  onAddToCart,
+}) => {
+  const { kind, slide, product, background, layout, panel, theme } = entry;
+  const onArt = hasHeroBackground(background);
+  const split = layout.preset === "split";
+  const panelClass = PANEL_CLASS[panel.kind] || "";
+
+  /**
+   * Which way a copy column reads.
+   *
+   * The split layout's automatic answer has its two columns hugging the card
+   * between them — the first reads to its right edge, the second from its left.
+   * On a PHONE there is no card between them: the composition is one stacked
+   * column, so both blocks take the second column's answer and the slide reads
+   * as one piece of copy instead of one block flush right above another flush
+   * left. An align the merchant set BY HAND is returned untouched either way.
+   */
+  const alignOf = (side) => resolveHeroAlign(layout, isMobile ? "b" : side);
+
+  // ---- What this slide prints -------------------------------------------
+  const isProduct = kind === "product";
+  const eyebrow = isProduct
+    ? heroEyebrow(index, total, eyebrowLabel)
+    : slide.eyebrow;
+  const headline = isProduct ? heroHeadline(product) : slide.headline;
+  const subtext = isProduct ? heroSubtext(product) : slide.subtext;
+  const badges = isProduct
+    ? Array.isArray(product?.badges)
+      ? product.badges
+      : []
+    : slide.badges;
+
+  const primaryLink = isProduct ? null : heroLinkProps(slide.primaryCta.href);
+  const secondaryLink = isProduct ? null : heroLinkProps(slide.secondaryCta.href);
+  const hasPrimary = isProduct ? Boolean(product) : hasHeroCta(slide.primaryCta);
+  const hasSecondary = isProduct
+    ? Boolean(product)
+    : hasHeroCta(slide.secondaryCta);
+  const actions = layout.showActions && (hasPrimary || hasSecondary);
+
+  // ---- The card over the picture ----------------------------------------
+  const productMedia = isProduct ? primaryImage(product) : null;
+  const posterSrc = isProduct
+    ? ""
+    : heroBackgroundSrc(slide.media, isMobile) || "";
+  const mediaSrc = isProduct ? productMedia?.url || "" : posterSrc;
+  const mediaAlt = isProduct
+    ? productAlt(product, productMedia)
+    : slide.media.alt || "";
+  const media = layout.showMedia && Boolean(mediaSrc);
+
+  // Everything past the opening slide waits for the idle pass; the active slide
+  // is always loaded in case a control ran before the idle callback did.
+  const loadMedia = index === 0 || active || mounted;
+
+  // The headline is the page's heading on the slide that is on screen, and a
+  // paragraph on the ones that are not — so the document keeps exactly one h1
+  // however many slides the merchant has arranged.
+  const Heading = active && headline ? "h1" : "p";
+
+  const copyLines = (which) => {
+    const first = !split || which === "a";
+    const second = !split || which === "b";
+    return (
+      <>
+        {first && showEyebrow && eyebrow && (
+          <p className={cx("sf-eyebrow", styles.eyebrow)}>{eyebrow}</p>
+        )}
+        {first && headline && (
+          <Heading className={styles.headline}>{headline}</Heading>
+        )}
+        {first && isProduct && product && (
+          <Price product={product} size="sm" live={false} className={styles.price} />
+        )}
+        {second && subtext && <p className={styles.subtext}>{subtext}</p>}
+      </>
+    );
+  };
+
+  const actionRow = (
+    <div className={styles.actions}>
+      {isProduct && product ? (
+        <>
+          <Button
+            variant="primary"
+            size="lg"
+            to={productPath(product)}
+            className={styles.cta}
+            tabIndex={active ? undefined : -1}
+          >
+            {exploreLabel(product)}
+          </Button>
+          <Button
+            variant="addToCart"
+            size="lg"
+            className={styles.cta}
+            disabled={Boolean(product.priceTBA)}
+            tabIndex={active ? undefined : -1}
+            onClick={() => onAddToCart(product)}
+          >
+            {product.priceTBA ? "Coming soon" : "Add to Cart"}
+          </Button>
+        </>
+      ) : (
+        <>
+          {hasPrimary && primaryLink && (
+            <Button
+              variant="primary"
+              size="lg"
+              className={styles.cta}
+              tabIndex={active ? undefined : -1}
+              {...primaryLink}
+            >
+              {slide.primaryCta.label}
+            </Button>
+          )}
+          {hasSecondary && secondaryLink && (
+            <Button
+              variant="secondary"
+              size="lg"
+              className={styles.cta}
+              tabIndex={active ? undefined : -1}
+              {...secondaryLink}
+            >
+              {slide.secondaryCta.label}
+            </Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  const badgeRow = badges.length > 0 && (
+    <ul className={styles.badges}>
+      {badges.map((badge) => (
+        <li key={badge}>
+          <Chip variant="trust">{badge}</Chip>
+        </li>
+      ))}
+    </ul>
+  );
+
+  // A copy column is only drawn when it has something in it — an empty plate
+  // over a poster is a grey rectangle nobody asked for.
+  const columnA =
+    (layout.showCopy && (eyebrow || headline || isProduct || (!split && subtext))) ||
+    (!split && layout.showCopy && badges.length > 0) ||
+    (!split && actions);
+  const columnB = split && ((layout.showCopy && (subtext || badges.length > 0)) || actions);
+
+  const mediaNode = media && (
+    <div className={styles.media}>
+      <GlowWrap
+        tone="duo"
+        intensity={0.24}
+        breathe={active}
+        className={styles.mediaGlow}
+      >
+        {loadMedia && (
+          <CloudinaryImage
+            src={mediaSrc}
+            alt={mediaAlt}
+            ar={isMobile ? "1:1" : "4:5"}
+            gravity="center"
+            fit="cover"
+            plate
+            widths={[480, 768, 1080]}
+            sizes="(max-width: 768px) 80vw, 40vw"
+            priority={index === 0}
+            className={styles.plate}
+          />
+        )}
+      </GlowWrap>
+    </div>
+  );
+
+  return (
+    <div
+      className={cx(
+        styles.slide,
+        active && styles.slideActive,
+        PRESET_CLASS[layout.preset] || PRESET_CLASS["text-left"],
+        VERTICAL_CLASS[layout.vertical] || VERTICAL_CLASS.center,
+        onArt && styles.slideOnArt,
+        themeClass(theme)
+      )}
+      style={heroSlideVars(background, panel)}
+      role="group"
+      aria-roledescription="slide"
+      aria-label={`${index + 1} of ${total}: ${heroSlideName(entry, index)}`}
+      aria-hidden={active ? undefined : "true"}
+    >
+      <div className={cx("sf-container", styles.slideInner)}>
+        {columnA && (
+          <div
+            className={cx(
+              styles.copy,
+              styles.copyA,
+              panelClass,
+              ALIGN_CLASS[alignOf("a")]
+            )}
+          >
+            {layout.showCopy && <div className={styles.copyLines}>{copyLines("a")}</div>}
+            {!split && layout.showCopy && badgeRow}
+            {!split && actions && actionRow}
+          </div>
+        )}
+
+        {mediaNode}
+
+        {columnB && (
+          <div
+            className={cx(
+              styles.copy,
+              styles.copyB,
+              panelClass,
+              ALIGN_CLASS[alignOf("b")]
+            )}
+          >
+            {layout.showCopy && <div className={styles.copyLines}>{copyLines("b")}</div>}
+            {layout.showCopy && badgeRow}
+            {actions && actionRow}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -262,8 +586,10 @@ const HeroCarousel = ({ heroProducts }) => {
   const [focusWithin, setFocusWithin] = useState(false);
   const [tabHidden, setTabHidden] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
-  // Slides after the first are mounted in an idle pass, so the first paint
-  // carries exactly one image: the LCP element.
+  // Slide artwork after the first is fetched in an idle pass, so the first
+  // paint carries exactly one image: the LCP element. The slides' LAYOUT is
+  // never deferred — the stage is as tall as its tallest slide from the first
+  // frame, and deferring a slide's box would move the page under the visitor.
   const [restMounted, setRestMounted] = useState(false);
 
   const heroRef = useRef(null);
@@ -274,9 +600,10 @@ const HeroCarousel = ({ heroProducts }) => {
   const parallaxOn = parallaxAllowed && !prefersReducedMotion;
 
   // ── Config ───────────────────────────────────────────────────────────────
-  // The hero's own collection — the master toggle, autoplay, timer and chrome.
-  // Nothing else on the page reads it, so it stays here. It never throws by
-  // contract (it resolves to {}), and its failure only costs the defaults.
+  // The hero's own collection — the master toggle, autoplay, timer, chrome,
+  // theme, height, the default composition and the slide list. Nothing else on
+  // the page reads it, so it stays here. It never throws by contract (it
+  // resolves to {}), and its failure only costs the defaults.
   useEffect(() => {
     let alive = true;
     apiService.hero.getConfig().then(
@@ -292,13 +619,12 @@ const HeroCarousel = ({ heroProducts }) => {
     };
   }, []);
 
-  // ── Slides ───────────────────────────────────────────────────────────────
+  // ── Products ─────────────────────────────────────────────────────────────
   // The range arrives as a prop. An empty (or unreadable) hero order is not the
   // end of the hero: the featured products stand in, and only if THAT is empty
-  // too does the brand slide carry the band on its own. The fallback is fetched
-  // here rather than in useHomeData because it is the one read on this page
-  // that is conditional — asking for it up front would be a request the page
-  // almost never needs.
+  // too — and no poster has been arranged either — does the brand slide carry
+  // the band on its own. The fallback is fetched here rather than in
+  // useHomeData because it is the one read on this page that is conditional.
   useEffect(() => {
     if (heroProducts === undefined) return undefined;
     let alive = true;
@@ -329,24 +655,21 @@ const HeroCarousel = ({ heroProducts }) => {
 
   const config = useMemo(() => normalizeHeroConfig(rawConfig), [rawConfig]);
 
-  // ── Backgrounds ──────────────────────────────────────────────────────────
-  // One resolved record per slide — the product's own picture, else the
-  // section's, else an empty record. Memoised on the two things it reads, so a
-  // carousel that re-renders on a timer does not re-normalise eight records a
-  // tick.
-  const backgrounds = useMemo(
-    () => products.map((product) => resolveHeroBackground(product, config)),
-    [products, config]
-  );
+  // ── The stage ────────────────────────────────────────────────────────────
+  // One resolved entry per slide: its kind, its product, its picture, its
+  // composition, its ground and its legibility plate — all decided in
+  // `utils/heroConfig` so the admin's preview and this stage cannot disagree.
+  const slides = useMemo(() => buildHeroSlides(products, config), [products, config]);
 
   // The section default on its own — what the BRAND slide is backed by, since
-  // it has no product to carry a picture of its own.
+  // it has no product and no poster record to carry a picture of its own.
   const sectionBackground = useMemo(
     () => normalizeHeroBackground(config.background),
     [config]
   );
+  const sectionLayout = useMemo(() => normalizeHeroLayout(config.layout), [config]);
 
-  const total = products.length;
+  const total = slides.length;
   const multiple = total > 1;
 
   // Keep the cursor in range if the slide count changes under it.
@@ -440,7 +763,7 @@ const HeroCarousel = ({ heroProducts }) => {
   }, [running, index, total, config.intervalMs]);
 
   // ── First paint ──────────────────────────────────────────────────────────
-  // Slide one is the LCP element. The other seven are mounted in an idle pass
+  // Slide one is the LCP element. The rest fetch their artwork in an idle pass
   // so their <img> tags cannot compete for the connection that paints it.
   useEffect(() => {
     if (restMounted || typeof window === "undefined") return undefined;
@@ -566,22 +889,23 @@ const HeroCarousel = ({ heroProducts }) => {
   );
 
   // ── The brand slide ──────────────────────────────────────────────────────
-  // Shown when the hero is switched off, and when neither the hero order nor
-  // the featured list resolved to a product. It carries no photography and no
-  // claim that is not already in brand.js. Its "headline" is the wordmark, so
-  // the page's single h1 is the visually hidden one beside it.
+  // Shown when the hero is switched off, and when neither the slide list, the
+  // hero order nor the featured list resolved to anything. It carries no
+  // photography and no claim that is not already in brand.js. Its "headline" is
+  // the wordmark, so the page's single h1 is the visually hidden one beside it.
   const brandOnly = !config.enabled || (loaded && total === 0);
+  const brandTheme = resolveHeroTheme(sectionLayout, config);
 
   if (brandOnly) {
     return (
       <section
-        className={[
+        className={cx(
           styles.hero,
           styles.heroBrand,
-          hasHeroBackground(sectionBackground) ? styles.heroBackdrop : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
+          HEIGHT_CLASS[config.height] || HEIGHT_CLASS.standard,
+          hasHeroBackground(sectionBackground) && styles.heroBackdrop,
+          themeClass(brandTheme)
+        )}
         aria-label={brand.name}
       >
         {/* The brand slide has no product, so it takes the SECTION picture —
@@ -589,7 +913,13 @@ const HeroCarousel = ({ heroProducts }) => {
             band, rather than the hero losing its art the moment it is switched
             off or the catalogue cannot be reached. */}
         <HeroBackdrop
-          backgrounds={[sectionBackground]}
+          layers={[
+            {
+              background: sectionBackground,
+              panel: resolveHeroPanel(sectionBackground, sectionLayout),
+              theme: brandTheme,
+            },
+          ]}
           index={0}
           isMobile={isMobile}
           instant={prefersReducedMotion}
@@ -598,9 +928,9 @@ const HeroCarousel = ({ heroProducts }) => {
         <div id="hero-sentinel" aria-hidden="true" className={styles.sentinel} />
         <div className={`sf-container ${styles.brandInner}`}>
           <h1 className="sf-visually-hidden">{brand.name}</h1>
-          {/* The lockup on its plate: this hero opens on the CREAM page, and
-              the wordmark is champagne gold with no light-ground variant. The
-              plate is the same near-black the masthead above it is. */}
+          {/* The lockup on its plate: the wordmark is champagne gold with no
+              light-ground variant, so its plate is the same near-black the
+              masthead above it is, on either theme. */}
           <GlowWrap tone="duo" intensity={0.2} className={styles.brandGlow}>
             <span className={`sf-on-dark sf-lockup-plate ${styles.brandPlate}`}>
               <Logo variant="wordmark" width={280} alt="" className={styles.brandMark} />
@@ -624,34 +954,38 @@ const HeroCarousel = ({ heroProducts }) => {
     );
   }
 
-  const active = products[index] || null;
-  // The picture behind the slide on screen, and whether the merchant asked for
-  // that picture ALONE — no copy, no CTAs, no plate.
-  const activeBackground = backgrounds[index] || null;
-  const backdropOnly = isHeroBackgroundOnly(activeBackground);
-  const anyBackdrop = backgrounds.some(hasHeroBackground);
-  const headline = heroHeadline(active);
-  const subtext = heroSubtext(active);
-  const badges = Array.isArray(active?.badges) ? active.badges : [];
-  const names = products.map((p) => p?.name || "");
-  const shortNames = products.map((p) => p?.shortName || p?.name || "");
-
-  const stageClasses = [
-    styles.stage,
-    config.transition === "none" || prefersReducedMotion ? styles.stageInstant : "",
-    // Not `visibility: hidden`: the stage is the swipe target, and a hidden box
-    // stops receiving the pointer events a phone changes slides with.
-    backdropOnly ? styles.stageBackdropOnly : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const activeEntry = slides[index] || null;
+  const activeTheme = activeEntry ? activeEntry.theme : brandTheme;
+  const anyBackdrop = slides.some((entry) => hasHeroBackground(entry.background));
+  const names = slides.map(heroSlideName);
+  const shortNames = slides.map(heroSlideShortName);
+  const instant = config.transition === "none" || prefersReducedMotion;
+  // A slide that prints no headline (a poster) still leaves the page a heading:
+  // the wordmark, spoken but not seen. Exactly one h1 either way.
+  const activeHeadline = activeEntry
+    ? activeEntry.kind === "product"
+      ? heroHeadline(activeEntry.product)
+      : activeEntry.slide.headline
+    : "";
+  // The rail and the ground light both follow the composition on screen.
+  const activeAlign = activeEntry
+    ? resolveHeroAlign(activeEntry.layout, isMobile ? "b" : "a")
+    : "start";
 
   return (
     <section
       ref={heroRef}
-      className={[styles.hero, anyBackdrop ? styles.heroBackdrop : ""]
-        .filter(Boolean)
-        .join(" ")}
+      className={cx(
+        styles.hero,
+        HEIGHT_CLASS[config.height] || HEIGHT_CLASS.standard,
+        anyBackdrop && styles.heroBackdrop,
+        instant && styles.heroInstant,
+        // The band's ground follows the slide on screen, so a dark poster can
+        // sit in a cream carousel and take its ink, hairlines, buttons and
+        // scrim with it. `.sf-on-dark` is the storefront's own token scope —
+        // the hero is the only content section that ever wears it.
+        themeClass(activeTheme)
+      )}
       aria-roledescription="carousel"
       aria-label="Black Rice range"
       onKeyDown={handleKeyDown}
@@ -664,10 +998,10 @@ const HeroCarousel = ({ heroProducts }) => {
       {/* The admin's artwork, one crossfading layer per slide, behind
           everything else the section draws. */}
       <HeroBackdrop
-        backgrounds={backgrounds}
+        layers={slides}
         index={index}
         isMobile={isMobile}
-        instant={config.transition === "none" || prefersReducedMotion}
+        instant={instant}
         mounted={restMounted}
       />
 
@@ -677,222 +1011,79 @@ const HeroCarousel = ({ heroProducts }) => {
 
       {/* Desktop-only ground light behind the copy. Non-breathing — the plate
           owns the one breathing glow above the fold (DESIGN_SYSTEM §5). */}
-      <GlowWrap tone="gold" className={styles.groundGlow} aria-hidden="true" />
+      <GlowWrap
+        tone="gold"
+        className={cx(styles.groundGlow, GLOW_CLASS[activeAlign] || GLOW_CLASS.start)}
+        aria-hidden="true"
+      />
 
-      <div className={`sf-container ${styles.inner}`}>
-        {/* ---- Copy: rendered ONCE, updated in place -------------------- */}
-        <div className={styles.copy}>
-          <div className={styles.copyText}>
-            {/* THE SIZER. Every slide's copy block, stacked in one grid cell and
-                left invisible, so the copy column is always as tall as the
-                TALLEST slide and nothing below it moves when the copy swaps.
-                Reserving a fixed number of ems instead would only hold for the
-                copy that happened to be seeded — hero lines are edited on the
-                products, and one word more would put the shift straight back.
-                It renders the real Button and Chip so the mirror cannot drift
-                from the thing it is measuring. `visibility: hidden` takes it out
-                of the tab order and `aria-hidden` out of the accessibility tree:
-                it is furniture, not content. */}
-            <div className={styles.copySizer} aria-hidden="true">
-              {/* The floor, present from the first frame: the copy column has a
-                  height BEFORE the catalogue answers, so the page below the hero
-                  does not drop when the first slide's words arrive. */}
-              <div className={styles.copyBlock}>
-                <div className={styles.copyLines}>
-                  <p className={`sf-eyebrow ${styles.eyebrow}`}>{EYEBROW_LABEL}</p>
-                  <p className={styles.headline} />
-                  <span className={styles.price} />
-                  <p className={styles.subtext} />
-                </div>
-                <div className={styles.actions}>
-                  <Button variant="primary" size="lg" as="span" className={styles.cta} />
-                  <Button variant="addToCart" size="lg" as="span" className={styles.cta} />
-                </div>
-                <ul className={styles.badges}>
-                  {brand.trustBadges.map((badge) => (
-                    <li key={badge}>
-                      <Chip variant="trust">{badge}</Chip>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+      {!activeHeadline && <h1 className="sf-visually-hidden">{brand.name}</h1>}
 
-              {products.map((product, i) => (
-                <div key={product.id ?? i} className={styles.copyBlock}>
-                  <div className={styles.copyLines}>
-                    <p className={`sf-eyebrow ${styles.eyebrow}`}>{heroEyebrow(i, total)}</p>
-                    <p className={styles.headline}>{heroHeadline(product)}</p>
-                    <Price product={product} size="sm" live={false} className={styles.price} />
-                    <p className={styles.subtext}>{heroSubtext(product)}</p>
-                  </div>
-                  <div className={styles.actions}>
-                    <Button variant="primary" size="lg" as="span" className={styles.cta}>
-                      {exploreLabel(product)}
-                    </Button>
-                    <Button variant="addToCart" size="lg" as="span" className={styles.cta}>
-                      {product.priceTBA ? "Coming soon" : "Add to Cart"}
-                    </Button>
-                  </div>
-                  <ul className={styles.badges}>
-                    {(Array.isArray(product.badges) ? product.badges : []).map((badge) => (
-                      <li key={badge}>
-                        <Chip variant="trust">{badge}</Chip>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+      {/* Announced only while the timer is not running, so what a screen reader
+          hears is always the answer to something the visitor just did — never
+          the carousel talking over whatever they were reading. */}
+      <p className="sf-visually-hidden" aria-live={running ? "off" : "polite"}>
+        {loaded && activeEntry
+          ? `Slide ${index + 1} of ${total}: ${names[index]}`
+          : ""}
+      </p>
 
-            {/* The copy itself: ONE block, laid over the sizer. On a slide the
-                merchant set to "background only" it keeps its box (the sizer
-                below it is what reserves the height either way) and hands the
-                whole stage to the picture — see `.copyBackdropOnly`, which
-                hides the words and the CTAs from view and from the tab order
-                while leaving the `h1` in the accessibility tree. */}
-            <div
-              className={[styles.copyBlock, backdropOnly ? styles.copyBackdropOnly : ""]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              {/* Live only while the timer is not running, so an announcement is
-                  always the answer to something the visitor just did. The CTAs
-                  sit outside it: their labels change with the slide too, and a
-                  button that narrates itself mid-sentence is noise. */}
-              <div
-                className={styles.copyLines}
-                aria-live={running ? "off" : "polite"}
-              >
-                <p className={`sf-eyebrow ${styles.eyebrow}`}>
-                  {loaded ? heroEyebrow(index, total) : EYEBROW_LABEL}
-                </p>
-
-                {headline ? (
-                  <h1 className={styles.headline}>{headline}</h1>
-                ) : (
-                  <div className={styles.headline} aria-hidden="true">
-                    <span className={`sf-skeleton ${styles.skeletonLine}`} />
-                  </div>
-                )}
-
-                {active && (
-                  <Price
-                    product={active}
-                    size="sm"
-                    live={false}
-                    className={styles.price}
-                  />
-                )}
-
-                <p className={styles.subtext}>{subtext}</p>
-              </div>
-
-              <div className={styles.actions}>
-                {active && (
-                  <>
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      to={productPath(active)}
-                      className={styles.cta}
-                    >
-                      {exploreLabel(active)}
-                    </Button>
-                    <Button
-                      variant="addToCart"
-                      size="lg"
-                      className={styles.cta}
-                      disabled={Boolean(active.priceTBA)}
-                      onClick={() => handleAddToCart(active)}
-                    >
-                      {active.priceTBA ? "Coming soon" : "Add to Cart"}
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <ul className={styles.badges}>
-                {badges.map((badge) => (
-                  <li key={badge}>
-                    <Chip variant="trust">{badge}</Chip>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      <div
+        className={styles.stage}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+      >
+        {!loaded && (
+          <div className={cx("sf-container", styles.skeletonInner)} aria-hidden="true">
+            <span className={`sf-skeleton ${styles.skeletonCopy}`} />
+            <span className={`sf-skeleton ${styles.skeletonPlate}`} />
           </div>
-
-          <HeroIndex
-            index={index}
+        )}
+        {slides.map((entry, i) => (
+          <HeroSlide
+            key={entry.key}
+            entry={entry}
+            index={i}
             total={total}
-            names={names}
-            shortNames={shortNames}
-            intervalMs={config.intervalMs}
-            autoplayOn={autoplayOn}
-            paused={paused}
-            userPaused={userPaused}
-            showArrows={config.showArrows}
-            showCounter={config.showCounter}
-            showProgress={config.showProgress && !prefersReducedMotion}
-            showIndex={config.showControls}
-            onSelect={goTo}
-            onPrev={() => goTo((prev) => prev - 1)}
-            onNext={() => goTo((prev) => prev + 1)}
-            onTogglePause={() => setUserPaused((prev) => !prev)}
+            active={i === index}
+            mounted={restMounted}
+            isMobile={isMobile}
+            eyebrowLabel={config.eyebrowLabel}
+            showEyebrow={config.showEyebrow}
+            onAddToCart={handleAddToCart}
           />
-        </div>
+        ))}
+      </div>
 
-        {/* ---- Media: one layer per slide, crossfaded -------------------- */}
-        <div
-          className={stageClasses}
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-        >
-          <GlowWrap
-            tone="duo"
-            intensity={0.24}
-            breathe
-            className={styles.stageGlow}
-          >
-            {!loaded && <span className={`sf-skeleton ${styles.stageSkeleton}`} />}
-            {products.map((product, i) => {
-              // Everything past the first slide waits for the idle pass; the
-              // active slide is always mounted in case a control ran first.
-              if (i !== 0 && i !== index && !restMounted) return null;
-              // "Background only": the picture IS the slide, so the label plate
-              // is never fetched for it, let alone crossfaded in behind a copy
-              // column that is not being drawn either.
-              if (isHeroBackgroundOnly(backgrounds[i])) return null;
-              const media = primaryImage(product);
-              if (!media) return null;
-              return (
-                <div
-                  key={product.id ?? i}
-                  className={[styles.layer, i === index ? styles.layerActive : ""]
-                    .filter(Boolean)
-                    .join(" ")}
-                  role="group"
-                  aria-roledescription="slide"
-                  aria-label={slideLabel(product, i, total)}
-                  aria-hidden={i === index ? undefined : "true"}
-                >
-                  <CloudinaryImage
-                    src={media.url}
-                    alt={productAlt(product, media)}
-                    ar={isMobile ? "1:1" : "4:5"}
-                    gravity="center"
-                    fit="cover"
-                    plate
-                    widths={[480, 768, 1080]}
-                    sizes="(max-width: 768px) 80vw, 40vw"
-                    priority={i === 0}
-                    className={styles.plate}
-                  />
-                </div>
-              );
-            })}
-          </GlowWrap>
-        </div>
+      {/* The control rail sits under the stage and follows the active slide's
+          alignment, so it reads as part of whichever composition is on screen
+          rather than as furniture bolted to one corner. */}
+      <div
+        className={cx(
+          "sf-container",
+          styles.railWrap,
+          ALIGN_CLASS[activeAlign]
+        )}
+      >
+        <HeroIndex
+          index={index}
+          total={total}
+          names={names}
+          shortNames={shortNames}
+          intervalMs={config.intervalMs}
+          autoplayOn={autoplayOn}
+          paused={paused}
+          userPaused={userPaused}
+          showArrows={config.showArrows}
+          showCounter={config.showCounter}
+          showProgress={config.showProgress && !prefersReducedMotion}
+          showIndex={config.showControls}
+          onSelect={goTo}
+          onPrev={() => goTo((prev) => prev - 1)}
+          onNext={() => goTo((prev) => prev + 1)}
+          onTogglePause={() => setUserPaused((prev) => !prev)}
+        />
       </div>
     </section>
   );

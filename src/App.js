@@ -80,6 +80,11 @@ const NotFound = React.lazy(() => import("./pages/NotFound/NotFound"));
 // same <Suspense fallback={<RouteFallback/>}> as the pages it wraps, so it
 // loads exactly the way they already do.
 const AdminLayout = React.lazy(() => import("./components/AdminLayout/AdminLayout"));
+// The theme provider above BOTH halves of the admin route tree — the sign-in
+// screen and the shell — so the light/dark choice is made once and there is no
+// flash of the other mode on the way in. Lazy with the rest of the admin: a
+// storefront visitor must not download the admin theme.
+const AdminShell = React.lazy(() => import("./components/AdminLayout/AdminShell"));
 
 const AdminLogin = React.lazy(() => import("./pages/Admin/AdminLogin"));
 const AdminDashboard = React.lazy(() => import("./pages/Admin/AdminDashboard"));
@@ -259,7 +264,7 @@ function App() {
                           rebuilt in place and keeps its historical
                           /admin/hero-section path — Settings and any bookmark
                           point at it, and renaming it buys nothing visible. */}
-                      <Route path="/admin">
+                      <Route path="/admin" element={<AdminShell />}>
                         <Route index element={<AdminLogin />} />
                         <Route element={<AdminLayout />}>
                           <Route path="dashboard" element={<AdminDashboard />} />

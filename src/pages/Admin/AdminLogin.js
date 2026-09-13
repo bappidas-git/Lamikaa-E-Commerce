@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import {
   Box,
@@ -17,7 +17,7 @@ import { useAdmin } from "../../context/AdminContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../../components/brand/Logo";
 import brand from "../../config/brand";
-import buildAdminTheme from "../../theme/adminTheme";
+import { useAdminTheme } from "../../context/AdminThemeContext";
 import useAdminBodyClass from "../../hooks/useAdminBodyClass";
 import { setPageTitle } from "../../utils/documentTitle";
 
@@ -30,7 +30,11 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading: adminLoading } = useAdmin();
   const { storeName } = useStoreSettings();
-  useAdminBodyClass();
+  // The door is themed by the same provider the shell is (`AdminShell`), so
+  // signing in never flashes the other mode; the switch itself is in the shell's
+  // app bar, where it belongs — the sign-in screen is not a settings screen.
+  const { mode, theme: adminTheme } = useAdminTheme();
+  useAdminBodyClass(mode);
 
   // Name the tab like every other admin screen. No release: signing in unmounts
   // this route into AdminLayout, which claims the tab for the screen it lands on.
@@ -82,10 +86,6 @@ const AdminLogin = () => {
       setIsLoading(false);
     }
   };
-
-  // One admin theme — dark, like the rest of the app. Built once so the
-  // login card is not re-themed on every keystroke.
-  const adminTheme = useMemo(() => buildAdminTheme(), []);
 
   // Wait for the sessionStorage restore before deciding what to render, so an
   // already-authenticated admin never sees a flash of the login form.
@@ -146,7 +146,10 @@ const AdminLogin = () => {
           backdropFilter: "blur(20px)",
           "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))":
             { backgroundColor: theme.palette.background.paper },
-          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.55)",
+          boxShadow:
+            theme.palette.mode === "dark"
+              ? "0 24px 64px rgba(0, 0, 0, 0.55)"
+              : "0 24px 64px rgba(74, 58, 32, 0.18)",
         })}
       >
           {/* Logo/Header */}

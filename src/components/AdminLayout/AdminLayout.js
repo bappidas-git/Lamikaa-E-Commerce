@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, Outlet, Navigate } from "react-router-dom";
 import {
   Box,
@@ -33,11 +33,8 @@ import { useAdmin } from "../../context/AdminContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../brand/Logo";
 import brand from "../../config/brand";
-import buildAdminTheme, {
-  ADMIN_GOLD_GRADIENT,
-  ADMIN_MAIN_ID,
-  ADMIN_PALETTE,
-} from "../../theme/adminTheme";
+import { ADMIN_MAIN_ID, ADMIN_PALETTE } from "../../theme/adminTheme";
+import { useAdminTheme } from "../../context/AdminThemeContext";
 import {
   releasePageTitle,
   setPageTitle,
@@ -197,9 +194,12 @@ const AdminLayout = () => {
   // formatCurrency() helper, which cannot ask React for a re-render itself).
   const { store, storeName } = useStoreSettings();
   // Dedicated admin theme — the LAMIKAA palette in the admin's own flat design
-  // language. There is no mode to track, so the theme is built once.
-  const adminTheme = useMemo(() => buildAdminTheme(), []);
-  useAdminBodyClass();
+  // language, in whichever of its two modes this administrator last chose.
+  // `AdminShell` holds the provider above both the sign-in screen and this one,
+  // so the mode survives the login → dashboard swap; the ThemeProvider below is
+  // kept so the shell still paints if it is ever mounted on its own.
+  const { mode, theme: adminTheme, toggleMode } = useAdminTheme();
+  useAdminBodyClass(mode);
 
   // The tab names the screen you are on, so a second admin window is
   // identifiable from the taskbar: "Orders \u00b7 Admin \u00b7 LAMIKAA NATURALS".
@@ -517,7 +517,7 @@ const AdminLayout = () => {
                         insetBlock: 0,
                         insetInlineStart: 0,
                         width: 3,
-                        backgroundImage: ADMIN_GOLD_GRADIENT,
+                        backgroundImage: adminTheme.palette.gradient.gold,
                       }
                     : undefined,
                 }}
@@ -592,6 +592,27 @@ const AdminLayout = () => {
           </IconButton>
 
           <Box sx={{ flexGrow: 1 }} />
+
+          {/* THE LIGHT/DARK SWITCH. A preference of the person at the keyboard,
+              not of the shop — so it is stored in this browser and never sent
+              to the API, where it would follow one administrator's eyes to
+              every machine in the building. `aria-pressed` rather than a second
+              label: it is one control with two states, and a screen reader
+              should hear which one it is in. */}
+          <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+            <IconButton
+              aria-label={
+                mode === "dark" ? "Switch to light mode" : "Switch to dark mode"
+              }
+              aria-pressed={mode === "light"}
+              sx={{ color: "text.primary" }}
+              onClick={toggleMode}
+            >
+              <Icon
+                icon={mode === "dark" ? "mdi:weather-sunny" : "mdi:weather-night"}
+              />
+            </IconButton>
+          </Tooltip>
 
           {/* Notifications */}
           <Tooltip title="Notifications">
