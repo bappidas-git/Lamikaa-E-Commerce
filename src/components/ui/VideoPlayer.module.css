@@ -187,3 +187,56 @@
     transform: none;
   }
 }
+
+/* ---- embeds --------------------------------------------------------------
+   A provider's player (YouTube, Vimeo, …) in place of the <video>. The wrapper
+   holds the frame's shape so the poster and the iframe that replaces it occupy
+   exactly the same box — pressing play must not reflow the gallery. */
+.embedWrap {
+  aspect-ratio: 16 / 9;
+  background: var(--sf-color-bg);
+}
+
+.iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* The still that stands in until the shopper presses play: the row's poster,
+   the provider's own thumbnail, or the product cover. It covers, like the film
+   it stands for. */
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--sf-color-bg);
+}
+
+/* No still anywhere — a quiet mark rather than a black rectangle. */
+.posterEmpty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--sf-color-text-secondary);
+  font-size: 3rem;
+  opacity: 0.5;
+}
+
+/* "YouTube" / "Vimeo" — who owns the player that is about to open. Bottom-left,
+   opposite the corner a provider puts its own logo in. */
+.provider {
+  position: absolute;
+  bottom: var(--sf-space-3);
+  left: var(--sf-space-3);
+  padding: 2px var(--sf-space-3);
+  border-radius: var(--sf-radius-pill);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-xs);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}

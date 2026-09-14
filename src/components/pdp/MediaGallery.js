@@ -5,6 +5,7 @@ import { DURATION, INSTANT, t } from "../../theme/motion";
 import { cld } from "../../utils/cloudinary";
 import { onImageError, PLACEHOLDER_IMG } from "../../utils/helpers";
 import { primaryImage, productAlt, productMedia } from "../../utils/product";
+import { videoThumbnail } from "../../utils/videoSource";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import useSwipe from "../../hooks/useSwipe";
 import { Button, CloudinaryImage, GlowWrap, VideoPlayer } from "../ui";
@@ -102,12 +103,16 @@ export const thumbLabel = (product, row) =>
  * The delivered thumbnail: a square, 144px for a 72px tile on a 2x screen,
  * holding the whole frame padded onto its own sampled ground — so the rail
  * reads as the stage in miniature and a shopper can tell two frames apart by
- * what is actually in them. A video shows its poster, or the pack itself when
- * the record has not been given one.
+ * what is actually in them. A video shows its poster, then the still its own
+ * provider publishes (a YouTube or Dailymotion link arrives with one, which is
+ * a truer thumbnail for that row than the pack), and only then the pack itself.
  */
 export const thumbSource = (row, posterFallback = "") => {
   if (!row) return "";
-  const source = row.type === "video" ? row.poster || posterFallback : row.url;
+  const source =
+    row.type === "video"
+      ? row.poster || videoThumbnail(row.url) || posterFallback
+      : row.url;
   if (!source) return "";
   return cld(source, { ar: "1:1", pad: true, w: THUMB_WIDTH });
 };
@@ -292,7 +297,10 @@ const MediaGallery = ({
                 {isVideo ? (
                   <VideoPlayer
                     src={row.url}
-                    poster={row.poster || posterFallback || undefined}
+                    // Not pre-collapsed: the player slots the provider's own
+                    // still between these two.
+                    poster={row.poster || undefined}
+                    posterFallback={posterFallback}
                     title={row.title || `${name} video`}
                     preload="metadata"
                     className={styles.videoFrame}
