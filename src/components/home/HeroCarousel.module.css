@@ -69,17 +69,14 @@
   --sf-hero-card-desktop: 1;
   /* THE CEILING THE BAND ITSELF PUTS ON THE CARD, as a width — the card is 4:5,
      so a height budget × 0.8 is a width budget. On a phone the band is as tall
-     as its content, so the ceiling is the screen: its WIDTH, and its height too
-     — a phone turned on its side is around 400px tall, and 80vw of it is a card
-     taller than the screen it is on, with the headline under it and the whole
-     control rail somewhere past that. Portrait never reaches the second term.
-     On a band asked to be one screen tall the ceiling is that screen less what
-     the band spends elsewhere (see `.hero.heightStandard`), which is what stops
-     a big card turning a "full screen" hero into a screen and a half. The
-     merchant's percentage multiplies the ANSWER, so asking for 130% is still
-     honoured on a short laptop — it is a decision, not a mistake. */
-  --sf-hero-card-fit: min(80vw, 42vh);
-  --sf-hero-card-fit: min(80vw, 42svh);
+     as its content, so the only ceiling is the screen's WIDTH: a phone scrolls,
+     and a card bounded by the height of a handset held on its side is a card
+     nobody asked for at a size nobody can read the pack on. On a band asked to
+     be one screen tall it is that screen (see `.hero.heightStandard`), which is
+     what stops a big card turning a "full screen" hero into a screen and a
+     half. The merchant's percentage multiplies the ANSWER, so asking for 130%
+     is still honoured on a short laptop — it is a decision, not a mistake. */
+  --sf-hero-card-fit: 80vw;
   /* THE SHARE OF THE SPREAD THE CARD TAKES, and where that stops.
      `--sf-hero-card-share` is the proportion the compositions were drawn with —
      the card's column used to be an `fr` share of exactly this size, so at the
@@ -95,22 +92,17 @@
      `heroSlideVars()`; declared here so a slide rendered without it is unlit
      rather than opaque. */
   --sf-hero-panel: 0;
-  /* WHAT THE BAND SPENDS ON SOMETHING OTHER THAN THE SLIDE'S CONTENT. Both are
-     pure geometry, both are read in two places — the boxes that actually draw
-     them, and the card's height budget below — and both are declared HERE so
-     those two can never drift apart. A budget that forgets them is what turned
-     a band asked to be one screen tall into a screen and a half, with the
-     control rail below the fold on every laptop.
-       `--sf-hero-rail`: one 44px control row, the gap, one 44px row of names,
-       the rail's own scroll padding, and the band's floor under it.
-       `--sf-hero-slide-pad`: the slide's own padding, re-pointed at 769px with
-       the padding itself. */
+  /* THE HEIGHT THE CONTROL RAIL RESERVES: one 44px control row, the gap, one
+     44px row of names and the rail's own scroll padding. Pure geometry, and
+     declared here rather than on `.rail` only because the figure is read by the
+     box that draws it AND quoted in the prose beside the card's budget below —
+     it is what the band spends under the stage. It is NOT subtracted from the
+     card (see `.hero.heightStandard`): paying for the rail in card was tried
+     twice and shrank the pack both times. */
   --sf-hero-rail-rows: calc(
     var(--sf-tap-target) + var(--sf-space-4) + var(--sf-tap-target) +
       var(--sf-space-1)
   );
-  --sf-hero-rail: calc(var(--sf-hero-rail-rows) + var(--sf-space-8));
-  --sf-hero-slide-pad: calc(var(--sf-space-6) + var(--sf-space-8));
 
   position: relative;
   display: grid;
@@ -487,6 +479,19 @@
 /* ─── Copy ─────────────────────────────────────────────────────────────── */
 
 .copy {
+  /* THE PLATE'S CONTAINING BLOCK, and the reason it is stated: `.panelScrim`
+     below is an absolutely positioned `::before`, and an abspos box is laid out
+     against the nearest POSITIONED ancestor — not against the element it is
+     attached to. `isolation: isolate` alone is not that: it opens a stacking
+     context, which decides paint ORDER, and touches the containing block not at
+     all. Without this line the bloom resolved against `.stage` instead: a
+     radial wash the full width and height of the whole carousel, with a hard
+     edge where the stage ends, drawn straight across the photograph a few
+     pixels above the control rail. That edge is what a merchant saw as "the
+     overlay is leaving a line", and it is why the storefront did not match the
+     admin's live preview — the preview composes the plate in its own box. Both
+     declarations are load-bearing and they do different jobs. */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--sf-space-5);
@@ -913,7 +918,7 @@
   max-width: 100%;
   /* Reserving the rail's height means the page below the hero does not jump
      when the index arrives. The figure is `--sf-hero-rail-rows` on the section,
-     because the card's height budget has to subtract exactly this box. */
+     where it is declared once and described beside the card's budget. */
   min-height: var(--sf-hero-rail-rows);
 }
 
@@ -1177,50 +1182,30 @@
      content — `auto`, `tall` — has no height to run out of either. */
   .hero {
     --sf-hero-card-fit: 100vw;
-    /* Kept in step with the two paddings above BY HAND, because a custom
-       property cannot read a box it does not own. Change one, change this. */
-    --sf-hero-slide-pad: calc(var(--sf-space-8) + var(--sf-space-10));
   }
 
-  /* A CARD IS NEVER TALLER THAN THE ROOM THE BAND HAS FOR IT. On a band asked
-     to be one screen tall the card is bounded by that screen as well as by its
-     designed width (× 0.8, because it is 4:5), so a short laptop gets a card
-     that fits rather than one that has to be scrolled past.
+  /* A CARD IS NEVER TALLER THAN THE BAND IT SITS IN. On a band asked to be one
+     screen tall the card is bounded by that screen as well as by its designed
+     width (× 0.8, because it is 4:5), so a short laptop gets a card that fits
+     rather than one that has to be scrolled past.
 
-     WHAT THE SCREEN IS BOUNDING IS THE SLIDE, NOT THE BAND, so the rail and the
-     slide's own padding come off the budget FIRST: they are the rest of the
-     band, and a card allowed to fill the whole screen leaves them nowhere to go
-     but under it. Sizing the card against the band's full height read as the
-     generous answer and was the opposite — it put the arrows, the pause, the
-     counter and the whole product index below the fold on every laptop, which
-     is a carousel a visitor cannot see is a carousel. The card gives up 64px on
-     a 900px screen for it, `max()` is a guard rather than a size — it keeps a
-     window shorter than the chrome, the rail and the padding put together from
-     resolving to a NEGATIVE length, and binds on nothing a visitor browses in
-     — and the merchant's percentage still multiplies the answer: asking for a
-     bigger card is a decision this honours, not a mistake it corrects. `auto`
-     and `tall` are exempt — both are asking for a band taller than the
-     screen. */
+     THE RAIL IS NOT SUBTRACTED FROM IT, and that is deliberate — it has been
+     tried twice and shrank the pack both times. Taking the control rail and the
+     slide's padding off the screen FIRST reads as the careful answer and is
+     not: it costs a 900px laptop a fifth of its card (474px where the
+     composition was drawn at 560) and it does not buy what it is for, because
+     what makes a full-screen band overflow is the copy column and the rail
+     under it, not the width of the pack. Paying for the rail in card is paying
+     the wrong account; the short-screen bracket at the foot of this file is
+     where that height is actually found, in leading and padding. The band's own
+     height is the honest ceiling, and the merchant's percentage multiplies it:
+     asking for a bigger card on a short screen is a decision this honours, not
+     a mistake it corrects. `auto` and `tall` are exempt — both are asking for a
+     band taller than the screen. */
   .hero.heightStandard,
   .hero.heightCompact {
-    --sf-hero-card-fit: max(
-      200px,
-      calc(
-        (
-            100vh - var(--sf-hero-chrome) - var(--sf-hero-rail) -
-              var(--sf-hero-slide-pad)
-          ) * 0.8
-      )
-    );
-    --sf-hero-card-fit: max(
-      200px,
-      calc(
-        (
-            100svh - var(--sf-hero-chrome) - var(--sf-hero-rail) -
-              var(--sf-hero-slide-pad)
-          ) * 0.8
-      )
-    );
+    --sf-hero-card-fit: calc((100vh - var(--sf-hero-chrome)) * 0.8);
+    --sf-hero-card-fit: calc((100svh - var(--sf-hero-chrome)) * 0.8);
   }
 
   .slideInner {
@@ -1505,23 +1490,21 @@
 
    A band asked to be one screen tall has one screen to spend, and on these the
    display tier that reads as editorial on a tall monitor spends a third of it
-   on three lines of headline — which is what pushed the control rail off the
-   bottom of the band. One step down the scale, a tighter rhythm between the
-   lines, and the whole composition — words, card, buttons, arrows, counter and
-   the product index — is on the screen at once. Nothing is hidden and nothing
-   is cropped; the type is set for the screen it is actually on.
+   on three lines of headline. One step down the scale and a tighter rhythm
+   between the lines gives the band back 30-40px of height, and it gives it back
+   out of the two things nobody is looking at — the leading and the air around
+   it — rather than out of the card, which is the one thing on the slide a
+   visitor came to see. Nothing is hidden and nothing is cropped; the type is
+   set for the screen it is actually on.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (min-width: 769px) and (max-height: 900px) {
-  /* The slide's own air, and the property that has to stay in step with it —
-     the card's budget is the screen less the chrome, the rail and THIS. */
+  /* The slide's own air. This is where a short band's height is found — in
+     padding and leading, which nobody is looking at — rather than in the card,
+     which is the one thing on the slide a visitor came to see. */
   .slide {
     padding-top: var(--sf-space-6);
     padding-bottom: var(--sf-space-4);
-  }
-
-  .hero {
-    --sf-hero-slide-pad: calc(var(--sf-space-6) + var(--sf-space-4));
   }
 
   .copy {
