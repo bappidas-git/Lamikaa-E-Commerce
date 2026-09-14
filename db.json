@@ -164,13 +164,8 @@
       "metaTitle": "Black Rice Face Wash · LAMIKAA NATURALS",
       "metaDescription": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-<<<<<<< Updated upstream
       "updatedAt": "2026-09-14T09:31:53.795Z",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
-=======
-      "updatedAt": "2026-09-11T10:12:40.602Z",
-      "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
->>>>>>> Stashed changes
       "heroBackground": null
     },
     {
@@ -1552,11 +1547,7 @@
       "isActive": true,
       "sortOrder": 1,
       "createdAt": "2026-09-06T00:00:00.000Z",
-<<<<<<< Updated upstream
       "updatedAt": "2026-09-11T11:24:00.756Z"
-=======
-      "updatedAt": "2026-09-11T10:17:23.352Z"
->>>>>>> Stashed changes
     },
     {
       "id": 2,
@@ -1970,7 +1961,6 @@
     "showProgress": true,
     "showArrows": true,
     "showPause": true,
-<<<<<<< Updated upstream
     "theme": "light",
     "height": "standard",
     "eyebrowLabel": "Black Rice Ritual",
@@ -1991,13 +1981,10 @@
       "showActions": true,
       "theme": "inherit"
     },
-=======
->>>>>>> Stashed changes
     "background": {
       "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121532/hero_image_desktop.png",
       "mobileUrl": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121524/mobile.png",
       "position": "center",
-<<<<<<< Updated upstream
       "overlay": 20,
       "blur": 0,
       "showContent": true
@@ -2279,13 +2266,6 @@
       }
     ],
     "updatedAt": "2026-09-14T09:34:55.185Z"
-=======
-      "overlay": 55,
-      "blur": 0,
-      "showContent": true
-    },
-    "updatedAt": "2026-09-11T10:14:36.913Z"
->>>>>>> Stashed changes
   },
   "settings": {
     "store": {
