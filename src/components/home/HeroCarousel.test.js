@@ -171,12 +171,44 @@ describe("HeroCarousel.module.css", () => {
     expect(headline).toMatch(/letter-spacing:/);
   });
 
-  // A band asked to be one screen tall has the rail and the slide's own padding
-  // to pay for out of that screen. A card budget that forgets them is a band a
-  // screen and a half tall, with every control below the fold.
-  it("takes the rail and the slide's padding off the card's height budget", () => {
-    expect(css).toMatch(
-      /--sf-hero-card-fit:[\s\S]{0,240}?--sf-hero-rail[\s\S]{0,80}?--sf-hero-slide-pad/
+  // THE CARD'S BUDGET IS THE BAND'S OWN HEIGHT, and the rail is not taken off
+  // it. Subtracting the rail and the slide's padding has been tried twice and
+  // shrank the pack both times — a 900px laptop lost a fifth of its card — for
+  // height that is properly found in the short-screen bracket's leading and
+  // padding instead. Pinned here because it is a DECISION, and a decision only
+  // a comment holds down is a decision the next edit reverses.
+  const budget = (
+    /\.hero\.heightStandard,\s*\n\s*\.hero\.heightCompact\s*\{([\s\S]*?)\}/m.exec(
+      css
+    ) || []
+  )[1];
+
+  it("bounds the card by the band's own height", () => {
+    expect(budget).toMatch(
+      /--sf-hero-card-fit:\s*calc\(\(100svh - var\(--sf-hero-chrome\)\) \* 0\.8\)/
     );
+  });
+
+  it("does not pay for the control rail out of the card", () => {
+    expect(budget).not.toMatch(/--sf-hero-rail\b|--sf-hero-slide-pad\b/);
+  });
+
+  // THE PLATE UNDER THE COPY IS AN ABSPOS `::before`, so the column it belongs
+  // to has to be its containing block. `isolation: isolate` is NOT that — it
+  // opens a stacking context and leaves the containing block alone — and
+  // without `position: relative` beside it the bloom resolved against `.stage`
+  // and washed the whole carousel, with a hard edge across the photograph where
+  // the stage ends. jsdom computes no CSS module, so nothing else can catch it.
+  // `.copy` is written twice — once in the handover block for the crossfade,
+  // once for the column itself — so the rule is taken from the one that carries
+  // `isolation`, not from whichever comes first.
+  const copy =
+    [...css.matchAll(/^\.copy\s*\{([\s\S]*?)^\}/gm)]
+      .map((m) => m[1])
+      .find((body) => /isolation/.test(body)) || "";
+
+  it("gives the copy column a containing block for its plate", () => {
+    expect(copy).toMatch(/position:\s*relative/);
+    expect(copy).toMatch(/isolation:\s*isolate/);
   });
 });

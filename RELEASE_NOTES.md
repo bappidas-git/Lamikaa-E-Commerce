@@ -1,5 +1,65 @@
 # Release notes
 
+## 1.4.3-lamikaa — 2026-09-14
+
+Two things a merchant saw on the home page and could not explain: a hard line
+drawn straight across the hero's photograph a little above the control rail,
+which the admin's own live preview never showed; and a product card that had
+quietly shrunk on every laptop. Both are fixed, and the second is a decision
+put back rather than a bug: the card is bounded by the band, not by what the
+band spends on furniture.
+
+### Fixed
+
+- **The overlay no longer leaves a line across the hero.** The ground under the
+  hero's copy (`panel: "scrim"`) is an absolutely positioned `::before` on
+  `.copy` — and an absolutely positioned box is laid out against the nearest
+  POSITIONED ancestor, not against the element it is attached to. `.copy`
+  carried `isolation: isolate` and nothing else, and isolation opens a stacking
+  context (paint ORDER) without touching the containing block, so the bloom
+  resolved against `.stage` instead: one radial wash the full width and height
+  of the carousel, with a hard edge where the stage ends — 116px above the foot
+  of the band, straight through the arrows and the counter. `position: relative`
+  on `.copy` puts the plate back in the column it belongs to. This is also
+  exactly why the storefront did not match Admin → Home & Hero: the preview's
+  copy column has always set `position: relative`, so it drew the same gradient
+  correctly. Measured on the built storefront at 1536x760 and 1920x905, on all
+  eight slides: the seam is gone, and the plate is the bounded, soft-edged
+  bloom the preview shows.
+
+- **The hero's product card is its designed size again.** 1.4.2 took the control
+  rail and the slide's own padding off the card's height budget, which cost a
+  laptop a fifth of its pack — 474px where the composition was drawn at 560, and
+  384px on a 1536x760 screen. The budget is the band's own height once more
+  (`--sf-hero-card-fit: calc((100svh - var(--sf-hero-chrome)) * 0.8)`), so the
+  card is 560px at 1920x905, 534px at 1366x768 and 528px at 1536x760. A phone's
+  card is bounded by the screen's WIDTH again (`80vw`, not `min(80vw, 42svh)`):
+  a phone scrolls, and a card sized from the height of a handset held on its
+  side is 151px of pack on a 360px-tall screen. Portrait was never affected in
+  either direction. The height that 1.4.2 was looking for is still found — in
+  the short-screen bracket's padding and leading, which nobody is looking at —
+  and on a screen 900px or shorter it keeps the band 32px shorter than it was
+  before 1.4.2 at the same card size.
+
+  **The trade-off, stated:** a 4:5 card 560px wide is 700px tall, and 700px of
+  card plus 40px of padding plus the 140px rail does not fit in the 660px a
+  "Full screen" band has at 1536x760 however it is divided. With the card at its
+  designed size the rail sits below the fold on a short laptop — which is the
+  behaviour the band had before 1.4.2, and is the way round the size was asked
+  for. A merchant who wants the controls above the fold on a short screen can
+  set the card below 100% in Admin → Home & Hero → Composition, or choose the
+  "Compact" band height.
+
+### Changed
+
+- **`HeroCarousel.test.js` pins the decision rather than its opposite.** The
+  guard added in 1.4.2 asserted that the rail comes off the card's budget; two
+  guards now assert that it does not and that the budget is the band's own
+  height, so the next edit reads the reasoning before reversing it. A third
+  reads `.copy` and asserts both `position: relative` and `isolation: isolate`
+  — jsdom computes no CSS module, so a containing block lost to an unrelated
+  edit can fail no other way.
+
 ## 1.4.2-lamikaa — 2026-09-14
 
 The home page's opening spread is a carousel again on the screen most visitors
