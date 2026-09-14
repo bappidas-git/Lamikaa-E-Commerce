@@ -194,6 +194,16 @@ schema). A few things are worth knowing before you touch it:
   mirrors** kept in step by `normalizeProduct`/`syncProductMedia`, because cart
   lines, wishlist snapshots and order items keep a copy of `images[0]` that
   cannot be re-derived later. Edit `media[]`; never edit the mirrors by hand.
+- **A video row's `url` may be a file or a hosted link.** A direct file
+  (`.mp4`, `.webm`, a Cloudinary delivery URL) plays in the storefront's own
+  player, with its own controls. A YouTube, Vimeo, Dailymotion, Google Drive or
+  Loom link plays in that provider's embedded player instead —
+  `utils/videoSource.js` decides which, and is the one place a provider is
+  added. Hosted links are recognised in every shape they are shared in
+  (`youtu.be/…`, `/shorts/…`, a `?t=` start time, an unlisted Vimeo hash), and
+  a hosted row needs no `poster`: the provider's own thumbnail is used, falling
+  back to the product's primary image. Nothing third-party loads until the
+  shopper presses play. Anything unrecognised is treated as a file.
 - **`heroConfig.slides[]`** is the home carousel, in order. An entry is either
   `{ kind: "product", productId }` or `{ kind: "custom", … }` — a **poster**: a
   picture with as much or as little on it as the merchant wants (an eyebrow, a

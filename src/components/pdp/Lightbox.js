@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { cld } from "../../utils/cloudinary";
 import { onImageError, PLACEHOLDER_IMG } from "../../utils/helpers";
-import { productAlt } from "../../utils/product";
+import { primaryImage, productAlt } from "../../utils/product";
 import useSwipe from "../../hooks/useSwipe";
 import Modal from "../ui/Modal";
 import VideoPlayer from "../ui/VideoPlayer";
@@ -445,6 +445,7 @@ const Lightbox = ({
             key={row.url}
             src={row.url}
             poster={row.poster || undefined}
+            posterFallback={primaryImage(product)?.url || ""}
             title={title}
             preload="metadata"
             className={styles.video}

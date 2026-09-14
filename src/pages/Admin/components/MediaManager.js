@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import { cld, isCloudinary } from "../../../utils/cloudinary";
 import { validateMedia } from "../../../utils/product";
+import { parseVideoSource } from "../../../utils/videoSource";
 import { ADMIN_PALETTE } from "../../../theme/adminTheme";
 
 // =============================================================================
@@ -25,6 +26,15 @@ import { ADMIN_PALETTE } from "../../../theme/adminTheme";
 // `<video preload="metadata">` for a video. If the browser cannot load it, the
 // row says so before the merchant saves; there is no other reachability check,
 // and a HEAD request from a CRA page would only have hit CORS anyway.
+//
+// A VIDEO LINK IS EITHER A FILE OR AN EMBED, and the preview has to know which
+// (`utils/videoSource.js` decides). A hosted link — YouTube, Vimeo, Dailymotion,
+// Drive, Loom — is an HTML player, so `<video>` cannot load it BY DESIGN: probing
+// one would print "Video could not be loaded" under a link that is perfectly
+// good, which is the exact false alarm this section used to give. Those rows
+// preview as the provider's own thumbnail under a chip naming the provider —
+// which doubles as the confirmation that the link was RECOGNISED — and only a
+// direct file is put through the `<video>` reachability check.
 //
 // TWO LISTS, ONE ARRAY. Images and videos are edited as separate ordered lists
 // because they are separate decisions — which picture leads a card, which film
@@ -519,9 +529,14 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
           {videos.map((row, index) => {
             const url = trimmed(row.url);
             const poster = trimmed(row.poster);
-            const unreachable = url && videoStatus[url] === "error";
+            const source = parseVideoSource(url);
+            const embed = source.kind === "embed";
+            // Only a FILE can be unreachable here: an embed is never handed to
+            // <video>, so it can never report an error it was destined to give.
+            const unreachable = !embed && url && videoStatus[url] === "error";
             const message = rowError(row) || (unreachable ? "Video could not be loaded" : "");
             const playable = /^https?:\/\/\S+$/i.test(url);
+            const still = poster || source.thumbnail;
             return (
               <Paper
                 /* eslint-disable-next-line react/no-array-index-key */
@@ -536,24 +551,41 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
                 <Box sx={thumbBoxSx}>
                   {playable ? (
                     <>
-                      {/* `preload="metadata"` IS the reachability check: it loads
-                          the header and nothing more, then reports which way it
-                          went. It also paints the poster, or the first frame. */}
-                      <Box
-                        component="video"
-                        src={url}
-                        poster={poster || undefined}
-                        preload="metadata"
-                        muted
-                        playsInline
-                        onLoadedMetadata={() =>
-                          setVideoStatus((s) => (s[url] === "ok" ? s : { ...s, [url]: "ok" }))
-                        }
-                        onError={() =>
-                          setVideoStatus((s) => (s[url] === "error" ? s : { ...s, [url]: "error" }))
-                        }
-                        sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                      />
+                      {embed ? (
+                        /* The provider's own still, where it publishes one at a
+                           predictable address. Vimeo and Loom do not, so the
+                           tile falls back to the plain film mark. */
+                        still ? (
+                          <Box
+                            component="img"
+                            src={still}
+                            alt=""
+                            loading="lazy"
+                            sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          />
+                        ) : (
+                          <Icon icon="mdi:play-box-outline" style={{ fontSize: 22, opacity: 0.6 }} />
+                        )
+                      ) : (
+                        /* `preload="metadata"` IS the reachability check: it loads
+                           the header and nothing more, then reports which way it
+                           went. It also paints the poster, or the first frame. */
+                        <Box
+                          component="video"
+                          src={url}
+                          poster={poster || undefined}
+                          preload="metadata"
+                          muted
+                          playsInline
+                          onLoadedMetadata={() =>
+                            setVideoStatus((s) => (s[url] === "ok" ? s : { ...s, [url]: "ok" }))
+                          }
+                          onError={() =>
+                            setVideoStatus((s) => (s[url] === "error" ? s : { ...s, [url]: "error" }))
+                          }
+                          sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                      )}
                       <Box
                         aria-hidden="true"
                         sx={{
@@ -587,7 +619,17 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
                       size="small"
                       error={!!message}
                       sx={{ flex: 2, minWidth: 200 }}
-                      placeholder="https://… .mp4"
+                      placeholder="https://… (YouTube, Vimeo, or a direct .mp4)"
+                      // Naming the provider back at the merchant is the receipt
+                      // that the link parsed: paste a YouTube URL and the field
+                      // says "YouTube" before they ever save.
+                      helperText={
+                        embed
+                          ? `${source.label} — plays in an embedded player`
+                          : url
+                          ? "Direct video file"
+                          : " "
+                      }
                     />
                     <TextField
                       label="Title"
@@ -606,7 +648,11 @@ const MediaManager = ({ value, onChange, productName, errors }) => {
                     fullWidth
                     sx={{ mt: 1 }}
                     placeholder="https://…"
-                    helperText="Optional — the primary image is used when this is empty."
+                    helperText={
+                      embed && source.thumbnail
+                        ? `Optional — ${source.label}'s own thumbnail is used when this is empty.`
+                        : "Optional — the primary image is used when this is empty."
+                    }
                   />
                   {errorText(message)}
                 </Box>

@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import useInView from "../../hooks/useInView";
+import { parseVideoSource } from "../../utils/videoSource";
 import styles from "./VideoPlayer.module.css";
 
 // =============================================================================
@@ -12,6 +13,26 @@ import styles from "./VideoPlayer.module.css";
 // that the chrome is OURS: a champagne play badge on the poster, a hairline of
 // progress, and a mute toggle, instead of a browser's grey control bar sitting
 // on top of a brand film.
+//
+// TWO KINDS OF LINK, ONE COMPONENT. `utils/videoSource.js` reads the `src` and
+// says which it is, and this branches exactly once on the answer:
+//
+//   FILE  (.mp4, Cloudinary, S3, anything unrecognised) — the <video> below,
+//         with all the chrome and every rule in this header, unchanged.
+//
+//   EMBED (YouTube, Vimeo, Dailymotion, Drive, Loom) — those hosts serve an
+//         HTML player, not a media file, so <video src> could never decode one:
+//         it failed instantly and the gallery said "Video unavailable" on a
+//         link that plays fine in a tab. Those get the provider's iframe.
+//
+// AN EMBED SITS BEHIND OUR POSTER UNTIL IT IS PRESSED. The iframe is not
+// rendered at all until the badge is pressed — which is the no-autoplay rule
+// enforced by construction (there is no player yet to autoplay), and also means
+// no third-party script, cookie or request happens to a shopper who only
+// scrolled past the frame. The still is the row's own `poster`, else the
+// thumbnail the provider already publishes, else the product's primary image.
+// Once pressed, the provider's own controls are the controls — we do not draw a
+// mute button over a player whose sound we cannot reach.
 //
 // THE RULES IT ENFORCES
 //   • It never autoplays, so it can never autoplay with sound. Playback starts
@@ -33,7 +54,8 @@ import styles from "./VideoPlayer.module.css";
 // FAILURE. A dead URL is likely here: the seeded clips are third-party
 // placeholders (PLACEHOLDER_ASSETS.md). On `error` the poster stays up under a
 // plain "Video unavailable" line, and the element hands over its own native
-// controls — whatever the browser can still do with the source, it may.
+// controls — whatever the browser can still do with the source, it may. An
+// embed reports its own failures inside its iframe, in the provider's words.
 // =============================================================================
 
 const SEEK_STEP = 5;
@@ -44,6 +66,11 @@ const supportsFullscreen = (node) =>
 const VideoPlayer = ({
   src,
   poster,
+  // The last resort behind `poster` and the provider's own still — in practice
+  // the product's primary image. Kept a separate prop rather than folded into
+  // `poster` by the caller so the priority (row poster, then the provider's
+  // published thumbnail, then the product cover) lives in ONE place.
+  posterFallback = "",
   title = "",
   preload = "metadata",
   muted: mutedProp = true,
@@ -53,7 +80,16 @@ const VideoPlayer = ({
 }) => {
   const videoRef = useRef(null);
   const wrapRef = useRef(null);
+  const iframeRef = useRef(null);
 
+  // Which kind of link this is. Memoised on the URL alone: it is pure string
+  // work, but it runs on every frame of a gallery crossfade otherwise.
+  const source = useMemo(() => parseVideoSource(src), [src]);
+  const isEmbed = source.kind === "embed";
+
+  // EMBED ONLY: has the shopper pressed play? Until they have, there is no
+  // iframe in the document at all.
+  const [activated, setActivated] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(mutedProp);
   const [progress, setProgress] = useState(0);
@@ -77,6 +113,13 @@ const VideoPlayer = ({
     setCanFullscreen(supportsFullscreen(videoRef.current));
   }, []);
 
+  // A new URL is a new video: the poster goes back up and the previous
+  // provider's iframe leaves the document with its audio.
+  useEffect(() => {
+    setActivated(false);
+    setPlaying(false);
+  }, [src]);
+
   const play = useCallback(() => {
     const node = videoRef.current;
     if (!node) return;
@@ -86,9 +129,20 @@ const VideoPlayer = ({
     if (started?.catch) started.catch(() => setPlaying(false));
   }, []);
 
+  // Pausing an embed means asking it to pause: the iframe is another origin, so
+  // there is no element to call .pause() on. Each provider listens for its own
+  // message (videoSource.js carries it); the ones that publish no such command
+  // simply do not stop, which is why `pauseMessage` may be empty.
   const pause = useCallback(() => {
+    if (isEmbed) {
+      const frame = iframeRef.current;
+      if (frame?.contentWindow && source.pauseMessage) {
+        frame.contentWindow.postMessage(source.pauseMessage, "*");
+      }
+      return;
+    }
     videoRef.current?.pause();
-  }, []);
+  }, [isEmbed, source.pauseMessage]);
 
   const toggle = useCallback(() => {
     const node = videoRef.current;
@@ -168,6 +222,81 @@ const VideoPlayer = ({
 
   const label = title || "video";
   const minimal = controlsVariant === "minimal";
+  const still = poster || source.thumbnail || posterFallback;
+
+  // ── EMBED ────────────────────────────────────────────────────────────────
+  // Everything above this line ran for both kinds (hooks cannot be branched);
+  // everything below the return is the file player.
+  if (isEmbed) {
+    const activate = () => {
+      setActivated(true);
+      setPlaying(true);
+    };
+
+    return (
+      <div
+        ref={wrapRef}
+        className={[styles.wrap, styles.embedWrap, className].filter(Boolean).join(" ")}
+        role="group"
+        aria-label={title || undefined}
+        // Only a focus target while it is still a poster. Once the provider's
+        // player is in the document, IT is the thing you tab into.
+        tabIndex={activated ? undefined : 0}
+        onKeyDown={
+          activated
+            ? undefined
+            : (event) => {
+                // A press that landed on the badge is the badge's.
+                if (event.target.closest?.("button")) return;
+                if (event.key === " " || event.key === "Enter" || event.key === "k" || event.key === "K") {
+                  event.preventDefault();
+                  activate();
+                }
+              }
+        }
+        {...rest}
+      >
+        {activated ? (
+          <iframe
+            ref={iframeRef}
+            className={styles.iframe}
+            // `autoplay` is honest here: the shopper just pressed play, and the
+            // frame did not exist until they did.
+            src={source.embedUrl({ autoplay: true })}
+            title={title || `${source.label} video`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        ) : (
+          <>
+            {still ? (
+              <img src={still} alt="" className={styles.poster} loading="lazy" decoding="async" />
+            ) : (
+              <span className={styles.posterEmpty} aria-hidden="true">
+                <Icon icon="mdi:play-box-outline" />
+              </span>
+            )}
+
+            <button
+              type="button"
+              className={styles.badge}
+              onClick={activate}
+              aria-label={`Play ${label} on ${source.label}`}
+            >
+              <Icon icon="mdi:play" aria-hidden="true" />
+            </button>
+
+            {/* Whose player is about to open. A shopper deserves to know before
+                they press that the next frame is not ours. */}
+            <span className={`sf-glass ${styles.provider}`}>{source.label}</span>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ── FILE ─────────────────────────────────────────────────────────────────
 
   return (
     <div
@@ -185,7 +314,7 @@ const VideoPlayer = ({
         ref={videoRef}
         className={styles.video}
         src={src}
-        poster={poster || undefined}
+        poster={still || undefined}
         preload={preload}
         title={title || undefined}
         playsInline
@@ -206,8 +335,8 @@ const VideoPlayer = ({
 
       {errored ? (
         <div className={styles.error}>
-          {poster ? (
-            <img src={poster} alt="" className={styles.errorPoster} />
+          {still ? (
+            <img src={still} alt="" className={styles.errorPoster} />
           ) : null}
           <p className={styles.errorText}>Video unavailable</p>
         </div>
