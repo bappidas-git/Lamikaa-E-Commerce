@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { fireAlert } from "../../utils/alerts";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../hooks/useAuth";
@@ -10,6 +9,7 @@ import {
   normalizeOrderAddress,
 } from "../../utils/helpers";
 import ReviewModal from "../../components/ReviewModal/ReviewModal";
+import ReturnModal from "../../components/ReturnModal/ReturnModal";
 import {
   Button,
   Chip,
@@ -21,6 +21,13 @@ import {
   Skeleton,
 } from "../../components/ui";
 import { orderStatusInfo } from "../../utils/orderStatus";
+import {
+  returnStatusInfo,
+  returnedUnitsByLine,
+  lineKey,
+  reasonLabel,
+  payableRefund,
+} from "../../utils/returns";
 import { STOREFRONT_CONFIG } from "../../theme/tokens";
 import { ROUTES } from "../../utils/constants";
 import useSeo from "../../hooks/useSeo";
@@ -165,7 +172,6 @@ const OrderHistory = () => {
     noindex: true,
   });
 
-  const navigate = useNavigate();
   const { addToCart, setIsCartOpen } = useCart();
   const { user, isAuthenticated, isLoading: authLoading, openAuthModal } = useAuth();
 
@@ -186,6 +192,12 @@ const OrderHistory = () => {
   const [myReviews, setMyReviews] = useState([]);
   const [reviewModal, setReviewModal] = useState({ open: false, product: null, existing: null, orderId: null, orderNumber: null });
 
+  // Returns this customer has raised (any status) — the order card reads them
+  // for its "Return requested / Refunded" line, and the request sheet reads
+  // them to cap each line at what has not already been sent back.
+  const [myReturns, setMyReturns] = useState([]);
+  const [returnModal, setReturnModal] = useState({ open: false, order: null });
+
   useEffect(() => {
     if (authLoading) return; // session restore in progress — keep the loader up
     if (isAuthenticated) {
@@ -200,14 +212,20 @@ const OrderHistory = () => {
     setLoading(true);
     setFetchError(false);
     try {
-      const [response, reviews] = await Promise.all([
+      // Returns ride along with the orders — they are part of the same record
+      // and a returned order that still reads "Delivered" is a lie. A failed
+      // returns fetch degrades to an empty list rather than emptying the
+      // ledger: the orders are the page, the returns are an annotation on it.
+      const [response, reviews, returns] = await Promise.all([
         apiService.orders.getByUserId(user?.id),
         apiService.reviews.getMine(user?.id).catch(() => []),
+        apiService.returns.getByUserId(user?.id).catch(() => []),
       ]);
       const data = Array.isArray(response) ? response : response?.data || response?.orders || [];
       const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setOrders(sorted);
       setMyReviews(Array.isArray(reviews) ? reviews : []);
+      setMyReturns(Array.isArray(returns) ? returns : []);
     } catch (err) {
       // Keep "No orders yet" honest: a failed fetch renders the error state,
       // never the empty state.
@@ -231,6 +249,26 @@ const OrderHistory = () => {
     }
   };
 
+  /** Every return this customer has raised against one order, newest first. */
+  const returnsForOrder = (order) =>
+    myReturns.filter((r) => String(r.orderId) === String(order?.id));
+
+  /** The one worth showing on the card: the newest still-open request, else the newest of all. */
+  const headlineReturn = (order) => {
+    const rows = returnsForOrder(order);
+    if (rows.length === 0) return null;
+    return rows.find((r) => returnStatusInfo(r.status).open) || rows[0];
+  };
+
+  /** Units still returnable across the whole order — 0 once it's all been asked for. */
+  const unitsLeftToReturn = (order) => {
+    const claimed = returnedUnitsByLine(myReturns, order?.id);
+    return (order?.items || []).reduce(
+      (sum, it) => sum + Math.max(0, (Number(it.quantity) || 0) - (claimed[lineKey(it)] || 0)),
+      0
+    );
+  };
+
   const isReturnEligible = (order) => {
     if (orderStatusInfo(order).status !== "delivered") return false;
     // The window starts when the parcel arrived: deliveredAt when recorded,
@@ -239,7 +277,9 @@ const OrderHistory = () => {
     const deliveredOn = order.deliveredAt || order.updatedAt;
     if (!deliveredOn) return false;
     const daysSinceDelivery = (Date.now() - new Date(deliveredOn).getTime()) / (1000 * 60 * 60 * 24);
-    return daysSinceDelivery <= RETURN_WINDOW_DAYS;
+    if (daysSinceDelivery > RETURN_WINDOW_DAYS) return false;
+    // Nothing left to send back — every piece is already on a request.
+    return unitsLeftToReturn(order) > 0;
   };
 
   // Orders can be cancelled until they ship — i.e. while the derived status
@@ -412,6 +452,31 @@ const OrderHistory = () => {
     } finally {
       setCancellingId(null);
     }
+  };
+
+  // ---------------------------------------------------------------------------
+  // RAISING A RETURN
+  // ---------------------------------------------------------------------------
+  // This used to navigate to the contact form with a subject line pre-filled,
+  // which turned a return into a support lead: the request never reached
+  // Admin → Returns, so that screen could only ever be filled by an admin
+  // typing an order number in by hand. It now writes the real record — the same
+  // one the admin's "New Return" writes — and the desk picks it up from the
+  // queue with its Approve / Reject actions already live.
+  const handleOpenReturn = (order) => setReturnModal({ open: true, order });
+
+  const handleCreateReturn = async (payload) => {
+    const created = await apiService.returns.create(payload);
+    // Put it on the page immediately — the card's status line and the next
+    // request's per-line cap both read this list.
+    setMyReturns((prev) => [created, ...prev]);
+    fireAlert({
+      icon: "success",
+      title: "Return requested",
+      html: `We've logged <strong>${created.returnNumber}</strong>. You'll hear from us once it's reviewed — usually within a working day.`,
+      confirmButtonText: "Done",
+    });
+    return created;
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -657,6 +722,7 @@ const OrderHistory = () => {
                 const stageIndex = derived === "delivered" ? 2 : derived === "shipped" ? 1 : 0;
                 const addr = normalizeOrderAddress(order.shippingAddress);
                 const canReorder = reorderableItems(order).length > 0;
+                const orderReturn = headlineReturn(order);
 
                 return (
                   <GlassCard
@@ -749,6 +815,44 @@ const OrderHistory = () => {
                         </div>
                       )}
 
+                      {/* A return already on this order — its number, where it
+                          has got to, and what it's worth back. Shown whatever
+                          the window says: a request outlives its window. */}
+                      {orderReturn && (
+                        <div className={styles.returnLine}>
+                          <Chip variant="status" tone={returnStatusInfo(orderReturn.status).tone}>
+                            {`Return ${returnStatusInfo(orderReturn.status).label}`}
+                          </Chip>
+                          <p className={styles.returnMeta}>
+                            <span className={styles.returnNumber}>{orderReturn.returnNumber}</span>
+                            <span className={styles.metaSep} aria-hidden="true">
+                              /
+                            </span>
+                            {reasonLabel(orderReturn.reason)}
+                            <span className={styles.metaSep} aria-hidden="true">
+                              /
+                            </span>
+                            {/* Once it is settled this is what was PAID, not
+                                what was asked for — a deduction taken on
+                                inspection is named rather than hidden. */}
+                            {formatCurrency(
+                              orderReturn.status === "refunded"
+                                ? payableRefund(orderReturn)
+                                : orderReturn.refundAmount
+                            )}
+                            {orderReturn.status === "refunded" &&
+                            Number(orderReturn.deductionAmount) > 0
+                              ? ` refunded — ${formatCurrency(
+                                  orderReturn.deductionAmount
+                                )} fee deducted`
+                              : ""}
+                            {orderReturn.status === "rejected" && orderReturn.rejectReason
+                              ? ` — ${orderReturn.rejectReason}`
+                              : ""}
+                          </p>
+                        </div>
+                      )}
+
                       {/* Actions */}
                       <div className={styles.actions}>
                         {isCancellable(order) && (
@@ -774,22 +878,9 @@ const OrderHistory = () => {
                             variant="secondary"
                             size="sm"
                             className={styles.actionAccent}
-                            // The care desk answers returns on this branch, so
-                            // the order goes WITH the visitor: Contact seeds the
-                            // subject, the order number and the category from
-                            // this state, instead of handing them a blank letter
-                            // and the admin a lead with no order on it.
-                            onClick={() =>
-                              navigate(ROUTES.CONTACT, {
-                                state: {
-                                  orderNumber: order.orderNumber || String(order.id),
-                                  category: "order",
-                                  subject: `Return or exchange · ${
-                                    order.orderNumber || order.id
-                                  }`,
-                                },
-                              })
-                            }
+                            // A real request, not a letter about one: the sheet
+                            // writes the return the desk works from.
+                            onClick={() => handleOpenReturn(order)}
                           >
                             Return / exchange
                           </Button>
@@ -1123,6 +1214,14 @@ const OrderHistory = () => {
         onSubmit={handleSubmitReview}
         authorName={reviewDisplayName(user)}
         defaultAvatar={user?.avatar || null}
+      />
+
+      <ReturnModal
+        open={returnModal.open}
+        order={returnModal.order}
+        existingReturns={myReturns}
+        onClose={() => setReturnModal((m) => ({ ...m, open: false }))}
+        onSubmitted={handleCreateReturn}
       />
     </div>
   );

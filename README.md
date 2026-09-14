@@ -293,6 +293,25 @@ schema). A few things are worth knowing before you touch it:
   inline as a data URL (`src/utils/imageFile.js`). That is the one place in the
   app that does not point at Cloudinary, and it exists because the person
   writing a review has a photograph and no asset pipeline.
+- **`returns`** is raised by the SHOPPER and worked by the desk, and both
+  halves write the same row. In My Orders, a delivered order inside
+  `STOREFRONT_CONFIG.returnsWindowDays` gets **Return / exchange** — a sheet
+  that picks the lines and quantities coming back, a reason, and where the money
+  goes (original payment or store credit). It posts a `requested` return with a
+  `RET-…` number and a timeline whose first entry is attributed to the customer;
+  Admin → Returns counts it, and takes it through **approved → pickup_scheduled
+  → in_transit → received → refunded** (or **rejected**, with a reason the
+  shopper reads on the order). Processing the refund is the one step that
+  cascades: it restocks the items when the admin asks, marks the order
+  `returned` and the payment refunded, restores a coupon redemption on a FULL
+  return, writes the `refunds` ledger row, and deposits `walletTransactions`
+  store credit when that is the chosen method. Admin → Returns keeps its own
+  **New Return** for a request that arrives by phone or email. Every line on
+  either path is capped at the quantity ordered MINUS whatever an un-rejected
+  return already claimed, so a unit can never be refunded twice; a rejected
+  request releases its units again. The reasons, the statuses and the
+  coupon-aware refund arithmetic are `src/utils/returns.js` — one vocabulary,
+  read by both screens.
 - **`siteContent`** is one keyed record (`about`, `whyLamikaa`, `impact`,
   `home`, `contact`, `policies`, `faqPage`) of markdown-lite prose — `##`, `-`,
   `1.`, `>`, `---`, `::callout`, `::steps`, `**bold**`, `[label](/href)` —

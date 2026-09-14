@@ -156,13 +156,16 @@ const Contact = () => {
     }
   }, [user]);
 
-  // ARRIVING FROM AN ORDER. "Return / exchange" in My Orders sends the visitor
-  // here, and used to send NOTHING with them: they landed on an empty letter
-  // and had to remember which order they were writing about, while the lead
-  // reached Admin → Leads with a blank `orderNumber` — the very field that
-  // screen prints. The order travels in `location.state` (never in the URL: an
-  // order number is not something to leave in a shared link) and seeds the
-  // subject, the number and the category the admin already has an icon for.
+  // ARRIVING WITH AN ORDER IN HAND. Any screen that sends a visitor here about
+  // a specific order passes it in `location.state` (never in the URL: an order
+  // number is not something to leave in a shared link), and it seeds the
+  // subject, the number and the category the admin already has an icon for —
+  // rather than an empty letter the visitor has to remember the order for, and
+  // a lead that reaches Admin → Leads with a blank `orderNumber`.
+  //
+  // My Orders' "Return / exchange" used to be that caller. It no longer is: a
+  // return is now RAISED there (ReturnModal → Admin → Returns) instead of being
+  // written about here. This stays for the general case.
   useEffect(() => {
     const from = location.state;
     if (!from?.orderNumber) return;
