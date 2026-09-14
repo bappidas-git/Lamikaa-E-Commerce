@@ -323,16 +323,17 @@
    `.sf-on-dark` while the page under it is cream: the wordmark is drawn in
    champagne gold and has no light-ground variant, so the ground comes to it.
    It is #17120F now rather than #0B0B0D — warmer, and a couple of steps up
-   from dead black — which the artwork is indifferent to: gold still measures
-   13.1:1 there, and the keyline was always carrying the edge, not the ground. */
+   from dead black — which the artwork is indifferent to: its median gold still
+   measures 12.3:1 there, and the keyline was always carrying the edge, not the
+   ground. */
 .logoLink {
   display: inline-flex;
   align-items: center;
   flex: none;
   min-width: 0;
-  /* The wordmark is 40px tall at the phone width (140px at 3.5:1), which is the
-     whole of the link's box and four pixels short of a thumb. The floor grows
-     the box, not the artwork: the image is centred and does not move. */
+  /* The wordmark is 37px tall at the phone width (140px at 3.83:1), which is the
+     whole of the link's box and short of a thumb. The floor grows the box, not
+     the artwork: the image is centred and does not move. */
   min-height: var(--sf-tap-target);
   text-decoration: none;
   color: inherit;

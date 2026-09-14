@@ -40,8 +40,10 @@ import styles from "./AuthModal.module.css";
 /* One wordmark on a transparent ground, so it sits straight on the sheet. Same
    <Logo> — and therefore the same URL — the masthead and SidebarMenu render, so
    opening the dialog paints it from cache. The slot in the module still decides
-   the rendered height. */
-const LOGO_WIDTH = 132;
+   the rendered HEIGHT (34px), and this is that height at brand.logoAspect: the
+   two have to agree, or <Logo> reserves a box of one size and the stylesheet
+   paints another. */
+const LOGO_WIDTH = 130;
 
 /* How far the tab panes travel as they swap. The pane is answering a click on a
    tab six pixels away, not arriving from off-screen. */

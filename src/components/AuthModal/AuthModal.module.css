@@ -80,9 +80,14 @@
   border-radius: var(--sf-radius-md);
 }
 
+/* Width drives it, height follows — the same rule the masthead and the footer
+   keep. A pinned height under the `max-width: 100%` every logo carries is what
+   squashes a lockup on a narrow sheet: the width gets clamped and the height
+   does not. 130px is LOGO_WIDTH in AuthModal.js and lands at 34px tall. */
 .logo {
-  height: 34px;
-  width: auto;
+  width: 130px;
+  max-width: 100%;
+  height: auto;
   display: block;
 }
 

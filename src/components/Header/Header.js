@@ -362,7 +362,7 @@ const Header = () => {
 
             {/* Transparent-ground artwork straight on the ground — the LAMIKAA
                 wordmark needs no plate on the chrome's espresso #17120F, where
-                it still measures 13.1:1 (PACKAGING_NOTES §1). */}
+                its median gold still measures 12.3:1 (PACKAGING_NOTES §1). */}
             <Link to={ROUTES.HOME} className={styles.logoLink} aria-label={storeName}>
               <Logo
                 variant={isTiny ? "mark" : "wordmark"}

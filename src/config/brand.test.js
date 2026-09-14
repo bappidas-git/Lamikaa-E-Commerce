@@ -48,18 +48,38 @@ describe("brand identity", () => {
     });
   });
 
-  // PRODUCTS.md §1 — the two real assets, quoted character for character.
+  // The two real assets, quoted character for character.
   it("points at the exact Cloudinary logo and icon", () => {
     expect(brand.logoUrl).toBe(
-      "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670626/logo.png"
+      "https://res.cloudinary.com/v8vrixwq/image/upload/v1789379844/new_logo.png"
     );
     expect(brand.iconUrl).toBe(
-      "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670625/icon.png"
+      "https://res.cloudinary.com/v8vrixwq/image/upload/v1789379845/new_logo_image.png"
     );
     // The named exports and the object must not drift apart: components import
     // whichever is closer to hand.
     expect(LOGO_URL).toBe(brand.logoUrl);
     expect(ICON_URL).toBe(brand.iconUrl);
+    // A RAW upload URL, with no transformation chain: every consumer adds its
+    // own (and `trim`, which is what makes the masters usable — see brand.js).
+    [brand.logoUrl, brand.iconUrl].forEach((url) => {
+      expect(url).toMatch(/\/image\/upload\/v\d+\/[^/]+\.png$/);
+    });
+  });
+
+  // The wordmark's box is derived from this number in one place (Logo.js), so a
+  // drift here is a drift in every masthead, drawer, footer and modal at once.
+  // 1923x502 is the TRIMMED master — what an <img> of it actually measures.
+  it("derives the wordmark box from the trimmed master's aspect", () => {
+    expect(brand.logoAspect).toBeCloseTo(1923 / 502, 1);
+  });
+
+  // The share card must be a real transformed URL, not the multi-megabyte
+  // master: platforms fetch it on every unfurl and some cap the payload.
+  it("ships a transformed, trimmed share image", () => {
+    expect(brand.seo.ogImage).toContain("e_trim");
+    expect(brand.seo.ogImage).toContain("w_1200");
+    expect(brand.seo.ogImage).toContain(brand.logoUrl.split("/upload/")[1]);
   });
 
   // A token is legal in this file (the owner has not supplied the fact yet);

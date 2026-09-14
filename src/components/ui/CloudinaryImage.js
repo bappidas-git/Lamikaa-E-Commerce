@@ -8,8 +8,8 @@ import styles from "./CloudinaryImage.module.css";
 // =============================================================================
 //
 // The delivery rule for the whole rebuild is that a raw upload URL is never
-// served at full size: the covers are multi-megapixel and the wordmark is
-// 1400x400. `cld()` inserts `f_auto,q_auto,w_…` after `/upload/`, and `srcSet()`
+// served at full size: the covers are multi-megapixel and the wordmark master is
+// 2073x758. `cld()` inserts `f_auto,q_auto,w_…` after `/upload/`, and `srcSet()`
 // offers the five real layout widths, so the browser picks the file it needs.
 // Anything that is not a Cloudinary upload URL — a placeholder host, an
 // admin-typed link, a data URI — passes through untouched and simply gets no

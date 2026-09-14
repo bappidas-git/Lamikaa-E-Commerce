@@ -6,10 +6,12 @@
 
 | Asset | URL | Config key |
 |---|---|---|
-| Logo (wordmark, 1400×400, transparent) | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670626/logo.png` | `brand.logoUrl` |
-| Icon (mark, 696×696, transparent corners) | `https://res.cloudinary.com/v8vrixwq/image/upload/v1788670625/icon.png` | `brand.iconUrl` |
+| Logo (wordmark, 2073×758 canvas / 1923×502 of ink, transparent) | `https://res.cloudinary.com/v8vrixwq/image/upload/v1789379844/new_logo.png` | `brand.logoUrl` |
+| Icon (mark, 1254×1254 canvas / 1024×1126 of ink, transparent) | `https://res.cloudinary.com/v8vrixwq/image/upload/v1789379845/new_logo_image.png` | `brand.iconUrl` |
 
-Cloudinary delivery rule: never serve the raw URL at full size in the UI. `src/utils/cloudinary.js → cld(url, opts)` inserts transformations after `/upload/`: `cld(logo, { w: 480 })` → `…/upload/f_auto,q_auto,w_480/v1788670626/logo.png`. `srcSet` widths: 480 / 768 / 1080 / 1440 / 1920. Crops: `cld(url, { crop: {x,y,w,h}, ar: "1:1", pad: true, w: 900 })` → `…/upload/c_crop,x_…,y_…,w_…,h_…/c_pad,ar_1:1,b_auto/f_auto,q_auto,w_900/v…`. (Verified: transformation URLs on this cloud return 200.)
+**Both masters carry a wide transparent bleed, and every consumer trims it.** Painted raw, a third of the wordmark's box is empty and the mark sits low and off-centre in its frame. `cld(url, { trim: true })` emits `e_trim` as the first component of the chain, so what an `<img>` measures is the artwork: the wordmark delivers at **3.83:1** (`brand.logoAspect`), and the mark is squared up after the trim on a **transparent** ground (`ar: "1:1", pad: true, background: "transparent"` — never `b_auto`, which would paint an opaque plate behind gold line art). The seven favicon/PWA files in `public/` come from the same mark through `npm run icons` (`scripts/generate-icons.js`).
+
+Cloudinary delivery rule: never serve the raw URL at full size in the UI. `src/utils/cloudinary.js → cld(url, opts)` inserts transformations after `/upload/`: `cld(logo, { trim: true, w: 480 })` → `…/upload/e_trim/f_auto,q_auto,w_480/v1789379844/new_logo.png`. `srcSet` widths: 480 / 768 / 1080 / 1440 / 1920. Crops: `cld(url, { crop: {x,y,w,h}, ar: "1:1", pad: true, w: 900 })` → `…/upload/c_crop,x_…,y_…,w_…,h_…/c_pad,ar_1:1,b_auto/f_auto,q_auto,w_900/v…`. (Verified: transformation URLs on this cloud return 200.)
 
 ## 2. The eight products — cover URLs (character-exact) and packaging-derived facts
 
