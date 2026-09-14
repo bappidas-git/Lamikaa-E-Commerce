@@ -104,7 +104,8 @@ import {
 //
 //   SECTION       the `heroConfig` singleton's behaviour: the master toggle,
 //                 autoplay and its timer, the transition, which chrome is
-//                 drawn, how tall the band is, the eyebrow's wording — plus
+//                 drawn, how tall the band is, the FALLBACK eyebrow's wording
+//                 for a slide that has written no tagline of its own — plus
 //                 the DEFAULT composition and the DEFAULT picture every slide
 //                 inherits until it is given its own.
 //
@@ -160,6 +161,17 @@ const secondsToMs = (s) => Math.round((Number(s) || 0) * 1000);
 
 /** "3" -> "03". Mirrors HeroCarousel's `padIndex`. */
 const padIndex = (value) => String(value).padStart(2, "0");
+
+/**
+ * The tracked line over a product headline. Mirrors HeroCarousel's
+ * `heroSlideEyebrow`: the slide's own TAGLINE if it has written one, else the
+ * section's label with the slide's position after it. A tagline is printed
+ * alone — a sentence written for one slide does not need a page number, and the
+ * rail under the stage still draws the counter.
+ */
+const previewEyebrow = (slide, index, total, label) =>
+  (typeof slide?.eyebrow === "string" && slide.eyebrow.trim()) ||
+  `${label} · ${padIndex(index + 1)} / ${padIndex(total)}`;
 
 /** The slide's headline: the product's hero line, else its promise. */
 const previewHeadline = (product) => product?.heroHeadline || product?.promise || "";
@@ -1278,7 +1290,7 @@ const SlidePreview = ({
 
   const { known, price } = resolvePrice(product);
   const eyebrow = isProduct
-    ? `${eyebrowLabel} · ${padIndex(index + 1)} / ${padIndex(total)}`
+    ? previewEyebrow(slide, index, total, eyebrowLabel)
     : slide.eyebrow;
   const headline = isProduct ? previewHeadline(product) : slide.headline;
   const subtext = isProduct ? previewSubtext(product) : slide.subtext;
@@ -1749,6 +1761,7 @@ const SlideRow = ({
   expanded,
   sectionHasBackground,
   sectionLayout,
+  eyebrowLabel,
   onToggle,
   onPatch,
   onCopyChange,
@@ -2052,6 +2065,28 @@ const SlideRow = ({
 
               {isProduct ? (
                 <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    {/* THE TAGLINE, and the one word on a product slide that is
+                        stored on the SLIDE rather than on the product: it is
+                        this slide's line in the carousel's argument, not a fact
+                        about the product, and a product dropped from the hero
+                        should not carry it into the catalogue. */}
+                    <TextField
+                      label="Tagline over the headline (optional)"
+                      value={slide.eyebrow}
+                      onChange={(e) => setSlide({ eyebrow: e.target.value })}
+                      fullWidth
+                      size="small"
+                      placeholder="Ancient Wisdom. Modern Beauty."
+                      helperText={
+                        slide.eyebrow.trim()
+                          ? "The small tracked line over the headline. Printed on its own — the counter under the stage carries the position."
+                          : `Blank — this slide prints the section's eyebrow: “${eyebrowLabel} · ${padIndex(
+                              index + 1
+                            )} / ${padIndex(total)}”`
+                      }
+                    />
+                  </Grid>
                   <Grid item xs={12}>
                     <TextField
                       label="Hero headline"
@@ -3114,6 +3149,7 @@ const AdminHeroSection = () => {
                           expanded={expandedId === entry.slide.id}
                           sectionHasBackground={hasHeroBackground(sectionBackground)}
                           sectionLayout={sectionLayout}
+                          eyebrowLabel={config.eyebrowLabel}
                           onToggle={(id) => {
                             setExpandedId((prev) => (prev === id ? null : id));
                             setPreviewId(id);
@@ -3204,7 +3240,7 @@ const AdminHeroSection = () => {
                           value={config.eyebrowLabel}
                           onChange={(e) => setCfg({ eyebrowLabel: e.target.value })}
                           disabled={!config.showEyebrow}
-                          helperText="The slide's position is added after it — “… · 03 / 08”."
+                          helperText="The fallback, for a slide with no tagline of its own. The slide's position is added after it — “… · 03 / 08”."
                         />
                       </Grid>
                       <Grid item xs={12}>

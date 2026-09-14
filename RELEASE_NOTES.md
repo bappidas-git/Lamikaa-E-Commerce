@@ -1,5 +1,49 @@
 # Release notes
 
+## 1.4.1-lamikaa — 2026-09-14
+
+The home page now opens on the brand's argument rather than on a repeated
+label. Every slide of the hero carousel carries a **tagline** of its own — the
+tracked gold line over the headline — and the first one is
+**"Ancient Wisdom. Modern Beauty."**: traditional knowledge and contemporary
+skincare, said in four words before a visitor has scrolled anything.
+
+### Added
+
+- **A tagline per hero slide.** `heroConfig.slides[].eyebrow` is now read on a
+  PRODUCT slide as well as on a poster (`heroSlideEyebrow` in
+  `src/components/home/HeroCarousel.js`), so each slide opens on its own line
+  instead of on one section-wide label. The eight slides read: *Ancient Wisdom.
+  Modern Beauty.* · *Handed Down. Made New.* · *Old Rituals. New Mornings.* ·
+  *Ancient Grain. Modern Glow.* · *Heritage Fields. Modern Skin.* · *Timeless
+  Care. New Radiance.* · *Age-Old Craft. Modern Ease.* · *Ancestral Roots.
+  Modern Light.*
+
+- **Admin → Home & Hero edits it.** A product slide's editor gained "Tagline
+  over the headline (optional)", above the headline it sits over, and the live
+  preview resolves it exactly as the storefront does. It is the one word of a
+  product slide's copy stored on the SLIDE rather than on the product — this
+  slide's line in the carousel's argument, not a fact about the product — so a
+  product dropped from the hero does not carry it into the catalogue.
+
+### Changed
+
+- **A tagline is printed on its own.** The position (`· 03 / 08`) is still
+  appended to `heroConfig.eyebrowLabel`, which is what a label repeated on
+  every slide needed to be worth reading, but not to a sentence written for one
+  slide. Nothing is lost: the rail under the stage still draws the counter, and
+  the slide's own `aria-label` ("1 of 8: Black Rice Face Wash") is what a
+  screen reader hears either way. A slide with no tagline of its own is
+  unchanged — it still prints "Black Rice Ritual · 03 / 08".
+
+- **The line is set to wrap, on every device.** `HeroCarousel.module.css` gives
+  the eyebrow `text-wrap: balance` (with `pretty` beneath it) and no `ch`
+  measure — `ch` cannot see the 0.14em tracking and would fold a tagline that
+  had room to spare. Measured on the built storefront, all eight taglines set
+  on ONE line from 320px to 1600px; squeezed further (a glass plate's padding,
+  the split composition's third of a spread) they break into two even lines at
+  the clause rather than overflowing the column.
+
 ## 1.4.0-lamikaa — 2026-09-13
 
 Customers can now show what they are talking about — a photograph of themselves

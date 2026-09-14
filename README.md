@@ -201,6 +201,15 @@ schema). A few things are worth knowing before you touch it:
   none of them). Every entry may carry its own `background`, its own `layout`
   and its own ground, and the list is saved with the rest of the section in one
   `PUT /heroConfig`.
+- **`heroConfig.slides[].eyebrow`** is the slide's **tagline** — the tracked
+  gold line over the headline, where the brand's philosophy is said on the
+  opening spread ("Ancient Wisdom. Modern Beauty."). It is read on a product
+  slide as well as on a poster, and it is the one word of a product slide's copy
+  that is stored on the SLIDE rather than on the product: it is this slide's line
+  in the carousel's argument, not a fact about the product. A slide that has
+  written none falls back to `heroConfig.eyebrowLabel` with its position after it
+  ("Black Rice Ritual · 03 / 08"); a tagline is printed on its own, because the
+  rail's counter and the slide's `aria-label` already carry the position.
 - **`heroOrder`** (1…n, or `null`) is how a product joins that carousel from
   the Products screen, and it is still what `products.getHeroProducts()`
   returns. `heroConfig.slides` is the authority on order and composition; a

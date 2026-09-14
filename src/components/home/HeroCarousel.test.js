@@ -11,6 +11,7 @@ import {
   exploreLabel,
   heroEyebrow,
   heroHeadline,
+  heroSlideEyebrow,
   heroSubtext,
   padIndex,
   resolveHeroSlides,
@@ -47,6 +48,41 @@ describe("padIndex / heroEyebrow", () => {
   it("prints the ritual eyebrow with a 1-based position", () => {
     expect(heroEyebrow(0, 8)).toBe("Black Rice Ritual · 01 / 08");
     expect(heroEyebrow(7, 8)).toBe("Black Rice Ritual · 08 / 08");
+  });
+});
+
+describe("heroSlideEyebrow — the slide's tagline", () => {
+  it("prints the slide's own tagline, and prints it alone", () => {
+    // The brand's philosophy line opens the carousel. No position after it: a
+    // sentence written for one slide is not a label that needs one, and the
+    // rail's counter and the slide's aria-label both still carry the position.
+    expect(
+      heroSlideEyebrow({ eyebrow: "Ancient Wisdom. Modern Beauty." }, 0, 8)
+    ).toBe("Ancient Wisdom. Modern Beauty.");
+    expect(heroSlideEyebrow({ eyebrow: "Old Rituals. New Mornings." }, 2, 8)).toBe(
+      "Old Rituals. New Mornings."
+    );
+  });
+
+  it("falls back to the section's label and position when the slide has no tagline", () => {
+    expect(heroSlideEyebrow({ eyebrow: "" }, 2, 8)).toBe(
+      "Black Rice Ritual · 03 / 08"
+    );
+    expect(heroSlideEyebrow({}, 2, 8)).toBe("Black Rice Ritual · 03 / 08");
+    expect(heroSlideEyebrow(null, 2, 8)).toBe("Black Rice Ritual · 03 / 08");
+    // A renamed section label reaches the fallback, and only the fallback.
+    expect(heroSlideEyebrow({ eyebrow: "" }, 0, 3, "New in")).toBe(
+      "New in · 01 / 03"
+    );
+    expect(heroSlideEyebrow({ eyebrow: "Handed Down. Made New." }, 0, 3, "New in")).toBe(
+      "Handed Down. Made New."
+    );
+  });
+
+  it("treats a whitespace-only tagline as no tagline", () => {
+    expect(heroSlideEyebrow({ eyebrow: "   " }, 0, 8)).toBe(
+      "Black Rice Ritual · 01 / 08"
+    );
   });
 });
 
