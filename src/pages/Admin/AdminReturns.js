@@ -4,63 +4,45 @@ import {
   TableHead, TableRow, Chip, IconButton, Tooltip, Skeleton, TextField,
   InputAdornment, Select, MenuItem, FormControl, InputLabel, Dialog,
   DialogTitle, DialogContent, DialogActions, Button, Divider, Checkbox,
-  FormControlLabel, Link, Alert,
+  FormControlLabel, Link, Alert, Stack, useMediaQuery,
 } from "@mui/material";
 import { Icon } from "@iconify/react";
 import { useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
+import {
+  RETURN_STATUS,
+  RETURN_REASONS,
+  REFUND_METHODS,
+  netRefundForItems,
+  isFullReturn,
+  reasonLabel,
+  methodLabel,
+  payableRefund,
+  returnedUnitsByLine,
+  lineKey,
+} from "../../utils/returns";
 
-const STATUS_CONFIG = {
-  requested: { label: "Requested", color: "warning" },
-  approved: { label: "Approved", color: "info" },
-  pickup_scheduled: { label: "Pickup Scheduled", color: "info" },
-  in_transit: { label: "In Transit", color: "primary" },
-  rejected: { label: "Rejected", color: "error" },
-  received: { label: "Received", color: "secondary" },
-  refunded: { label: "Refunded", color: "success" },
-};
-
-const RETURN_REASONS = [
-  { value: "defective", label: "Defective / Damaged" },
-  { value: "wrong_item", label: "Wrong Item Received" },
-  { value: "not_as_described", label: "Not As Described" },
-  { value: "size_issue", label: "Size / Fit Issue" },
-  { value: "changed_mind", label: "Changed Mind" },
-  { value: "other", label: "Other" },
-];
-
-const REFUND_METHODS = [
-  { value: "original_payment", label: "Original Payment Method" },
-  { value: "store_credit", label: "Store Credit" },
-  { value: "bank_transfer", label: "Bank Transfer" },
-  { value: "upi", label: "UPI" },
-];
-
-// Allocate the order's coupon discount proportionally to the selected items so
-// the refund reflects what the customer actually PAID (net), not the pre-coupon
-// list price. A full return refunds the whole discount back out; a partial one
-// only the returned items' share. Returns { gross, discountShare, net }.
-const netRefundForItems = (order, picks, items) => {
-  const gross = (items || []).reduce((sum, it, i) => {
-    const pick = picks[i];
-    if (!pick?.checked) return sum;
-    return sum + (Number(it.price) || 0) * (Number(pick.quantity) || 0);
-  }, 0);
-  const orderSubtotal = Number(order?.subtotal) || 0;
-  const orderDiscount = Number(order?.discountAmount) || 0;
-  const discountShare = orderSubtotal > 0 && orderDiscount > 0
-    ? Math.min(gross, Math.round((gross / orderSubtotal) * orderDiscount))
-    : 0;
-  return { gross, discountShare, net: Math.max(0, gross - discountShare) };
-};
+// The statuses, the reasons, the refund methods and the coupon-aware refund
+// arithmetic all live in utils/returns now — because the SHOPPER raises the
+// request (My Orders) and this screen works it. Two copies of that vocabulary
+// would let a customer file a reason this page renders as a raw slug, or be
+// quoted a refund this page then disagrees with.
+const STATUS_CONFIG = RETURN_STATUS;
 
 const AdminReturns = () => {
   // Currency comes from the admin's own Settings > General, so every figure
   // on this screen speaks the same money as the storefront.
   const { currencySymbol, formatPrice } = useStoreSettings();
   const location = useLocation();
+  // Same two breakpoints the rest of the admin uses: dialogs become sheets on a
+  // phone (AdminCategories, AdminConcerns, AdminFaqs …), and the 900px-wide
+  // table becomes a list of cards rather than a scrollport whose contents —
+  // including its own "No returns found" — sit off the right edge of a 390px
+  // screen where nobody thinks to look for them.
+  const fullScreenDialog = useMediaQuery("(max-width:599.95px)");
+  const compact = useMediaQuery("(max-width:899.95px)");
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
   // Pre-filter when arriving from an order's "View Returns" action.
@@ -125,14 +107,6 @@ const AdminReturns = () => {
       apiService.admin.getOrder(ret.orderId).then(setReturnOrder).catch(() => setReturnOrder(null));
     }
     setDialogOpen(true);
-  };
-
-  // Does this return cover the whole order? Drives the coupon-restore note.
-  const isFullReturn = (ret, order) => {
-    if (!ret || !order) return false;
-    const ordered = (order.items || []).reduce((s, it) => s + (Number(it.quantity) || 0), 0);
-    const returned = (ret.items || []).reduce((s, it) => s + (Number(it.quantity) || 0), 0);
-    return ordered > 0 && returned >= ordered;
   };
 
   const handleStatusUpdate = async (newStatus) => {
@@ -212,8 +186,8 @@ const AdminReturns = () => {
   };
 
   // Refund = requested amount − deduction (restocking fee / shipping recovery).
-  const payableOf = (ret, ded) =>
-    Math.max(0, (Number(ret?.refundAmount) || 0) - (Number(ded) || 0));
+  // Shared with My Orders so the shopper is shown the same settled figure.
+  const payableOf = payableRefund;
 
   const handleProcessRefund = async () => {
     const ded = Number(deduction) || 0;
@@ -273,8 +247,20 @@ const AdminReturns = () => {
       const order = (all || []).find((o) => (o.orderNumber || "").toLowerCase() === q);
       if (!order) { setOrderLookupError("No order with that number."); return; }
       if (order.fulfillmentStatus === "cancelled") { setOrderLookupError("That order is cancelled."); return; }
+      // Cap every line at what is still returnable. The shopper can raise a
+      // return themselves now, so an order can already be carrying one when the
+      // desk opens this — without the cap the same unit is refundable twice.
+      const claimed = returnedUnitsByLine(returns, order.id);
+      const picks = (order.items || []).map((it) => {
+        const max = Math.max(0, (Number(it.quantity) || 0) - (claimed[lineKey(it)] || 0));
+        return { checked: max > 0, quantity: max > 0 ? max : 0, max };
+      });
+      if (picks.length > 0 && picks.every((p) => p.max <= 0)) {
+        setOrderLookupError("Every item on that order is already on a return.");
+        return;
+      }
       setSourceOrder(order);
-      setItemPicks((order.items || []).map((it) => ({ checked: true, quantity: Number(it.quantity) || 1 })));
+      setItemPicks(picks);
     } catch (e) {
       setOrderLookupError("Could not look up the order.");
     }
@@ -342,11 +328,21 @@ const AdminReturns = () => {
           <Typography variant="h5" component="h1" fontWeight="bold">Returns & Refunds</Typography>
           <Typography variant="body2" color="text.secondary">Manage customer return requests and refunds</Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
+        {/* The seven counters and the one action. On a phone the counters
+            wrap to as many rows as they need and "New Return" takes the full
+            width under them — a 120px button squeezed onto the end of a
+            wrapping chip row is the hardest thing on the screen to hit. */}
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center", width: { xs: "100%", md: "auto" } }}>
           {Object.entries(STATUS_CONFIG).map(([key, val]) => (
             <Chip key={key} label={`${val.label}: ${returns.filter((r) => r.status === key).length}`} size="small" color={val.color} variant="outlined" />
           ))}
-          <Button variant="contained" size="small" startIcon={<Icon icon="mdi:plus" />} onClick={openCreate}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Icon icon="mdi:plus" />}
+            onClick={openCreate}
+            sx={{ width: { xs: "100%", sm: "auto" }, mt: { xs: 1, sm: 0 } }}
+          >
             New Return
           </Button>
         </Box>
@@ -359,10 +355,12 @@ const AdminReturns = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             size="small"
-            sx={{ flex: 1, maxWidth: 360 }}
+            // Full width on a phone: sharing one 390px row with the status
+            // Select left it about 180px wide, i.e. "Search by return…".
+            sx={{ flex: { xs: "1 1 100%", sm: 1 }, maxWidth: { xs: "none", sm: 360 } }}
             InputProps={{ startAdornment: <InputAdornment position="start"><Icon icon="mdi:magnify" /></InputAdornment> }}
           />
-          <FormControl size="small" sx={{ minWidth: 160 }}>
+          <FormControl size="small" sx={{ minWidth: 160, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}>
             <InputLabel id="admin-returns-status-label">Status</InputLabel>
             <Select labelId="admin-returns-status-label" value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
               <MenuItem value="all">All</MenuItem>
@@ -370,68 +368,140 @@ const AdminReturns = () => {
             </Select>
           </FormControl>
         </Box>
-        {/* A KEYBOARD USER MUST BE ABLE TO SCROLL IT (Prompt 38). At a phone
-            width this table is wider than its container, and unlike the
-            admin's other tables its cells hold nothing focusable — so
-            there was no way to reach the horizontal scroll from the
-            keyboard at all (axe `scrollable-region-focusable`, serious).
-            `tabIndex` makes the container itself a stop; the region role
-            and label are what make that stop announce what it is. */}
-        <TableContainer tabIndex={0} role="region" aria-label="Returns and refunds">
-          <Table sx={{ minWidth: 900 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Return #</TableCell>
-                <TableCell>Order #</TableCell>
-                <TableCell>Items</TableCell>
-                <TableCell>Reason</TableCell>
-                <TableCell>Refund Amount</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                [...Array(4)].map((_, i) => (<TableRow key={i}><TableCell colSpan={8}><Skeleton height={52} /></TableCell></TableRow>))
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No returns found</Typography></TableCell></TableRow>
-              ) : (
-                filtered.map((ret) => {
+        {/* ── The queue ──────────────────────────────────────────────────
+            ONE LIST, TWO SHAPES. A 900px-wide table on a 390px phone is a
+            scrollport, and everything past the first two columns — the
+            status, the amount, the button that opens the return, and the
+            "No returns found" line itself — sits off the right edge where
+            nobody thinks to look. Below 900px each return is therefore a
+            CARD that fits the screen it is on; at 900px and up the table
+            comes back, because eight returns side by side is what a desk
+            actually wants to scan. The data and the handler are the same
+            on both paths. */}
+        {compact ? (
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            {loading ? (
+              <Stack spacing={1.5}>
+                {[...Array(4)].map((_, i) => (<Skeleton key={i} variant="rounded" height={132} />))}
+              </Stack>
+            ) : filtered.length === 0 ? (
+              <Typography color="text.secondary" align="center" sx={{ py: 6 }}>No returns found</Typography>
+            ) : (
+              <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                {filtered.map((ret) => {
                   const sc = STATUS_CONFIG[ret.status] || { label: ret.status, color: "default" };
                   const payable = payableOf(ret, ret.deductionAmount);
                   return (
-                    <TableRow key={ret.id} hover>
-                      <TableCell><Typography variant="body2" fontWeight={500}>{ret.returnNumber}</Typography></TableCell>
-                      <TableCell><Typography variant="body2">{ret.orderNumber}</Typography></TableCell>
-                      <TableCell>{ret.items?.length || 0} item(s)</TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ textTransform: "capitalize" }}>{ret.reason?.replace(/_/g, " ")}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={500}>{formatCurrency(ret.refundAmount)}</Typography>
-                        {Number(ret.deductionAmount) > 0 && (
-                          <Typography variant="caption" color="warning.main" sx={{ display: "block" }}>
-                            −{formatCurrency(ret.deductionAmount)} → {formatCurrency(payable)}
+                    <Box
+                      key={ret.id}
+                      component="li"
+                      sx={{ p: 2, borderRadius: 1, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 1 }}>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="body2" fontWeight={600} sx={{ wordBreak: "break-word" }}>{ret.returnNumber}</Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", wordBreak: "break-word" }}>
+                            {ret.orderNumber} · {ret.items?.length || 0} item(s)
                           </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell><Chip label={sc.label} size="small" color={sc.color} /></TableCell>
-                      <TableCell><Typography variant="caption">{formatDate(ret.createdAt)}</Typography></TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="View & Update"><IconButton size="small" onClick={() => openDetail(ret)}><Icon icon="mdi:eye-outline" /></IconButton></Tooltip>
-                      </TableCell>
-                    </TableRow>
+                        </Box>
+                        <Chip label={sc.label} size="small" color={sc.color} sx={{ flexShrink: 0 }} />
+                      </Box>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 1.5 }}>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Reason</Typography>
+                          <Typography variant="body2">{reasonLabel(ret.reason)}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Refund</Typography>
+                          <Typography variant="body2" fontWeight={500}>{formatCurrency(ret.refundAmount)}</Typography>
+                          {Number(ret.deductionAmount) > 0 && (
+                            <Typography variant="caption" color="warning.main" sx={{ display: "block" }}>
+                              −{formatCurrency(ret.deductionAmount)} → {formatCurrency(payable)}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>
+                        <Typography variant="caption" color="text.secondary">{formatDate(ret.createdAt)}</Typography>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<Icon icon="mdi:eye-outline" />}
+                          onClick={() => openDetail(ret)}
+                        >
+                          View &amp; update
+                        </Button>
+                      </Box>
+                    </Box>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                })}
+              </Stack>
+            )}
+          </Box>
+        ) : (
+          /* A KEYBOARD USER MUST BE ABLE TO SCROLL IT (Prompt 38). Even above
+             900px a narrow window can leave this table wider than its
+             container, and unlike the admin's other tables its cells hold
+             nothing focusable — so there was no way to reach the horizontal
+             scroll from the keyboard at all (axe `scrollable-region-focusable`,
+             serious). `tabIndex` makes the container itself a stop; the region
+             role and label are what make that stop announce what it is. */
+          <TableContainer tabIndex={0} role="region" aria-label="Returns and refunds">
+            <Table sx={{ minWidth: 900 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Return #</TableCell>
+                  <TableCell>Order #</TableCell>
+                  <TableCell>Items</TableCell>
+                  <TableCell>Reason</TableCell>
+                  <TableCell>Refund Amount</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  [...Array(4)].map((_, i) => (<TableRow key={i}><TableCell colSpan={8}><Skeleton height={52} /></TableCell></TableRow>))
+                ) : filtered.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No returns found</Typography></TableCell></TableRow>
+                ) : (
+                  filtered.map((ret) => {
+                    const sc = STATUS_CONFIG[ret.status] || { label: ret.status, color: "default" };
+                    const payable = payableOf(ret, ret.deductionAmount);
+                    return (
+                      <TableRow key={ret.id} hover>
+                        <TableCell><Typography variant="body2" fontWeight={500}>{ret.returnNumber}</Typography></TableCell>
+                        <TableCell><Typography variant="body2">{ret.orderNumber}</Typography></TableCell>
+                        <TableCell>{ret.items?.length || 0} item(s)</TableCell>
+                        <TableCell>
+                          <Typography variant="body2">{reasonLabel(ret.reason)}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={500}>{formatCurrency(ret.refundAmount)}</Typography>
+                          {Number(ret.deductionAmount) > 0 && (
+                            <Typography variant="caption" color="warning.main" sx={{ display: "block" }}>
+                              −{formatCurrency(ret.deductionAmount)} → {formatCurrency(payable)}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell><Chip label={sc.label} size="small" color={sc.color} /></TableCell>
+                        <TableCell><Typography variant="caption">{formatDate(ret.createdAt)}</Typography></TableCell>
+                        <TableCell align="right">
+                          <Tooltip title="View & Update"><IconButton size="small" onClick={() => openDetail(ret)}><Icon icon="mdi:eye-outline" /></IconButton></Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
 
       {/* Detail / Update Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth fullScreen={fullScreenDialog}>
         {selectedReturn && (
           <>
             <DialogTitle sx={{ fontWeight: "bold" }}>
@@ -439,11 +509,11 @@ const AdminReturns = () => {
               <Chip label={(STATUS_CONFIG[selectedReturn.status] || {}).label || selectedReturn.status} size="small" color={(STATUS_CONFIG[selectedReturn.status] || {}).color} sx={{ ml: 2 }} />
             </DialogTitle>
             <DialogContent dividers>
-              <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mb: 2 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mb: 2 }}>
                 <Box><Typography variant="caption" color="text.secondary">Order</Typography><Typography variant="body2" fontWeight={500}>{selectedReturn.orderNumber}</Typography></Box>
                 <Box><Typography variant="caption" color="text.secondary">Requested Refund</Typography><Typography variant="body2" fontWeight={500}>{formatCurrency(selectedReturn.refundAmount)}</Typography></Box>
-                <Box><Typography variant="caption" color="text.secondary">Reason</Typography><Typography variant="body2" sx={{ textTransform: "capitalize" }}>{selectedReturn.reason?.replace(/_/g, " ")}</Typography></Box>
-                <Box><Typography variant="caption" color="text.secondary">Refund Method</Typography><Typography variant="body2" sx={{ textTransform: "capitalize" }}>{selectedReturn.refundMethod?.replace(/_/g, " ") || "—"}</Typography></Box>
+                <Box><Typography variant="caption" color="text.secondary">Reason</Typography><Typography variant="body2">{reasonLabel(selectedReturn.reason)}</Typography></Box>
+                <Box><Typography variant="caption" color="text.secondary">Refund Method</Typography><Typography variant="body2">{methodLabel(selectedReturn.refundMethod) || "—"}</Typography></Box>
               </Box>
               {selectedReturn.reasonDetails && (
                 <Box sx={{ bgcolor: "action.hover", borderRadius: 1, p: 2, mb: 2 }}>
@@ -493,11 +563,12 @@ const AdminReturns = () => {
                   <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Process Refund</Typography>
                   <Box sx={{ display: "flex", gap: 2, mb: 1.5, flexWrap: "wrap" }}>
                     <TextField
-                      label={`Deduction (${currencySymbol})`} type="number" size="small" sx={{ width: 150 }}
+                      label={`Deduction (${currencySymbol})`} type="number" size="small"
+                      sx={{ width: { xs: "100%", sm: 150 } }}
                       value={deduction} onChange={(e) => setDeduction(e.target.value)}
                       helperText="Restocking / shipping fee"
                     />
-                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 200 } }}>
                       <InputLabel id="admin-returns-refund-method-label">Refund Method</InputLabel>
                       <Select labelId="admin-returns-refund-method-label" value={refundMethod} label="Refund Method" onChange={(e) => setRefundMethod(e.target.value)}>
                         {REFUND_METHODS.map((m) => (<MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>))}
@@ -523,11 +594,11 @@ const AdminReturns = () => {
               {/* Refund outcome — once processed */}
               {selectedReturn.status === "refunded" && (
                 <Box sx={{ mt: 2, p: 2, borderRadius: 1, bgcolor: "action.hover" }}>
-                  <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
                     <Box><Typography variant="caption" color="text.secondary">Deduction</Typography><Typography variant="body2">{formatCurrency(selectedReturn.deductionAmount || 0)}</Typography></Box>
                     <Box><Typography variant="caption" color="text.secondary">Refunded</Typography><Typography variant="body2" fontWeight="bold">{formatCurrency(payableOf(selectedReturn, selectedReturn.deductionAmount))}</Typography></Box>
                     <Box><Typography variant="caption" color="text.secondary">Restocked</Typography><Typography variant="body2">{selectedReturn.restocked ? "Yes" : "No"}</Typography></Box>
-                    <Box><Typography variant="caption" color="text.secondary">Method</Typography><Typography variant="body2" sx={{ textTransform: "capitalize" }}>{selectedReturn.refundMethod?.replace(/_/g, " ")}</Typography></Box>
+                    <Box><Typography variant="caption" color="text.secondary">Method</Typography><Typography variant="body2">{methodLabel(selectedReturn.refundMethod)}</Typography></Box>
                     {selectedReturn.returnTrackingNumber && (
                       <Box sx={{ gridColumn: "1 / -1" }}>
                         <Typography variant="caption" color="text.secondary">Return Tracking</Typography>
@@ -555,7 +626,15 @@ const AdminReturns = () => {
                 ))
               )}
             </DialogContent>
-            <DialogActions sx={{ p: 2, gap: 1, flexWrap: "wrap" }}>
+            {/* Up to three actions. They wrap on a narrow sheet, and below
+                600px each takes the full width so no decision ends up as a
+                half-width button hanging off a wrapped row. */}
+            <DialogActions
+              sx={{
+                p: 2, gap: 1, flexWrap: "wrap",
+                "& > button": { width: { xs: "100%", sm: "auto" }, ml: { xs: "0 !important", sm: undefined } },
+              }}
+            >
               <Button onClick={() => setDialogOpen(false)}>Close</Button>
               {selectedReturn.status === "requested" && (<>
                 <Button variant="outlined" color="error" onClick={handleReject}>Reject</Button>
@@ -581,15 +660,15 @@ const AdminReturns = () => {
       </Dialog>
 
       {/* New Return Dialog */}
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth fullScreen={fullScreenDialog}>
         <DialogTitle sx={{ fontWeight: "bold" }}>New Return</DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Record a return against an order — e.g., from a customer's support request.
           </Typography>
-          <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+          <Box sx={{ display: "flex", gap: 1, mb: 1, flexWrap: "wrap" }}>
             <TextField
-              label="Order Number" size="small" sx={{ flex: 1 }}
+              label="Order Number" size="small" sx={{ flex: "1 1 12rem", minWidth: 0 }}
               value={orderQuery} onChange={(e) => setOrderQuery(e.target.value)}
               placeholder="ORD-…"
               onKeyDown={(e) => { if (e.key === "Enter") handleFindOrder(); }}
@@ -615,27 +694,36 @@ const AdminReturns = () => {
                   <Checkbox
                     size="small"
                     checked={itemPicks[i]?.checked || false}
+                    disabled={(itemPicks[i]?.max ?? 0) <= 0}
                     onChange={(e) => setItemPicks((p) => p.map((x, j) => (j === i ? { ...x, checked: e.target.checked } : x)))}
                     inputProps={{ "aria-label": `Return ${it.name}` }}
                   />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2">{it.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">{formatCurrency(it.price)} · ordered ×{it.quantity}</Typography>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="body2" sx={{ wordBreak: "break-word" }}>{it.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatCurrency(it.price)} · ordered ×{it.quantity}
+                      {(itemPicks[i]?.max ?? 0) <= 0
+                        ? " · already returned"
+                        : (itemPicks[i]?.max ?? 0) < (Number(it.quantity) || 0)
+                          ? ` · ${itemPicks[i].max} returnable`
+                          : ""}
+                    </Typography>
                   </Box>
                   <TextField
-                    label="Qty" type="number" size="small" sx={{ width: 80 }}
+                    label="Qty" type="number" size="small" sx={{ width: 80, flexShrink: 0 }}
                     value={itemPicks[i]?.quantity ?? 1}
                     onChange={(e) => {
-                      const max = Number(it.quantity) || 1;
+                      const max = itemPicks[i]?.max ?? (Number(it.quantity) || 1);
                       const v = Math.max(1, Math.min(max, Number(e.target.value) || 1));
                       setItemPicks((p) => p.map((x, j) => (j === i ? { ...x, quantity: v } : x)));
                     }}
-                    disabled={!itemPicks[i]?.checked}
+                    inputProps={{ min: 1, max: itemPicks[i]?.max ?? undefined }}
+                    disabled={!itemPicks[i]?.checked || (itemPicks[i]?.max ?? 0) <= 0}
                   />
                 </Box>
               ))}
 
-              <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mt: 2 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mt: 2 }}>
                 <FormControl size="small">
                   <InputLabel id="admin-returns-reason-label">Reason</InputLabel>
                   <Select labelId="admin-returns-reason-label" value={createReason} label="Reason" onChange={(e) => setCreateReason(e.target.value)}>

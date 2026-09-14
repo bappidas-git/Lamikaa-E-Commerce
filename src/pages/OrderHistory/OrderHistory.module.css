@@ -876,3 +876,40 @@
     animation-duration: 2.4s;
   }
 }
+
+/* =============================================================================
+ * A RETURN ON THE RECORD
+ * =============================================================================
+ * The order's own status chip says where the PARCEL got to; this line says what
+ * happened to a return raised against it — its number, its state, its reason
+ * and what it is worth back. They are two different facts and each keeps its
+ * own row, because "Delivered" and "Return approved" are both true at once.
+ *
+ * It wraps rather than truncates: on a 320px card the chip takes the first
+ * line and the detail flows under it, and nothing is ever clipped away.
+ * ========================================================================== */
+
+.returnLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-2) var(--sf-space-3);
+  margin-top: var(--sf-space-5);
+  padding-top: var(--sf-space-4);
+  border-top: 1px solid var(--sf-color-border);
+}
+
+.returnMeta {
+  flex: 1 1 12rem;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.returnNumber {
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text-secondary);
+}

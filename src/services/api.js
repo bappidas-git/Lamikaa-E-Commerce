@@ -338,6 +338,46 @@ const historyEvent = (action, note = "", by = null) => ({
   ...(note ? { note } : {}),
 });
 
+// ----- One shape for a new return, whoever asks for it ----------------------
+// A return can be raised from two places — the shopper's My Orders and the
+// admin's "New Return" — and both MUST write the same row. The storefront's
+// create used to be a bare POST of whatever the caller passed, so a
+// customer-raised return landed with no RET- number, no `status`, no
+// `refundStatus` and no timeline: Admin → Returns then showed a blank Return #,
+// counted it under none of the status chips, and its detail dialog offered no
+// action because `status` matched no branch. This builder is that missing
+// contract, applied on both paths.
+//
+// `by` names the actor the first timeline entry records — "Customer" when the
+// request comes from the storefront, the signed-in admin otherwise (see
+// historyEvent above).
+const buildReturnRow = (data, { by = null, action = "Return created" } = {}) => {
+  const now = new Date();
+  const ymd = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return {
+    returnNumber: `RET-${ymd}-${rand}`,
+    status: "requested",
+    refundStatus: "pending",
+    refundMethod: data.refundMethod || "original_payment",
+    deductionAmount: 0,
+    restocked: false,
+    // Return-leg shipping (the parcel coming BACK to the warehouse) is
+    // recorded manually by the admin — mirrors the outbound tracking fields
+    // and stays consistent with the "no shipping automation" rule.
+    returnTrackingNumber: null,
+    returnTrackingUrl: null,
+    returnCarrier: null,
+    pickupScheduledAt: null,
+    images: [],
+    notes: "",
+    ...data,
+    statusHistory: [historyEvent(action, data.reason ? `Reason: ${data.reason}` : "", by)],
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+  };
+};
+
 // Append a refund onto a payment record and return the patched row. Payments
 // keep BOTH shapes in sync: refunds[] (per-transaction history) and
 // refundAmount (running total, what the list/summary cards read). Status
@@ -1997,18 +2037,36 @@ const apiService = {
   // Returns
   // ===========================================================================
   returns: {
+    // The shopper raises the return themselves, from My Orders. In mock mode
+    // the row is built by buildReturnRow so it is byte-for-byte the record the
+    // admin's own "New Return" writes — same RET- number, same `requested`
+    // status, same timeline — which is what makes it appear in Admin → Returns,
+    // count under the status chips, and carry an Approve/Reject action.
+    // The timeline's first entry is attributed to the customer, not the admin.
     create: async (returnData) => {
       try {
+        if (IS_MOCK_API) {
+          const response = await api.post(
+            "/returns",
+            buildReturnRow(returnData, { by: "Customer", action: "Return requested" })
+          );
+          return response.data;
+        }
         const response = await api.post("/returns", returnData);
         return extractData(response);
       } catch (error) { console.error("Create return error:", error); throw error; }
     },
 
+    // This customer's returns, newest first. A missing id returns nothing
+    // rather than everything: json-server would answer an absent `userId`
+    // filter with the WHOLE table, i.e. other people's returns.
     getByUserId: async (userId) => {
       try {
         if (IS_MOCK_API) {
+          if (userId == null || userId === "") return [];
           const response = await api.get("/returns", { params: { userId } });
-          return response.data;
+          const rows = Array.isArray(response.data) ? response.data : [];
+          return rows.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         }
         const response = await api.get("/returns");
         return extractData(response);
@@ -2800,30 +2858,7 @@ const apiService = {
     createReturn: async (data) => {
       try {
         if (IS_MOCK_API) {
-          const now = new Date();
-          const ymd = now.toISOString().slice(0, 10).replace(/-/g, "");
-          const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-          const response = await api.post("/returns", {
-            returnNumber: `RET-${ymd}-${rand}`,
-            status: "requested",
-            refundStatus: "pending",
-            refundMethod: data.refundMethod || "original_payment",
-            deductionAmount: 0,
-            restocked: false,
-            // Return-leg shipping (the parcel coming BACK to the warehouse) is
-            // recorded manually by the admin — mirrors the outbound tracking
-            // fields and stays consistent with the "no shipping automation" rule.
-            returnTrackingNumber: null,
-            returnTrackingUrl: null,
-            returnCarrier: null,
-            pickupScheduledAt: null,
-            images: [],
-            notes: "",
-            ...data,
-            statusHistory: [historyEvent("Return created", data.reason ? `Reason: ${data.reason}` : "")],
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-          });
+          const response = await api.post("/returns", buildReturnRow(data));
           return response.data;
         }
         const response = await api.post("/admin/returns", data);

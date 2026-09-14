@@ -1,0 +1,323 @@
+/* =============================================================================
+ * ReturnModal — the return request form inside `ui/Modal`
+ * =============================================================================
+ * The sheet, the scrim, the glass, the padding, the close mark and the footer
+ * rail all come from Modal.module.css. This file styles the form only.
+ *
+ * TOKENS ONLY — no hex, no hard-coded duration, no restated glass recipe.
+ *
+ * EVERY DEVICE, BY CONSTRUCTION. There is one column and no fixed width
+ * anywhere: the item rows are a flex line that WRAPS its quantity control onto
+ * a second row when the name needs the space, the selects and the textarea are
+ * 100% of whatever they are given, and `min-width: 0` sits on every flex child
+ * that holds text so a long product name shortens instead of pushing the sheet
+ * sideways. Below 480px `ui/Modal` is already a full-screen sheet, so the only
+ * thing this file changes at that width is the item row's shape.
+ * ========================================================================== */
+
+.dialog {
+  position: relative;
+}
+
+.heading {
+  margin: var(--sf-space-2) 0 var(--sf-space-4);
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
+  color: var(--sf-color-text);
+}
+
+.orderLine {
+  margin: 0 0 var(--sf-space-3);
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.orderLine strong {
+  font-weight: var(--sf-font-semibold);
+  color: var(--sf-color-text);
+}
+
+.note {
+  margin: 0;
+  padding: var(--sf-space-3) var(--sf-space-4);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface);
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* =============================================================================
+ * THE ITEMS — a checkbox, a plate, the name, and how many go back
+ * ========================================================================== */
+
+.fieldset {
+  margin: var(--sf-space-5) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: var(--sf-space-2);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text-secondary);
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface);
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sf-space-3);
+  padding: var(--sf-space-3);
+}
+
+.item + .item {
+  border-top: 1px solid var(--sf-color-border);
+}
+
+/* A line an earlier request already took. It stays on the list — seeing it is
+   how the shopper understands why the total is what it is — but it reads as
+   spent rather than available. */
+.itemOff {
+  opacity: 0.55;
+}
+
+.checkbox {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--sf-color-gold);
+  cursor: pointer;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.checkbox:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.thumb {
+  flex: none;
+  width: 48px;
+  border-radius: var(--sf-radius-sm);
+}
+
+/* The one part that may shrink — so a long product name wraps inside the row
+   instead of widening it. */
+.itemText {
+  flex: 1 1 8rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemName {
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-normal);
+  color: var(--sf-color-text);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.itemMeta {
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-muted);
+}
+
+/* On a narrow sheet this drops to its own full-width row under the name rather
+   than squeezing the name into two characters. */
+.qty {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+@media (max-width: 380px) {
+  .qty {
+    flex: 1 0 100%;
+    margin-left: 0;
+    padding-left: calc(20px + 48px + var(--sf-space-3) * 2);
+  }
+}
+
+/* =============================================================================
+ * FIELDS
+ * ========================================================================== */
+
+.field {
+  margin-top: var(--sf-space-5);
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-3);
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--sf-space-2);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  color: var(--sf-color-text-secondary);
+}
+
+.counter {
+  font-size: var(--sf-text-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--sf-font-normal);
+  color: var(--sf-color-text-muted);
+}
+
+.req {
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-normal);
+  color: var(--sf-color-gold);
+}
+
+.select,
+.textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--sf-glass-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface-2);
+  font-family: var(--sf-font-family);
+  /* 16px or larger, or iOS Safari zooms the whole page on focus — the one
+     mobile bug you cannot see on a desktop browser at a phone width. */
+  font-size: var(--sf-text-base);
+  color: var(--sf-color-text);
+  transition: border-color var(--sf-transition), box-shadow var(--sf-transition);
+}
+
+.select {
+  height: var(--sf-tap-target);
+  padding: 0 var(--sf-space-4);
+  cursor: pointer;
+}
+
+.textarea {
+  padding: var(--sf-space-3) var(--sf-space-4);
+  line-height: var(--sf-leading-relaxed);
+  resize: vertical;
+  min-height: 84px;
+}
+
+.textarea::placeholder {
+  color: var(--sf-color-text-muted);
+}
+
+.select:focus,
+.textarea:focus {
+  outline: 2px solid transparent;
+  border-color: var(--sf-color-gold);
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* =============================================================================
+ * THE ESTIMATE
+ * ========================================================================== */
+
+.summary {
+  margin-top: var(--sf-space-5);
+  padding: var(--sf-space-4);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-surface);
+}
+
+.summaryRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-4);
+  margin: 0 0 var(--sf-space-2);
+  font-size: var(--sf-text-sm);
+  color: var(--sf-color-text-secondary);
+}
+
+.summaryRow > span:last-child {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.summaryDiscount {
+  color: var(--sf-color-success);
+}
+
+.summaryTotal {
+  margin-bottom: 0;
+  padding-top: var(--sf-space-3);
+  border-top: 1px dashed var(--sf-color-border);
+  font-size: var(--sf-text-base);
+  font-weight: var(--sf-font-semibold);
+  color: var(--sf-color-text);
+}
+
+.fineprint {
+  margin: var(--sf-space-3) 0 0;
+  font-size: var(--sf-text-xs);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-muted);
+}
+
+/* =============================================================================
+ * ERROR + PENDING
+ * ========================================================================== */
+
+.error {
+  margin: var(--sf-space-4) 0 0;
+  padding: var(--sf-space-3) var(--sf-space-4);
+  border: 1px solid color-mix(in srgb, var(--sf-color-danger) 35%, transparent);
+  border-radius: var(--sf-radius-md);
+  background: var(--sf-color-danger-bg);
+  font-size: var(--sf-text-sm);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text);
+}
+
+.btnSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  /* `.sf-btn`'s gap reaches its own flex children, and the label is one of
+     them — inside it the spinner has to space itself. */
+  margin-right: var(--sf-space-2);
+  vertical-align: -2px;
+  border: 2px solid color-mix(in srgb, var(--sf-color-primary-contrast) 35%, transparent);
+  border-top-color: var(--sf-color-primary-contrast);
+  border-radius: 50%;
+  animation: sf-return-spin 0.9s linear infinite;
+}
+
+@keyframes sf-return-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btnSpinner {
+    animation-duration: 2.4s;
+  }
+}

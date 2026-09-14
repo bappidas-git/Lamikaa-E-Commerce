@@ -15,6 +15,9 @@ import styles from "./QuantityStepper.module.css";
 //   onChange  fn       (next:number) => void
 //   min       number   default 1
 //   max       number   default Infinity (caller passes real stock)
+//   maxHint   string   what the ceiling MEANS, shown on + once it is reached.
+//                      Defaults to the stock wording; a return sheet's ceiling
+//                      is "how many you bought", not "how many we have left".
 //   disabled  boolean
 //   size      "sm"|"md"
 // =============================================================================
@@ -23,6 +26,7 @@ const QuantityStepper = ({
   onChange,
   min = 1,
   max = Infinity,
+  maxHint = "No more stock available",
   disabled = false,
   size = "md",
 }) => {
@@ -58,7 +62,7 @@ const QuantityStepper = ({
         className={styles.btn}
         onClick={inc}
         disabled={disabled || atMax}
-        title={atMax && Number.isFinite(max) ? "No more stock available" : undefined}
+        title={atMax && Number.isFinite(max) ? maxHint : undefined}
         aria-label="Increase quantity"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
