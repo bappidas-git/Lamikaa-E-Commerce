@@ -80,40 +80,58 @@ honoured, which is what makes a throwaway QA database easy:
 JSON_SERVER_DB=/tmp/qa-db.json JSON_SERVER_PORT=3001 node server.js
 ```
 
-### Merging `db.json`
+### Pulling and merging `db.json`
 
-Run this once in every clone, including GitHub Desktop's:
+**Cannot pull? Use `npm run pull`.**
 
 ```bash
-npm run setup:git
+npm run pull
 ```
 
-Because `db.json` is a real database rather than source, every machine's copy
-drifts on its own — place an order, approve a review, drag a hero slide, and
-json-server rewrites the file. Git has no way to merge that except by LINE, so
-two machines that each appended an order collide over lines that have nothing to
-do with each other, and `"rating": 4.7` against `"rating": 0` cannot be settled
-as text at all: the number is DERIVED from the `reviews` collection further down
-the same file, so neither side of the conflict holds the right answer.
+Because `db.json` is a real database rather than source, the running app keeps it
+modified — place an order, approve a review, drag a hero slide, and json-server
+rewrites the file. So a plain `git pull` does not conflict; it refuses to start:
 
-`npm run setup:git` registers `scripts/merge-db-json.js` as the merge driver for
-`db.json` (`.gitattributes` already points at it). Git then merges the file as
-DATA: collections merge **by record `id`** rather than by position, so rows added
-on either side all survive and an insert never shifts its neighbours into a false
-conflict; a field only one side touched is simply taken from that side; and the
-review aggregates are **recomputed** from the merged reviews by the same rule
-`src/services/api.js` applies, rather than picked from a side.
+```
+error: Your local changes to the following files would be overwritten by merge:
+	db.json
+Please commit your changes or stash them before you merge. Aborting
+```
+
+That is every pull, on every machine that has ever been clicked in, and no merge
+setting can reach it — git aborts before any merge begins. `npm run pull` sets
+the live copy aside (kept at `.git/db.json.before-pull` until it is safely back),
+lets git move a clean tree, then folds the local data back in **as data**: your
+orders survive, the incoming changes arrive, and `db.json` is left modified in
+the working tree, which is where live data belongs. Pass git's own arguments
+after `--`, e.g. `npm run pull -- origin main`. If the pull fails before git has
+moved anything, the live file goes back byte for byte; if it stops part way, the
+live data is folded onto as much as git did move, and the command exits non-zero
+so you know the pull itself is unfinished.
+
+Once a merge does begin — pulling a branch you have committed `db.json` on —
+`scripts/merge-db-json.js` is also registered as git's **merge driver** for the
+file (`.gitattributes` points at it; `npm install` arms it in every clone through
+`prepare`). Git then merges `db.json` as DATA rather than by LINE: collections
+merge **by record `id`** rather than by position, so rows added on either side all
+survive and an insert never shifts its neighbours into a false conflict; a field
+only one side touched is simply taken from that side; and the review aggregates
+are **recomputed** from the merged reviews by the same rule `src/services/api.js`
+applies, rather than picked from a side — `"rating": 4.7` against `"rating": 0`
+cannot be settled as text at all, because the number is derived from the
+`reviews` collection further down the same file and neither side holds it.
 
 What is left is only what a person genuinely has to decide — the same field
-changed to two different values on both sides. Those are printed with both
-values and their path, git still marks the file for review, and the file it
-leaves behind is always valid JSON with no conflict markers in it.
+changed to two different values on both sides. Those are printed with both values
+and their path, git still marks the file for review, and the file it leaves
+behind is always valid JSON with no conflict markers in it.
 
-The driver is per clone: git will not run a command a repository supplied, which
-is why it cannot ship pre-armed. A clone that never runs `setup:git` is not
-broken — git just falls back to its built-in text merge and keeps producing the
-line conflicts. If you are already staring at one, `npm run db:resolve` settles
-it from the three sides git has staged, then `git add db.json && git commit`.
+Git will not run a command a repository supplied, so the driver lives in each
+clone's `.git/config`. `npm install` puts it there; `npm run setup:git` re-arms it
+by hand if it is ever removed. A clone that has neither is not broken — git falls
+back to its built-in text merge and keeps producing the line conflicts. If you are
+already staring at one, `npm run db:resolve` settles it from the three sides git
+has staged, then `git add db.json && git commit`.
 
 ## Live mode
 
@@ -311,8 +329,9 @@ Where each kind is resolved:
 | `npm test` | Jest in watch mode; `npm test -- --watchAll=false` for one pass |
 | `npm run sitemap` | Writes `public/sitemap.xml` from `db.json` + the static routes. **No-ops with a notice while `brand.seo.siteUrl` is a placeholder** — a sitemap has no relative form to fall back on |
 | `npm run placeholders` | Regenerates the two placeholder inventories (tokens, stand-in media) as Markdown tables |
-| `npm run setup:git` | **Run once per clone.** Registers the structural `db.json` merge driver (see *Merging `db.json`*) |
-| `npm run db:resolve` | Resolves a `db.json` conflict git is already holding, for a clone that has not run `setup:git` |
+| `npm run pull` | **Pulls over a live `db.json`.** Plain `git pull` aborts because the running app keeps the file modified (see *Pulling and merging `db.json`*). Git's own arguments go after `--` |
+| `npm run setup:git` | Re-arms the structural `db.json` merge driver. `npm install` already does this in every clone via `prepare` |
+| `npm run db:resolve` | Resolves a `db.json` conflict git is already holding, in a clone with no driver armed |
 | `npm run test:live` | The live-API suite. **Writes to the real database — staging URLs only, never production** |
 
 ## Deployment
