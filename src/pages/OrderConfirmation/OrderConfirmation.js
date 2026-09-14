@@ -221,11 +221,15 @@ const OrderConfirmation = () => {
     const discount = order.discountAmount ?? 0;
 
     const address = normalizeOrderAddress(order.shippingAddress || order.billingAddress);
+    // The same five fields, in the same order, that the address block on the
+    // page prints — `normalizeOrderAddress` has already joined city, state and
+    // postcode into `cityLine`, so this must read that rather than invent
+    // `city`/`state`/`pincode` keys the normalised shape does not carry.
     const addressLines = [
       address?.name,
       address?.line1,
       address?.line2,
-      [address?.city, address?.state, address?.pincode].filter(Boolean).join(", "),
+      address?.cityLine,
       address?.country,
       address?.phone,
     ].filter(Boolean);
@@ -319,10 +323,17 @@ const OrderConfirmation = () => {
 
     // A blocked pop-up must not fail silently: fall back to printing from a
     // hidden frame in this window, which no blocker can intercept.
-    const win = window.open("", "_blank", "noopener,width=880,height=1000");
+    // NOT `noopener`: that feature makes window.open() return null by
+    // definition, which would leave a blank tab on screen and silently drop us
+    // into the fallback below. There is nothing to protect against here — the
+    // document is written from this page, has no URL of its own and loads
+    // nothing remote — but the handle is severed the moment it has been
+    // written, so the new window cannot reach back through `opener` either.
+    const win = window.open("", "_blank", "width=880,height=1000");
     if (win) {
       win.document.write(html);
       win.document.close();
+      win.opener = null;
       return;
     }
     const frame = document.createElement("iframe");

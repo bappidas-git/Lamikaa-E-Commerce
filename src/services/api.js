@@ -383,6 +383,41 @@ const reflectPaymentOnOrder = async (orderId, paymentStatus, action, note = "") 
   }
 };
 
+// The same reflection in the OTHER direction: an order's payment status changed
+// in Admin → Orders, so the transaction in Admin → Payments has to follow.
+//
+// This is the daily COD workflow. "Mark as Paid" on a delivered cash order
+// wrote `paymentStatus: "paid"` onto the order and nothing at all onto the
+// payment, so Admin → Orders showed the order PAID while Admin → Payments kept
+// showing the same transaction PENDING — and the Payments summary, which sums
+// only `captured`/`partially_refunded` rows, went on excluding the money.
+//
+// Only the two states an order-side edit can legitimately assert are mapped.
+// Refunds are deliberately NOT in the table: they are booked by the refund
+// endpoints, which write `refundAmount`, the `refunds[]` history and the
+// refunded/partially_refunded status together, and a blunt overwrite from here
+// would flatten that detail. A payment already carrying a refund is therefore
+// left alone.
+const ORDER_TO_PAYMENT_STATUS = { paid: "captured", failed: "failed" };
+
+const reflectOrderPaymentStatus = async (orderId, orderPaymentStatus) => {
+  const target = ORDER_TO_PAYMENT_STATUS[orderPaymentStatus];
+  if (!IS_MOCK_API || orderId == null || !target) return;
+  try {
+    const { data: rows } = await api.get("/payments", { params: { orderId } });
+    const payment = (Array.isArray(rows) ? rows : [])[0];
+    if (!payment || payment.status === target) return;
+    // Never walk back over a settled refund (see the note above).
+    if (["refunded", "partially_refunded", "refund_pending"].includes(payment.status)) return;
+    await api.patch(`/payments/${payment.id}`, {
+      status: target,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error("Reflect order payment status error:", e);
+  }
+};
+
 // When a return refund is processed in mock mode, cascade the outcome onto the
 // linked order and payment so every surface stays consistent: Admin Orders
 // (chips), Admin Payments (refund history + totals), and the customer's Order
@@ -2569,6 +2604,12 @@ const apiService = {
             ];
           }
           const response = await api.patch(`/orders/${id}`, payload);
+          // Keep the transaction in Admin → Payments in step with the order it
+          // belongs to (see reflectOrderPaymentStatus). Best-effort, and after
+          // the order write, so it can never fail the edit the admin asked for.
+          if (updates.paymentStatus) {
+            await reflectOrderPaymentStatus(id, updates.paymentStatus);
+          }
           return response.data;
         }
         const response = await api.patch(`/admin/orders/${id}`, event ? { ...updates, event } : updates);
