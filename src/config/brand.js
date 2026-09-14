@@ -20,13 +20,22 @@
 // =============================================================================
 import { cld } from "../utils/cloudinary";
 
-// The two real brand assets, character-exact (PRODUCTS.md §1). Raw upload URLs:
-// every consumer runs them through `cld()` for the size it actually paints.
-// Wordmark 1400x400 (3.5:1), mark 696x696, both on transparent grounds.
+// The two real brand assets, character-exact. Raw upload URLs: every consumer
+// runs them through `cld()` for the size it actually paints.
+//
+// BOTH MASTERS CARRY A WIDE TRANSPARENT BLEED, AND EVERY CONSUMER TRIMS IT.
+// The wordmark file is 2073x758 around 1923x502 of ink; the mark is 1254x1254
+// around 1024x1126, sitting low in its frame. Painted raw, a third of the
+// masthead's logo box would be empty and the lockup would read a quarter
+// smaller than the slot was designed for — so `cld()` is given `trim: true`
+// wherever these two are delivered (Logo.js, seo.ogImage below, useSeo's
+// JSON-LD logo, the admin invoice, and the static URLs in public/index.html).
+// `logoAspect` is the TRIMMED wordmark's ratio, which is what an <img> of it
+// actually measures.
 export const LOGO_URL =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670626/logo.png";
+  "https://res.cloudinary.com/v8vrixwq/image/upload/v1789379844/new_logo.png";
 export const ICON_URL =
-  "https://res.cloudinary.com/v8vrixwq/image/upload/v1788670625/icon.png";
+  "https://res.cloudinary.com/v8vrixwq/image/upload/v1789379845/new_logo_image.png";
 
 export const brand = {
   // ---- Names (BRAND.md §3.9 rule 1 — casing is not interchangeable) --------
@@ -94,9 +103,12 @@ export const brand = {
   // ---- Identity assets ----------------------------------------------------
   logoUrl: LOGO_URL,
   iconUrl: ICON_URL,
-  // Intrinsic 1400x400. Components derive their height from this so a future
-  // wordmark with different proportions needs one number changed here.
-  logoAspect: 3.5,
+  // The TRIMMED wordmark is 1923x502. Components derive their height from this
+  // so a future wordmark with different proportions needs one number changed
+  // here. It is deliberately not the 2.73 of the raw 2073x758 canvas: nothing
+  // renders the raw canvas (see the note above LOGO_URL), and a box sized for
+  // the bleed is a box with a hole in it.
+  logoAspect: 3.83,
   currency: "INR",
   locale: "en-IN",
 
@@ -167,8 +179,11 @@ export const brand = {
     titleTemplate: "%s · LAMIKAA NATURALS",
     defaultDescription:
       "Farmer-owned skincare rooted in the indigenous wisdom of Assam and Northeast India. The Black Rice range: cleanse, refresh, treat and moisturise — beauty that creates value for farmers.",
-    // 1200px wide wordmark for share cards; 1200x343 at the 3.5:1 aspect.
-    ogImage: cld(LOGO_URL, { w: 1200 }),
+    // 1200px wide wordmark for share cards; 1200x313 at the trimmed 3.83:1
+    // aspect. Trimmed like every other delivery — a share card is the one place
+    // a transparent bleed is most visible, because the platform composites the
+    // image onto its own ground and the bleed becomes a margin nobody asked for.
+    ogImage: cld(LOGO_URL, { trim: true, w: 1200 }),
   },
 
   // ---- Product defaults ---------------------------------------------------

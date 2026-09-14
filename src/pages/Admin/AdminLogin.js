@@ -22,8 +22,11 @@ import useAdminBodyClass from "../../hooks/useAdminBodyClass";
 import { setPageTitle } from "../../utils/documentTitle";
 
 // The same <Logo> the storefront renders. One wordmark on a transparent ground:
-// it reads on the login card's glass without a variant to pick.
-const LOGO_WIDTH = 210;
+// it reads on the login card's glass without a variant to pick. 230 is the 60px
+// the inline style pins, at brand.logoAspect — keep the two in step so the box
+// <Logo> reserves is the box that gets painted. `maxWidth: "100%"` below is what
+// keeps it inside a 320px phone, where the card has less than 230px to give.
+const LOGO_WIDTH = 230;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const AdminLogin = () => {
@@ -173,10 +176,21 @@ const AdminLogin = () => {
                   mx: "auto",
                 }}
               >
+                {/* WIDTH DRIVES THE SIZE, height follows. Pinning the height and
+                    letting `maxWidth` clamp the width is how a lockup gets
+                    squashed: on a 320px phone the card has ~206px to give, and
+                    a 230x60 image capped at 206px wide but still told to be
+                    60px tall is a 10% horizontal squeeze. This way it shrinks
+                    to 206x54 and keeps its proportions. */}
                 <Logo
                   width={LOGO_WIDTH}
                   alt={`${storeName} Admin`}
-                  style={{ height: 60, width: "auto", maxWidth: "100%", display: "block" }}
+                  style={{
+                    width: LOGO_WIDTH,
+                    maxWidth: "100%",
+                    height: "auto",
+                    display: "block",
+                  }}
                 />
               </Box>
             </Box>

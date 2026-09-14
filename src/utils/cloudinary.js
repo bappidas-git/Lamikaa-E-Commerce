@@ -3,24 +3,28 @@
 // =============================================================================
 // Every LAMIKAA image (the wordmark, the mark, the eight product covers) is
 // delivered from one Cloudinary cloud. The delivery rule for the whole rebuild
-// is: NEVER serve a raw upload URL at full size. The wordmark is 1400x400 and
-// the covers are multi-megapixel — painting those into a 168px masthead slot
-// costs the visitor bandwidth for pixels no screen will ever show.
+// is: NEVER serve a raw upload URL at full size. The wordmark master is
+// 2073x758 and the covers are multi-megapixel — painting those into a 168px
+// masthead slot costs the visitor bandwidth for pixels no screen will ever show.
 //
 // `cld()` inserts a transformation chain immediately after `/upload/`:
 //
-//   cld(brand.logoUrl, { w: 480 })
-//     → …/upload/f_auto,q_auto,w_480/v…/logo.png
+//   cld(brand.logoUrl, { trim: true, w: 480 })
+//     → …/upload/e_trim/f_auto,q_auto,w_480/v…/new_logo.png
 //
 //   cld(cover, { crop: { x: 700, y: 10, w: 425, h: 750 }, ar: "1:1",
 //                pad: true, w: 900 })
 //     → …/upload/c_crop,x_700,y_10,w_425,h_750/c_pad,ar_1:1,b_auto/f_auto,q_auto,w_900/v…
 //
+//   cld(brand.iconUrl, { trim: true, ar: "1:1", pad: true,
+//                        background: "transparent", w: 72 })
+//     → …/upload/e_trim/c_pad,ar_1:1,b_transparent/f_auto,q_auto,w_72/v…
+//
 // Chained components are `/`-separated and Cloudinary applies them in order, so
-// the crop happens first, the aspect-ratio pad second, and the delivery
-// (format/quality/width) last. `f_auto` and `q_auto` are always emitted: they
-// are what turn a 400 KB PNG into a 30 KB AVIF/WebP for the browsers that can
-// take one, and they cost nothing for the browsers that cannot.
+// the trim happens first, then the crop, then the aspect-ratio pad, and the
+// delivery (format/quality/width) last. `f_auto` and `q_auto` are always
+// emitted: they are what turn a 400 KB PNG into a 30 KB AVIF/WebP for the
+// browsers that can take one, and cost nothing for the browsers that cannot.
 //
 // A URL that is not a Cloudinary upload URL (a placeholder host, a data URI, an
 // admin-typed link) is returned EXACTLY as given. Callers therefore never have
@@ -61,9 +65,16 @@ const num = (value) => {
  * @param {object} [opts]
  * @param {number} [opts.w]        target width in px
  * @param {number} [opts.h]        target height in px
+ * @param {boolean|number} [opts.trim]  strip the uniform border (a transparent bleed
+ *                                      around a lockup) before anything else; a number
+ *                                      is the tolerance, e.g. `20`
  * @param {object} [opts.crop]     `{ x, y, w, h }` source-pixel crop, applied first
  * @param {string} [opts.ar]       aspect ratio for the pad/fill step, e.g. "1:1"
  * @param {boolean} [opts.pad]     with `ar`, pad to the ratio on an auto-picked ground
+ * @param {string} [opts.background]  the `b_` value for the pad step — "transparent"
+ *                                    keeps a transparent-ground logo transparent,
+ *                                    where the default `auto` would fill an opaque
+ *                                    plate behind it
  * @param {boolean} [opts.fit]     with both `w` and `h`, letterbox rather than crop (default true)
  * @param {boolean} [opts.limit]   with `w` alone, scale down only — never upscale past the source
  * @param {string} [opts.quality]  `q_` value (default "auto")
@@ -77,9 +88,11 @@ export function cld(
   {
     w,
     h,
+    trim,
     crop,
     ar,
     pad,
+    background,
     fit = true,
     limit = false,
     quality = "auto",
@@ -90,6 +103,16 @@ export function cld(
   if (!isCloudinary(url)) return url;
 
   const chain = [];
+
+  // 0. Trim the uniform border off the source, BEFORE every other step, so a
+  //    crop or a pad below measures the artwork rather than the artwork plus
+  //    its bleed. This is what the brand lockups are delivered with: both
+  //    master files are exported with a wide transparent margin (the wordmark
+  //    is 2073x758 around 1923x502 of ink), and an <img> of the raw canvas
+  //    reserves a box a third of which is empty — so the lockup reads small in
+  //    a masthead sized for the art. `e_trim` gives back the tight framing the
+  //    slots were measured against; see brand.logoAspect.
+  if (trim) chain.push(typeof trim === "number" ? `e_trim:${trim}` : "e_trim");
 
   // 1. Source crop, in the original image's own pixels. Used by the PDP stage
   //    crops recorded per product in PRODUCTS.md.
@@ -105,9 +128,12 @@ export function cld(
   //    eight products in a row crop the same way. Without a gravity the art is
   //    padded onto a ground sampled from its own edges (`b_auto`), which is
   //    what keeps a flat label or a transparent-corner shot from being sliced.
+  //    `background` overrides that sampled ground: the brand mark is gold line
+  //    art on nothing at all, and squaring it up on `b_auto` would paint an
+  //    opaque plate behind a logo whose whole point is that it has none.
   if (ar) {
     if (gravity) chain.push(`c_fill,g_${gravity},ar_${ar}`);
-    else if (pad) chain.push(`c_pad,ar_${ar},b_auto`);
+    else if (pad) chain.push(`c_pad,ar_${ar},b_${background || "auto"}`);
   }
 
   // 3. Delivery. `c_fit` only makes sense once both dimensions are known — with

@@ -47,7 +47,10 @@ import Swal from "sweetalert2";
 // The same <Logo> the storefront renders, so the drawer paints from cache. The
 // wordmark heads the permanent drawer; the temporary (mobile) drawer takes the
 // square mark, which reads at a glance in a panel a thumb is about to dismiss.
-const LOGO_WIDTH = 150;
+// 153 is the 40px the inline style pins, at brand.logoAspect — keep the two in
+// step so the reserved box and the painted one are the same box. It clears the
+// 260px drawer's 236px of usable width with room to spare.
+const LOGO_WIDTH = 153;
 const MARK_WIDTH = 36;
 
 const drawerWidth = 260;
@@ -449,10 +452,18 @@ const AdminLayout = () => {
               style={{ height: MARK_WIDTH, width: MARK_WIDTH, display: "block" }}
             />
           ) : (
+            /* Width drives the size and the height follows, so a drawer that
+               ever gets narrower than the lockup shrinks it in proportion
+               rather than squashing it against a pinned height. */
             <Logo
               width={LOGO_WIDTH}
               alt={`${storeName} Admin`}
-              style={{ height: 40, width: "auto", maxWidth: "100%", display: "block" }}
+              style={{
+                width: LOGO_WIDTH,
+                maxWidth: "100%",
+                height: "auto",
+                display: "block",
+              }}
             />
           )}
         </Box>

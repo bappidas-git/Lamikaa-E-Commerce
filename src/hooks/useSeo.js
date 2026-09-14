@@ -156,7 +156,7 @@ export const organizationJsonLd = ({ social } = {}) => {
     name: brand.name,
     legalName: isPlaceholder(brand.legalName) ? "" : brand.legalName,
     url: seoOrigin(),
-    logo: cld(brand.logoUrl, { w: 600 }),
+    logo: cld(brand.logoUrl, { trim: true, w: 600 }),
     sameAs,
   });
 };

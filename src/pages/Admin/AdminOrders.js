@@ -404,7 +404,7 @@ const AdminOrders = () => {
       th{background:#f5f5f5} .totals td{border:none;padding:4px 8px}
       .muted{color:#666;font-size:12px}
     </style></head><body>
-      <img class="mark" src="${cld(brand.logoUrl, { w: 400 })}" alt="${storeName}" />
+      <img class="mark" src="${cld(brand.logoUrl, { trim: true, w: 400 })}" alt="${storeName}" />
       <h1>${storeName}</h1>
       <div class="muted">${brand.legalName}</div>
       ${storeAddress ? `<div class="muted">${storeAddress}</div>` : ""}
