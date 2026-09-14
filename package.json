@@ -32,6 +32,8 @@
     "server": "node server.js",
     "sitemap": "node scripts/generate-sitemap.js",
     "placeholders": "node scripts/placeholder-inventory.js",
+    "db:resolve": "node scripts/merge-db-json.js",
+    "setup:git": "node scripts/merge-db-json.js --install",
     "dev": "concurrently \"npm start\" \"npm run server\"",
     "test:live": "LIVE_API=1 CI=true NODE_USE_ENV_PROXY=1 react-scripts test --watchAll=false --testPathPattern=api.live --testTimeout=90000"
   },

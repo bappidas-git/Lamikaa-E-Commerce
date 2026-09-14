@@ -80,6 +80,41 @@ honoured, which is what makes a throwaway QA database easy:
 JSON_SERVER_DB=/tmp/qa-db.json JSON_SERVER_PORT=3001 node server.js
 ```
 
+### Merging `db.json`
+
+Run this once in every clone, including GitHub Desktop's:
+
+```bash
+npm run setup:git
+```
+
+Because `db.json` is a real database rather than source, every machine's copy
+drifts on its own — place an order, approve a review, drag a hero slide, and
+json-server rewrites the file. Git has no way to merge that except by LINE, so
+two machines that each appended an order collide over lines that have nothing to
+do with each other, and `"rating": 4.7` against `"rating": 0` cannot be settled
+as text at all: the number is DERIVED from the `reviews` collection further down
+the same file, so neither side of the conflict holds the right answer.
+
+`npm run setup:git` registers `scripts/merge-db-json.js` as the merge driver for
+`db.json` (`.gitattributes` already points at it). Git then merges the file as
+DATA: collections merge **by record `id`** rather than by position, so rows added
+on either side all survive and an insert never shifts its neighbours into a false
+conflict; a field only one side touched is simply taken from that side; and the
+review aggregates are **recomputed** from the merged reviews by the same rule
+`src/services/api.js` applies, rather than picked from a side.
+
+What is left is only what a person genuinely has to decide — the same field
+changed to two different values on both sides. Those are printed with both
+values and their path, git still marks the file for review, and the file it
+leaves behind is always valid JSON with no conflict markers in it.
+
+The driver is per clone: git will not run a command a repository supplied, which
+is why it cannot ship pre-armed. A clone that never runs `setup:git` is not
+broken — git just falls back to its built-in text merge and keeps producing the
+line conflicts. If you are already staring at one, `npm run db:resolve` settles
+it from the three sides git has staged, then `git add db.json && git commit`.
+
 ## Live mode
 
 Edit `.env` — comment out the mock pair, uncomment the live pair — and restart
@@ -276,6 +311,8 @@ Where each kind is resolved:
 | `npm test` | Jest in watch mode; `npm test -- --watchAll=false` for one pass |
 | `npm run sitemap` | Writes `public/sitemap.xml` from `db.json` + the static routes. **No-ops with a notice while `brand.seo.siteUrl` is a placeholder** — a sitemap has no relative form to fall back on |
 | `npm run placeholders` | Regenerates the two placeholder inventories (tokens, stand-in media) as Markdown tables |
+| `npm run setup:git` | **Run once per clone.** Registers the structural `db.json` merge driver (see *Merging `db.json`*) |
+| `npm run db:resolve` | Resolves a `db.json` conflict git is already holding, for a clone that has not run `setup:git` |
 | `npm run test:live` | The live-API suite. **Writes to the real database — staging URLs only, never production** |
 
 ## Deployment
