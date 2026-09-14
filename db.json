@@ -8,14 +8,20 @@
       "sku": "LK-BR-FW-001",
       "brand": "LAMIKAA Naturals",
       "categoryId": 1,
-      "categoryIds": [1, 3],
-      "concerns": ["cleansing", "brightening"],
+      "categoryIds": [
+        1,
+        3
+      ],
+      "concerns": [
+        "cleansing",
+        "brightening"
+      ],
       "ritualStep": {
         "order": 1,
         "label": "Cleanse",
         "frequency": "Morning and evening"
       },
-      "heroHeadline": "Begin again, every morning.",
+      "heroHeadline": "Ancient Wisdom, Modern Beauty.",
       "heroSubtext": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant.",
       "heroOrder": 1,
       "promise": "A gentle daily cleanse that leaves skin clean, refreshed and quietly bright.",
@@ -33,7 +39,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Black Rice",
@@ -77,7 +87,9 @@
       ],
       "fragranceNote": "Mild sandalwood fragrance",
       "caution": "For external use only. Avoid direct contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children. Store in a cool, dry place away from direct sunlight.",
-      "suitableFor": ["All skin types — patch test recommended"],
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
       "media": [
         {
           "type": "image",
@@ -127,20 +139,32 @@
           "a": "The pack prints a mild sandalwood fragrance."
         }
       ],
-      "tags": ["black rice", "face wash", "cleanser", "face care"],
-      "relatedProductIds": [5, 7, 8],
-      "frequentlyBoughtTogetherIds": [5, 8],
+      "tags": [
+        "black rice",
+        "face wash",
+        "cleanser",
+        "face care"
+      ],
+      "relatedProductIds": [
+        5,
+        7,
+        8
+      ],
+      "frequentlyBoughtTogetherIds": [
+        5,
+        8
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
       "isNew": true,
       "isActive": true,
-      "rating": 4.7,
-      "totalReviews": 3,
+      "rating": 0,
+      "totalReviews": 0,
       "metaTitle": "Black Rice Face Wash · LAMIKAA NATURALS",
       "metaDescription": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T16:10:02.800Z",
+      "updatedAt": "2026-09-14T09:31:53.795Z",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
       "heroBackground": null
     },
@@ -152,8 +176,14 @@
       "sku": "LK-BR-GS-002",
       "brand": "LAMIKAA Naturals",
       "categoryId": 2,
-      "categoryIds": [2, 3],
-      "concerns": ["nourishing", "cleansing"],
+      "categoryIds": [
+        2,
+        3
+      ],
+      "concerns": [
+        "nourishing",
+        "cleansing"
+      ],
       "ritualStep": {
         "order": 1,
         "label": "Body cleanse",
@@ -177,7 +207,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Goat Milk",
@@ -196,7 +230,11 @@
           "benefit": "conditioning"
         }
       ],
-      "benefits": ["Nourishes", "Cleanses", "Softens skin"],
+      "benefits": [
+        "Nourishes",
+        "Cleanses",
+        "Softens skin"
+      ],
       "howToUse": [
         "Wet the soap and work into a rich lather.",
         "Massage gently over the skin.",
@@ -213,7 +251,9 @@
       ],
       "fragranceNote": "Mild sandalwood fragrance",
       "caution": "For external use only. Avoid contact with eyes. Keep out of reach of children. Store in a cool, dry place after use.",
-      "suitableFor": ["All skin types (as printed)"],
+      "suitableFor": [
+        "All skin types (as printed)"
+      ],
       "media": [
         {
           "type": "image",
@@ -256,16 +296,29 @@
           "a": "Wet the soap and work into a rich lather, massage gently over the skin, then rinse thoroughly with water."
         }
       ],
-      "tags": ["black rice", "soap bar", "cleanser", "body care", "goat milk"],
-      "relatedProductIds": [3, 5, 1],
-      "frequentlyBoughtTogetherIds": [5, 1],
+      "tags": [
+        "black rice",
+        "soap bar",
+        "cleanser",
+        "body care",
+        "goat milk"
+      ],
+      "relatedProductIds": [
+        3,
+        5,
+        1
+      ],
+      "frequentlyBoughtTogetherIds": [
+        5,
+        1
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
       "isNew": true,
       "isActive": true,
-      "rating": 5,
-      "totalReviews": 2,
+      "rating": 0,
+      "totalReviews": 0,
       "metaTitle": "Black Rice Goat Milk Soap · LAMIKAA NATURALS",
       "metaDescription": "Black rice and goat milk, pressed into a bar that treats your skin the way tradition always meant to. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
@@ -280,8 +333,14 @@
       "sku": "LK-BR-BW-003",
       "brand": "LAMIKAA Naturals",
       "categoryId": 2,
-      "categoryIds": [2, 3],
-      "concerns": ["hydration", "refresh"],
+      "categoryIds": [
+        2,
+        3
+      ],
+      "concerns": [
+        "hydration",
+        "refresh"
+      ],
       "ritualStep": {
         "order": 1,
         "label": "Body cleanse",
@@ -305,7 +364,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Black Rice",
@@ -324,7 +387,11 @@
           "benefit": "helps skin look smooth"
         }
       ],
-      "benefits": ["Nourishes", "Cleanses", "Hydrates"],
+      "benefits": [
+        "Nourishes",
+        "Cleanses",
+        "Hydrates"
+      ],
       "howToUse": [
         "Apply to wet skin.",
         "Massage gently to create a rich lather.",
@@ -340,7 +407,9 @@
       ],
       "fragranceNote": "Mild sandalwood fragrance",
       "caution": "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children.",
-      "suitableFor": ["All skin types — patch test recommended"],
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
       "media": [
         {
           "type": "image",
@@ -396,15 +465,22 @@
         "body care",
         "sandalwood"
       ],
-      "relatedProductIds": [2, 5, 1],
-      "frequentlyBoughtTogetherIds": [5, 1],
+      "relatedProductIds": [
+        2,
+        5,
+        1
+      ],
+      "frequentlyBoughtTogetherIds": [
+        5,
+        1
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
       "isNew": true,
       "isActive": true,
-      "rating": 4.5,
-      "totalReviews": 2,
+      "rating": 0,
+      "totalReviews": 0,
       "metaTitle": "Black Rice Body Wash · LAMIKAA NATURALS",
       "metaDescription": "A nourishing black rice and sandalwood body wash that turns a quick shower into a slow, fragrant ritual. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
@@ -419,8 +495,14 @@
       "sku": "LK-BR-FM-004",
       "brand": "LAMIKAA Naturals",
       "categoryId": 1,
-      "categoryIds": [1, 6],
-      "concerns": ["glow", "revive"],
+      "categoryIds": [
+        1,
+        6
+      ],
+      "concerns": [
+        "glow",
+        "revive"
+      ],
       "ritualStep": {
         "order": 3,
         "label": "Treat",
@@ -444,7 +526,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Black Rice",
@@ -482,7 +568,9 @@
       ],
       "fragranceNote": "Mild sandalwood fragrance",
       "caution": "For external use only. Avoid contact with eyes. Patch test before use. Discontinue if irritation occurs.",
-      "suitableFor": ["All skin types — patch test before use (as printed)"],
+      "suitableFor": [
+        "All skin types — patch test before use (as printed)"
+      ],
       "media": [
         {
           "type": "image",
@@ -538,16 +626,29 @@
           "a": "The pack asks for a patch test before use, and for the mask to be kept away from the eye area."
         }
       ],
-      "tags": ["black rice", "face mask", "clay mask", "face care", "kaolin"],
-      "relatedProductIds": [1, 6, 7],
-      "frequentlyBoughtTogetherIds": [7, 8],
+      "tags": [
+        "black rice",
+        "face mask",
+        "clay mask",
+        "face care",
+        "kaolin"
+      ],
+      "relatedProductIds": [
+        1,
+        6,
+        7
+      ],
+      "frequentlyBoughtTogetherIds": [
+        7,
+        8
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
       "isNew": true,
       "isActive": true,
-      "rating": 4.5,
-      "totalReviews": 2,
+      "rating": 0,
+      "totalReviews": 0,
       "metaTitle": "Black Rice Face Mask · LAMIKAA NATURALS",
       "metaDescription": "A black rice clay mask that gives tired skin its freshness back, one unhurried evening at a time. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
@@ -562,8 +663,14 @@
       "sku": "LK-BR-MI-005",
       "brand": "LAMIKAA Naturals",
       "categoryId": 1,
-      "categoryIds": [1, 5],
-      "concerns": ["hydration", "refresh"],
+      "categoryIds": [
+        1,
+        5
+      ],
+      "concerns": [
+        "hydration",
+        "refresh"
+      ],
       "ritualStep": {
         "order": 2,
         "label": "Refresh",
@@ -587,7 +694,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Black Rice",
@@ -606,7 +717,11 @@
           "benefit": "helps skin look smooth"
         }
       ],
-      "benefits": ["Refreshes", "Hydrates", "Revitalizes the feel of skin"],
+      "benefits": [
+        "Refreshes",
+        "Hydrates",
+        "Revitalizes the feel of skin"
+      ],
       "howToUse": [
         "Close eyes and mist evenly over the face from a comfortable distance.",
         "Allow to absorb naturally.",
@@ -622,7 +737,9 @@
       ],
       "fragranceNote": "Mild sandalwood fragrance",
       "caution": "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children.",
-      "suitableFor": ["All skin types — patch test recommended"],
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
       "media": [
         {
           "type": "image",
@@ -678,8 +795,15 @@
         "face care",
         "aloe vera"
       ],
-      "relatedProductIds": [1, 7, 8],
-      "frequentlyBoughtTogetherIds": [7, 8],
+      "relatedProductIds": [
+        1,
+        7,
+        8
+      ],
+      "frequentlyBoughtTogetherIds": [
+        7,
+        8
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
@@ -701,8 +825,14 @@
       "sku": "LK-BR-SC-006",
       "brand": "LAMIKAA Naturals",
       "categoryId": 1,
-      "categoryIds": [1, 6],
-      "concerns": ["exfoliation", "texture"],
+      "categoryIds": [
+        1,
+        6
+      ],
+      "concerns": [
+        "exfoliation",
+        "texture"
+      ],
       "ritualStep": {
         "order": 2,
         "label": "Polish",
@@ -726,7 +856,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Black Rice",
@@ -822,15 +956,22 @@
         "face care",
         "rice powder"
       ],
-      "relatedProductIds": [1, 4, 7],
-      "frequentlyBoughtTogetherIds": [4, 7],
+      "relatedProductIds": [
+        1,
+        4,
+        7
+      ],
+      "frequentlyBoughtTogetherIds": [
+        4,
+        7
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
       "isNew": true,
       "isActive": true,
-      "rating": 4.5,
-      "totalReviews": 2,
+      "rating": 0,
+      "totalReviews": 0,
       "metaTitle": "Black Rice Exfoliating Face Scrub · LAMIKAA NATURALS",
       "metaDescription": "Fine black rice exfoliation that gently polishes away dullness and lets your natural light through. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
@@ -845,8 +986,14 @@
       "sku": "LK-BR-SE-007",
       "brand": "LAMIKAA Naturals",
       "categoryId": 1,
-      "categoryIds": [1, 4],
-      "concerns": ["brightening", "even-tone"],
+      "categoryIds": [
+        1,
+        4
+      ],
+      "concerns": [
+        "brightening",
+        "even-tone"
+      ],
       "ritualStep": {
         "order": 4,
         "label": "Treat",
@@ -870,7 +1017,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Black Rice",
@@ -913,7 +1064,9 @@
       ],
       "fragranceNote": "Mild sandalwood fragrance",
       "caution": "For external use only. Avoid contact with eyes. Patch test before use.",
-      "suitableFor": ["All skin types — patch test before use (as printed)"],
+      "suitableFor": [
+        "All skin types — patch test before use (as printed)"
+      ],
       "media": [
         {
           "type": "image",
@@ -969,9 +1122,22 @@
           "a": "The pack asks for a patch test before use, and for the serum to be kept away from the eyes."
         }
       ],
-      "tags": ["black rice", "face serum", "serum", "face care", "niacinamide"],
-      "relatedProductIds": [1, 5, 8],
-      "frequentlyBoughtTogetherIds": [8, 5],
+      "tags": [
+        "black rice",
+        "face serum",
+        "serum",
+        "face care",
+        "niacinamide"
+      ],
+      "relatedProductIds": [
+        1,
+        5,
+        8
+      ],
+      "frequentlyBoughtTogetherIds": [
+        8,
+        5
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
@@ -993,8 +1159,14 @@
       "sku": "LK-BR-MG-008",
       "brand": "LAMIKAA Naturals",
       "categoryId": 1,
-      "categoryIds": [1, 5],
-      "concerns": ["hydration", "comfort"],
+      "categoryIds": [
+        1,
+        5
+      ],
+      "concerns": [
+        "hydration",
+        "comfort"
+      ],
       "ritualStep": {
         "order": 5,
         "label": "Moisturise",
@@ -1018,7 +1190,11 @@
       "weight": 0,
       "dimensions": null,
       "variants": [],
-      "badges": ["Farmer to Consumer", "100% Organic", "Result Oriented"],
+      "badges": [
+        "Farmer to Consumer",
+        "100% Organic",
+        "Result Oriented"
+      ],
       "keyIngredients": [
         {
           "name": "Black Rice",
@@ -1037,7 +1213,11 @@
           "benefit": "helps skin look smooth"
         }
       ],
-      "benefits": ["Hydrates", "Softens", "Refreshes"],
+      "benefits": [
+        "Hydrates",
+        "Softens",
+        "Refreshes"
+      ],
       "howToUse": [
         "Apply a small amount evenly over cleansed face and neck.",
         "Gently massage until absorbed.",
@@ -1053,7 +1233,9 @@
       ],
       "fragranceNote": "Mild sandalwood fragrance",
       "caution": "For external use only. Avoid contact with eyes. Discontinue use if irritation occurs. Keep out of reach of children.",
-      "suitableFor": ["All skin types — patch test recommended"],
+      "suitableFor": [
+        "All skin types — patch test recommended"
+      ],
       "media": [
         {
           "type": "image",
@@ -1109,15 +1291,22 @@
         "face care",
         "hyaluronic acid"
       ],
-      "relatedProductIds": [1, 5, 7],
-      "frequentlyBoughtTogetherIds": [7, 5],
+      "relatedProductIds": [
+        1,
+        5,
+        7
+      ],
+      "frequentlyBoughtTogetherIds": [
+        7,
+        5
+      ],
       "featured": true,
       "trending": false,
       "hot": false,
       "isNew": true,
       "isActive": true,
-      "rating": 4.3,
-      "totalReviews": 3,
+      "rating": 0,
+      "totalReviews": 0,
       "metaTitle": "Black Rice Moisturizer Gel · LAMIKAA NATURALS",
       "metaDescription": "A featherlight black rice gel that drinks in fast and keeps skin soft, smooth and comfortable all day. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
@@ -1318,7 +1507,7 @@
     {
       "id": 1,
       "slug": "morning-glow",
-      "name": "The Morning Glow Ritual",
+      "name": "The Morning Glow Ritual outcome",
       "tagline": "Clear, refreshed, quietly radiant.",
       "story": "Four unhurried steps to start the day clear, refreshed and quietly radiant — the Black Rice range in the order it was designed to be used. Black rice is the thread running through all four, paired each time with botanicals chosen for that step of your routine.",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121775/morning.png",
@@ -1434,7 +1623,11 @@
       "question": "Who owns LAMIKAA Naturals?",
       "answer": "LAMIKAA Naturals is owned by Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company owned by its farmer members. The value created through LAMIKAA contributes to the farmer-owned enterprise, and profits distributed by BAOPCL can reach its member farmers as dividends, subject to applicable laws and the company's dividend declaration.",
       "group": "brand",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 0,
@@ -1446,7 +1639,11 @@
       "question": "Does buying LAMIKAA products benefit farmers?",
       "answer": "LAMIKAA Naturals is part of a farmer-owned value chain: farmer, FPC, value addition, LAMIKAA Naturals, consumer. When the business succeeds and profits are distributed by BAOPCL, its farmer members can benefit through dividends, subject to applicable laws and the company's dividend declaration. Your choice of LAMIKAA can help create value beyond the product — value that may ultimately return to the farming community.",
       "group": "brand",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 1,
@@ -1458,7 +1655,11 @@
       "question": "Why is black rice in every product?",
       "answer": "Black rice is the hero ingredient of the range: antioxidant-rich and traditionally valued in Northeast India. Each product pairs it with botanicals chosen for a specific step of your routine.",
       "group": "products",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 2,
@@ -1470,7 +1671,11 @@
       "question": "Are the products suitable for all skin types?",
       "answer": "The range is formulated for everyday use. As printed on the packs, do a patch test before first use, keep away from the eyes and discontinue use if irritation occurs.",
       "group": "products",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 3,
@@ -1482,7 +1687,11 @@
       "question": "Do the products have a fragrance?",
       "answer": "The Black Rice range carries a mild sandalwood fragrance, as printed on the packs.",
       "group": "products",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 4,
@@ -1494,7 +1703,11 @@
       "question": "How long does delivery take, and is shipping free?",
       "answer": "Dispatch and delivery times are shown at checkout for your address. Shipping is free on orders above {freeShipping}.",
       "group": "orders",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 5,
@@ -1506,7 +1719,11 @@
       "question": "What is your return policy?",
       "answer": "You can request a return from My Orders within {{RETURN_WINDOW_DAYS}} days of delivery for unopened products in their original packaging. Opened skincare cannot be returned for hygiene reasons unless it arrived damaged.",
       "group": "orders",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 6,
@@ -1518,7 +1735,11 @@
       "question": "How do I track my order?",
       "answer": "You will receive an email with a tracking number as soon as your order is dispatched. You can also follow it at any time from the My Orders section of your account, where the current stage of every order is shown.",
       "group": "orders",
-      "placements": ["home", "help", "product"],
+      "placements": [
+        "home",
+        "help",
+        "product"
+      ],
       "productIds": [],
       "isActive": true,
       "sortOrder": 7,
@@ -1769,7 +1990,7 @@
         "productId": 1,
         "enabled": true,
         "label": "",
-        "eyebrow": "Ancient Wisdom. Modern Beauty.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1786,7 +2007,14 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366155/hero_1st.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": {
           "theme": "dark"
         },
@@ -1798,7 +2026,7 @@
         "productId": 2,
         "enabled": true,
         "label": "",
-        "eyebrow": "Handed Down. Made New.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1815,7 +2043,14 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366152/hero_2nd.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": null,
         "theme": "inherit"
       },
@@ -1825,7 +2060,7 @@
         "productId": 3,
         "enabled": true,
         "label": "",
-        "eyebrow": "Old Rituals. New Mornings.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1842,7 +2077,14 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366152/hero_3rd.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": null,
         "theme": "inherit"
       },
@@ -1852,7 +2094,7 @@
         "productId": 4,
         "enabled": true,
         "label": "",
-        "eyebrow": "Ancient Grain. Modern Glow.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1869,7 +2111,14 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366152/hero_4th.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": null,
         "theme": "inherit"
       },
@@ -1879,7 +2128,7 @@
         "productId": 5,
         "enabled": true,
         "label": "",
-        "eyebrow": "Heritage Fields. Modern Skin.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1896,7 +2145,14 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366153/hero_5th.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": null,
         "theme": "inherit"
       },
@@ -1906,7 +2162,7 @@
         "productId": 6,
         "enabled": true,
         "label": "",
-        "eyebrow": "Timeless Care. New Radiance.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1923,7 +2179,14 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366152/hero_6th.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": null,
         "theme": "inherit"
       },
@@ -1933,7 +2196,7 @@
         "productId": 8,
         "enabled": true,
         "label": "",
-        "eyebrow": "Age-Old Craft. Modern Ease.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1950,7 +2213,14 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366151/hero_7th.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": null,
         "theme": "inherit"
       },
@@ -1960,7 +2230,7 @@
         "productId": 7,
         "enabled": true,
         "label": "",
-        "eyebrow": "Ancestral Roots. Modern Light.",
+        "eyebrow": "",
         "headline": "",
         "subtext": "",
         "badges": [],
@@ -1977,12 +2247,19 @@
           "label": "",
           "href": ""
         },
-        "background": null,
+        "background": {
+          "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789366149/hero_8th.png",
+          "mobileUrl": "",
+          "position": "center",
+          "overlay": 55,
+          "blur": 0,
+          "showContent": true
+        },
         "layout": null,
         "theme": "inherit"
       }
     ],
-    "updatedAt": "2026-09-14T05:16:23.859Z"
+    "updatedAt": "2026-09-14T09:34:55.185Z"
   },
   "settings": {
     "store": {
@@ -1991,8 +2268,8 @@
       "email": "{{LAMIKAA_EMAIL}}",
       "phone": "{{LAMIKAA_PHONE}}",
       "address": "{{LAMIKAA_ADDRESS}}",
-      "currency": "INR",
-      "currencySymbol": "₹",
+      "currency": "USD",
+      "currencySymbol": "$",
       "timezone": "Asia/Kolkata",
       "logo": null,
       "favicon": null,
@@ -2035,11 +2312,11 @@
       "facebookPixelId": ""
     },
     "social": {
-      "facebook": "",
-      "instagram": "",
-      "twitter": "",
-      "youtube": "",
-      "whatsapp": ""
+      "facebook": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "instagram": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "twitter": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "youtube": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
+      "whatsapp": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51"
     }
   },
   "dealsConfig": {
@@ -2623,8 +2900,6 @@
       "isSample": true,
       "isVerifiedPurchase": false,
       "helpfulCount": 0,
-      "avatar": null,
-      "featured": false,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-13T22:00:24.563Z"
@@ -2642,277 +2917,25 @@
       "isSample": true,
       "isVerifiedPurchase": false,
       "helpfulCount": 0,
-      "avatar": null,
-      "featured": false,
       "photos": [],
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
+      "productId": 1,
+      "userId": null,
+      "userName": "shubendu",
+      "rating": 5,
+      "title": "test",
+      "body": "testhsbdhdhd",
+      "status": "approved",
+      "isVerifiedPurchase": true,
+      "helpfulCount": 0,
+      "source": "admin",
+      "createdAt": "2026-09-13T21:59:53.126Z",
+      "updatedAt": "2026-09-13T23:04:56.655Z",
       "id": 3,
-      "productId": 1,
-      "userId": null,
-      "userName": "Ananya Baruah",
-      "rating": 5,
-      "title": "My skin finally feels clean without feeling tight",
-      "body": "I have combination skin and most face washes leave my cheeks stripped and my T-zone still oily. This one does neither. It lathers lightly, rinses clean, and my skin feels soft straight out of the shower — no need to rush for moisturiser. Three weeks in and the dullness around my nose has genuinely lifted.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 11,
-      "avatar": "https://randomuser.me/api/portraits/women/44.jpg",
-      "featured": true,
-      "photos": [],
-      "createdAt": "2026-08-19T00:26:55.044Z",
-      "updatedAt": "2026-08-19T00:26:55.044Z"
-    },
-    {
-      "id": 4,
-      "productId": 1,
-      "userId": null,
-      "userName": "Rohit Sharma",
-      "rating": 4,
-      "title": "Gentle enough for every day",
-      "body": "Bought this after my dermatologist told me to stop using foaming cleansers with sulphates. It is mild, the scent is faint and natural, and a small amount goes a long way. Knocking off a star only because I wish the bottle were bigger — at this rate I will finish it in six weeks.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 0,
-      "avatar": "https://randomuser.me/api/portraits/men/32.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-08-26T00:26:55.044Z",
-      "updatedAt": "2026-08-26T00:26:55.044Z"
-    },
-    {
-      "id": 5,
-      "productId": 1,
-      "userId": null,
-      "userName": "Meghna Das",
-      "rating": 5,
-      "title": "Worth it for the ingredient list alone",
-      "body": "I bought it because it is farmer-owned and the black rice is actually from Assam, but I have stayed with it because it works. My skin looks calmer in photographs, which is the only test I trust.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 8,
-      "avatar": "https://randomuser.me/api/portraits/women/68.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-09-03T00:26:55.044Z",
-      "updatedAt": "2026-09-03T00:26:55.044Z"
-    },
-    {
-      "id": 6,
-      "productId": 2,
-      "userId": null,
-      "userName": "Priya Nair",
-      "rating": 5,
-      "title": "The only bar that has not dried out my arms",
-      "body": "Winter usually means itchy forearms and flaky shins for me. I switched to this in November and simply did not get either. It lathers creamy rather than squeaky, and the bar has lasted a lot longer than I expected for the price.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 6,
-      "avatar": "https://randomuser.me/api/portraits/women/21.jpg",
-      "featured": true,
-      "photos": [],
-      "createdAt": "2026-08-12T00:26:55.044Z",
-      "updatedAt": "2026-08-12T00:26:55.044Z"
-    },
-    {
-      "id": 7,
-      "productId": 2,
-      "userId": null,
-      "userName": "Imran Hussain",
-      "rating": 5,
-      "title": "Bought one, went back for three",
-      "body": "Smells clean and faintly sweet, nothing like the perfumed bars at the supermarket. My wife took the first one so I ordered a set. Good soap, honest packaging.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 9,
-      "avatar": "https://randomuser.me/api/portraits/men/51.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-08-31T00:26:55.044Z",
-      "updatedAt": "2026-08-31T00:26:55.044Z"
-    },
-    {
-      "id": 8,
-      "productId": 3,
-      "userId": null,
-      "userName": "Kavya Reddy",
-      "rating": 5,
-      "title": "Turns a rushed shower into something nicer",
-      "body": "The texture is thicker than most body washes so you need less of it. The scent lingers just long enough to notice and then it is gone — it does not fight with perfume. My shoulders and back feel properly moisturised afterwards.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 3,
-      "avatar": "https://randomuser.me/api/portraits/women/9.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-08-23T00:26:55.044Z",
-      "updatedAt": "2026-08-23T00:26:55.044Z"
-    },
-    {
-      "id": 9,
-      "productId": 3,
-      "userId": null,
-      "userName": "Debojit Gogoi",
-      "rating": 4,
-      "title": "Good wash, subtle scent",
-      "body": "Does everything I want a body wash to do and nothing I do not. I would have liked a pump cap instead of a flip top, but that is a packaging quibble, not a complaint about what is inside.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 3,
-      "avatar": "https://randomuser.me/api/portraits/men/75.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-09-06T00:26:55.044Z",
-      "updatedAt": "2026-09-06T00:26:55.044Z"
-    },
-    {
-      "id": 10,
-      "productId": 4,
-      "userId": null,
-      "userName": "Sneha Kalita",
-      "rating": 5,
-      "title": "Ten minutes, and my skin looks like I slept properly",
-      "body": "I use this on a Sunday evening before the week starts. It goes on smooth, does not crack painfully as it dries, and washes off without scrubbing. The difference is not dramatic but it is real — my face looks rested and takes makeup much more evenly the next morning.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 6,
-      "avatar": "https://randomuser.me/api/portraits/women/30.jpg",
-      "featured": true,
-      "photos": [],
-      "createdAt": "2026-08-28T00:26:55.044Z",
-      "updatedAt": "2026-08-28T00:26:55.044Z"
-    },
-    {
-      "id": 11,
-      "productId": 4,
-      "userId": null,
-      "userName": "Tanvi Mehta",
-      "rating": 4,
-      "title": "Lovely, though I wish the jar were larger",
-      "body": "Really pleasant to use and my skin looks brighter afterwards. At two uses a week the jar will not last me long, which is the only reason this is four stars and not five.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 1,
-      "avatar": "https://randomuser.me/api/portraits/women/57.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-09-09T00:26:55.044Z",
-      "updatedAt": "2026-09-09T00:26:55.044Z"
-    },
-    {
-      "id": 12,
-      "productId": 6,
-      "userId": null,
-      "userName": "Ritika Choudhury",
-      "rating": 5,
-      "title": "Finally, a scrub that does not feel like sandpaper",
-      "body": "The grains are fine and rounded, so it polishes instead of scratching. I have sensitive, easily-flushed skin and I can use this twice a week without any redness at all. The texture on my forehead has visibly evened out.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 6,
-      "avatar": "https://randomuser.me/api/portraits/women/12.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-08-16T00:26:55.044Z",
-      "updatedAt": "2026-08-16T00:26:55.044Z"
-    },
-    {
-      "id": 13,
-      "productId": 6,
-      "userId": null,
-      "userName": "Arjun Phukan",
-      "rating": 4,
-      "title": "Does the job without the sting",
-      "body": "I have used plenty of scrubs that leave my face burning for an hour. This one does not. Skin feels smooth for days after. Would happily buy again.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 0,
-      "avatar": "https://randomuser.me/api/portraits/men/40.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-09-01T00:26:55.044Z",
-      "updatedAt": "2026-09-01T00:26:55.044Z"
-    },
-    {
-      "id": 14,
-      "productId": 8,
-      "userId": null,
-      "userName": "Nandita Bora",
-      "rating": 5,
-      "title": "Hydration that disappears into the skin",
-      "body": "I could never get on with creams — everything sat on top and made my face shine by lunchtime. This sinks in within seconds and my skin still feels comfortable at the end of a long day in air conditioning. It also sits perfectly under sunscreen, which very few gels do.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 5,
-      "avatar": "https://randomuser.me/api/portraits/women/65.jpg",
-      "featured": true,
-      "photos": [],
-      "createdAt": "2026-08-21T00:26:55.044Z",
-      "updatedAt": "2026-08-21T00:26:55.044Z"
-    },
-    {
-      "id": 15,
-      "productId": 8,
-      "userId": null,
-      "userName": "Siddharth Rao",
-      "rating": 5,
-      "title": "Light, and it lasts all day",
-      "body": "Bought it for the summer and ended up using it through the year. No greasiness, no pilling under sunscreen, and my skin has stopped feeling tight in the evenings.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 6,
-      "avatar": "https://randomuser.me/api/portraits/men/3.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-09-05T00:26:55.044Z",
-      "updatedAt": "2026-09-05T00:26:55.044Z"
-    },
-    {
-      "id": 16,
-      "productId": 8,
-      "userId": null,
-      "userName": "Farheen Ahmed",
-      "rating": 3,
-      "title": "Good gel, but not enough for very dry skin",
-      "body": "This is a genuinely nice, light hydrator and I can see why people love it. For my skin in mid-winter it simply is not rich enough on its own — I have to layer an oil over it. In summer it would probably be all I need.",
-      "status": "approved",
-      "source": "admin",
-      "isSample": false,
-      "isVerifiedPurchase": true,
-      "helpfulCount": 1,
-      "avatar": "https://randomuser.me/api/portraits/women/89.jpg",
-      "featured": false,
-      "photos": [],
-      "createdAt": "2026-09-10T00:26:55.044Z",
-      "updatedAt": "2026-09-10T00:26:55.044Z"
+      "featured": true
     }
   ],
   "wishlist": [
