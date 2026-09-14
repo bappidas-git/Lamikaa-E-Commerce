@@ -1,5 +1,60 @@
 # Release notes
 
+## 1.4.2-lamikaa — 2026-09-14
+
+The home page's opening spread is a carousel again on the screen most visitors
+have. Its controls — the arrows, the pause, the counter, the progress hairline
+and the row of product names — had been pushed below the fold on every laptop,
+so the band read as one still photograph; and the headline had lost the rule
+that typeset it, which set it at the browser's own 32px on every phone and
+tablet and moved the whole page on every advance.
+
+### Fixed
+
+- **The hero headline is typeset again.** `.headline` in
+  `HeroCarousel.module.css` — its measure, display face, size, weight, leading
+  and tracking — was deleted by an unrelated edit to the eyebrow beside it
+  (1.4.1), and nothing failed: the class is a CSS module, so no test computes
+  it, and the ACTIVE slide still looked almost right because its headline is an
+  `<h1>` and the global stylesheet gives an `h1` a face and a leading. Below
+  1025px there was no size left at all and the hero opened at the browser's
+  default 2em; the other seven slides, which render as `<p>`, were set in the
+  BODY face at the display size. The rule is restored.
+
+- **The band no longer moves under the visitor on every advance.** That is the
+  same deletion, seen from below: the stage is one grid cell as tall as its
+  TALLEST slide, so seven slides measured in the wrong face measured the wrong
+  height, and which slide was the tallest changed each time the active one did.
+  Measured across the eight slides, the band moved by up to 62px on a laptop
+  and 48px on a phone between advances; it is 0 on both now.
+
+- **A band asked to be one screen tall is one screen tall.** The card's height
+  budget was the whole screen, leaving the control rail and the slide's own
+  padding nowhere to go but under it — so a "full screen" hero was 984px on an
+  800px laptop and every control sat below the fold. The rail and that padding
+  now come off the budget first (`--sf-hero-rail`, `--sf-hero-slide-pad`, both
+  declared once on the section and read by the boxes that draw them), the copy
+  takes one step down the type scale and a tighter rhythm on a screen 900px or
+  shorter, and the whole composition — words, card, buttons, arrows, counter,
+  progress and all eight product names — lands on one screen from 1366x768 up.
+
+- **A phone's card is bounded by the screen's height as well as its width.**
+  `80vw` on a handset turned on its side is a card taller than the screen it is
+  on; it is `min(80vw, 42svh)` now. Portrait is unchanged — it never reaches
+  the second term.
+
+- **The progress hairline has a track over a photograph.** Its 10%-opacity
+  ground was invisible against the artwork, leaving the gradient fill floating
+  with no rule to read as progress along. It takes a real ground now, for the
+  same reason the glass circles beside it do.
+
+### Added
+
+- **Two guards in `HeroCarousel.test.js`** for the rules above, because both
+  were lost silently and neither can fail loudly: the stylesheet is read as
+  text and asserted to typeset the headline on the CLASS (not on the `h1`), and
+  to subtract the rail and the slide's padding from the card's budget.
+
 ## 1.4.1-lamikaa — 2026-09-14
 
 The home page now opens on the brand's argument rather than on a repeated

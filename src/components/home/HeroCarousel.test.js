@@ -7,6 +7,9 @@
 // build a real axios client; nothing in this file calls it.
 jest.mock("../../services/api", () => ({ __esModule: true, default: {} }));
 
+import { readFileSync } from "fs";
+import { join } from "path";
+
 import {
   exploreLabel,
   heroEyebrow,
@@ -141,5 +144,39 @@ describe("resolveHeroSlides", () => {
     expect(resolveHeroSlides([null, FACE_WASH, undefined], null)).toEqual([
       FACE_WASH,
     ]);
+  });
+});
+
+// =============================================================================
+// The two rules in HeroCarousel.module.css that nothing else can hold down
+// =============================================================================
+// Both are geometry the component depends on and neither can fail loudly: the
+// stylesheet is a CSS module, so jsdom never computes it, and a rule deleted by
+// an unrelated edit takes the hero down on a real browser with every test still
+// green. That is exactly how each of these was lost once.
+describe("HeroCarousel.module.css", () => {
+  const css = readFileSync(join(__dirname, "HeroCarousel.module.css"), "utf8");
+  // The base rule — a nested copy inside an @media block is indented.
+  const headline = (/^\.headline\s*\{([\s\S]*?)\}/m.exec(css) || [])[1] || "";
+
+  // `HeroSlide` renders the ACTIVE slide's headline as an <h1> and every other
+  // slide's as a <p>, so anything this class does not state is a different
+  // typeface, size and leading on seven of the eight slides — and the stage is
+  // sized from the tallest of them, so the band's height, and the whole page
+  // under it, moves on every advance.
+  it("typesets the headline on the class rather than on the h1", () => {
+    expect(headline).toMatch(/font-family:\s*var\(--sf-font-display\)/);
+    expect(headline).toMatch(/font-size:\s*var\(--sf-text-/);
+    expect(headline).toMatch(/line-height:\s*var\(--sf-leading-/);
+    expect(headline).toMatch(/letter-spacing:/);
+  });
+
+  // A band asked to be one screen tall has the rail and the slide's own padding
+  // to pay for out of that screen. A card budget that forgets them is a band a
+  // screen and a half tall, with every control below the fold.
+  it("takes the rail and the slide's padding off the card's height budget", () => {
+    expect(css).toMatch(
+      /--sf-hero-card-fit:[\s\S]{0,240}?--sf-hero-rail[\s\S]{0,80}?--sf-hero-slide-pad/
+    );
   });
 });
