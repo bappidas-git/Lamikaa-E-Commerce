@@ -1,2 +1,10 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# db.json is a live, mutable database (README: writes from the storefront and
+# the admin land in it), not source. Merging 3,000 lines of one-field-per-line
+# JSON by LINE produces conflicts between edits that never touched each other,
+# and leaves derived fields (products[].rating) unresolvable as text. Merge it
+# as DATA instead: `npm run setup:git` registers the driver in this clone.
+# Until a clone runs that, git falls back to its built-in text merge.
+db.json merge=dbjson
