@@ -4,8 +4,9 @@
 // merge-db-json.js — a STRUCTURAL three-way merge for db.json
 // =============================================================================
 //
+//   npm run pull            pull, though the running app has db.json modified
 //   npm run db:resolve      resolve the conflict git is sitting on right now
-//   npm run setup:git       teach this clone to do it automatically, forever
+//   npm run setup:git       re-arm the driver by hand (npm install arms it)
 //
 // WHY THIS EXISTS
 // ---------------
@@ -25,6 +26,19 @@
 // "Resolve the hero conflict left unmerged in db.json").
 //
 // The file is not the problem; merging it as text is. So merge it as DATA.
+//
+// AND A MERGE DRIVER IS NOT ENOUGH ON ITS OWN. A driver only runs once git has
+// begun a merge, but the running app keeps db.json modified in the working
+// tree, so `git pull` refuses to begin at all:
+//
+//     error: Your local changes to the following files would be overwritten by
+//     merge: db.json — Please commit your changes or stash them. Aborting
+//
+// That is every pull, on every machine that has ever placed an order, and no
+// merge configuration can reach it. `npm run pull` does: it sets the live copy
+// aside so git has a clean tree to move, then folds the live edits back in with
+// the same three-way merge below — ancestor HEAD, ours the live file, theirs
+// what arrived. See pull() at the foot of this file.
 //
 // WHAT IT DOES
 // ------------
@@ -391,15 +405,233 @@ const readStage = (stage, label) => {
  * built-in text merge. Nothing breaks in a clone that never runs it; that clone
  * just keeps getting the line conflicts.
  */
-const install = () => {
+const install = ({ quiet = false } = {}) => {
   const driver = "node scripts/merge-db-json.js --driver %O %A %B";
-  execFileSync("git", ["config", "merge.dbjson.name", "structural three-way merge for db.json"], { cwd: ROOT });
-  execFileSync("git", ["config", "merge.dbjson.driver", driver], { cwd: ROOT });
+  try {
+    // stderr is captured rather than inherited: when \`npm install\` runs this in a
+    // working copy that is no git clone, git’s "fatal: not in a git directory" is
+    // ours to swallow, not the install log’s to carry.
+    const quietly = { cwd: ROOT, stdio: ["ignore", "ignore", "pipe"] };
+    execFileSync("git", ["config", "merge.dbjson.name", "structural three-way merge for db.json"], quietly);
+    execFileSync("git", ["config", "merge.dbjson.driver", driver], quietly);
+  } catch (error) {
+    // `npm install` runs this through `prepare`, and an install has to survive a
+    // working copy that is not a git clone at all — a downloaded tarball, a build
+    // image, a vendored copy. Nothing is registered; nothing is broken either.
+    if (quiet) return 0;
+    throw error;
+  }
+  if (quiet) {
+    console.log("  db.json merge driver armed. `npm run pull` pulls over a live database.");
+    return 0;
+  }
   console.log("\n  Registered the db.json merge driver in this clone.\n");
   console.log(`    merge.dbjson.driver = ${driver}\n`);
   console.log("  git — and GitHub Desktop, which drives the same git — will now merge");
-  console.log("  db.json structurally instead of line by line. It is per clone: every");
-  console.log("  machine that works on this repository runs `npm run setup:git` once.\n");
+  console.log("  db.json structurally instead of line by line.\n");
+  console.log("  `npm install` arms this in every clone, so this command is only needed");
+  console.log("  if the driver was taken back out of .git/config by hand.\n");
+  return 0;
+};
+
+// ---- Pulling over a live db.json --------------------------------------------
+
+/**
+ * Run git, returning its stdout. `soft: true` returns null instead of throwing
+ * when git exits non-zero — used for the questions git answers with an exit
+ * code (is there a HEAD? is this path unmerged?).
+ */
+const git = (args, { soft = false, inherit = false } = {}) => {
+  try {
+    return execFileSync("git", args, {
+      cwd: ROOT,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: inherit ? ["ignore", "inherit", "inherit"] : ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    if (soft) return null;
+    const detail = (error.stderr || error.message || "").trim();
+    throw new Error(`git ${args.join(" ")} failed: ${detail}`);
+  }
+};
+
+/** Is db.json unmerged — i.e. does git hold conflicting stages for it? */
+const isUnmerged = () => {
+  const listing = git(["ls-files", "--unmerged", "--", "db.json"], { soft: true });
+  return Boolean(listing && listing.trim());
+};
+
+/** Is a merge, rebase or cherry-pick sitting half finished? */
+const midOperation = () =>
+  ["MERGE_HEAD", "REBASE_HEAD", "CHERRY_PICK_HEAD"].some((ref) =>
+    Boolean(git(["rev-parse", "--verify", "--quiet", ref], { soft: true }))
+  );
+
+/** Has the working tree's db.json moved away from the commit it came from? */
+const isDirty = () => {
+  const status = git(["status", "--porcelain", "--", "db.json"], { soft: true });
+  return Boolean(status && status.trim());
+};
+
+/**
+ * `npm run pull` — pull with a live database in the working tree.
+ *
+ * THE PROBLEM THE MERGE DRIVER CANNOT REACH. A merge driver only runs once git
+ * has begun a merge. But db.json is rewritten by the running app, so the
+ * working tree copy is nearly always modified, and git refuses to START:
+ *
+ *     error: Your local changes to the following files would be overwritten
+ *     by merge: db.json
+ *     Please commit your changes or stash them before you merge. Aborting
+ *
+ * Every pull, on every machine that has ever placed an order. Committing the
+ * live data to pull is not an answer (it is not source), and stashing it means
+ * popping the stash straight back into the line conflict.
+ *
+ * So: set the live copy aside, let git have a clean tree to move, then fold the
+ * live edits back in AS DATA with the same three-way merge the driver uses —
+ * ancestor is the commit the live edits were made on top of, "ours" is the live
+ * file, "theirs" is what the pull brought in. The local orders survive, the
+ * incoming changes arrive, and db.json is left modified in the working tree
+ * exactly as it was before: live data, uncommitted.
+ */
+const pull = (passthrough, prefer) => {
+  if (!git(["rev-parse", "--git-dir"], { soft: true })) {
+    throw new Error("this is not a git repository, so there is nothing to pull.");
+  }
+  if (isUnmerged()) {
+    throw new Error(
+      "git is already holding an unresolved merge of db.json.\n" +
+        "  Settle that one first with `npm run db:resolve`, then\n" +
+        "  `git add db.json && git commit` — and pull again after."
+    );
+  }
+
+  // Not ROOT/.git: in a worktree or a submodule that is a FILE pointing
+  // elsewhere, and the backup has to land in the directory git actually uses.
+  const backup = path.join(git(["rev-parse", "--absolute-git-dir"]).trim(), "db.json.before-pull");
+  const shown = path.relative(ROOT, backup);
+
+  if (!isDirty()) {
+    // Nothing live to protect — this is just a pull.
+    try {
+      git(["pull", ...passthrough], { inherit: true });
+    } catch {
+      return 1;
+    }
+    console.log("\n  db.json had no local changes to fold back in.\n");
+    return 0;
+  }
+
+  const headBefore = git(["rev-parse", "HEAD"]).trim();
+  const live = readJson(DB_PATH, "live");
+  // The commit the live edits sit on top of, and so the ancestor of both the
+  // live file and whatever the pull is about to bring in.
+  const base = parseJson(git(["show", "HEAD:db.json"]), "ancestor", "HEAD:db.json");
+
+  // On disk, not just in memory: if anything below fails, or this process is
+  // killed outright, the afternoon of clicking is still sitting there.
+  fs.copyFileSync(DB_PATH, backup);
+  git(["checkout", "HEAD", "--", "db.json"]);
+  console.log(`\n  db.json was modified; set aside (${shown}) so git has a clean tree to move.\n`);
+
+  let pulled = false;
+  try {
+    git(["pull", ...passthrough], { inherit: true });
+    pulled = true;
+  } catch {
+    // git has printed its own diagnosis. What is ours to report is the live data.
+  }
+
+  if (!pulled && isUnmerged()) {
+    // git is holding db.json itself. Overwriting that would only bury the merge
+    // it has started, so leave every side of it alone and say where the data is.
+    console.error(
+      `\n  The pull stopped on db.json itself, so it has been left exactly as git\n` +
+        `  left it. YOUR LIVE DATA IS SAFE at\n\n    ${shown}\n\n` +
+        `  Settle the merge with \`npm run db:resolve\`, then fold that file back in.\n` +
+        `  It is not deleted.\n`
+    );
+    return 1;
+  }
+
+  const wentNowhere = git(["rev-parse", "HEAD"]).trim() === headBefore && !midOperation();
+
+  if (!pulled && wentNowhere) {
+    // The pull never started. Put the live database back: the working tree is
+    // then byte for byte what it was before this command ran.
+    fs.copyFileSync(backup, DB_PATH);
+    fs.unlinkSync(backup);
+    console.error("\n  The pull failed, so db.json has been put back untouched.\n");
+    return 1;
+  }
+
+  // Fold the live edits back onto whatever db.json now holds: what the pull
+  // brought in, or — if it stopped on some OTHER file — git's merge of it. The
+  // index keeps git's own version either way, so a merge commit finished from
+  // here still carries data nobody has been clicking on.
+  const incoming = readJson(DB_PATH, "incoming");
+  const showSample = readShowSampleReviews();
+  const ctx = { prefer, conflicts: [], notes: [], recomputesAggregates: showSample !== null };
+  const merged = mergeObject(base, live, incoming, "", ctx);
+  const rerated = showSample === null ? [] : reconcileReviewAggregates(merged, showSample);
+  writeDb(DB_PATH, merged);
+  fs.unlinkSync(backup);
+
+  report(merged, ctx, rerated, showSample, prefer, "db.json pulled and merged structurally.");
+  console.log("  Your local db.json data was folded back in. It is modified in the working");
+  console.log("  tree, which is where live data belongs.\n");
+
+  if (!pulled) {
+    console.error("  The pull itself did NOT finish — git stopped on something else above.\n");
+    return 1;
+  }
+  return 0;
+};
+
+// ---- Reporting --------------------------------------------------------------
+
+/**
+ * What the merge did, in the one shape every mode prints it: the size of the
+ * result, the aggregates that were recomputed rather than chosen, the values
+ * kept against a delete, and — the only part a person has to read — the fields
+ * both sides changed to different values.
+ */
+const report = (merged, ctx, rerated, showSample, prefer, headline) => {
+  const collections = Object.entries(merged).filter(([, value]) => Array.isArray(value));
+  const records = collections.reduce((total, [, value]) => total + value.length, 0);
+
+  console.log(`\n  ${headline}`);
+  console.log(`  ${collections.length} collections, ${records} records.\n`);
+
+  if (showSample === null) {
+    console.log("  ! Could not read brand.flags.showSampleReviews from src/config/brand.js, so");
+    console.log("    products[].rating / .totalReviews were merged as ordinary fields rather");
+    console.log("    than recomputed. Check them by hand.\n");
+  } else if (rerated.length) {
+    console.log(`  Review aggregates recomputed from the merged reviews (${rerated.length}):`);
+    for (const row of rerated) console.log(`    #${row.id} ${row.name} — ${row.was} -> ${row.now}`);
+    console.log("");
+  }
+
+  if (ctx.notes.length) {
+    console.log(`  Kept ${ctx.notes.length} value(s) one side deleted and the other edited:`);
+    for (const note of ctx.notes) console.log(`    ${note.where} — kept the ${note.from} edit`);
+    console.log("");
+  }
+
+  if (ctx.conflicts.length) {
+    console.log(`  ${ctx.conflicts.length} field(s) changed on BOTH sides. Settled on --prefer=${prefer}; check these:`);
+    for (const conflict of ctx.conflicts) {
+      console.log(`    ${conflict.where}`);
+      console.log(`      ours   ${brief(conflict.ours)}`);
+      console.log(`      theirs ${brief(conflict.theirs)}`);
+    }
+    console.log("");
+  } else {
+    console.log("  No field was changed on both sides — nothing had to be chosen.\n");
+  }
 };
 
 // ---- Entry point ------------------------------------------------------------
@@ -407,12 +639,14 @@ const install = () => {
 const HELP = `
   merge-db-json.js — structural three-way merge for db.json
 
+    npm run pull                    pull, though db.json is live and modified
     npm run db:resolve              resolve the conflict git is holding now
-    npm run setup:git               install it as this clone's merge driver
+    npm run setup:git               re-arm the driver (npm install already does)
 
     node scripts/merge-db-json.js [--prefer=theirs|ours] [--dry-run]
+    node scripts/merge-db-json.js --pull [-- <git pull args>]
     node scripts/merge-db-json.js --driver <ancestor> <ours> <theirs>
-    node scripts/merge-db-json.js --install
+    node scripts/merge-db-json.js --install [--quiet]
 
   --prefer  which side wins a field BOTH sides changed to different values.
             Default "theirs" — the branch being merged in, i.e. the shared one.
@@ -427,8 +661,7 @@ const main = () => {
     return 0;
   }
   if (argv.includes("--install")) {
-    install();
-    return 0;
+    return install({ quiet: argv.includes("--quiet") });
   }
 
   const prefer = (argv.find((arg) => arg.startsWith("--prefer=")) || "--prefer=theirs").split("=")[1];
@@ -436,6 +669,17 @@ const main = () => {
     console.error(`  --prefer takes "ours" or "theirs", not ${JSON.stringify(prefer)}.`);
     return 2;
   }
+  if (argv.includes("--pull")) {
+    // npm eats the separator it is given, so the `pull` script supplies its own:
+    // `npm run pull -- origin main` arrives here as `--pull -- origin main`. What
+    // follows is git’s, minus any of our own flags npm appended past it.
+    const separator = argv.indexOf("--");
+    const passthrough = (separator === -1 ? [] : argv.slice(separator + 1)).filter(
+      (arg) => arg !== "--pull" && !arg.startsWith("--prefer=")
+    );
+    return pull(passthrough, prefer);
+  }
+
   const dryRun = argv.includes("--dry-run");
   const driverIndex = argv.indexOf("--driver");
   const asDriver = driverIndex !== -1;
@@ -475,39 +719,7 @@ const main = () => {
 
   // ---- Report ---------------------------------------------------------------
 
-  const collections = Object.entries(merged).filter(([, value]) => Array.isArray(value));
-  const records = collections.reduce((total, [, value]) => total + value.length, 0);
-
-  console.log(`\n  db.json merged structurally${dryRun ? " (dry run — nothing written)" : ""}.`);
-  console.log(`  ${collections.length} collections, ${records} records.\n`);
-
-  if (showSample === null) {
-    console.log("  ! Could not read brand.flags.showSampleReviews from src/config/brand.js, so");
-    console.log("    products[].rating / .totalReviews were merged as ordinary fields rather");
-    console.log("    than recomputed. Check them by hand.\n");
-  } else if (rerated.length) {
-    console.log(`  Review aggregates recomputed from the merged reviews (${rerated.length}):`);
-    for (const row of rerated) console.log(`    #${row.id} ${row.name} — ${row.was} -> ${row.now}`);
-    console.log("");
-  }
-
-  if (ctx.notes.length) {
-    console.log(`  Kept ${ctx.notes.length} value(s) one side deleted and the other edited:`);
-    for (const note of ctx.notes) console.log(`    ${note.where} — kept the ${note.from} edit`);
-    console.log("");
-  }
-
-  if (ctx.conflicts.length) {
-    console.log(`  ${ctx.conflicts.length} field(s) changed on BOTH sides. Settled on --prefer=${prefer}; check these:`);
-    for (const conflict of ctx.conflicts) {
-      console.log(`    ${conflict.where}`);
-      console.log(`      ours   ${brief(conflict.ours)}`);
-      console.log(`      theirs ${brief(conflict.theirs)}`);
-    }
-    console.log("");
-  } else {
-    console.log("  No field was changed on both sides — nothing had to be chosen.\n");
-  }
+  report(merged, ctx, rerated, showSample, prefer, `db.json merged structurally${dryRun ? " (dry run — nothing written)" : ""}.`);
 
   if (!asDriver && !dryRun) {
     console.log("  db.json is written and valid. Finish the merge with:\n");
