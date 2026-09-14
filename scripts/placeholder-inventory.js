@@ -49,11 +49,12 @@
 //   1. `media[].placeholder === true` — the flag Prompt 06 seeded and the
 //      admin's media manager round-trips, which is authoritative for product
 //      galleries.
-//   2. The four stand-in hosts, anywhere in `db.json` or `src/`:
+//   2. The five stand-in hosts, anywhere in `db.json` or `src/`:
 //      picsum.photos · interactive-examples.mdn.mozilla.net ·
-//      res.cloudinary.com/demo · mdn.mozilla.net. Category, ritual and story
-//      imagery is NOT inside `media[]` and carries no flag, so the host test
-//      is the only thing that finds it.
+//      res.cloudinary.com/demo · mdn.mozilla.net · randomuser.me. Category,
+//      ritual and story imagery is NOT inside `media[]` and carries no flag,
+//      and neither does a reviewer's `avatar`, so the host test is the only
+//      thing that finds them.
 //   A row found by both is reported once, with both signals named.
 //
 // NO DEPENDENCIES, BY THE PROGRAMME'S RULE (00_INDEX.md §2): Node's own fs
@@ -81,6 +82,10 @@ const PLACEHOLDER_HOSTS = [
   "interactive-examples.mdn.mozilla.net",
   "mdn.mozilla.net",
   "res.cloudinary.com/demo",
+  // The faces on the demo reviews seeded in `reviews[].avatar`. Stand-ins like
+  // any other: real customers' photographs replace them, and until they do the
+  // owner should be able to see how many there are.
+  "randomuser.me",
 ];
 const HOST_RE = new RegExp(
   PLACEHOLDER_HOSTS.map((h) => h.replace(/[.]/g, "\\.").replace(/\//g, "\\/")).join("|")
@@ -184,7 +189,7 @@ function scanSource() {
     text.split("\n").forEach((lineText, i) => {
       // The scheme is optional: a fixture may carry a bare host string.
       const hostMatch = lineText.match(
-        /(?:https?:\/\/)?[^\s"'`)]*(?:picsum\.photos|mdn\.mozilla\.net|res\.cloudinary\.com\/demo)[^\s"'`)]*/
+        /(?:https?:\/\/)?[^\s"'`)]*(?:picsum\.photos|mdn\.mozilla\.net|res\.cloudinary\.com\/demo|randomuser\.me)[^\s"'`)]*/
       );
       if (!hostMatch) return;
       const index = text.split("\n").slice(0, i).join("\n").length + (i ? 1 : 0);

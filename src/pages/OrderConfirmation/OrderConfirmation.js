@@ -16,8 +16,9 @@
 //     never congratulated for a payment that did not happen.
 //   • Arrival is `createdAt + 5 days` and is LABELLED an estimate, unless the
 //     order has actually been delivered — then it is the real `deliveredAt`.
-//   • "Download invoice" is still only an alert(). It is drawn as a muted
-//     "Coming soon" row so it never pretends otherwise.
+//   • "Download invoice" builds the document from the order already on the
+//     page and hands it to the browser's print dialog, where "Save as PDF" is
+//     the download. No gateway, no round trip, no new dependency.
 //
 // THE THREE OTHER STATES (Prompt 31)
 //   Loading is the page's own silhouette in `Skeleton` — never a spinner, so
@@ -56,6 +57,7 @@ import {
   Skeleton,
 } from "../../components/ui";
 import { ROUTES } from "../../utils/constants";
+import brand from "../../config/brand";
 import useSeo from "../../hooks/useSeo";
 import styles from "./OrderConfirmation.module.css";
 
@@ -193,9 +195,157 @@ const OrderConfirmation = () => {
     return formatDeliveryDate(delivery);
   };
 
+  // ── The invoice ───────────────────────────────────────────────────────────
+  // Built from the order already on the page — the same lines, the same money,
+  // the same addresses — and opened in its own window for the browser's print
+  // dialog, where "Save as PDF" is the customer's download. No gateway, no
+  // server round trip and no new dependency: everything the document needs has
+  // already been fetched.
+  //
+  // It used to be an alert() reading "Invoice download will be available soon."
+  // A button on a paid order that apologises instead of producing the document
+  // is worse than no button, so it now produces the document.
   const handleDownloadInvoice = () => {
-    // No-op placeholder for invoice download
-    alert("Invoice download will be available soon.");
+    if (!order) return;
+
+    const esc = (value) =>
+      String(value ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+
+    // Derived here rather than read from the render scope: the summary's copies
+    // are declared after the early returns, and this closure must not depend on
+    // which branch the current render took.
+    const tax = order.taxAmount ?? order.tax ?? 0;
+    const shipping = order.shippingAmount ?? order.shipping ?? 0;
+    const discount = order.discountAmount ?? 0;
+
+    const address = normalizeOrderAddress(order.shippingAddress || order.billingAddress);
+    // The same five fields, in the same order, that the address block on the
+    // page prints — `normalizeOrderAddress` has already joined city, state and
+    // postcode into `cityLine`, so this must read that rather than invent
+    // `city`/`state`/`pincode` keys the normalised shape does not carry.
+    const addressLines = [
+      address?.name,
+      address?.line1,
+      address?.line2,
+      address?.cityLine,
+      address?.country,
+      address?.phone,
+    ].filter(Boolean);
+
+    const rows = (order.items || [])
+      .map(
+        (item) => `<tr>
+          <td>${esc(item.name)}${item.variantName ? `<br><span class="muted">${esc(item.variantName)}</span>` : ""}</td>
+          <td class="num">${esc(item.quantity)}</td>
+          <td class="num">${esc(formatCurrency(item.price, item.currency))}</td>
+          <td class="num">${esc(formatCurrency(item.price * item.quantity, item.currency))}</td>
+        </tr>`
+      )
+      .join("");
+
+    // Only the lines this order actually has — the same rule the summary on the
+    // page follows, so the document never invents a tax or a discount row.
+    const totals = [
+      ["Subtotal", formatCurrency(order.subtotal)],
+      discount > 0 ? ["Discount", `-${formatCurrency(discount)}`] : null,
+      ["Shipping", shipping > 0 ? formatCurrency(shipping) : "Free"],
+      tax > 0 ? ["Tax", formatCurrency(tax)] : null,
+      ["Total", formatCurrency(order.total)],
+      order.storeCreditUsed > 0 ? ["Store credit", `-${formatCurrency(order.storeCreditUsed)}`] : null,
+      order.storeCreditUsed > 0 ? ["Amount paid", formatCurrency(order.amountPayable ?? order.total)] : null,
+    ]
+      .filter(Boolean)
+      .map(
+        ([label, value], index, all) =>
+          `<tr class="${index === all.length - 1 ? "grand" : ""}"><th>${esc(label)}</th><td class="num">${esc(value)}</td></tr>`
+      )
+      .join("");
+
+    const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Invoice ${esc(order.orderNumber)} — ${esc(brand.name)}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1c1a17;margin:0;padding:40px;background:#fff}
+  .wrap{max-width:760px;margin:0 auto}
+  header{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;border-bottom:2px solid #1c1a17;padding-bottom:20px;margin-bottom:28px;flex-wrap:wrap}
+  h1{font-size:26px;letter-spacing:.04em;margin:0 0 4px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;margin:0 0 8px;color:#6b6257}
+  .muted{color:#6b6257;font-size:12px}
+  .meta{text-align:right}
+  .cols{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:28px}
+  .cols>div{flex:1;min-width:220px}
+  table{width:100%;border-collapse:collapse;margin-bottom:24px}
+  th,td{padding:9px 8px;text-align:left;border-bottom:1px solid #e6e1d9;vertical-align:top}
+  thead th{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#6b6257}
+  .num{text-align:right;white-space:nowrap}
+  .totals{width:300px;margin-left:auto}
+  .totals th{font-weight:400;color:#6b6257;border:0}
+  .totals td{border:0}
+  .totals .grand th,.totals .grand td{border-top:2px solid #1c1a17;font-weight:700;color:#1c1a17;font-size:16px;padding-top:12px}
+  footer{border-top:1px solid #e6e1d9;padding-top:16px;margin-top:32px;font-size:12px;color:#6b6257}
+  @media print{body{padding:0}}
+</style></head>
+<body><div class="wrap">
+  <header>
+    <div>
+      <h1>${esc(brand.name)}</h1>
+      <div class="muted">${esc(brand.legalName)}</div>
+    </div>
+    <div class="meta">
+      <h2>Invoice</h2>
+      <div><strong>${esc(order.orderNumber)}</strong></div>
+      <div class="muted">${esc(formatDate(order.createdAt, "long"))}</div>
+    </div>
+  </header>
+  <div class="cols">
+    <div>
+      <h2>Billed to</h2>
+      ${addressLines.length ? addressLines.map((line) => `<div>${esc(line)}</div>`).join("") : '<div class="muted">—</div>'}
+    </div>
+    <div>
+      <h2>Payment</h2>
+      <div>${esc(order.paymentMethod || "—")}</div>
+      <div class="muted">${esc(order.paymentStatus || "")}</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Amount</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <table class="totals"><tbody>${totals}</tbody></table>
+  <footer>${esc(brand.legalNote)}</footer>
+</div>
+<script>window.onload=function(){window.print()}</script>
+</body></html>`;
+
+    // A blocked pop-up must not fail silently: fall back to printing from a
+    // hidden frame in this window, which no blocker can intercept.
+    // NOT `noopener`: that feature makes window.open() return null by
+    // definition, which would leave a blank tab on screen and silently drop us
+    // into the fallback below. There is nothing to protect against here — the
+    // document is written from this page, has no URL of its own and loads
+    // nothing remote — but the handle is severed the moment it has been
+    // written, so the new window cannot reach back through `opener` either.
+    const win = window.open("", "_blank", "width=880,height=1000");
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+      win.opener = null;
+      return;
+    }
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    frame.srcdoc = html;
+    frame.onload = () => {
+      // Give the document a tick to lay out before the dialog takes a snapshot,
+      // then drop the frame once the dialog has been dismissed.
+      setTimeout(() => frame.remove(), 60000);
+    };
+    document.body.appendChild(frame);
   };
 
   // ── Loading — the page's own silhouette, never a spinner ──────────────────
@@ -549,10 +699,11 @@ const OrderConfirmation = () => {
             <Button variant="ghost" to={ROUTES.ORDERS} block>
               Track order
             </Button>
-            {/* Still only an alert() — drawn as the placeholder it is. */}
+            {/* Opens the invoice in the print dialog — "Save as PDF" there is
+                the customer's download. */}
             <button type="button" className={styles.invoiceBtn} onClick={handleDownloadInvoice}>
               Download invoice
-              <span className={styles.invoiceSoon}>Coming soon</span>
+              <span className={styles.invoiceSoon}>PDF</span>
             </button>
           </div>
         </div>
