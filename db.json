@@ -34,7 +34,7 @@
       "costPrice": 0,
       "currency": "INR",
       "size": "200 ml",
-      "stock": 100,
+      "stock": 103,
       "lowStockThreshold": 10,
       "weight": 0,
       "dimensions": null,
@@ -164,7 +164,7 @@
       "metaTitle": "Black Rice Face Wash · LAMIKAA NATURALS",
       "metaDescription": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-14T09:31:53.795Z",
+      "updatedAt": "2026-09-14T13:04:30.998Z",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
       "heroBackground": null
     },
@@ -202,7 +202,7 @@
       "costPrice": 0,
       "currency": "INR",
       "size": "100 g",
-      "stock": 100,
+      "stock": 102,
       "lowStockThreshold": 10,
       "weight": 0,
       "dimensions": null,
@@ -259,13 +259,7 @@
           "type": "image",
           "url": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v3.png",
           "alt": "Black Rice Goat Milk Soap by LAMIKAA Naturals — label",
-          "primary": true,
-          "crop": {
-            "x": 216,
-            "y": 522,
-            "w": 1377,
-            "h": 1248
-          }
+          "primary": true
         },
         {
           "type": "image",
@@ -323,12 +317,12 @@
       "hot": false,
       "isNew": true,
       "isActive": true,
-      "rating": 0,
-      "totalReviews": 0,
+      "rating": 5,
+      "totalReviews": 1,
       "metaTitle": "Black Rice Goat Milk Soap · LAMIKAA NATURALS",
       "metaDescription": "Black rice and goat milk, pressed into a bar that treats your skin the way tradition always meant to. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T16:15:00.214Z",
+      "updatedAt": "2026-09-14T13:01:43.086Z",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v3.png"
     },
     {
@@ -1625,7 +1619,6 @@
   ],
   "faqs": [
     {
-      "id": 1,
       "question": "Who owns LAMIKAA Naturals?",
       "answer": "LAMIKAA Naturals is owned by Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company owned by its farmer members. The value created through LAMIKAA contributes to the farmer-owned enterprise, and profits distributed by BAOPCL can reach its member farmers as dividends, subject to applicable laws and the company's dividend declaration.",
       "group": "brand",
@@ -1635,10 +1628,11 @@
         "product"
       ],
       "productIds": [],
-      "isActive": true,
+      "isActive": false,
       "sortOrder": 0,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-14T12:08:02.835Z",
+      "id": 1
     },
     {
       "id": 2,
@@ -1673,7 +1667,6 @@
       "updatedAt": "2026-09-06T00:00:00.000Z"
     },
     {
-      "id": 4,
       "question": "Are the products suitable for all skin types?",
       "answer": "The range is formulated for everyday use. As printed on the packs, do a patch test before first use, keep away from the eyes and discontinue use if irritation occurs.",
       "group": "products",
@@ -1683,13 +1676,13 @@
         "product"
       ],
       "productIds": [],
-      "isActive": true,
+      "isActive": false,
       "sortOrder": 3,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-14T12:08:09.788Z",
+      "id": 4
     },
     {
-      "id": 5,
       "question": "Do the products have a fragrance?",
       "answer": "The Black Rice range carries a mild sandalwood fragrance, as printed on the packs.",
       "group": "products",
@@ -1699,13 +1692,13 @@
         "product"
       ],
       "productIds": [],
-      "isActive": true,
+      "isActive": false,
       "sortOrder": 4,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-14T12:08:09.010Z",
+      "id": 5
     },
     {
-      "id": 6,
       "question": "How long does delivery take, and is shipping free?",
       "answer": "Dispatch and delivery times are shown at checkout for your address. Shipping is free on orders above {freeShipping}.",
       "group": "orders",
@@ -1715,13 +1708,13 @@
         "product"
       ],
       "productIds": [],
-      "isActive": true,
+      "isActive": false,
       "sortOrder": 5,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-14T12:08:08.430Z",
+      "id": 6
     },
     {
-      "id": 7,
       "question": "What is your return policy?",
       "answer": "You can request a return from My Orders within {{RETURN_WINDOW_DAYS}} days of delivery for unopened products in their original packaging. Opened skincare cannot be returned for hygiene reasons unless it arrived damaged.",
       "group": "orders",
@@ -1731,10 +1724,11 @@
         "product"
       ],
       "productIds": [],
-      "isActive": true,
+      "isActive": false,
       "sortOrder": 6,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-14T12:08:07.620Z",
+      "id": 7
     },
     {
       "id": 8,
@@ -2263,9 +2257,40 @@
         },
         "layout": null,
         "theme": "inherit"
+      },
+      {
+        "id": "hs-mu168lak-1",
+        "kind": "custom",
+        "productId": null,
+        "enabled": true,
+        "label": "Poster 1",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": {
+          "preset": "text-center",
+          "showMedia": false,
+          "theme": "dark"
+        },
+        "theme": "inherit"
       }
     ],
-    "updatedAt": "2026-09-14T09:34:55.185Z"
+    "updatedAt": "2026-09-14T11:42:29.275Z"
   },
   "settings": {
     "store": {
@@ -2333,14 +2358,14 @@
       "subtitle": "Launch offers will appear here."
     },
     "timer": {
-      "enabled": false,
+      "enabled": true,
       "endAt": "",
-      "onExpiry": "hide"
+      "onExpiry": "endOfDay"
     },
     "featuredCouponIds": [],
     "dealOfTheDayIds": [],
     "featuredProductIds": [],
-    "updatedAt": "2026-09-11T19:42:50.083Z"
+    "updatedAt": "2026-09-14T11:43:18.277Z"
   },
   "admins": [
     {
@@ -2382,7 +2407,7 @@
       "isActive": true,
       "storeCredit": 390,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-14T12:11:01.722Z"
     },
     {
       "firstName": "Shubendu",
@@ -2407,8 +2432,22 @@
       "addresses": [],
       "isActive": true,
       "createdAt": "2026-09-11T11:13:56.176Z",
-      "updatedAt": "2026-09-11T11:13:56.176Z",
-      "id": 3
+      "updatedAt": "2026-09-14T12:03:09.430Z",
+      "id": 3,
+      "storeCredit": 390
+    },
+    {
+      "firstName": "Shubendu",
+      "lastName": "Das",
+      "email": "shubendu@ssamdigital.com",
+      "phone": "",
+      "password": "Shuben1212",
+      "avatar": null,
+      "addresses": [],
+      "isActive": true,
+      "createdAt": "2026-09-14T11:44:34.018Z",
+      "updatedAt": "2026-09-14T11:44:34.018Z",
+      "id": 4
     }
   ],
   "shipping_methods": [
@@ -2440,7 +2479,23 @@
       "isActive": true,
       "expiresAt": "2027-12-31T23:59:59.000Z",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-09-14T12:01:23.537Z"
+    },
+    {
+      "code": "444",
+      "description": "gfgv",
+      "type": "percentage",
+      "value": 100,
+      "minOrderAmount": 0,
+      "maxDiscount": null,
+      "usageLimit": null,
+      "perUserLimit": null,
+      "isActive": true,
+      "expiresAt": null,
+      "usedCount": 0,
+      "createdAt": "2026-09-14T11:45:48.980Z",
+      "updatedAt": "2026-09-14T11:45:48.980Z",
+      "id": 2
     }
   ],
   "orders": [
@@ -2502,9 +2557,9 @@
       "subtotal": 570,
       "total": 570,
       "amountPayable": 570,
-      "paymentStatus": "paid",
+      "paymentStatus": "refunded",
       "paymentMethod": "upi",
-      "fulfillmentStatus": "fulfilled",
+      "fulfillmentStatus": "returned",
       "shippingStatus": "delivered",
       "trackingNumber": "LK-TRACK-0001",
       "trackingUrl": "",
@@ -2531,10 +2586,33 @@
           "at": "2026-09-04T14:20:00.000Z",
           "by": "Store Admin",
           "action": "Delivered"
+        },
+        {
+          "at": "2026-09-14T12:56:31.985Z",
+          "by": "Store Admin",
+          "action": "Refund initiated",
+          "note": "$570 via original payment — settlement pending"
+        },
+        {
+          "at": "2026-09-14T12:56:52.231Z",
+          "by": "Store Admin",
+          "action": "Refund completed",
+          "note": "$570 via original payment settled to customer"
+        },
+        {
+          "at": "2026-09-14T13:01:42.936Z",
+          "by": "Store Admin",
+          "action": "Return refund processed (RET-20260914-ILQE)",
+          "note": "$570 refunded"
         }
       ],
       "createdAt": "2026-09-01T10:15:00.000Z",
-      "updatedAt": "2026-09-04T14:20:00.000Z"
+      "updatedAt": "2026-09-14T13:01:42.817Z",
+      "refundStatus": "completed",
+      "refundMethod": "original_payment",
+      "pendingRefund": null,
+      "refundedAmount": 570,
+      "refundCompletedAt": "2026-09-14T12:56:52.150Z"
     },
     {
       "discountAmount": 0,
@@ -2586,19 +2664,24 @@
       "amountPayable": 349,
       "paymentStatus": "pending",
       "paymentMethod": "cod",
-      "fulfillmentStatus": "unfulfilled",
-      "shippingStatus": "pending",
-      "trackingNumber": "",
-      "trackingUrl": "",
+      "fulfillmentStatus": "fulfilled",
+      "shippingStatus": "shipped",
+      "trackingNumber": null,
+      "trackingUrl": null,
       "statusHistory": [
         {
           "at": "2026-09-04T11:05:00.000Z",
           "by": "Customer",
           "action": "Order placed"
+        },
+        {
+          "at": "2026-09-14T12:56:11.637Z",
+          "by": "Store Admin",
+          "action": "Fulfilled & shipped"
         }
       ],
       "createdAt": "2026-09-04T11:05:00.000Z",
-      "updatedAt": "2026-09-04T11:05:00.000Z"
+      "updatedAt": "2026-09-14T12:56:11.622Z"
     },
     {
       "discountAmount": 0,
@@ -2740,16 +2823,16 @@
       "storeCreditUsed": 0,
       "amountPayable": 390,
       "paymentMethod": "cod",
-      "paymentStatus": "paid",
-      "fulfillmentStatus": "fulfilled",
-      "shippingStatus": "shipped",
+      "paymentStatus": "refunded",
+      "fulfillmentStatus": "cancelled",
+      "shippingStatus": "recalled",
       "trackingNumber": null,
       "notes": "",
       "userId": 3,
       "orderNumber": "ORD-MTWV5I8V-O93P",
       "shiprocketOrderId": null,
       "createdAt": "2026-09-11T11:19:00.511Z",
-      "updatedAt": "2026-09-11T11:26:33.356Z",
+      "updatedAt": "2026-09-14T12:03:09.117Z",
       "statusHistory": [
         {
           "at": "2026-09-11T11:19:00.512Z",
@@ -2765,10 +2848,255 @@
           "at": "2026-09-11T11:26:33.385Z",
           "by": "Store Admin",
           "action": "Payment marked as paid"
+        },
+        {
+          "at": "2026-09-14T12:03:00.788Z",
+          "by": "Store Admin",
+          "action": "Order cancelled",
+          "note": "tysf"
+        },
+        {
+          "at": "2026-09-14T12:03:00.789Z",
+          "by": "Store Admin",
+          "action": "Shipment recall initiated",
+          "note": "Return tracking 254212"
+        },
+        {
+          "at": "2026-09-14T12:03:00.806Z",
+          "by": "Store Admin",
+          "action": "Refund initiated",
+          "note": "$390 via store credit — settlement pending"
+        },
+        {
+          "at": "2026-09-14T12:03:09.208Z",
+          "by": "Store Admin",
+          "action": "Refund completed",
+          "note": "$390 via store credit settled to customer"
         }
       ],
       "id": 4,
-      "trackingUrl": null
+      "trackingUrl": null,
+      "cancelReason": "tysf",
+      "cancelledAt": "2026-09-14T12:03:00.788Z",
+      "recall": {
+        "trackingNumber": "254212",
+        "trackingUrl": null,
+        "carrier": null,
+        "scheduledAt": "2026-09-14T12:03:00.788Z",
+        "by": "Store Admin"
+      },
+      "refundStatus": "completed",
+      "refundMethod": "store_credit",
+      "pendingRefund": null,
+      "refundedAmount": 390,
+      "refundCompletedAt": "2026-09-14T12:03:09.117Z"
+    },
+    {
+      "items": [
+        {
+          "productId": 1,
+          "variantId": null,
+          "name": "Black Rice Face Wash",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_facewash_v1.png",
+          "sku": "",
+          "price": 390,
+          "quantity": 1,
+          "subtotal": 390
+        }
+      ],
+      "shippingAddress": {
+        "firstName": "Shubendu",
+        "lastName": "Das",
+        "phone": "6901608721",
+        "addressLine1": "test",
+        "addressLine2": "rest",
+        "city": "bongaigaon",
+        "state": "assam",
+        "postalCode": "783354",
+        "country": "India"
+      },
+      "billingAddress": {
+        "firstName": "Shubendu",
+        "lastName": "Das",
+        "phone": "6901608721",
+        "addressLine1": "test",
+        "addressLine2": "rest",
+        "city": "bongaigaon",
+        "state": "assam",
+        "postalCode": "783354",
+        "country": "India"
+      },
+      "subtotal": 390,
+      "discountAmount": 39,
+      "couponCode": "SAMPLE10",
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "codFee": 0,
+      "total": 351,
+      "storeCreditUsed": 0,
+      "amountPayable": 351,
+      "paymentMethod": "cod",
+      "paymentStatus": "voided",
+      "fulfillmentStatus": "cancelled",
+      "shippingStatus": "recalled",
+      "trackingNumber": null,
+      "notes": "",
+      "userId": 4,
+      "orderNumber": "ORD-MU16EXY9-K0OE",
+      "shiprocketOrderId": null,
+      "createdAt": "2026-09-14T11:45:21.249Z",
+      "updatedAt": "2026-09-14T12:01:23.415Z",
+      "statusHistory": [
+        {
+          "at": "2026-09-14T11:45:21.250Z",
+          "by": "Customer",
+          "action": "Order placed"
+        },
+        {
+          "at": "2026-09-14T12:01:04.566Z",
+          "by": "Store Admin",
+          "action": "Fulfilled & shipped"
+        },
+        {
+          "at": "2026-09-14T12:01:23.415Z",
+          "by": "Store Admin",
+          "action": "Order cancelled",
+          "note": "bvbv"
+        },
+        {
+          "at": "2026-09-14T12:01:23.415Z",
+          "by": "Store Admin",
+          "action": "Shipment recall initiated",
+          "note": "Parcel recalled to warehouse"
+        },
+        {
+          "at": "2026-09-14T12:01:23.415Z",
+          "by": "Store Admin",
+          "action": "Payment voided",
+          "note": "Cash on delivery not collected"
+        },
+        {
+          "at": "2026-09-14T12:01:23.564Z",
+          "by": "Store Admin",
+          "action": "Coupon usage restored",
+          "note": "SAMPLE10 freed for reuse"
+        }
+      ],
+      "id": 5,
+      "trackingUrl": null,
+      "cancelReason": "bvbv",
+      "cancelledAt": "2026-09-14T12:01:23.415Z",
+      "recall": {
+        "trackingNumber": null,
+        "trackingUrl": null,
+        "carrier": null,
+        "scheduledAt": "2026-09-14T12:01:23.415Z",
+        "by": "Store Admin"
+      },
+      "couponRestored": true
+    },
+    {
+      "items": [
+        {
+          "productId": 3,
+          "variantId": null,
+          "name": "Black Rice Body Wash",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v2.png",
+          "sku": "",
+          "price": 500,
+          "quantity": 1,
+          "subtotal": 500
+        }
+      ],
+      "shippingAddress": {
+        "firstName": "Shubendu",
+        "lastName": "Das",
+        "phone": "+91 6901608721",
+        "addressLine1": "test",
+        "addressLine2": "rest",
+        "city": "bongaigaon",
+        "state": "Assam",
+        "postalCode": "783380",
+        "country": "India"
+      },
+      "billingAddress": {
+        "firstName": "Shubendu",
+        "lastName": "Das",
+        "phone": "+91 6901608721",
+        "addressLine1": "test",
+        "addressLine2": "rest",
+        "city": "bongaigaon",
+        "state": "Assam",
+        "postalCode": "783380",
+        "country": "India"
+      },
+      "subtotal": 500,
+      "discountAmount": 0,
+      "couponCode": null,
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "codFee": 0,
+      "total": 500,
+      "storeCreditUsed": 0,
+      "amountPayable": 500,
+      "paymentMethod": "wallet",
+      "paymentStatus": "refunded",
+      "fulfillmentStatus": "fulfilled",
+      "shippingStatus": "shipped",
+      "trackingNumber": null,
+      "notes": "",
+      "userId": 4,
+      "orderNumber": "ORD-MU17MTK8-YJJO",
+      "shiprocketOrderId": null,
+      "createdAt": "2026-09-14T12:19:28.424Z",
+      "updatedAt": "2026-09-14T12:55:59.217Z",
+      "statusHistory": [
+        {
+          "at": "2026-09-14T12:19:28.425Z",
+          "by": "Customer",
+          "action": "Order placed"
+        },
+        {
+          "at": "2026-09-14T12:19:56.913Z",
+          "by": "Store Admin",
+          "action": "Fulfilled & shipped"
+        },
+        {
+          "at": "2026-09-14T12:20:04.302Z",
+          "by": "Store Admin",
+          "action": "Tracking updated"
+        },
+        {
+          "at": "2026-09-14T12:20:12.459Z",
+          "by": "Store Admin",
+          "action": "Marked delivered"
+        },
+        {
+          "at": "2026-09-14T12:20:45.559Z",
+          "by": "Store Admin",
+          "action": "Refund initiated",
+          "note": "$500 via original payment · ref vnvh — settlement pending"
+        },
+        {
+          "at": "2026-09-14T12:21:54.368Z",
+          "by": "Store Admin",
+          "action": "Refund completed",
+          "note": "$500 via original payment settled to customer"
+        },
+        {
+          "at": "2026-09-14T12:55:59.251Z",
+          "by": "Store Admin",
+          "action": "Tracking updated"
+        }
+      ],
+      "id": 6,
+      "trackingUrl": null,
+      "deliveredAt": "2026-09-14T12:20:12.426Z",
+      "refundStatus": "completed",
+      "refundMethod": "original_payment",
+      "pendingRefund": null,
+      "refundedAmount": 500,
+      "refundCompletedAt": "2026-09-14T12:21:54.292Z"
     }
   ],
   "payments": [
@@ -2783,11 +3111,30 @@
       "gateway": "razorpay",
       "transactionId": "pay_SEED0001",
       "gatewayOrderId": "order_SEED0001",
-      "status": "captured",
+      "status": "refunded",
       "storeCreditApplied": 0,
       "gatewayResponse": {},
       "createdAt": "2026-09-01T10:16:00.000Z",
-      "updatedAt": "2026-09-01T10:16:00.000Z"
+      "updatedAt": "2026-09-14T13:01:42.872Z",
+      "pendingRefund": null,
+      "refundAmount": 1140,
+      "refundReason": "Return RET-20260914-ILQE",
+      "refunds": [
+        {
+          "id": "ref_mu18ywutlfj9",
+          "amount": 570,
+          "reason": "gggg",
+          "at": "2026-09-14T12:56:52.181Z",
+          "by": "Store Admin"
+        },
+        {
+          "id": "ref_mu19555k9xrj",
+          "amount": 570,
+          "reason": "Return RET-20260914-ILQE",
+          "at": "2026-09-14T13:01:42.872Z",
+          "by": "Store Admin"
+        }
+      ]
     },
     {
       "id": 2,
@@ -2844,12 +3191,71 @@
       "gateway": "cod",
       "transactionId": null,
       "gatewayOrderId": null,
-      "status": "pending",
+      "status": "refunded",
       "storeCreditApplied": 0,
       "gatewayResponse": {},
       "createdAt": "2026-09-11T11:19:00.560Z",
-      "updatedAt": "2026-09-11T11:19:00.560Z",
-      "id": 4
+      "updatedAt": "2026-09-14T12:03:09.156Z",
+      "id": 4,
+      "refundAmount": 390,
+      "refundReason": "tysf",
+      "refunds": [
+        {
+          "id": "ref_mu171tyczy7v",
+          "amount": 390,
+          "reason": "tysf",
+          "at": "2026-09-14T12:03:09.156Z",
+          "by": "Store Admin"
+        }
+      ],
+      "pendingRefund": null
+    },
+    {
+      "orderId": 5,
+      "orderNumber": "ORD-MU16EXY9-K0OE",
+      "userId": 4,
+      "amount": 351,
+      "currency": "INR",
+      "paymentMethod": "cod",
+      "gateway": "cod",
+      "transactionId": null,
+      "gatewayOrderId": null,
+      "status": "voided",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "createdAt": "2026-09-14T11:45:21.302Z",
+      "updatedAt": "2026-09-14T12:01:23.460Z",
+      "id": 5,
+      "refundReason": "bvbv"
+    },
+    {
+      "orderId": 6,
+      "orderNumber": "ORD-MU17MTK8-YJJO",
+      "userId": 4,
+      "amount": 500,
+      "currency": "INR",
+      "paymentMethod": "wallet",
+      "gateway": "razorpay",
+      "transactionId": "pay_MOCKMU17MTLO",
+      "gatewayOrderId": "order_MOCKMU17MTLO",
+      "status": "refunded",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "createdAt": "2026-09-14T12:19:28.476Z",
+      "updatedAt": "2026-09-14T12:21:54.328Z",
+      "id": 6,
+      "pendingRefund": null,
+      "refundAmount": 500,
+      "refundReason": "trst",
+      "refunds": [
+        {
+          "id": "ref_mu17py54d491",
+          "amount": 500,
+          "reason": "trst",
+          "at": "2026-09-14T12:21:54.328Z",
+          "by": "Store Admin"
+        }
+      ]
     }
   ],
   "refunds": [
@@ -2873,6 +3279,90 @@
       "by": "Store Admin",
       "createdAt": "2026-09-03T12:01:00.000Z",
       "updatedAt": "2026-09-03T12:30:00.000Z"
+    },
+    {
+      "refundNumber": "REF-20260914-IBVL",
+      "type": "recall_refund",
+      "orderId": 4,
+      "orderNumber": "ORD-MTWV5I8V-O93P",
+      "returnId": null,
+      "returnNumber": null,
+      "paymentId": null,
+      "amount": 390,
+      "method": "store_credit",
+      "reason": "tysf",
+      "reference": null,
+      "status": "completed",
+      "couponRestored": false,
+      "initiatedAt": "2026-09-14T12:03:00.946Z",
+      "settledAt": "2026-09-14T12:03:09.308Z",
+      "by": "Store Admin",
+      "createdAt": "2026-09-14T12:03:00.946Z",
+      "updatedAt": "2026-09-14T12:03:09.308Z",
+      "id": 2
+    },
+    {
+      "refundNumber": "REF-20260914-QQ2U",
+      "type": "order_refund",
+      "orderId": 6,
+      "orderNumber": "ORD-MU17MTK8-YJJO",
+      "returnId": null,
+      "returnNumber": null,
+      "paymentId": null,
+      "amount": 500,
+      "method": "original_payment",
+      "reason": "trst",
+      "reference": "vnvh",
+      "status": "completed",
+      "couponRestored": false,
+      "initiatedAt": "2026-09-14T12:20:45.662Z",
+      "settledAt": "2026-09-14T12:21:54.465Z",
+      "by": "Store Admin",
+      "createdAt": "2026-09-14T12:20:45.662Z",
+      "updatedAt": "2026-09-14T12:21:54.465Z",
+      "id": 3
+    },
+    {
+      "refundNumber": "REF-20260914-65MU",
+      "type": "order_refund",
+      "orderId": 1,
+      "orderNumber": "ORD-20260901-0001",
+      "returnId": null,
+      "returnNumber": null,
+      "paymentId": null,
+      "amount": 570,
+      "method": "original_payment",
+      "reason": "gggg",
+      "reference": null,
+      "status": "completed",
+      "couponRestored": false,
+      "initiatedAt": "2026-09-14T12:56:32.101Z",
+      "settledAt": "2026-09-14T12:56:52.304Z",
+      "by": "Store Admin",
+      "createdAt": "2026-09-14T12:56:32.101Z",
+      "updatedAt": "2026-09-14T12:56:52.304Z",
+      "id": 4
+    },
+    {
+      "refundNumber": "REF-20260914-PUFL",
+      "type": "return_refund",
+      "orderId": 1,
+      "orderNumber": "ORD-20260901-0001",
+      "returnId": 1,
+      "returnNumber": "RET-20260914-ILQE",
+      "paymentId": 1,
+      "amount": 570,
+      "method": "original_payment",
+      "reason": "Return RET-20260914-ILQE",
+      "reference": null,
+      "status": "completed",
+      "couponRestored": false,
+      "initiatedAt": "2026-09-14T13:01:42.954Z",
+      "settledAt": "2026-09-14T13:01:42.954Z",
+      "by": "Store Admin",
+      "createdAt": "2026-09-14T13:01:42.954Z",
+      "updatedAt": "2026-09-14T13:01:42.954Z",
+      "id": 5
     }
   ],
   "walletTransactions": [
@@ -2889,9 +3379,132 @@
       "balanceBefore": 0,
       "balanceAfter": 390,
       "createdAt": "2026-09-03T12:30:00.000Z"
+    },
+    {
+      "userId": 3,
+      "type": "credit",
+      "amount": 390,
+      "reason": "Refund for order ORD-MTWV5I8V-O93P",
+      "orderId": 4,
+      "orderNumber": "ORD-MTWV5I8V-O93P",
+      "refundId": null,
+      "refundNumber": null,
+      "balanceBefore": 0,
+      "balanceAfter": 390,
+      "createdAt": "2026-09-14T12:03:09.377Z",
+      "id": 2
     }
   ],
-  "returns": [],
+  "returns": [
+    {
+      "returnNumber": "RET-20260914-ILQE",
+      "status": "refunded",
+      "refundStatus": "processed",
+      "refundMethod": "original_payment",
+      "deductionAmount": 0,
+      "restocked": true,
+      "returnTrackingNumber": null,
+      "returnTrackingUrl": null,
+      "returnCarrier": null,
+      "pickupScheduledAt": null,
+      "images": [],
+      "notes": "",
+      "orderId": 1,
+      "orderNumber": "ORD-20260901-0001",
+      "userId": 1,
+      "items": [
+        {
+          "productId": 1,
+          "variantId": null,
+          "name": "Black Rice Face Wash",
+          "sku": "LK-BR-FW-001",
+          "price": 390,
+          "quantity": 1,
+          "subtotal": 390
+        },
+        {
+          "productId": 2,
+          "variantId": null,
+          "name": "Black Rice Goat Milk Soap",
+          "sku": "LK-BR-GS-002",
+          "price": 90,
+          "quantity": 2,
+          "subtotal": 180
+        }
+      ],
+      "reason": "defective",
+      "reasonDetails": "hghgh",
+      "refundAmount": 570,
+      "statusHistory": [
+        {
+          "at": "2026-09-14T13:01:17.645Z",
+          "by": "Store Admin",
+          "action": "Return created",
+          "note": "Reason: defective"
+        },
+        {
+          "at": "2026-09-14T13:01:31.219Z",
+          "by": "Store Admin",
+          "action": "Return approved"
+        },
+        {
+          "at": "2026-09-14T13:01:39.179Z",
+          "by": "Store Admin",
+          "action": "Items received"
+        },
+        {
+          "at": "2026-09-14T13:01:42.778Z",
+          "by": "Store Admin",
+          "action": "Refund processed ($570)"
+        }
+      ],
+      "createdAt": "2026-09-14T13:01:17.645Z",
+      "updatedAt": "2026-09-14T13:01:42.766Z",
+      "id": 1
+    },
+    {
+      "returnNumber": "RET-20260914-P0A5",
+      "status": "requested",
+      "refundStatus": "pending",
+      "refundMethod": "original_payment",
+      "deductionAmount": 0,
+      "restocked": false,
+      "returnTrackingNumber": null,
+      "returnTrackingUrl": null,
+      "returnCarrier": null,
+      "pickupScheduledAt": null,
+      "images": [],
+      "notes": "",
+      "orderId": 6,
+      "orderNumber": "ORD-MU17MTK8-YJJO",
+      "userId": 4,
+      "items": [
+        {
+          "productId": 3,
+          "variantId": null,
+          "name": "Black Rice Body Wash",
+          "sku": "",
+          "price": 500,
+          "quantity": 1,
+          "subtotal": 500
+        }
+      ],
+      "reason": "defective",
+      "reasonDetails": "vhvh",
+      "refundAmount": 500,
+      "statusHistory": [
+        {
+          "at": "2026-09-14T13:03:03.900Z",
+          "by": "Store Admin",
+          "action": "Return created",
+          "note": "Reason: defective"
+        }
+      ],
+      "createdAt": "2026-09-14T13:03:03.900Z",
+      "updatedAt": "2026-09-14T13:03:03.900Z",
+      "id": 2
+    }
+  ],
   "reviews": [
     {
       "id": 1,
@@ -2942,6 +3555,24 @@
       "updatedAt": "2026-09-13T23:04:56.655Z",
       "id": 3,
       "featured": true
+    },
+    {
+      "productId": 2,
+      "userId": null,
+      "userName": "test",
+      "rating": 5,
+      "title": "test",
+      "body": "test",
+      "status": "approved",
+      "isVerifiedPurchase": true,
+      "featured": true,
+      "avatar": "https://img.magnific.com/free-photo/closeup-shot-beautiful-butterfly-with-interesting-textures-orange-petaled-flower_181624-7640.jpg?semt=ais_hybrid&w=740&q=80",
+      "photos": [],
+      "helpfulCount": 0,
+      "source": "admin",
+      "createdAt": "2026-09-14T12:05:51.144Z",
+      "updatedAt": "2026-09-14T12:05:51.144Z",
+      "id": 4
     }
   ],
   "wishlist": [
@@ -3015,6 +3646,51 @@
       "notes": "",
       "createdAt": "2026-09-06T00:00:00.000Z",
       "updatedAt": "2026-09-06T00:00:00.000Z"
+    },
+    {
+      "type": "newsletter",
+      "name": null,
+      "email": "shubendu@assamdigital.com",
+      "phone": null,
+      "orderNumber": null,
+      "category": null,
+      "subject": null,
+      "message": null,
+      "status": "subscribed",
+      "createdAt": "2026-09-14T12:11:43.952Z",
+      "updatedAt": "2026-09-14T12:11:43.952Z",
+      "notes": "",
+      "id": 3
+    },
+    {
+      "type": "newsletter",
+      "name": null,
+      "email": "shubendu@assamdigital.com",
+      "phone": null,
+      "orderNumber": null,
+      "category": null,
+      "subject": null,
+      "message": null,
+      "status": "subscribed",
+      "createdAt": "2026-09-14T12:11:57.512Z",
+      "updatedAt": "2026-09-14T12:11:57.512Z",
+      "notes": "",
+      "id": 4
+    },
+    {
+      "type": "contact",
+      "name": "Shubendu Das",
+      "email": "shubendu@ssamdigital.com",
+      "phone": "6901608721",
+      "orderNumber": "",
+      "category": "general",
+      "subject": "test",
+      "message": "dhddeddddddddddddddddddddddddddddddddddddddddd",
+      "status": "new",
+      "createdAt": "2026-09-14T12:12:51.353Z",
+      "updatedAt": "2026-09-14T12:12:51.353Z",
+      "notes": "",
+      "id": 5
     }
   ]
 }
