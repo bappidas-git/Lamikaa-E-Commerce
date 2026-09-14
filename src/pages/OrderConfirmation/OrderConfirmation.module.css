@@ -16,8 +16,8 @@
      3. THE BLOCKS — Summary, Address, Payment. Tracked captions over hairline
         rows on the dark ground. The ledger is hairlines and 15px figures; the
         payment state is a shared `Chip variant="status"`.
-     4. THE ACTIONS — three shared pill Buttons, and the invoice as a
-        deliberately muted "Coming soon" row, because that is all it is.
+     4. THE ACTIONS — three shared pill Buttons, and the invoice as a quieter
+        hairline row beneath them: a real control, but a secondary one.
 
    The money ledger is presentation only: every row, its order and its value
    come straight from the placed order.
@@ -647,8 +647,9 @@
   gap: var(--sf-space-3);
 }
 
-/* The invoice is not a feature yet — it is a control that says so. Muted, no
-   fill, no hairline frame, and the state is spelled out beside the label. */
+/* The invoice is the quietest control in the stack — no fill, no frame, just a
+   hairline above it — because it is the one action most customers never take.
+   The pill beside the label says what comes out of it. */
 .invoiceBtn {
   display: flex;
   align-items: center;
