@@ -579,21 +579,34 @@
   box-shadow: var(--sf-shadow-2);
 }
 
+/* THE TAGLINE OVER THE HEADLINE.
+   `.sf-eyebrow` carries the whole look — gold, 12px, 600, tracked, upper case —
+   and everything here is about the one thing that changed when this line stopped
+   being a label ("Black Rice Ritual · 03 / 08") and became a SENTENCE PAIR
+   ("Ancient Wisdom. Modern Beauty."): it is now long enough to wrap.
+
+   It is left free to take the copy column's full width — no `ch` measure, which
+   cannot see the 0.14em tracking and would fold a tagline that had room to spare
+   — so the desktop and the tablet set it on one line and only a genuinely narrow
+   column (a phone, or the split composition's third of the spread) breaks it. */
 .eyebrow {
   margin: 0;
-}
-
-.headline {
-  margin: 0;
-  /* A display measure, not a hard cap: `ch` keeps the line length editorial at
-     every type size, and the copy column's own width takes over on a phone. */
-  max-width: 16ch;
-  color: var(--sf-color-text);
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-4xl);
-  font-weight: 500;
-  line-height: var(--sf-leading-display);
-  letter-spacing: var(--sf-tracking-tight);
+  /* `.sf-eyebrow` is an inline-flex: its one text node is an anonymous flex item
+     that wraps INSIDE the box, so the box only has to be allowed to reach the
+     column's edge and never past it. */
+  max-width: 100%;
+  /* WHERE THE LINE BREAKS, when it does. `balance` evens the lines, which on a
+     two-clause tagline is the break between the clauses — "ANCIENT WISDOM."
+     over "MODERN BEAUTY." — rather than one word stranded under the rest.
+     Browsers without it wrap on the column, which is the behaviour this is an
+     improvement on rather than a regression from; `pretty` is the same bargain
+     one step down. */
+  text-wrap: pretty;
+  text-wrap: balance;
+  /* Tracked upper case does not hyphenate well, and a tagline is written to be
+     read whole: a break comes at a space, never inside a word. */
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 .price {

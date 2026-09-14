@@ -38,8 +38,9 @@ import styles from "./HeroCarousel.module.css";
 // A STAGE OF SLIDES, AND EVERY SLIDE IS ITS OWN COMPOSITION. Two kinds share
 // the stage:
 //
-//   • a PRODUCT slide — the label card on its glowing plate, the product's own
-//     headline, its price, two quiet lines, its trust marks and two CTAs;
+//   • a PRODUCT slide — the label card on its glowing plate, the slide's own
+//     tagline, the product's headline, its price, two quiet lines, its trust
+//     marks and two CTAs;
 //   • a POSTER (`kind: "custom"`) — a picture with nothing on it but what the
 //     merchant switched on: an eyebrow, a headline, two lines, some marks, up
 //     to two buttons, a card of its own, or none of the above.
@@ -103,9 +104,9 @@ import styles from "./HeroCarousel.module.css";
 // than leaving it unstoppable.
 // =============================================================================
 
-// The eyebrow's fixed half, when the admin has not renamed it. The variable
-// half is the slide's position, and the headline/subtext under it are the
-// product's own words.
+// The FALLBACK eyebrow, for a slide with no tagline of its own: the label's
+// fixed half, when the admin has not renamed it, and the slide's position after
+// it. The headline/subtext under either are the product's own words.
 const EYEBROW_LABEL = "Black Rice Ritual";
 
 // How many products the featured fallback may borrow — the launch range.
@@ -132,6 +133,28 @@ export const padIndex = (value) => String(value).padStart(2, "0");
 /** "Black Rice Ritual · 03 / 08" — the label is the admin's, the position ours. */
 export const heroEyebrow = (index, total, label = EYEBROW_LABEL) =>
   `${label} · ${padIndex(index + 1)} / ${padIndex(total)}`;
+
+/**
+ * THE TRACKED LINE OVER A PRODUCT HEADLINE — the slide's tagline.
+ *
+ * A product slide used to have one line here for the whole carousel: the
+ * section's label and the slide's position. It can now carry a TAGLINE of its
+ * own (`heroConfig.slides[].eyebrow`, "Ancient Wisdom. Modern Beauty."), which
+ * is where the brand's philosophy — traditional knowledge, contemporary
+ * skincare — is said on the home page's opening spread.
+ *
+ * A tagline is printed ALONE. The position is what made a repeated section
+ * label worth reading ("Black Rice Ritual" on all eight slides is only useful
+ * with a "· 03 / 08" after it); a sentence written for one slide is not the
+ * same line eight times, and "Ancient Wisdom. Modern Beauty. · 01 / 08" is a
+ * tagline with a page number stapled to it. Nothing is lost by dropping it:
+ * the rail still draws the counter, and the slide's own `aria-label` ("1 of 8:
+ * Black Rice Face Wash") is what a screen reader hears either way.
+ */
+export const heroSlideEyebrow = (slide, index, total, label = EYEBROW_LABEL) => {
+  const tagline = typeof slide?.eyebrow === "string" ? slide.eyebrow.trim() : "";
+  return tagline || heroEyebrow(index, total, label);
+};
 
 /** The slide's headline: the product's hero line, else its promise. */
 export const heroHeadline = (product) =>
@@ -329,7 +352,7 @@ const HeroSlide = ({
   // ---- What this slide prints -------------------------------------------
   const isProduct = kind === "product";
   const eyebrow = isProduct
-    ? heroEyebrow(index, total, eyebrowLabel)
+    ? heroSlideEyebrow(slide, index, total, eyebrowLabel)
     : slide.eyebrow;
   const headline = isProduct ? heroHeadline(product) : slide.headline;
   const subtext = isProduct ? heroSubtext(product) : slide.subtext;
