@@ -114,6 +114,46 @@ const normalizeProducts = (list) =>
 /** The storefront read: hide drafts, then normalise what is left. */
 const visibleNormalized = (list) => normalizeProducts(visibleProducts(list));
 
+// =============================================================================
+// Review aggregates — the stars on a product CARD
+// =============================================================================
+//
+// A product page can afford to read every approved review and average them; a
+// product CARD cannot. So `product.rating` / `product.totalReviews` is the
+// recorded aggregate every card, rail, search hit and wishlist row prints, and
+// it has to be kept in step with the `reviews` collection or the two surfaces
+// disagree: a five-star review approved in Admin → Reviews would show on the
+// PDP while every card of that product still showed no stars at all.
+//
+// This recomputes the pair from the reviews a SHOPPER can actually see — the
+// same gate `products.getReviews` applies (approved, and sample rows only while
+// `brand.flags.showSampleReviews` is on) — and writes it back onto the product.
+// Called after every review create, edit, status change and delete, on both the
+// admin path and the customer's own. Mock-mode only: the Laravel API owns this
+// server-side on the same endpoints, which is why the live branch never calls it.
+//
+// BEST EFFORT, ALWAYS. The review write has already succeeded by the time this
+// runs; a failure here must leave the aggregate stale rather than report the
+// review itself as failed.
+const syncProductRating = async (productId) => {
+  if (!IS_MOCK_API || productId == null || productId === "") return;
+  try {
+    const response = await api.get("/reviews", {
+      params: { productId, status: "approved" },
+    });
+    const rows = (Array.isArray(response.data) ? response.data : []).filter(
+      (row) => brand.flags.showSampleReviews || row?.isSample !== true
+    );
+    const total = rows.length;
+    const sum = rows.reduce((acc, row) => acc + (Number(row.rating) || 0), 0);
+    // One decimal — the precision every star row on the storefront prints.
+    const rating = total > 0 ? Math.round((sum / total) * 10) / 10 : 0;
+    await api.patch(`/products/${productId}`, { rating, totalReviews: total });
+  } catch (error) {
+    console.error("Sync product rating error:", error);
+  }
+};
+
 /**
  * Catalogue order for a product list: the merchant's `heroOrder` first (it is
  * the one hand-arranged sequence in the data), then alphabetically. Products
@@ -206,6 +246,43 @@ const accountDisabledError = () => {
   );
   err.code = "ACCOUNT_DISABLED";
   return err;
+};
+
+// =============================================================================
+// Email identity — an address is ONE account, whatever its capitalisation
+// =============================================================================
+//
+// JSON Server's `?email=` filter is an exact, case-SENSITIVE string match, so a
+// shopper who registered as `Asha@example.com` and typed `asha@example.com` a
+// week later was told her password was wrong, and a second registration with
+// the other casing quietly created a duplicate account beside the first. (The
+// seed database still carries one such pair, which is how this was found.)
+// Laravel's `users.email` is matched case-insensitively, so this was also a
+// difference in behaviour between the two backends.
+//
+// `normalizeEmail` is what gets WRITTEN (register stores the address folded, so
+// every new row is canonical), and `findUserByEmail` is what READS: it fetches
+// the small mock user table once and compares folded, so either casing finds
+// the one account. Both are mock-branch helpers — the live API owns this rule
+// server-side.
+const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
+
+/**
+ * The mock user table, matched on a folded email and (optionally) an exact
+ * password. Returns the row or null.
+ */
+const findUserByEmail = async (email, password) => {
+  const target = normalizeEmail(email);
+  if (!target) return null;
+  const response = await api.get("/users");
+  const rows = Array.isArray(response.data) ? response.data : [];
+  return (
+    rows.find(
+      (row) =>
+        normalizeEmail(row?.email) === target &&
+        (password === undefined || row?.password === password)
+    ) || null
+  );
 };
 
 /** Extract human-readable error message */
@@ -937,8 +1014,8 @@ const apiService = {
       try {
         const { remember = false, ...creds } = credentials;
         if (IS_MOCK_API) {
-          const response = await api.get("/users", { params: { email: creds.email, password: creds.password } });
-          const user = response.data[0] || null;
+          // Folded email, exact password (see findUserByEmail).
+          const user = await findUserByEmail(creds.email, creds.password);
           if (!user) return null;
           // Admin → Users → "Deactivate" writes isActive:false. Honour it here,
           // or the deactivation is cosmetic and the account keeps signing in.
@@ -971,8 +1048,10 @@ const apiService = {
         const { confirmPassword, ...rest } = userData;
         if (IS_MOCK_API) {
           // JSON Server has no unique-email rule; mirror Laravel's 422 here.
-          const existing = await api.get("/users", { params: { email: rest.email } });
-          if (existing.data.length > 0) {
+          // Matched folded, so `Asha@…` cannot open a second account beside
+          // `asha@…` — and stored folded, so every new row is canonical.
+          const existing = await findUserByEmail(rest.email);
+          if (existing) {
             const err = new Error("An account with this email already exists. Please log in instead.");
             err.code = "EMAIL_TAKEN";
             throw err;
@@ -980,6 +1059,7 @@ const apiService = {
           const now = new Date().toISOString();
           const response = await api.post("/users", {
             ...rest,
+            email: normalizeEmail(rest.email),
             avatar: null,
             addresses: [],
             isActive: true,
@@ -1047,10 +1127,10 @@ const apiService = {
           const stored = authStorage.get("user");
           if (!stored) throw new Error("Not signed in.");
           const { id, email } = JSON.parse(stored);
-          const match = await api.get("/users", {
-            params: { email, password: currentPassword },
-          });
-          if (!match.data.length) {
+          // Folded, so a session opened under either casing can still confirm
+          // its own password (see findUserByEmail).
+          const match = await findUserByEmail(email, currentPassword);
+          if (!match) {
             const err = new Error("Your current password is not correct.");
             err.code = "WRONG_PASSWORD";
             throw err;
@@ -1861,9 +1941,13 @@ const apiService = {
           };
           if (existing) {
             const response = await api.patch(`/reviews/${existing.id}`, base);
+            // An edit drops the row back to `pending`, so the product loses the
+            // rating it was carrying until a moderator approves it again.
+            await syncProductRating(response.data?.productId);
             return response.data;
           }
           const response = await api.post("/reviews", { ...base, helpfulCount: 0, createdAt: now });
+          await syncProductRating(response.data?.productId);
           return response.data;
         }
         const response = await api.post(`/products/${productId}/reviews`, {
@@ -2151,8 +2235,18 @@ const apiService = {
     login: async (credentials) => {
       try {
         if (IS_MOCK_API) {
-          const response = await api.get("/admins", { params: { email: credentials.email, password: credentials.password } });
-          const admin = response.data[0] || null;
+          // Folded email, exact password — the same rule auth.login follows, so
+          // "Admin@store.com" signs in to the "admin@store.com" account instead
+          // of being told the password is wrong.
+          const target = normalizeEmail(credentials.email);
+          const response = await api.get("/admins");
+          const rows = Array.isArray(response.data) ? response.data : [];
+          const admin =
+            rows.find(
+              (row) =>
+                normalizeEmail(row?.email) === target &&
+                row?.password === credentials.password
+            ) || null;
           if (!admin) return null;
           // A revoked admin account must not sign in either (mirrors auth.login).
           if (admin.isActive === false) throw accountDisabledError();
@@ -2972,6 +3066,8 @@ const apiService = {
             createdAt: now,
             updatedAt: now,
           });
+          // The stars on every card of this product (see syncProductRating).
+          await syncProductRating(response.data?.productId);
           return response.data;
         }
         const response = await api.post("/admin/reviews", data);
@@ -2986,6 +3082,8 @@ const apiService = {
             ...updates,
             updatedAt: new Date().toISOString(),
           });
+          // Approving, rejecting or re-scoring a review all move the average.
+          await syncProductRating(response.data?.productId);
           return response.data;
         }
         const response = await api.patch(`/admin/reviews/${id}`, updates);
@@ -2995,7 +3093,12 @@ const apiService = {
 
     deleteReview: async (id) => {
       try {
+        // Which product's average to recount has to be read BEFORE the row goes.
+        const productId = IS_MOCK_API
+          ? (await api.get(`/reviews/${id}`).catch(() => null))?.data?.productId ?? null
+          : null;
         const response = await api.delete(IS_MOCK_API ? `/reviews/${id}` : `/admin/reviews/${id}`);
+        await syncProductRating(productId);
         return IS_MOCK_API ? response.data : extractData(response);
       } catch (error) { console.error("Admin delete review error:", error); throw error; }
     },

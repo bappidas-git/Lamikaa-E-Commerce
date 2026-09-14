@@ -394,15 +394,28 @@ const useProductPage = () => {
   const comingSoon = product ? !isPriceKnown(product) : false;
   const unavailable = comingSoon || isOutOfStock;
 
-  // ── Reviews blend (one average across the page) ─────────────────────────
+  // ── One average across the page ─────────────────────────────────────────
+  // `product.rating` / `product.totalReviews` is the RECORDED AGGREGATE — the
+  // pair every product card prints, kept in step with this collection by
+  // `syncProductRating` on every review write. So the approved reviews loaded
+  // below are already counted in it, and adding the two together would report
+  // one review as two ratings on the page that shows the review itself.
+  //
+  // The aggregate leads, and the loaded reviews are the floor under it: a store
+  // whose aggregate has not caught up (a row written straight into the
+  // database, or a live backend that recounts on its own schedule) still shows
+  // at least the reviews actually on the page rather than "no ratings yet"
+  // above a list of them.
   const baseRating = Number(product?.rating) || 0;
   const baseCount = Number(product?.totalReviews) || 0;
   const reviewSum = reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
-  const totalRatingsCount = baseCount + reviews.length;
+  const totalRatingsCount = Math.max(baseCount, reviews.length);
   const displayAvg =
-    totalRatingsCount > 0
-      ? (baseRating * baseCount + reviewSum) / totalRatingsCount
-      : baseRating;
+    baseCount >= reviews.length && baseCount > 0
+      ? baseRating
+      : reviews.length > 0
+        ? reviewSum / reviews.length
+        : baseRating;
 
   // ── Cart wiring. The line id scheme is the cart's contract: `<id>` for a
   // plain product, `<id>-<variantId>` for a variant. Changing it orphans every
