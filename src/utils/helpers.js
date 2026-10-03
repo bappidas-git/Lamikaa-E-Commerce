@@ -451,14 +451,116 @@ export const calculateCartTotal = (items) => {
   return items.reduce((total, item) => total + item.price * item.quantity, 0);
 };
 
-export const copyToClipboard = async (text) => {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch (err) {
-    console.error("Failed to copy:", err);
+// ── Clipboard ────────────────────────────────────────────────────────────────
+// `navigator.clipboard` exists only in a SECURE context (HTTPS, or localhost),
+// and even there it can refuse: an unfocused document, an iframe without
+// `clipboard-write`. A storefront opened over plain HTTP (the dev server on a
+// LAN address from a phone, a host without a certificate) has no
+// `navigator.clipboard` at all. The helper used to call it unguarded, so every
+// Copy button on such a page threw, caught, and did nothing.
+//
+// So there are two writers. The async Clipboard API where the page may use it,
+// and otherwise the select-and-`execCommand("copy")` path. execCommand is
+// deprecated, but every browser the storefront supports still has it, and it
+// is the only clipboard write an insecure page can make. It needs the click's
+// user activation, which is why there is no `await` ahead of it when the API is
+// missing: the copy happens inside the click itself.
+//
+// Resolves `true` only once the text has really been handed to the clipboard,
+// so a caller can say "Copied" without lying.
+
+/** Copy through a throwaway selection. Synchronous; true on success. */
+const copyWithSelection = (text) => {
+  if (
+    typeof document === "undefined" ||
+    !document.body ||
+    typeof document.execCommand !== "function"
+  ) {
     return false;
   }
+
+  const selection = document.getSelection ? document.getSelection() : null;
+  // Whatever the visitor had selected goes back afterwards, untouched.
+  const previous = [];
+  if (selection) {
+    for (let i = 0; i < selection.rangeCount; i += 1) {
+      previous.push(selection.getRangeAt(i));
+    }
+  }
+
+  // A span, not a textarea: nothing takes focus, so no on-screen keyboard
+  // opens and no focus ring is handed back to the button. Rendered (a node
+  // with `display: none` cannot be selected) but clipped to nothing, pinned
+  // so that adding it cannot scroll the page, and selectable whatever the
+  // page's own `user-select` says.
+  const mark = document.createElement("span");
+  mark.textContent = text;
+  mark.setAttribute("aria-hidden", "true");
+  mark.style.cssText = [
+    "all: unset",
+    "position: fixed",
+    "top: 0",
+    "left: 0",
+    "clip: rect(0, 0, 0, 0)",
+    "white-space: pre",
+    "-webkit-user-select: text",
+    "user-select: text",
+  ].join(";");
+
+  // Write the string itself as plain text, never the span's styling as HTML.
+  const onCopy = (event) => {
+    if (!event.clipboardData) return;
+    event.preventDefault();
+    event.clipboardData.setData("text/plain", text);
+  };
+
+  let copied = false;
+  document.body.appendChild(mark);
+  document.addEventListener("copy", onCopy, true);
+  try {
+    const range = document.createRange();
+    range.selectNodeContents(mark);
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    copied = document.execCommand("copy") === true;
+  } catch (err) {
+    copied = false;
+  } finally {
+    document.removeEventListener("copy", onCopy, true);
+    if (selection) {
+      selection.removeAllRanges();
+      previous.forEach((range) => selection.addRange(range));
+    }
+    mark.remove();
+  }
+  return copied;
+};
+
+export const copyToClipboard = async (text) => {
+  const value = text == null ? "" : String(text);
+  if (!value) return false;
+
+  if (
+    typeof navigator !== "undefined" &&
+    typeof navigator.clipboard?.writeText === "function"
+  ) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch (err) {
+      // Refused. Chrome and Firefox keep the click's activation for a few
+      // seconds, so the older path can still succeed from here.
+      if (copyWithSelection(value)) return true;
+      console.error("Failed to copy:", err);
+      return false;
+    }
+  }
+
+  if (copyWithSelection(value)) return true;
+  console.error("Failed to copy: this browser does not allow clipboard writes here.");
+  return false;
 };
 
 export const downloadFile = (data, filename, type = "application/json") => {
