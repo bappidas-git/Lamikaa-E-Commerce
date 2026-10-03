@@ -2,11 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
-import { categoryPath, concernPath, ritualPath } from "../../utils/categories";
+import {
+  categoryPath,
+  concernPath,
+  getShopMenuTree,
+  ritualPath,
+} from "../../utils/categories";
 import {
   categoryThumbSrc,
   firstProductForCategory,
-  productsForCategory,
+  productsForCategoryTree,
 } from "../../utils/catalogue";
 import { onImageError, productPath } from "../../utils/helpers";
 import { stageSrc, productAlt, primaryImage } from "../../utils/product";
@@ -180,15 +185,22 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
   // 96px of art for a 40px slot is the retina allowance at DPR 2, and the
   // 1:1 pad is the plate's own ratio — a wide category banner letterboxes into
   // the square rather than being cut down to it.
+  //
+  // THE ROWS ARE A TREE (getShopMenuTree): only top-level categories the admin
+  // put in the main menu are rows, each sub-category sits indented UNDER its
+  // parent, and ritual sub-categories are not here at all — they belong to the
+  // header's Rituals tab. A parent's count includes its children's products,
+  // the same set its /category page lists.
   const rows = useMemo(() => {
     const cats = data?.categories || [];
     const catalogue = data?.products || [];
-    return cats.map((cat) => ({
+    return getShopMenuTree(cats).map(({ cat, children }) => ({
       cat,
+      children,
       thumb: categoryThumbSrc(cat, firstProductForCategory(catalogue, cat), {
         w: 96,
       }),
-      count: productsForCategory(catalogue, cat).length,
+      count: productsForCategoryTree(catalogue, cat, cats).length,
     }));
   }, [data]);
 
@@ -245,7 +257,7 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
           <div className={styles.column}>
             <p className={`sf-eyebrow ${styles.eyebrow}`}>Categories</p>
             <ul className={styles.categoryList}>
-              {rows.map(({ cat, thumb, count }) => (
+              {rows.map(({ cat, children, thumb, count }) => (
                 <li key={cat.id}>
                   <Link
                     to={categoryPath(cat)}
@@ -282,6 +294,24 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
                       </span>
                     ) : null}
                   </Link>
+                  {children.length > 0 ? (
+                    <ul
+                      className={styles.subList}
+                      aria-label={`${cat.displayName || cat.name} sub-categories`}
+                    >
+                      {children.map((child) => (
+                        <li key={child.id}>
+                          <Link
+                            to={categoryPath(child)}
+                            className={styles.subRow}
+                            onClick={onNavigate}
+                          >
+                            {child.displayName || child.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </li>
               ))}
               <li>

@@ -5,6 +5,7 @@ import authStorage from "../utils/authStorage";
 import { formatCurrency } from "../utils/helpers";
 import { isPriceKnown, normalizeProduct, syncProductMedia } from "../utils/product";
 import { isPlaceholder } from "../utils/placeholders";
+import { categoryScopeIds } from "../utils/categories";
 
 // Money inside a timeline entry or an error message, in whole units and in the
 // store's own currency (Settings > General) rather than a baked-in rupee sign.
@@ -1358,13 +1359,18 @@ const apiService = {
         if (IS_MOCK_API) {
           const category = await apiService.categories.getBySlug(slug);
           if (!category) return { category: null, products: [] };
-          const id = String(category.id);
+          // A parent lists its sub-categories' products too, so "Face Care"
+          // shows what is filed under its children as well as under itself.
+          const allCategories = await apiService.categories.getAll().catch(() => []);
+          const scope = new Set(
+            categoryScopeIds(category, Array.isArray(allCategories) ? allCategories : []).map(String)
+          );
           const response = await api.get("/products");
           const products = visibleNormalized(response.data)
             .filter(
               (p) =>
-                p.categoryIds.some((c) => String(c) === id) ||
-                String(p.categoryId) === id
+                p.categoryIds.some((c) => scope.has(String(c))) ||
+                scope.has(String(p.categoryId))
             )
             .sort(byHeroOrderThenName);
           return { category, products };

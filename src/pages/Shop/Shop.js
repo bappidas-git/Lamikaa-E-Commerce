@@ -3,7 +3,7 @@ import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import apiService from "../../services/api";
 import useSeo from "../../hooks/useSeo";
 import { breadcrumbJsonLd, itemListJsonLd } from "../../utils/seo";
-import { concernPath } from "../../utils/categories";
+import { categoryPath, concernPath } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
 import {
   Button,
@@ -628,8 +628,10 @@ const Shop = ({ mode = "shop" }) => {
 
   const data = useShopData({ concernSlug, categorySlug, skip: toRituals });
 
-  if (toRituals || (isCategory && data.category?.kind === "rituals")) {
-    return <Navigate to={ROUTES.RITUALS} replace />;
+  if (toRituals) return <Navigate to={ROUTES.RITUALS} replace />;
+  // A ritual collection is a section of /rituals — land on it.
+  if (isCategory && data.category?.kind === "rituals") {
+    return <Navigate to={categoryPath(data.category)} replace />;
   }
 
   // A slug nobody has is a 404, not an empty listing: `getByCategorySlug`

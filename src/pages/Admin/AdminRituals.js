@@ -14,6 +14,7 @@ import {
   FormControlLabel,
   Grid,
   IconButton,
+  MenuItem,
   Paper,
   Skeleton,
   Switch,
@@ -61,6 +62,14 @@ import { ROUTES } from "../../utils/constants";
 // Content, so `## headings`, `::steps` and the placeholder tokens behave
 // identically wherever an owner writes copy.
 //
+// THE CATEGORY decides WHERE the ritual sits on the storefront. Filed under the
+// Rituals root (a `kind: "rituals"` category with no parent) it lists at the
+// top of /rituals, and the header's Rituals tab opens straight onto it. Filed
+// under a ritual SUB-category, that sub-category appears under the Rituals tab
+// and links to /rituals#<slug>, which scrolls to a section of its own listing
+// every ritual filed there. Ritual sub-categories are made in Admin →
+// Categories (Type "Rituals", parent "Rituals").
+//
 // A DELETED RITUAL LEAVES ITS PRODUCTS ALONE. `steps[].productId` points AT the
 // catalogue, not the other way round, so deleting a ritual is safe — it removes
 // a page, never a product. That is why this screen has no in-use guard where
@@ -100,8 +109,12 @@ const EMPTY_FORM = {
   image: "",
   duration: "",
   isActive: true,
+  categoryId: null,
   steps: [],
 };
+
+const isRitualsKind = (c) => c?.kind === "rituals";
+const hasParent = (c) => c?.parentId != null && c.parentId !== "";
 
 const bySortOrder = (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
 
@@ -220,6 +233,7 @@ const AdminRituals = () => {
 
   const [rituals, setRituals] = useState([]);
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -233,12 +247,14 @@ const AdminRituals = () => {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const [rows, catalogue] = await Promise.all([
+      const [rows, catalogue, cats] = await Promise.all([
         apiService.admin.getRituals().catch(() => []),
         apiService.admin.getProducts().catch(() => []),
+        apiService.admin.getCategories().catch(() => []),
       ]);
       setRituals((Array.isArray(rows) ? rows : []).slice().sort(bySortOrder));
       setProducts(Array.isArray(catalogue) ? catalogue : []);
+      setCategories(Array.isArray(cats) ? cats : []);
     } catch (error) {
       console.error("Error loading rituals:", error);
       toast("error", "Could not load the rituals", error.message);
@@ -258,9 +274,48 @@ const AdminRituals = () => {
 
   const setField = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
+  // ── Category options ───────────────────────────────────────────────────────
+  // The Rituals root(s) first, then each ritual sub-category indented under
+  // its root. Only `kind: "rituals"` categories can hold a ritual.
+  const ritualCategoryOptions = useMemo(() => {
+    const ritualCats = categories
+      .filter(isRitualsKind)
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const roots = ritualCats.filter((c) => !hasParent(c));
+    const subs = ritualCats.filter(hasParent);
+    const rootIds = new Set(roots.map((c) => String(c.id)));
+    const options = [];
+    roots.forEach((root) => {
+      options.push({ cat: root, sub: false });
+      subs
+        .filter((c) => String(c.parentId) === String(root.id))
+        .forEach((c) => options.push({ cat: c, sub: true }));
+    });
+    // A ritual category whose parent is not a Rituals root still holds rituals.
+    subs
+      .filter((c) => !rootIds.has(String(c.parentId)))
+      .forEach((c) => options.push({ cat: c, sub: true }));
+    return options;
+  }, [categories]);
+
+  const defaultCategoryId = useMemo(
+    () => ritualCategoryOptions.find((o) => !o.sub)?.cat.id ?? null,
+    [ritualCategoryOptions]
+  );
+
+  const categoryLabel = useCallback(
+    (id) => {
+      if (id == null) return null;
+      const cat = categories.find((c) => String(c.id) === String(id));
+      return cat ? cat.displayName || cat.name : null;
+    },
+    [categories]
+  );
+
   const openCreate = () => {
     setEditing(null);
-    setForm({ ...EMPTY_FORM, steps: [] });
+    setForm({ ...EMPTY_FORM, categoryId: defaultCategoryId, steps: [] });
     setStoryPreview(false);
     setDialogOpen(true);
   };
@@ -275,6 +330,13 @@ const AdminRituals = () => {
       image: ritual.image || "",
       duration: ritual.duration || "",
       isActive: ritual.isActive !== false,
+      // A category that has since been deleted (or re-typed) falls back to the
+      // Rituals root rather than leaving the select on a value it cannot show.
+      categoryId: ritualCategoryOptions.some(
+        (o) => String(o.cat.id) === String(ritual.categoryId)
+      )
+        ? ritual.categoryId
+        : defaultCategoryId,
       steps: (Array.isArray(ritual.steps) ? ritual.steps : [])
         .slice()
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -358,6 +420,9 @@ const AdminRituals = () => {
       image: form.image.trim(),
       duration: form.duration.trim(),
       isActive: !!form.isActive,
+      // The Rituals root or one of its collections (null when the store has no
+      // ritual category at all — the ritual then lists at the top of /rituals).
+      categoryId: form.categoryId != null && form.categoryId !== "" ? Number(form.categoryId) : null,
       // `order` comes from the row's position, never from a field, so it is
       // dense and always agrees with the editor.
       steps: steps.map((step, index) => ({
@@ -608,6 +673,15 @@ const AdminRituals = () => {
                             <Typography variant="body2" fontWeight={500}>
                               {ritual.name}
                             </Typography>
+                            {categoryLabel(ritual.categoryId) && (
+                              <Chip
+                                size="small"
+                                variant="outlined"
+                                icon={<Icon icon="mdi:spa-outline" />}
+                                label={categoryLabel(ritual.categoryId)}
+                                sx={{ mt: 0.5, mb: 0.25, height: 22 }}
+                              />
+                            )}
                             {ritual.tagline && (
                               <Typography
                                 variant="caption"
@@ -736,6 +810,40 @@ const AdminRituals = () => {
                 size="small"
                 placeholder="e.g. Clear, refreshed, quietly radiant."
               />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                select
+                label="Category"
+                value={form.categoryId ?? ""}
+                onChange={(e) =>
+                  setField("categoryId", e.target.value === "" ? null : Number(e.target.value))
+                }
+                fullWidth
+                size="small"
+                helperText={
+                  ritualCategoryOptions.length === 0
+                    ? "No Rituals category exists yet — add one in Categories (Type: Rituals)."
+                    : ritualCategoryOptions.find(
+                        (o) => String(o.cat.id) === String(form.categoryId)
+                      )?.sub
+                    ? "Listed in its own section of the Rituals page. This category appears under the Rituals tab in the main menu and scrolls straight to it."
+                    : "Listed at the top of the Rituals page — the Rituals tab opens straight onto it."
+                }
+              >
+                {ritualCategoryOptions.length === 0 && (
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                )}
+                {ritualCategoryOptions.map(({ cat, sub }) => (
+                  <MenuItem key={cat.id} value={cat.id} sx={sub ? { pl: 4 } : undefined}>
+                    {sub ? "↳ " : ""}
+                    {cat.displayName || cat.name}
+                    {cat.isActive === false ? " (inactive)" : ""}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={5}>
               <TextField

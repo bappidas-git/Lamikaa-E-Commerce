@@ -12,6 +12,7 @@
 // ---------------------------------------------------
 //   /category/<slug>     a product category      categoryPath(cat)
 //   /rituals             the rituals index       categoryPath(ritualsCat)
+//   /rituals#<slug>      one ritual collection   categoryPath(ritualSubCat)
 //   /rituals/<slug>      one ritual              ritualPath(ritual)
 //   /shop?concern=<slug> the shop, one concern   concernPath(slug)
 //
@@ -49,10 +50,38 @@ export const categoryParam = (cat) => {
  */
 export const categoryPath = (cat) => {
   if (!cat) return ROUTES.SHOP;
-  if (cat.kind === "rituals") return ROUTES.RITUALS;
+  if (cat.kind === "rituals") {
+    // The Rituals root IS the index. A ritual SUB-category is a collection on
+    // that same page, so its link lands on the index and scrolls to the
+    // collection's section (Rituals.js renders it with `id={slug}`).
+    const token = categoryParam(cat);
+    return isRitualSubcategory(cat) && token
+      ? `${ROUTES.RITUALS}#${encodeURIComponent(token)}`
+      : ROUTES.RITUALS;
+  }
   const token = categoryParam(cat);
   return token ? `/category/${token}` : ROUTES.SHOP;
 };
+
+/** True for a parent id that actually names a parent. */
+const hasParent = (cat) =>
+  cat != null && cat.parentId != null && cat.parentId !== "" && cat.parentId !== 0;
+
+/**
+ * A ritual SUB-category: a `kind: "rituals"` category that sits under another
+ * category. It is a collection of rituals — it belongs under the header's
+ * Rituals tab and on the /rituals page, never in the Shop menu.
+ */
+export const isRitualSubcategory = (cat) => cat?.kind === "rituals" && hasParent(cat);
+
+/** The Rituals root: a `kind: "rituals"` category with no parent. */
+export const isRitualsRoot = (cat) => cat?.kind === "rituals" && !hasParent(cat);
+
+/** The order the admin set for the main menu, then the catalogue order. */
+const byMenuOrder = (a, b) =>
+  (a.menuOrder ?? 0) - (b.menuOrder ?? 0) ||
+  (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+  String(a.name).localeCompare(String(b.name));
 
 /** The canonical URL for one ritual — accepts a ritual object or a slug. */
 export const ritualPath = (ritual) => {
@@ -111,15 +140,114 @@ export const getDescendantIds = (rootId, categories = []) => {
 
 /**
  * The admin-curated main-menu category list: active categories flagged
- * `showInMainMenu`, ordered by `menuOrder` (then sortOrder, then name). This is
- * the single rule the storefront top menu renders from — no hardcoded list.
+ * `showInMainMenu`, ordered by `menuOrder` (then sortOrder, then name).
  */
 export const getMainMenuCategories = (categories = []) =>
   categories
     .filter((c) => c.showInMainMenu === true && c.isActive !== false)
-    .sort(
-      (a, b) =>
-        (a.menuOrder ?? 0) - (b.menuOrder ?? 0) ||
-        (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
-        String(a.name).localeCompare(String(b.name))
-    );
+    .sort(byMenuOrder);
+
+/**
+ * The Shop menu as a TWO-LEVEL TREE: `[{ cat, children: [cat, …] }]`.
+ *
+ * Every surface that lists the catalogue as a menu (the desktop mega panel,
+ * the mobile drawer, the footer) reads this, so a sub-category always shows
+ * UNDER its parent and never as a parent of its own.
+ *
+ *   - Ritual SUB-categories are left out — they live under the Rituals tab
+ *     (`getRitualMenuCategories`). The Rituals root stays, as the way in.
+ *   - A child is filed under its TOP-LEVEL ancestor, so a grandchild still
+ *     reads as one indented row rather than a third level a menu cannot hold.
+ *   - A product category whose parent is missing, inactive or a rituals
+ *     category has no usable parent, and is shown at the top level.
+ *   - `menuOnly` (default) honours the admin's "Show in main menu" switch. A
+ *     parent that is hidden hides its whole branch.
+ */
+export const getShopMenuTree = (categories = [], { menuOnly = true } = {}) => {
+  const live = (Array.isArray(categories) ? categories : []).filter(
+    (c) => c && c.isActive !== false && !isRitualSubcategory(c)
+  );
+  const byId = new Map(live.map((c) => [String(c.id), c]));
+
+  const topOf = (cat) => {
+    let current = cat;
+    const seen = new Set([String(cat.id)]);
+    while (hasParent(current)) {
+      const parent = byId.get(String(current.parentId));
+      if (!parent || parent.kind === "rituals" || seen.has(String(parent.id))) break;
+      seen.add(String(parent.id));
+      current = parent;
+    }
+    return current;
+  };
+
+  const shown = menuOnly ? live.filter((c) => c.showInMainMenu === true) : live;
+  const tops = shown.filter((c) => topOf(c) === c).sort(byMenuOrder);
+  return tops.map((top) => ({
+    cat: top,
+    children: shown
+      .filter((c) => c !== top && topOf(c) === top)
+      .sort(byMenuOrder),
+  }));
+};
+
+/**
+ * The entries under the header's Rituals tab: active ritual sub-categories the
+ * admin put in the main menu that have at least one live ritual filed under
+ * them (`ritual.categoryId`). An empty collection would scroll to nothing, so
+ * it is not offered.
+ */
+export const getRitualMenuCategories = (
+  categories = [],
+  rituals = [],
+  { menuOnly = true } = {}
+) => {
+  const filed = new Set(
+    (Array.isArray(rituals) ? rituals : [])
+      .filter((r) => r && r.isActive !== false && r.categoryId != null)
+      .map((r) => String(r.categoryId))
+  );
+  return (Array.isArray(categories) ? categories : [])
+    .filter(
+      (c) =>
+        c &&
+        c.isActive !== false &&
+        isRitualSubcategory(c) &&
+        (!menuOnly || c.showInMainMenu === true) &&
+        filed.has(String(c.id))
+    )
+    .sort(byMenuOrder);
+};
+
+/**
+ * The /rituals page, split into its sections:
+ *   `main`   — rituals filed under the Rituals root (or under nothing, or under
+ *              a collection that is gone/inactive). They open the page.
+ *   `groups` — one `{ category, rituals }` per ritual sub-category that has
+ *              rituals, in menu order. Each is the target of `/rituals#<slug>`.
+ */
+export const groupRitualsByCategory = (rituals = [], categories = []) => {
+  const list = Array.isArray(rituals) ? rituals : [];
+  const subs = (Array.isArray(categories) ? categories : [])
+    .filter((c) => c && c.isActive !== false && isRitualSubcategory(c))
+    .sort(byMenuOrder);
+  const subIds = new Set(subs.map((c) => String(c.id)));
+  return {
+    main: list.filter((r) => r.categoryId == null || !subIds.has(String(r.categoryId))),
+    groups: subs
+      .map((category) => ({
+        category,
+        rituals: list.filter((r) => String(r.categoryId) === String(category.id)),
+      }))
+      .filter((group) => group.rituals.length > 0),
+  };
+};
+
+/**
+ * The ids a category page lists products for: the category itself and every
+ * category below it, so a parent shows its sub-categories' products too.
+ */
+export const categoryScopeIds = (cat, categories = []) => {
+  if (!cat) return [];
+  return [cat.id, ...getDescendantIds(cat.id, categories)];
+};
