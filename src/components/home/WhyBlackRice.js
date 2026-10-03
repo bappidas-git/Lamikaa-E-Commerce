@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { RISE, reveal } from "../../theme/motion";
 import { onImageError, productPath } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { stageSrc } from "../../utils/product";
 import { GlowWrap, SectionHeading, Skeleton } from "../ui";
 import styles from "./WhyBlackRice.module.css";
@@ -37,8 +38,9 @@ import styles from "./WhyBlackRice.module.css";
 // link to its PDP carrying the product's name — the one place in this section
 // where a tab stop is warranted, because each destination is different.
 //
-// The photograph is a plain <img>, not `CloudinaryImage`: the placeholder is a
-// Picsum URL and Cloudinary transformations do not apply to it. It carries
+// The photograph is a plain <img>, not `CloudinaryImage` — its own class
+// carries the layout — delivered through `responsiveImage()`, so a Cloudinary
+// upload arrives as a resized srcset rather than the multi-megabyte master. It carries
 // `.sf-placeholder-media` and `alt=""` — it is decorative, and describing a
 // macro shot the brand has not taken would be inventing one.
 // =============================================================================
@@ -128,7 +130,9 @@ const WhyBlackRice = ({ content, products: productRows }) => {
                 <div className={`sf-placeholder-media ${styles.media}`}>
                   <img
                     className={styles.image}
-                    src={copy.image}
+                    {...responsiveImage(copy.image, {
+                      sizes: "(min-width: 1025px) 530px, 100vw",
+                    })}
                     alt=""
                     loading="lazy"
                     decoding="async"

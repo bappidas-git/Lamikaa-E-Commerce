@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import { concernPath } from "../../utils/categories";
 import { onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { Chip, GlassCard } from "../ui";
 import styles from "./CategoryHead.module.css";
 
@@ -68,7 +69,7 @@ const CategoryHead = ({
         {image ? (
           <img
             className={styles.image}
-            src={image}
+            {...responsiveImage(image)}
             alt=""
             /* The first thing on the page, above the fold at every width — the
                one image on this route that must not wait for a lazy pass. */

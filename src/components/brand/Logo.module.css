@@ -5,4 +5,8 @@
   display: block;
   height: auto;
   max-width: 100%;
+  /* The untrimmed master <Logo> falls back to (see Logo.js) has a wider bleed
+     than the trimmed box it lands in; contain keeps it in proportion. A no-op
+     for the trimmed art, whose ratio is the box's own. */
+  object-fit: contain;
 }

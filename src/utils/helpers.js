@@ -47,13 +47,25 @@ export const PLACEHOLDER_IMG =
 export const onImageError = (e) => {
   const img = e.currentTarget;
   if (!img || img.src === PLACEHOLDER_IMG) return;
+  if (retryOriginalUpload(img)) return;
+  img.src = PLACEHOLDER_IMG;
+};
+
+// Step 1 above on its own, for an <img> whose last resort is not the plate —
+// a full-bleed ground that should drop out instead (FullPageCta). Swaps the
+// failed element to the untransformed upload and returns true, or returns
+// false when there is nothing left to try: a non-Cloudinary URL, or the
+// original itself failing (the original of an original is itself, which is
+// also what stops this from looping).
+export const retryOriginalUpload = (img) => {
+  if (!img) return false;
   const failed = img.currentSrc || img.src;
   img.removeAttribute("srcset");
   img.removeAttribute("sizes");
-  // The original of an original is itself, so a failing upload falls through
-  // to the placeholder rather than looping.
   const original = isCloudinary(failed) ? originalUpload(failed) : failed;
-  img.src = original !== failed ? original : PLACEHOLDER_IMG;
+  if (!original || original === failed) return false;
+  img.src = original;
+  return true;
 };
 
 // ── Active currency ─────────────────────────────────────────────

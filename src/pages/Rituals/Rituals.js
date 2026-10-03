@@ -7,6 +7,7 @@ import { reveal } from "../../theme/motion";
 import { groupRitualsByCategory, ritualPath } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
 import { onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { stageSrc } from "../../utils/product";
 import {
   Button,
@@ -150,7 +151,9 @@ const RitualRow = ({ ritual, products, index, headingAs: Heading = "h2" }) => {
           <div className={`sf-placeholder-media ${styles.media}`}>
             <img
               className={styles.image}
-              src={ritual.image}
+              {...responsiveImage(ritual.image, {
+                sizes: "(min-width: 1280px) 540px, (min-width: 900px) 42vw, 100vw",
+              })}
               alt=""
               loading="lazy"
               decoding="async"

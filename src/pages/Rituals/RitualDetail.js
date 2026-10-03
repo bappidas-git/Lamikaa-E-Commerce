@@ -8,6 +8,7 @@ import { useCart } from "../../hooks/useCart";
 import { breadcrumbJsonLd, itemListJsonLd } from "../../utils/seo";
 import { ROUTES } from "../../utils/constants";
 import { buildCartItem, formatCurrency, onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { isPriceKnown, resolvePrice } from "../../utils/product";
 import {
   Button,
@@ -274,7 +275,9 @@ const RitualDetailView = ({ status, ritual, products, retry }) => {
               <div className={`sf-placeholder-media ${styles.mediaFrame}`}>
                 <img
                   className={styles.image}
-                  src={ritual.image}
+                  {...responsiveImage(ritual.image, {
+                    sizes: "(min-width: 1280px) 480px, (min-width: 1025px) 38vw, 100vw",
+                  })}
                   alt=""
                   loading="eager"
                   decoding="async"

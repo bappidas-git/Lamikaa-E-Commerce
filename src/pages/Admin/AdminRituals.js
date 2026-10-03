@@ -33,6 +33,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { fillSrc } from "../../utils/product";
 import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import MarkdownField, { ContentHelp } from "./components/MarkdownField";
 import { ROUTES } from "../../utils/constants";
@@ -661,7 +662,7 @@ const AdminRituals = () => {
                             {ritual.image ? (
                               <Box
                                 component="img"
-                                src={ritual.image}
+                                src={fillSrc(ritual.image, { w: 96, ar: "1:1" })}
                                 alt=""
                                 sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                               />

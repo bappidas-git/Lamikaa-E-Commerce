@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import brand from "../../config/brand";
 import { ROUTES } from "../../utils/constants";
+import { responsiveImage } from "../../utils/cloudinary";
+import { retryOriginalUpload } from "../../utils/helpers";
 import { reveal } from "../../theme/motion";
 import { Button, GlassCard, GlowWrap } from "../ui";
 import LegalNote from "../brand/LegalNote";
@@ -158,12 +160,14 @@ const FullPageCta = ({ content }) => {
       {image ? (
         <img
           className={`sf-placeholder-media ${styles.photo}`}
-          src={image}
+          {...responsiveImage(image)}
           alt=""
           loading="lazy"
           decoding="async"
           aria-hidden="true"
-          onError={() => setFailedImage(image)}
+          onError={(e) => {
+            if (!retryOriginalUpload(e.currentTarget)) setFailedImage(image);
+          }}
         />
       ) : null}
 

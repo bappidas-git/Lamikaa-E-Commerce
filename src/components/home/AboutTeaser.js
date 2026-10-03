@@ -4,6 +4,7 @@ import brand from "../../config/brand";
 import { RISE, reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
 import { onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { Button, ContentBlocks, GlowWrap, SectionHeading, Skeleton } from "../ui";
 import LegalNote from "../brand/LegalNote";
 import ValueChain from "../brand/ValueChain";
@@ -38,8 +39,9 @@ import styles from "./AboutTeaser.module.css";
 // a single row at any desktop width, and the chain being one row from 1025px up
 // is the whole point of the drawing.
 //
-// The image is a plain <img>, not `CloudinaryImage`: the placeholder is a Picsum
-// URL and Cloudinary transformations do not apply to it. It carries
+// The image is a plain <img>, not `CloudinaryImage` — its own class carries the
+// layout — delivered through `responsiveImage()`, so a Cloudinary upload
+// arrives as a resized srcset rather than the multi-megabyte master. It carries
 // `.sf-placeholder-media` (desaturated, under the bottom-weighted wash) and
 // `alt=""` — it is decorative, and describing a scene the brand has not
 // photographed would be inventing one.
@@ -124,7 +126,9 @@ const AboutTeaser = ({ content }) => {
                 <div className={`sf-placeholder-media ${styles.media}`}>
                   <img
                     className={styles.image}
-                    src={copy.image}
+                    {...responsiveImage(copy.image, {
+                      sizes: "(min-width: 1025px) 560px, 100vw",
+                    })}
                     alt=""
                     loading="lazy"
                     decoding="async"

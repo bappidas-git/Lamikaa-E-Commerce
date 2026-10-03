@@ -47,6 +47,7 @@ import {
   onImageError,
   PLACEHOLDER_IMG,
 } from "../../utils/helpers";
+import { plateSrc } from "../../utils/product";
 import {
   Button,
   Chip,
@@ -576,7 +577,7 @@ const OrderConfirmation = () => {
                 <li key={index} className={styles.line}>
                   <span className={`sf-plate ${styles.thumb}`}>
                     <img
-                      src={item.image || PLACEHOLDER_IMG}
+                      src={plateSrc(item.image, { w: 160 }) || PLACEHOLDER_IMG}
                       alt={item.name || "Product"}
                       loading="lazy"
                       onError={onImageError}

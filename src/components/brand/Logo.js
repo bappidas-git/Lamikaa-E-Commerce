@@ -1,6 +1,7 @@
 import React from "react";
 import brand from "../../config/brand";
 import { cld } from "../../utils/cloudinary";
+import { retryOriginalUpload } from "../../utils/helpers";
 import styles from "./Logo.module.css";
 
 // =============================================================================
@@ -36,6 +37,13 @@ import styles from "./Logo.module.css";
 // specificity: a consumer that already sizes its logo slot (the masthead's
 // 44px, the footer's 48px) keeps winning with a plain class, in either source
 // order. Defaults, not opinions.
+//
+// A TRIM THE CDN FAILS TO BUILD must not leave a broken-image icon in the
+// masthead. `e_trim` is a derived image, built on first request, and that build
+// can fail while the master upload is fine — so a load error swaps to the
+// master: the same artwork with its transparent bleed, kept in proportion by
+// the `object-fit: contain` in Logo.module.css. Smaller in its box for one
+// visit, never missing.
 // =============================================================================
 
 const Logo = ({
@@ -44,6 +52,7 @@ const Logo = ({
   className = "",
   alt,
   style,
+  onError,
   ...rest
 }) => {
   const isMark = variant === "mark";
@@ -66,6 +75,10 @@ const Logo = ({
       loading="eager"
       decoding="async"
       style={style}
+      onError={(e) => {
+        retryOriginalUpload(e.currentTarget);
+        onError?.(e);
+      }}
       {...rest}
     />
   );

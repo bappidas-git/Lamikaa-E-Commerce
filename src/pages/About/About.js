@@ -18,6 +18,7 @@ import { RISE, reveal } from "../../theme/motion";
 import { parseBlocks } from "../../utils/contentBlocks";
 import { ROUTES } from "../../utils/constants";
 import { onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { breadcrumbJsonLd } from "../../utils/seo";
 import styles from "./About.module.css";
 
@@ -151,7 +152,7 @@ const About = () => {
           {copy.heroImage ? (
             <img
               className={styles.bandImage}
-              src={copy.heroImage}
+              {...responsiveImage(copy.heroImage)}
               alt=""
               /* Above the fold at every width — the one image on this route
                  that must not wait for a lazy pass. */
@@ -221,7 +222,7 @@ const About = () => {
         >
           <img
             className={styles.plateImage}
-            src={copy.image2}
+            {...responsiveImage(copy.image2)}
             alt=""
             loading="lazy"
             decoding="async"

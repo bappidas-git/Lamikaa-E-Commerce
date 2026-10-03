@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Price } from "../ui";
-import { isPriceKnown } from "../../utils/product";
+import { isPriceKnown, stageSrc } from "../../utils/product";
 import {
   getProductMinPrice,
   buildCartItem,
@@ -112,7 +112,7 @@ const FrequentlyBoughtTogether = ({
     >
       <span className={`sf-plate ${styles.plate}`}>
         <img
-          src={p.images?.[0] || p.image || PLACEHOLDER_IMG}
+          src={stageSrc(p, { w: 240 }) || PLACEHOLDER_IMG}
           alt=""
           loading="lazy"
           decoding="async"

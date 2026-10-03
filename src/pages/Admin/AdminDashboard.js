@@ -9,6 +9,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import apiService from "../../services/api";
+import { plateSrc } from "../../utils/product";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 
 // Keep status chip labels/colors identical to the Orders page (src/pages/Admin/AdminOrders.js)
@@ -322,7 +323,7 @@ const AdminDashboard = () => {
               ) : (
                 lowStockProducts.map((p, i) => (
                   <Box key={p.id} sx={{ display: "flex", alignItems: "center", gap: 2, p: 1.5, borderBottom: i < lowStockProducts.length - 1 ? "1px solid" : "none", borderColor: "divider" }}>
-                    <Avatar src={p.images?.[0]} alt="" variant="rounded" sx={{ width: 40, height: 40, bgcolor: "action.hover" }}>
+                    <Avatar src={plateSrc(p.images?.[0], { w: 80 }) || undefined} alt="" variant="rounded" sx={{ width: 40, height: 40, bgcolor: "action.hover" }}>
                       <Icon icon="mdi:package-variant" />
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
