@@ -164,7 +164,7 @@
       "metaTitle": "Black Rice Face Wash · LAMIKAA NATURALS",
       "metaDescription": "A gentle black rice cleanse that lifts the day's dust and leaves your skin calm, clear and quietly radiant. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-14T13:04:30.998Z",
+      "updatedAt": "2026-10-03T21:37:36.020Z",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
       "heroBackground": null
     },
@@ -851,7 +851,7 @@
       "costPrice": 0,
       "currency": "INR",
       "size": "100 g",
-      "stock": 100,
+      "stock": 101,
       "lowStockThreshold": 10,
       "weight": 0,
       "dimensions": null,
@@ -975,7 +975,7 @@
       "metaTitle": "Black Rice Exfoliating Face Scrub · LAMIKAA NATURALS",
       "metaDescription": "Fine black rice exfoliation that gently polishes away dullness and lets your natural light through. Farmer-owned, rooted in Assam.",
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-10T22:59:21.205Z",
+      "updatedAt": "2026-10-03T15:26:12.715Z",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080362/face_scrub_v1.png"
     },
     {
@@ -1318,7 +1318,7 @@
     {
       "id": 1,
       "slug": "face-care",
-      "name": "Face Care",
+      "name": "Face Care ",
       "displayName": "Face Care",
       "description": "Cleanse, refresh, treat and moisturise — the Black Rice face routine.",
       "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080365/face_scrub_v3.png",
@@ -1330,7 +1330,7 @@
       "showInMainMenu": true,
       "menuOrder": 1,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T10:04:45.914Z"
+      "updatedAt": "2026-09-29T07:41:21.403Z"
     },
     {
       "id": 2,
@@ -1541,7 +1541,8 @@
       "isActive": true,
       "sortOrder": 1,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T11:24:00.756Z"
+      "updatedAt": "2026-10-03T12:48:35.891Z",
+      "categoryId": 7
     },
     {
       "id": 2,
@@ -1586,7 +1587,8 @@
       "isActive": true,
       "sortOrder": 2,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T10:17:36.689Z"
+      "updatedAt": "2026-10-03T12:48:26.766Z",
+      "categoryId": 7
     },
     {
       "id": 3,
@@ -1614,7 +1616,8 @@
       "isActive": true,
       "sortOrder": 3,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-11T10:18:30.527Z"
+      "updatedAt": "2026-10-03T12:49:36.665Z",
+      "categoryId": 7
     }
   ],
   "faqs": [
@@ -1751,8 +1754,8 @@
     "about": {
       "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789122309/background_v2.1.png",
       "image2": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789122917/beauty_brand_rooted_in_indigenous_wisdom_modern_science_responsible_beauty_and_farmer_ownership..png",
-      "eyebrow": "Our Story",
-      "title": "A beauty brand owned by farmers",
+      "eyebrow": "Our Story ",
+      "title": "A beauty brand owned by farmers ",
       "lede": "LAMIKAA Naturals is a farmer-owned beauty brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company (FPC) established to create greater value and better opportunities for farmers.",
       "body": "Rooted in the indigenous knowledge and rich natural heritage of Assam and Northeast India, LAMIKAA Naturals combines traditional wisdom with modern cosmetic science to create conscious, nature-inspired beauty products.\n\nBut LAMIKAA is more than a beauty brand. It is a farmer-owned enterprise where the success of the brand is connected directly to the prosperity of its farmer members.\n\nLAMIKAA Naturals is owned by Bokakhat Agro Organic Producer Co. Ltd., an FPC owned by its farmer members. Therefore, the value created through LAMIKAA contributes to the farmer-owned enterprise, and profits distributed by BAOPCL can reach its member farmers as dividends, subject to applicable laws and the company's dividend declaration.\n\nWhen LAMIKAA grows, our farmers grow with us.\n\nEvery product carries a bigger purpose — to create value from nature, strengthen the farmer-owned value chain and contribute to a better quality of life for farming families.\n\n## The farmer-owned value chain\n\n::steps\n- Farmer\n- FPC\n- Value Addition\n- LAMIKAA Naturals\n- Consumer\n- Profit\n- Farmer Members\n::\n\n::callout The LAMIKAA Difference\nLAMIKAA Naturals is different because behind the brand is not simply a corporate ownership structure. Behind LAMIKAA are farmers.\n\nThis is the heart of our story. When you choose LAMIKAA, you are choosing beauty with a purpose. You are supporting a farmer-owned enterprise that seeks to transform natural resources into higher-value products, create economic opportunities and build a more prosperous future for farming families.\n::\n\n> To build a globally respected Indian beauty brand where indigenous knowledge, modern science and farmer ownership come together to create beauty, prosperity and a better future.",
       "ctaLabel": "Shop the Black Rice Range",
@@ -1760,8 +1763,8 @@
     },
     "whyLamikaa": {
       "heroImage": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789122310/background_v1.png",
-      "eyebrow": "Why LAMIKAA",
-      "title": "Indigenous Wisdom. Modern Science. Responsible Beauty.",
+      "eyebrow": "Why LAMIKAA  ",
+      "title": "Indigenous Wisdom. Modern Science. Responsible Beauty. ",
       "body": "LAMIKAA Naturals believes that the future of beauty can be inspired by the wisdom of the past. For generations, communities across Assam and Northeast India have developed knowledge of plants, herbs and natural resources and their traditional uses. LAMIKAA seeks to respect this heritage and bring it into the modern world through contemporary cosmetic science, responsible sourcing and quality-focused product development.\n\nOur philosophy is built on four pillars:",
       "pillars": [
         {
@@ -1785,12 +1788,12 @@
           "text": "Building products and processes that respect people, communities and the environment."
         }
       ],
-      "difference": "LAMIKAA Naturals is different because behind the brand is not simply a corporate ownership structure. Behind LAMIKAA are farmers.\n\n::steps\n- LAMIKAA Naturals\n- Owned by Bokakhat Agro Organic Producer Co. Ltd.\n- A Farmer Producer Company\n- Owned by Farmer Members\n- Profits can return to members through declared dividends\n- Greater opportunity for farmer income and improved quality of life\n::\n\nThis is the heart of our story. When you choose LAMIKAA, you are choosing beauty with a purpose. You are supporting a farmer-owned enterprise that seeks to transform natural resources into higher-value products, create economic opportunities and build a more prosperous future for farming families.\n\nLAMIKAA is where the wisdom of nature meets the science of modern beauty — and where beauty creates value for farmers.",
+      "difference": "LAMIKAA Naturals is different because behind the brand is not simply a corporate ownership structure. Behind LAMIKAA are farmers.::steps- LAMIKAA Naturals- Owned by Bokakhat Agro Organic Producer Co. Ltd.- A Farmer Producer Company- Owned by Farmer Members- Profits can return to members through declared dividends- Greater opportunity for farmer income and improved quality of life::This is the heart of our story. When you choose LAMIKAA, you are choosing beauty with a purpose. You are supporting a farmer-owned enterprise that seeks to transform natural resources into higher-value products, create economic opportunities and build a more prosperous future for farming families.LAMIKAA is where the wisdom of nature meets the science of modern beauty — and where beauty creates value for farmers.",
       "vision": "To build a globally respected Indian beauty brand where indigenous knowledge, modern science and farmer ownership come together to create beauty, prosperity and a better future."
     },
     "impact": {
-      "eyebrow": "Our Impact",
-      "title": "Beauty That Creates Prosperity for Farmers",
+      "eyebrow": "Our Impact ",
+      "title": "Beauty That Creates Prosperity for Farmers ",
       "intro": "The fundamental motive behind LAMIKAA Naturals is simple: to create more value for the farmers who produce the natural resources behind our products.\n\nIn a conventional agricultural value chain, farmers often sell raw produce at commodity prices while greater value is created later through processing, branding and marketing. LAMIKAA Naturals seeks to change this equation. As a brand owned by Bokakhat Agro Organic Producer Co. Ltd., a Farmer Producer Company, LAMIKAA forms part of a farmer-owned value chain.\n\nThe journey is: **Farmer → FPC → Value Addition → LAMIKAA Naturals → Consumer → Profit → Farmer Members**\n\nWhen the business succeeds and profits are distributed by BAOPCL, its farmer members can benefit through dividends. This creates an important connection between consumer purchase and farmer prosperity. Your choice of LAMIKAA can help create value beyond the product — value that can ultimately return to the farming community.\n\nOur long-term ambition is to help farmers earn more from what they grow, participate in value addition and gradually improve their family's standard of living.",
       "items": [
         {
@@ -1830,16 +1833,16 @@
     },
     "home": {
       "aboutTeaser": {
-        "eyebrow": "About LAMIKAA",
-        "title": "When LAMIKAA grows, our farmers grow with us.",
+        "eyebrow": "About LAMIKAA ",
+        "title": "When LAMIKAA grows, our farmers grow with us. ",
         "text": "LAMIKAA Naturals is a farmer-owned beauty brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company established to create greater value and better opportunities for farmers.\n\nRooted in the indigenous knowledge and rich natural heritage of Assam and Northeast India, we combine traditional wisdom with modern cosmetic science. Every product carries a bigger purpose — to create value from nature, strengthen the farmer-owned value chain and contribute to a better quality of life for farming families.",
         "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789121642/when_lamikaa_grows.png",
-        "ctaLabel": "Our Story",
+        "ctaLabel": "Our Story ",
         "ctaTo": "/about"
       },
       "whyBlackRice": {
-        "eyebrow": "The hero ingredient",
-        "title": "Why black rice?",
+        "eyebrow": "The hero ingredient ",
+        "title": "Why black rice? ",
         "points": [
           "Antioxidant-rich, traditionally valued in Northeast India.",
           "The one ingredient every product in the range is built around.",
@@ -1861,27 +1864,27 @@
       }
     },
     "contact": {
-      "eyebrow": "Contact",
-      "title": "Write to us",
-      "lede": "Questions about a product, an order or the farmer-owned story — we read every message.",
+      "eyebrow": "Contact ",
+      "title": "Write to us ",
+      "lede": "Questions about a product, an order or the farmer-owned story — we read every message. ",
       "hoursNote": "{{SUPPORT_HOURS}}"
     },
     "policies": {
       "privacy": {
-        "title": "Privacy Policy",
+        "title": "Privacy Policy .",
         "updatedAt": "2026-09-06T00:00:00.000Z",
         "body": "## 01. What this policy covers\n\nThis policy explains what LAMIKAA Naturals collects when you browse this store, place an order or write to us, why we hold it, and what you can ask us to do with it. LAMIKAA Naturals is a brand of Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL).\n\n## 02. What we collect\n\n- **What you give us.** Your name, email address, phone number and delivery address when you create an account or place an order; the contents of any message you send us.\n- **What an order creates.** The items ordered, the amount, the delivery status and the returns or refunds attached to it.\n- **What your browser tells us.** Pages viewed, approximate location from your network address, device and browser type — used in aggregate to keep the store working.\n\nWe do not store full card numbers. Card and UPI details are entered with the payment provider at checkout and never reach our servers.\n\n## 03. Why we hold it\n\n- To take, pack, deliver and, where necessary, refund your order.\n- To answer your messages and keep a record of what was agreed.\n- To send order and delivery updates, and marketing email only where you have asked for it.\n- To keep the accounting, tax and audit records the law requires of us.\n\n## 04. Who else sees it\n\nOnly the parties that make an order happen: the payment provider that takes your money, the courier that carries the parcel, and the services that host this store and send its email. Each receives the minimum needed to do its part. We do not sell personal data.\n\nWe may also disclose information where the law, a court or a regulator requires it.\n\n## 05. How long we keep it\n\nOrder and tax records are kept for as long as the law requires. Account details are kept while your account is open; marketing consent is kept until you withdraw it. Anything else is deleted when it is no longer needed.\n\n## 06. Your choices\n\n- Ask for a copy of what we hold about you.\n- Ask us to correct anything that is wrong.\n- Ask us to delete your account and the data that is not part of a legal record.\n- Unsubscribe from marketing email at any time, from the link in the email or by writing to us.\n\n## 07. Children\n\nThis store is not intended for children under 18, and we do not knowingly collect their data. Where we learn that we have, we delete it.\n\n## 08. Changes\n\nWhen this policy changes, the revised version is published here with a new date. Material changes are announced on the site.\n\n## 09. Contact\n\nWe answer every message we receive. Write to {{LAMIKAA_EMAIL}} with any question about this policy or about the data we hold on you, or post to {{LAMIKAA_ADDRESS}}."
       },
       "terms": {
-        "title": "Terms of Service",
+        "title": "Terms of Service ",
         "body": "## 01. Who you are dealing with\n\nThis store is operated by Bokakhat Agro Organic Producer Co. Ltd. (BAOPCL), a Farmer Producer Company, under its brand LAMIKAA Naturals. Placing an order means you accept these terms.\n\nOur GSTIN is {{GSTIN}}. Our Corporate Identification Number is {{CIN}}.\n\n## 02. Your account\n\nYou are responsible for what happens under your account and for keeping your password to yourself. Tell us at once if you think someone else has used it. We may suspend an account used for fraud or abuse.\n\n## 03. Products and descriptions\n\nWe describe every product as accurately as we can, quoting the printed pack for volumes, ingredients, directions and cautions. Our products are cosmetics for external use. They are not medicines and are not offered to diagnose, treat or cure any condition. Read the caution on the pack, patch test before first use and stop using a product if irritation occurs.\n\nPhotographs are indicative. Colour and finish can vary a little between screens and between batches of a natural ingredient.\n\n## 04. Prices and payment\n\nPrices are in Indian Rupees and are inclusive of all taxes, as printed on the pack. A product shown without a price is not yet on sale and cannot be added to the cart. We may change prices before an order is placed; the price you see at checkout is the price that applies.\n\nAn order is an offer to buy. It is accepted when we confirm dispatch. If a product is out of stock or was listed at an obviously wrong price, we may decline the order and refund anything already paid.\n\n## 05. Delivery, returns and refunds\n\nDelivery, returns and refunds are governed by our Shipping & Returns policy, which forms part of these terms.\n\n## 06. Acceptable use\n\nDo not attempt to break, overload or gain unauthorised access to this store, scrape it at scale, or use it to post anything unlawful. Reviews and messages you submit must be your own honest experience.\n\n## 07. Our content\n\nThe LAMIKAA name and mark, the product photography, and the text on this site belong to BAOPCL and may not be reproduced for commercial use without written permission.\n\n## 08. Liability\n\nNothing here limits liability that cannot be limited in law. Beyond that, our liability for any order is limited to the amount you paid for it. We are not liable for indirect or consequential loss.\n\n## 09. Governing law\n\nThese terms are governed by the laws of India. The courts of {{JURISDICTION}} have exclusive jurisdiction over any dispute arising from them. Nothing in this clause affects a right you have as a consumer to bring a claim where the law allows it.\n\n## 10. Changes and contact\n\nWe may update these terms; the version published here at the time of your order is the one that applies. Write to {{LAMIKAA_EMAIL}} with any question about them. We answer every message we receive."
       },
       "shippingReturns": {
-        "title": "Shipping & Returns",
+        "title": "Shipping & Returns ",
         "body": "## 01. Dispatch\n\nOrders are packed and handed to the courier from Monday to Saturday. Our dispatch time is {{DISPATCH_SLA}}. The delivery estimate for your address is shown at checkout before you pay, and the charge, if any, is shown on the same screen.\n\n## 02. Tracking\n\nYou receive a tracking number by email as soon as the parcel leaves us, and the current stage of every order is shown in My Orders.\n\n## 03. If something arrives damaged\n\nTell us within 48 hours of delivery, with a photograph of the parcel and the product. A damaged or wrong item is replaced or refunded in full, and we pay the return leg.\n\n## 04. Returns\n\nA return is requested from My Orders. You have {{RETURN_WINDOW_DAYS}} days from delivery to ask for one. The product must be unused, unopened and in its original packaging, with the seal intact.\n\n**Opened skincare cannot be returned for hygiene reasons** unless it arrived damaged or is faulty. This is the one rule we cannot bend: a cosmetic that has been opened cannot be resold safely.\n\n## 05. How a return is processed\n\n- Request the return from My Orders and tell us why.\n- We arrange a pickup or, where a pickup is not available, ask you to send it back.\n- The product is inspected when it reaches us.\n- An approved return is refunded to the original payment method, or to your store credit if you prefer.\n\nRefunds are processed {{REFUND_TIMELINE}}. Your bank may take a few days more to show the money.\n\n## 06. Cancellations\n\nAn order can be cancelled from My Orders at any time before it is dispatched, and is refunded in full.\n\n## 07. Contact\n\nAnything to do with a delivery, a return or a refund can be raised from the order itself, in My Orders. You can also write to {{LAMIKAA_EMAIL}}."
       },
       "cookies": {
-        "title": "Cookie Policy",
+        "title": "Cookie Policy ",
         "body": "## 01. What a cookie is\n\nA cookie is a small text file that a site asks your browser to keep. On the next page you open, the browser hands it back, and that is how a site remembers that the product you added is still in your cart and that you are the person who added it.\n\nCookies cannot read the rest of your device, and ours hold identifiers rather than personal details. What we do with the data behind those identifiers is set out in our [Privacy Policy](/privacy).\n\nSome of what is listed below is kept in your browser's local storage rather than in a cookie proper — your cart and the products you have recently looked at are held that way. It is the same bargain either way, so this policy covers both, and clearing your site data clears all of it.\n\n## 02. The cookies we set\n\nOnly the essential family is required for the store to work. Everything else can be refused without losing your cart or your order history.\n\n### Essential — always on\n\nHolds your cart between visits, keeps you signed in, and carries the security tokens that protect checkout. Lifetime: session to one year.\n\n### Functional — optional\n\nRemembers the choices you have made and the products you have recently looked at. Lifetime: one year.\n\n### Analytics — optional\n\nTells us, in aggregate, which pages and which products are being looked at, so we know what to photograph and stock. Lifetime: two years.\n\n### Marketing — optional\n\nMeasures how a campaign performed and lets us show our products to you on other sites. Lifetime: ninety days.\n\n## 03. Turning them off\n\nEvery browser lets you block or clear cookies, usually under Settings, then Privacy. You can refuse them for this site alone or for every site, and you can delete the ones already stored.\n\nBlocking the essential family will stop the cart and the sign-in from working — the store cannot remember you without it. Blocking the other three costs you nothing but the convenience of not setting your preferences again.\n\n## 04. Contact\n\nOur [Privacy Policy](/privacy) covers the wider question of what we do with the data behind these identifiers. Write to {{LAMIKAA_EMAIL}} and we will tell you exactly what a given cookie holds."
       }
     },
@@ -1910,26 +1913,26 @@
   },
   "announcements": [
     {
-      "id": 1,
       "text": "Farmer-owned. Assam-grown.",
       "link": "",
       "isActive": true,
-      "sortOrder": 0,
       "startsAt": null,
       "endsAt": null,
+      "sortOrder": 0,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-10-03T15:40:43.310Z",
+      "id": 1
     },
     {
-      "id": 2,
-      "text": "Free shipping over ₹{{FREE_SHIPPING_THRESHOLD}}",
+      "text": "Free shipping over ₹100",
       "link": "/shop",
-      "isActive": true,
-      "sortOrder": 1,
+      "isActive": false,
       "startsAt": null,
       "endsAt": null,
+      "sortOrder": 1,
       "createdAt": "2026-09-06T00:00:00.000Z",
-      "updatedAt": "2026-09-06T00:00:00.000Z"
+      "updatedAt": "2026-10-03T15:39:52.870Z",
+      "id": 2
     },
     {
       "id": 3,
@@ -2288,9 +2291,36 @@
           "theme": "dark"
         },
         "theme": "inherit"
+      },
+      {
+        "id": "product-9",
+        "kind": "product",
+        "productId": 9,
+        "enabled": false,
+        "label": "",
+        "eyebrow": "",
+        "headline": "",
+        "subtext": "",
+        "badges": [],
+        "media": {
+          "url": "",
+          "mobileUrl": "",
+          "alt": ""
+        },
+        "primaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "secondaryCta": {
+          "label": "",
+          "href": ""
+        },
+        "background": null,
+        "layout": null,
+        "theme": "inherit"
       }
     ],
-    "updatedAt": "2026-09-14T11:42:29.275Z"
+    "updatedAt": "2026-09-29T07:34:55.212Z"
   },
   "settings": {
     "store": {
@@ -2299,8 +2329,8 @@
       "email": "{{LAMIKAA_EMAIL}}",
       "phone": "{{LAMIKAA_PHONE}}",
       "address": "{{LAMIKAA_ADDRESS}}",
-      "currency": "USD",
-      "currencySymbol": "$",
+      "currency": "INR",
+      "currencySymbol": "₹",
       "timezone": "Asia/Kolkata",
       "logo": null,
       "favicon": null,
@@ -2324,8 +2354,8 @@
       "stripeEnabled": false,
       "stripePublishableKey": "",
       "codEnabled": true,
-      "codFee": 0,
-      "codMinOrder": 0,
+      "codFee": 40,
+      "codMinOrder": 45,
       "codMaxOrder": 0
     },
     "notifications": {
@@ -2343,11 +2373,11 @@
       "facebookPixelId": ""
     },
     "social": {
-      "facebook": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
-      "instagram": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
-      "twitter": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
-      "youtube": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51",
-      "whatsapp": "https://github.com/bappidas-git/Lamikaa-E-Commerce/pull/51"
+      "facebook": "",
+      "instagram": "",
+      "twitter": "",
+      "youtube": "",
+      "whatsapp": ""
     }
   },
   "dealsConfig": {
@@ -2362,10 +2392,18 @@
       "endAt": "",
       "onExpiry": "endOfDay"
     },
-    "featuredCouponIds": [],
-    "dealOfTheDayIds": [],
-    "featuredProductIds": [],
-    "updatedAt": "2026-09-14T11:43:18.277Z"
+    "featuredCouponIds": [
+      3
+    ],
+    "dealOfTheDayIds": [
+      1,
+      3
+    ],
+    "featuredProductIds": [
+      1,
+      3
+    ],
+    "updatedAt": "2026-10-03T15:29:04.542Z"
   },
   "admins": [
     {
@@ -2444,10 +2482,23 @@
       "password": "Shuben1212",
       "avatar": null,
       "addresses": [],
-      "isActive": true,
+      "isActive": false,
       "createdAt": "2026-09-14T11:44:34.018Z",
-      "updatedAt": "2026-09-14T11:44:34.018Z",
+      "updatedAt": "2026-10-03T20:09:28.474Z",
       "id": 4
+    },
+    {
+      "firstName": "test",
+      "lastName": "test",
+      "email": "test@gmail.com",
+      "phone": "+916901875478",
+      "password": "123456789",
+      "avatar": null,
+      "addresses": [],
+      "isActive": true,
+      "createdAt": "2026-10-03T20:25:10.780Z",
+      "updatedAt": "2026-10-03T21:07:17.830Z",
+      "id": 5
     }
   ],
   "shipping_methods": [
@@ -2496,6 +2547,22 @@
       "createdAt": "2026-09-14T11:45:48.980Z",
       "updatedAt": "2026-09-14T11:45:48.980Z",
       "id": 2
+    },
+    {
+      "code": "101010",
+      "description": "ffsaf",
+      "type": "percentage",
+      "value": 100,
+      "minOrderAmount": 20,
+      "maxDiscount": null,
+      "usageLimit": 2,
+      "perUserLimit": 1,
+      "isActive": true,
+      "expiresAt": null,
+      "usedCount": 1,
+      "createdAt": "2026-10-03T15:27:22.013Z",
+      "updatedAt": "2026-10-03T20:27:11.253Z",
+      "id": 3
     }
   ],
   "orders": [
@@ -2662,9 +2729,9 @@
       "subtotal": 349,
       "total": 349,
       "amountPayable": 349,
-      "paymentStatus": "pending",
+      "paymentStatus": "refunded",
       "paymentMethod": "cod",
-      "fulfillmentStatus": "fulfilled",
+      "fulfillmentStatus": "returned",
       "shippingStatus": "shipped",
       "trackingNumber": null,
       "trackingUrl": null,
@@ -2678,10 +2745,16 @@
           "at": "2026-09-14T12:56:11.637Z",
           "by": "Store Admin",
           "action": "Fulfilled & shipped"
+        },
+        {
+          "at": "2026-10-03T15:26:12.602Z",
+          "by": "Store Admin",
+          "action": "Return refund processed (RET-20261003-XULK)",
+          "note": "$349 refunded"
         }
       ],
       "createdAt": "2026-09-04T11:05:00.000Z",
-      "updatedAt": "2026-09-14T12:56:11.622Z"
+      "updatedAt": "2026-10-03T15:26:12.476Z"
     },
     {
       "discountAmount": 0,
@@ -3097,6 +3170,144 @@
       "pendingRefund": null,
       "refundedAmount": 500,
       "refundCompletedAt": "2026-09-14T12:21:54.292Z"
+    },
+    {
+      "items": [
+        {
+          "productId": 1,
+          "variantId": null,
+          "name": "Black Rice Face Wash ultimate",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789139042/lamikaa_face_wash_2000x2000_final.png",
+          "sku": "",
+          "price": 390,
+          "quantity": 1,
+          "subtotal": 390
+        }
+      ],
+      "shippingAddress": {
+        "firstName": "test",
+        "lastName": "test",
+        "phone": "+916901875478",
+        "addressLine1": "test",
+        "addressLine2": "test",
+        "city": "test",
+        "state": "Assam",
+        "postalCode": "783380",
+        "country": "India"
+      },
+      "billingAddress": {
+        "firstName": "test",
+        "lastName": "test",
+        "phone": "+916901875478",
+        "addressLine1": "test",
+        "addressLine2": "test",
+        "city": "test",
+        "state": "Assam",
+        "postalCode": "783380",
+        "country": "India"
+      },
+      "subtotal": 390,
+      "discountAmount": 390,
+      "couponCode": "101010",
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "codFee": 0,
+      "total": 0,
+      "storeCreditUsed": 0,
+      "amountPayable": 0,
+      "paymentMethod": "card",
+      "paymentStatus": "paid",
+      "fulfillmentStatus": "unfulfilled",
+      "shippingStatus": "pending",
+      "trackingNumber": null,
+      "notes": "",
+      "userId": 5,
+      "orderNumber": "ORD-MUSUF7GM-QZMT",
+      "shiprocketOrderId": null,
+      "createdAt": "2026-10-03T20:27:11.110Z",
+      "updatedAt": "2026-10-03T20:27:11.110Z",
+      "statusHistory": [
+        {
+          "at": "2026-10-03T20:27:11.111Z",
+          "by": "Customer",
+          "action": "Order placed"
+        }
+      ],
+      "id": 7
+    },
+    {
+      "items": [
+        {
+          "productId": 2,
+          "variantId": null,
+          "name": "Black Rice Goat Milk Soap",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080354/black_rice_goat_milk_soap_v3.png",
+          "sku": "",
+          "price": 900,
+          "quantity": 1,
+          "subtotal": 900
+        },
+        {
+          "productId": 3,
+          "variantId": null,
+          "name": "Black Rice Body Wash",
+          "image": "https://res.cloudinary.com/v8vrixwq/image/upload/v1789080336/black_rice_body_wash_v2.png",
+          "sku": "",
+          "price": 500,
+          "quantity": 2,
+          "subtotal": 1000
+        }
+      ],
+      "shippingAddress": {
+        "firstName": "test",
+        "lastName": "test",
+        "phone": "+916901875478",
+        "addressLine1": "barpeta",
+        "addressLine2": "barpeta moutupuri",
+        "city": "Barpeta",
+        "state": "Assam",
+        "postalCode": "783380",
+        "country": "India"
+      },
+      "billingAddress": {
+        "firstName": "test",
+        "lastName": "test",
+        "phone": "+916901875478",
+        "addressLine1": "barpeta",
+        "addressLine2": "barpeta moutupuri",
+        "city": "Barpeta",
+        "state": "Assam",
+        "postalCode": "783380",
+        "country": "India"
+      },
+      "subtotal": 1900,
+      "discountAmount": 0,
+      "couponCode": null,
+      "shippingAmount": 0,
+      "taxAmount": 0,
+      "codFee": 40,
+      "total": 1940,
+      "storeCreditUsed": 0,
+      "amountPayable": 1940,
+      "paymentMethod": "cod",
+      "paymentStatus": "pending",
+      "fulfillmentStatus": "unfulfilled",
+      "shippingStatus": "pending",
+      "trackingNumber": null,
+      "notes": "",
+      "userId": 5,
+      "orderNumber": "ORD-MUSVVKFF-6ER9",
+      "shiprocketOrderId": null,
+      "createdAt": "2026-10-03T21:07:54.027Z",
+      "updatedAt": "2026-10-03T21:07:54.027Z",
+      "statusHistory": [
+        {
+          "at": "2026-10-03T21:07:54.027Z",
+          "by": "Customer",
+          "action": "Order placed"
+        }
+      ],
+      "id": 8
     }
   ],
   "payments": [
@@ -3147,11 +3358,23 @@
       "gateway": "cod",
       "transactionId": null,
       "gatewayOrderId": null,
-      "status": "pending",
+      "status": "refunded",
       "storeCreditApplied": 0,
       "gatewayResponse": {},
       "createdAt": "2026-09-04T11:05:00.000Z",
-      "updatedAt": "2026-09-04T11:05:00.000Z"
+      "updatedAt": "2026-10-03T15:26:12.546Z",
+      "refundAmount": 349,
+      "refundReason": "Return RET-20261003-XULK",
+      "refunds": [
+        {
+          "id": "ref_musjo5duz5ys",
+          "amount": 349,
+          "reason": "Return RET-20261003-XULK",
+          "at": "2026-10-03T15:26:12.546Z",
+          "by": "Store Admin"
+        }
+      ],
+      "pendingRefund": null
     },
     {
       "id": 3,
@@ -3256,6 +3479,40 @@
           "by": "Store Admin"
         }
       ]
+    },
+    {
+      "orderId": 7,
+      "orderNumber": "ORD-MUSUF7GM-QZMT",
+      "userId": 5,
+      "amount": 0,
+      "currency": "INR",
+      "paymentMethod": "card",
+      "gateway": "razorpay",
+      "transactionId": "pay_MOCKMUSUF7IJ",
+      "gatewayOrderId": "order_MOCKMUSUF7IJ",
+      "status": "captured",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "createdAt": "2026-10-03T20:27:11.179Z",
+      "updatedAt": "2026-10-03T20:27:11.179Z",
+      "id": 7
+    },
+    {
+      "orderId": 8,
+      "orderNumber": "ORD-MUSVVKFF-6ER9",
+      "userId": 5,
+      "amount": 1940,
+      "currency": "INR",
+      "paymentMethod": "cod",
+      "gateway": "cod",
+      "transactionId": null,
+      "gatewayOrderId": null,
+      "status": "pending",
+      "storeCreditApplied": 0,
+      "gatewayResponse": {},
+      "createdAt": "2026-10-03T21:07:54.112Z",
+      "updatedAt": "2026-10-03T21:07:54.112Z",
+      "id": 8
     }
   ],
   "refunds": [
@@ -3363,6 +3620,27 @@
       "createdAt": "2026-09-14T13:01:42.954Z",
       "updatedAt": "2026-09-14T13:01:42.954Z",
       "id": 5
+    },
+    {
+      "refundNumber": "REF-20261003-H2J1",
+      "type": "return_refund",
+      "orderId": 2,
+      "orderNumber": "ORD-20260904-0002",
+      "returnId": 3,
+      "returnNumber": "RET-20261003-XULK",
+      "paymentId": 2,
+      "amount": 349,
+      "method": "original_payment",
+      "reason": "Return RET-20261003-XULK",
+      "reference": null,
+      "status": "completed",
+      "couponRestored": false,
+      "initiatedAt": "2026-10-03T15:26:12.645Z",
+      "settledAt": "2026-10-03T15:26:12.645Z",
+      "by": "Store Admin",
+      "createdAt": "2026-10-03T15:26:12.645Z",
+      "updatedAt": "2026-10-03T15:26:12.645Z",
+      "id": 6
     }
   ],
   "walletTransactions": [
@@ -3503,6 +3781,63 @@
       "createdAt": "2026-09-14T13:03:03.900Z",
       "updatedAt": "2026-09-14T13:03:03.900Z",
       "id": 2
+    },
+    {
+      "returnNumber": "RET-20261003-XULK",
+      "status": "refunded",
+      "refundStatus": "processed",
+      "refundMethod": "original_payment",
+      "deductionAmount": 0,
+      "restocked": true,
+      "returnTrackingNumber": null,
+      "returnTrackingUrl": null,
+      "returnCarrier": null,
+      "pickupScheduledAt": null,
+      "images": [],
+      "notes": "bnb",
+      "orderId": 2,
+      "orderNumber": "ORD-20260904-0002",
+      "userId": 1,
+      "items": [
+        {
+          "productId": 6,
+          "variantId": null,
+          "name": "Black Rice Exfoliating Face Scrub",
+          "sku": "LK-BR-SC-006",
+          "price": 349,
+          "quantity": 1,
+          "subtotal": 349
+        }
+      ],
+      "reason": "defective",
+      "reasonDetails": "hjhb",
+      "refundAmount": 349,
+      "statusHistory": [
+        {
+          "at": "2026-10-03T15:25:26.900Z",
+          "by": "Store Admin",
+          "action": "Return created",
+          "note": "Reason: defective"
+        },
+        {
+          "at": "2026-10-03T15:25:33.596Z",
+          "by": "Store Admin",
+          "action": "Return approved"
+        },
+        {
+          "at": "2026-10-03T15:26:03.199Z",
+          "by": "Store Admin",
+          "action": "Items received"
+        },
+        {
+          "at": "2026-10-03T15:26:12.420Z",
+          "by": "Store Admin",
+          "action": "Refund processed ($349)"
+        }
+      ],
+      "createdAt": "2026-10-03T15:25:26.899Z",
+      "updatedAt": "2026-10-03T15:26:12.389Z",
+      "id": 3
     }
   ],
   "reviews": [
@@ -3627,21 +3962,6 @@
       "updatedAt": "2026-09-14T12:11:43.952Z",
       "notes": "",
       "id": 3
-    },
-    {
-      "type": "newsletter",
-      "name": null,
-      "email": "shubendu@assamdigital.com",
-      "phone": null,
-      "orderNumber": null,
-      "category": null,
-      "subject": null,
-      "message": null,
-      "status": "subscribed",
-      "createdAt": "2026-09-14T12:11:57.512Z",
-      "updatedAt": "2026-09-14T12:11:57.512Z",
-      "notes": "",
-      "id": 4
     },
     {
       "type": "contact",
