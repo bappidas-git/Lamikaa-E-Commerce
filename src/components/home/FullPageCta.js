@@ -43,14 +43,20 @@ import styles from "./FullPageCta.module.css";
 // scroll position or any height.
 //
 // THE COPY IS THE OWNER'S, AND FALLS BACK TO THE BRAND'S OWN LINES.
-// `siteContent.home.fullPageCta` carries the three lines, the two labels and
-// their destinations, and the photograph. When the block is missing,
+// `siteContent.home.fullPageCta` carries the headline's lines, the two labels
+// and their destinations, and the photograph. When the block is missing,
 // unpublished or unreachable, the section still stands: the lines fall back to
 // `brand.signatureLines[0..2]` — the same three sentences, from the config
 // rather than from the CMS — and the two actions to /shop and /about. That is
 // the opposite of the ingredient spotlight's rule, and deliberately so: these
 // are the brand's own signature lines, not a cosmetic claim, so a fallback here
 // cannot state anything the brand has not already said of itself.
+//
+// EVERY LINE THE OWNER PUBLISHES IS PRINTED. The headline was drawn as a
+// triplet, and it used to be held to one — a fourth line saved in Admin →
+// Content went into the record and never reached the page. A longer headline
+// is set smaller instead (`headlineLength`), so it keeps the height the
+// triplet was drawn for rather than pushing the buttons off the screen.
 // =============================================================================
 
 const EYEBROW = "Beauty with a purpose";
@@ -115,15 +121,17 @@ export const ctaCopy = (block) => {
     block && typeof block === "object" && block.published !== false ? block : null;
 
   const lines = Array.isArray(published?.lines)
-    ? published.lines.filter((line) => typeof line === "string" && line.trim())
+    ? published.lines
+        .filter((line) => typeof line === "string" && line.trim())
+        .map((line) => line.trim())
     : [];
 
   return {
-    // Three lines, always: the owner's if there are any, the brand's otherwise.
-    // A block that publishes four gets the first three — the composition is a
-    // triplet, and a fourth line would set the card's headline against the
-    // measure it was drawn for.
-    lines: (lines.length ? lines : brand.signatureLines).slice(0, 3),
+    // EVERY line the owner publishes, in their order — a line saved in Admin →
+    // Content that never reaches the page is the one outcome this section must
+    // not have. A longer headline is set smaller instead (`headlineLength`).
+    // With no lines at all, the brand's own three.
+    lines: lines.length ? lines : brand.signatureLines.slice(0, 3),
     primaryLabel: published?.primaryLabel || DEFAULT_PRIMARY.label,
     primaryTo: published?.primaryTo || DEFAULT_PRIMARY.to,
     secondaryLabel: published?.secondaryLabel || DEFAULT_SECONDARY.label,
@@ -132,6 +140,27 @@ export const ctaCopy = (block) => {
     // wash over the page ground, which is a composition in its own right.
     image: published?.image || "",
   };
+};
+
+/**
+ * How long the headline is, as the size it is set at: "standard" up to three
+ * lines, "long" for four or five, "longer" from six.
+ *
+ * The section was drawn for three. At the display size each of them wraps to
+ * two rows in the 760px card, and those six rows are the height the card was
+ * composed around. Every line added at that size pushes the two buttons down
+ * by another one to three rows — a fourth puts them below the fold of a
+ * 1366x768 laptop, six or eight most of a screen further. So each step is one
+ * size down the display scale (the stylesheet has the sizes), which keeps four
+ * to eight lines inside the height the triplet was drawn for — measured at
+ * 1440px, 500px for the triplet against 315–459px for four to eight lines.
+ *
+ * Exported for the unit test.
+ */
+export const headlineLength = (count) => {
+  if (count >= 6) return "longer";
+  if (count >= 4) return "long";
+  return "standard";
 };
 
 /**
@@ -199,9 +228,13 @@ const FullPageCta = ({ content }) => {
             <GlassCard strong scrim padding="lg" className={styles.card}>
               <p className={`sf-eyebrow ${styles.eyebrow}`}>{EYEBROW}</p>
 
-              {/* Three lines, three blocks — the break is the composition, so
-                  it is markup rather than a <br> the copy has to carry. */}
-              <h2 id={HEADING_ID} className={styles.headline}>
+              {/* One block per line — the break is the composition, so it is
+                  markup rather than a <br> the copy has to carry. */}
+              <h2
+                id={HEADING_ID}
+                className={styles.headline}
+                data-length={headlineLength(copy.lines.length)}
+              >
                 {copy.lines.map((line, index) => {
                   // The gradient keyword lives in the FIRST line only.
                   const parts = index === 0 ? splitOnWord(line) : null;

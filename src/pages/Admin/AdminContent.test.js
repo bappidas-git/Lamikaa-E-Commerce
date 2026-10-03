@@ -7,6 +7,10 @@
 // that counts the pillars ("built on four pillars") is flagged the moment the
 // list stops agreeing with it.
 //
+// The full-page CTA's lines are the same promise for the home page's headline:
+// a line added here is written back with the rest, and the field says what the
+// storefront does with it.
+//
 // `services/api` is mocked — the screen reads and writes one record through it,
 // and the point is what it sends — and so is sweetalert2, whose toasts are not
 // what is under test. Clicks go through RTL's `fireEvent`, as everywhere else
@@ -168,5 +172,42 @@ describe("the pillars editor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save section" }));
     const [, data] = await saved();
     expect(data.pillars[5]).toEqual({ title: "", text: "", key: "" });
+  });
+});
+
+describe("the full-page CTA's lines", () => {
+  jest.setTimeout(20000);
+
+  const CTA = {
+    lines: brand.signatureLines.slice(0, 3),
+    primaryLabel: "Shop the Black Rice Range",
+    primaryTo: "/shop",
+    secondaryLabel: "Meet the farmer-owners",
+    secondaryTo: "/about",
+    image: "https://example.test/cta.jpg",
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    apiService.admin.getSiteContent.mockResolvedValue({
+      home: { aboutTeaser: { title: "About LAMIKAA" }, fullPageCta: { ...CTA } },
+    });
+    apiService.admin.updateSiteContent.mockResolvedValue({});
+  });
+
+  it("says every line is shown, and writes a line added at the end with the rest", async () => {
+    render(<AdminContent />);
+    fireEvent.click(screen.getByRole("button", { name: "Full-page CTA" }));
+    expect(await screen.findByText(/every one is shown/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Add line" }));
+    fireEvent.change(screen.getByLabelText("Lines 4"), { target: { value: "acchaa" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save section" }));
+
+    await waitFor(() => expect(apiService.admin.updateSiteContent).toHaveBeenCalledTimes(1));
+    const [key, data] = apiService.admin.updateSiteContent.mock.calls[0];
+    // The sub-block saves into its parent, so the About teaser is untouched.
+    expect(key).toBe("home");
+    expect(data).toEqual({ fullPageCta: { ...CTA, lines: [...CTA.lines, "acchaa"] } });
   });
 });

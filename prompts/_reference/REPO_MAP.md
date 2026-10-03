@@ -373,7 +373,7 @@ Rewritten for LAMIKAA NATURALS. **23 collections in this order**; `banners` is g
 | `concerns` | 11 | `id, slug, name, order` | cleansing · brightening · hydration · refresh · glow · revive · exfoliation · texture · even-tone · comfort · nourishing. "Shop by concern" links to `/shop?concern=<slug>`. |
 | `rituals` | 3 | `id, slug, name, tagline, story, image, duration, steps[{order, productId, alternativeProductId?, note, frequency}], isActive, sortOrder, createdAt, updatedAt` | morning-glow (4 steps) · evening-renewal (5) · black-rice-body (2, step 1 offers the bar **or** the wash via `alternativeProductId`). `story` is derived from `BRAND.md` — no new facts. |
 | `faqs` | 8 | `id, question, answer, group ("brand"\|"products"\|"orders"\|"account"), placements[] (home/help/product), productIds[], isActive, sortOrder, createdAt, updatedAt` | The eight site FAQs from `constants.js → FAQ_ITEMS`, same ids and order. `group` is new and must be one of `siteContent.faqPage.groups[].key`; rows 1–2 `brand`, 3–5 `products`, 6–8 `orders`. Answers keep the `{freeShipping}` and `{{RETURN_WINDOW_DAYS}}` copy tokens `fillStoreCopy()` resolves. |
-| `siteContent` | singleton | `about{heroImage,image2,eyebrow,title,lede,body,ctaLabel,ctaTo}`, `whyLamikaa{heroImage,eyebrow,title,body,pillars[{key,title,text,icon?}],difference,vision}`, `impact{eyebrow,title,intro,items[{key,title,image,points[],body}]}`, `home{aboutTeaser{…},whyBlackRice{…},fullPageCta{lines[],primaryLabel,primaryTo,secondaryLabel,secondaryTo,image}}`, `contact{eyebrow,title,lede,hoursNote}`, `policies{privacy{title,updatedAt,body},terms{title,body},shippingReturns{title,body},cookies{title,body}}`, `faqPage{eyebrow,title,groups[{key,label}]}` | Every long `body`/`text`/`intro`/`difference` field is plain text in the markdown-lite grammar of `src/utils/contentBlocks.js` (`## `, `### `, `- `, `1. `, `> `, `---`, `::callout Title` … `::`, `::steps` … `::`, `**bold**`, `[label](/href)`). Copy traces to `BRAND.md` §3 or to packaging; the four policies are generic templates carrying `{{TOKENS}}`. `whyLamikaa.pillars` is the list every storefront surface draws (home band, `/why-lamikaa`, `/about`, the `/contact` rail) — `brand.pillars` is only the fallback for a record that cannot be read, and an emptied list stays empty. A pillar's `text` is one plain sentence (not markdown-lite); `icon` is an optional Iconify name (`mdi:…`), written only once the admin picks one — absent means "Auto". |
+| `siteContent` | singleton | `about{heroImage,image2,eyebrow,title,lede,body,ctaLabel,ctaTo}`, `whyLamikaa{heroImage,eyebrow,title,body,pillars[{key,title,text,icon?}],difference,vision}`, `impact{eyebrow,title,intro,items[{key,title,image,points[],body}]}`, `home{aboutTeaser{…},whyBlackRice{…},fullPageCta{lines[],primaryLabel,primaryTo,secondaryLabel,secondaryTo,image}}`, `contact{eyebrow,title,lede,hoursNote}`, `policies{privacy{title,updatedAt,body},terms{title,body},shippingReturns{title,body},cookies{title,body}}`, `faqPage{eyebrow,title,groups[{key,label}]}` | Every long `body`/`text`/`intro`/`difference` field is plain text in the markdown-lite grammar of `src/utils/contentBlocks.js` (`## `, `### `, `- `, `1. `, `> `, `---`, `::callout Title` … `::`, `::steps` … `::`, `**bold**`, `[label](/href)`). Copy traces to `BRAND.md` §3 or to packaging; the four policies are generic templates carrying `{{TOKENS}}`. `whyLamikaa.pillars` is the list every storefront surface draws (home band, `/why-lamikaa`, `/about`, the `/contact` rail) — `brand.pillars` is only the fallback for a record that cannot be read, and an emptied list stays empty. A pillar's `text` is one plain sentence (not markdown-lite); `icon` is an optional Iconify name (`mdi:…`), written only once the admin picks one — absent means "Auto". `home.fullPageCta.lines` is the CTA's headline, one row per line and every line printed (the brand's first three signature lines only when it has none), so a backend must round-trip any number of them. |
 | `announcements` | 3 | `id, text, link ("" \| "/shop"), isActive, sortOrder, startsAt (null), endsAt (null), createdAt, updatedAt` | Replaces `banners`. From `brand.announcements`: "Farmer-owned. Assam-grown." then two token-carrying rows (`{{FREE_SHIPPING_THRESHOLD}}`, `{{LAUNCH_OFFER_TEXT}}`) left `isActive: true` — the bar hides an unresolved text rather than printing it. |
 | `heroConfig` | singleton | `enabled, source ("products"), autoplay, intervalMs (6500), transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, showPause, background{url,mobileUrl,position,overlay,blur,showContent}, updatedAt` | Product-driven: the slides are the eight products ordered by `heroOrder`, so the old `overlayOpacity`, `heights{}`, `secondaryCta{}` and `openers{}` keys are dropped. |
 | `settings` | singleton | `store{name,tagline,email,phone,address,currency,currencySymbol,timezone,logo,favicon,taxRate,taxIncluded}, shipping{shiprocketEnabled,shiprocketEmail,shiprocketPassword,defaultWeight,defaultDimensions{}}, payment{razorpayEnabled,razorpayKeyId,stripeEnabled,stripePublishableKey,codEnabled,codFee,codMinOrder,codMaxOrder}, notifications{orderConfirmationEmail,shippingUpdateEmail,adminNewOrderEmail,adminEmail,lowStockAlert,lowStockEmail}, seo{metaTitle,metaDescription,googleAnalyticsId,facebookPixelId}, social{facebook,instagram,twitter,youtube,whatsapp}` | Contact, notification and social fields are `{{TOKENS}}` (blanked by `normalizeStoreSettings`/`normalizeSocialUrl` until the owner fills Admin → Settings). `taxRate: 0` with `taxIncluded: true` — packs print "M.R.P (incl. of all taxes)". Gateway credentials blank, COD on with no cap. |
@@ -1195,20 +1195,30 @@ footer and the CTA now share.
   scroll positions, never two in one viewport). `scrim` is not optional: without
   it the signature gradient's violet stop measures 1.6:1 on the headline over a
   bright photograph, against 3.1:1 with it.
-  **Composition:** `.sf-eyebrow` "Beauty with a purpose" → an `<h2>` of three
-  `<span>` blocks 8px apart in Fraunces `--sf-text-4xl` (`--sf-text-3xl` below
-  769px), the FIRST carrying the section's one gradient keyword → `brand.tagline`
-  as the lede → `Button variant="primary" size="lg"` and
-  `variant="secondary" size="lg"`, stacked full-width below 640px →
+  **Composition:** `.sf-eyebrow` "Beauty with a purpose" → an `<h2>` of one
+  `<span>` block per line, 8px apart, in Fraunces `--sf-text-4xl`
+  (`--sf-text-3xl` below 769px), the FIRST carrying the section's one gradient
+  keyword → `brand.tagline` as the lede → `Button variant="primary" size="lg"`
+  and `variant="secondary" size="lg"`, stacked full-width below 640px →
   `NewsletterForm variant="cta"` under a `--sf-glass-border` rule →
   `LegalNote compact`.
+  **Every line the owner publishes is printed.** The headline used to be cut to
+  its first three, so a line added in Admin → Content was saved and never
+  shown. A longer headline is set smaller instead: `data-length` on the `<h2>`
+  (`headlineLength`) steps four or five lines one size down the display scale
+  and six or more two (`--sf-text-3xl` / `--sf-text-2xl` from 769px; below it
+  both stop at `--sf-text-2xl`, the section-heading size). Measured at 1440px,
+  four to eight lines stay inside the triplet's 500px (315–459px), so the
+  buttons sit no lower than the triplet left them; the triplet itself is
+  unchanged.
   **Copy is `siteContent.home.fullPageCta` with a real fallback** —
   `brand.signatureLines.slice(0, 3)` plus `/shop` and `/about` — unlike the
   ingredient spotlight, which has none: these are the brand's own signature
   lines, not a cosmetic claim. Only the photograph has no fallback.
-  **Two named exports, pure and unit-tested:** `splitOnWord(line, word)` (splits
-  around a whole-word, regex-escaped match so the sentence's own full stop stays
-  out of the gradient; `null` when the word is gone) and `ctaCopy(block)`.
+  **Three named exports, pure and unit-tested:** `splitOnWord(line, word)`
+  (splits around a whole-word, regex-escaped match so the sentence's own full
+  stop stays out of the gradient; `null` when the word is gone), `ctaCopy(block)`
+  and `headlineLength(count)`.
 - `pages/Home/Home.js`: `<FullPageCta/>` mounts directly after
   `<RitualsTeaser/>`. Sections 1–6 still follow; Prompt 22 replaces them.
 - `theme/storefront-primitives.css`: **two pre-existing defects fixed**, both in
