@@ -62,6 +62,12 @@ const SKELETON_COUNT = 3;
 // 48px on the page, so 96 covers a 2x screen.
 const THUMB_WIDTH = 96;
 
+/** "1 ritual", "3 rituals" — the count a collection's heading carries. */
+export const ritualCountLabel = (count) => {
+  const n = Number.isFinite(Number(count)) ? Math.max(0, Number(count)) : 0;
+  return `${n} ${n === 1 ? "ritual" : "rituals"}`;
+};
+
 // ── The page's one read ──────────────────────────────────────────────────────
 
 /**
@@ -212,6 +218,47 @@ const RitualRow = ({ ritual, products, index, headingAs: Heading = "h2" }) => {
   );
 };
 
+// ── One collection's heading ─────────────────────────────────────────────────
+
+/**
+ * How a ritual collection opens: a seam (the "Collection" label, a hairline
+ * the width of the list, the count), then the collection's own name and
+ * description.
+ *
+ * NEVER LOUDER THAN THE PAGE TITLE. The name is an h2 under "Curated
+ * routines", so it takes that heading's --sf-text-2xl and no more. At
+ * --sf-text-3xl it out-sized the page's own h1 and matched the routine names
+ * in the cards, and nothing on the page said which heading was in charge.
+ *
+ * THE SEAM IS THE DIVIDER. Without it a collection was loose text in the gap
+ * between two cards; with it the section visibly starts, and the count at the
+ * rule's far end fills the row a left-aligned heading would leave empty.
+ *
+ * From 900px the name and the description split on the card's own 42/58 line,
+ * so the description starts exactly where the story in the card below does.
+ */
+const CollectionHead = ({ category, count, titleId }) => {
+  const reduceMotion = useReducedMotion();
+  const description = String(category.description || "").trim();
+
+  return (
+    <motion.header
+      className={styles.collectionHead}
+      {...reveal(reduceMotion, { inView: true, amount: 0.5 })}
+    >
+      <div className={styles.collectionMeta}>
+        <p className={`sf-eyebrow ${styles.collectionEyebrow}`}>Collection</p>
+        <span className={styles.collectionRule} aria-hidden="true" />
+        <p className={styles.collectionCount}>{ritualCountLabel(count)}</p>
+      </div>
+      <h2 id={titleId} className={styles.collectionTitle}>
+        {category.displayName || category.name}
+      </h2>
+      {description ? <p className={styles.collectionLede}>{description}</p> : null}
+    </motion.header>
+  );
+};
+
 // ══════════════════════════════════════════════════════════════════════════════
 // RITUALS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -336,15 +383,11 @@ const Rituals = () => {
                 className={styles.collection}
                 aria-labelledby={titleId}
               >
-                <header className={styles.collectionHead}>
-                  <p className="sf-eyebrow sf-eyebrow--rule">Collection</p>
-                  <h2 id={titleId} className={styles.collectionTitle}>
-                    {category.displayName || category.name}
-                  </h2>
-                  {category.description ? (
-                    <p className={styles.collectionLede}>{category.description}</p>
-                  ) : null}
-                </header>
+                <CollectionHead
+                  category={category}
+                  count={list.length}
+                  titleId={titleId}
+                />
                 {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
                 <ul className={styles.rows} role="list">
                   {list.map((ritual, index) => (

@@ -21,37 +21,6 @@
   min-width: 0;
 }
 
-/* A ritual collection (a ritual sub-category). `scroll-margin-top` keeps the
-   heading clear of the sticky 64px header when /rituals#<slug> lands here. */
-.collection {
-  margin-top: var(--sf-space-16, 4rem);
-  scroll-margin-top: calc(64px + var(--sf-space-6));
-}
-
-.collection:focus {
-  outline: none;
-}
-
-.collectionHead {
-  margin-bottom: var(--sf-space-8);
-}
-
-.collectionTitle {
-  margin: var(--sf-space-2) 0 0;
-  font-family: var(--sf-font-display);
-  font-size: var(--sf-text-3xl, 2rem);
-  font-weight: var(--sf-font-medium);
-  line-height: var(--sf-leading-display);
-  letter-spacing: var(--sf-tracking-tight);
-  color: var(--sf-color-text);
-}
-
-.collectionLede {
-  max-width: 60ch;
-  margin: var(--sf-space-3) 0 0;
-  color: var(--sf-color-text-secondary);
-}
-
 .rows {
   display: flex;
   flex-direction: column;
@@ -215,6 +184,108 @@
 @media (min-width: 1280px) {
   .name {
     font-size: var(--sf-text-3xl);
+  }
+}
+
+/* ---- A collection ---------------------------------------------------------
+   A ritual sub-category: a section of its own below the opening list, and the
+   target of /rituals#<slug> from the header's Rituals tab. `scroll-margin-top`
+   keeps the seam clear of the sticky 64px header when the link lands here.
+
+   MORE AIR ABOVE THAN BELOW. The gap before a collection is wider than the
+   40px between two cards and the gap after its heading is no wider than that,
+   so the heading groups with the routines it names, not the ones above it. */
+
+.collection {
+  margin-top: clamp(var(--sf-space-16), 7vw, var(--sf-space-24));
+  scroll-margin-top: calc(64px + var(--sf-space-6));
+}
+
+/* When every routine is in a collection, the first one opens the list and the
+   page head's own gap is the only one it needs. */
+.list > .collection:first-child {
+  margin-top: 0;
+}
+
+.collection:focus {
+  outline: none;
+}
+
+.collectionHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--sf-space-3);
+  margin-bottom: var(--sf-space-8);
+}
+
+/* The seam: label, hairline, count — one line at every width. */
+.collectionMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-4);
+  margin-bottom: var(--sf-space-2);
+}
+
+.collectionEyebrow {
+  margin: 0;
+  flex: none;
+}
+
+.collectionRule {
+  flex: 1 1 auto;
+  min-width: var(--sf-space-8);
+  height: 1px;
+  background: var(--sf-color-border);
+}
+
+/* The eyebrow's metrics in the muted ink: a fact, where the eyebrow is a
+   signpost. */
+.collectionCount {
+  margin: 0;
+  flex: none;
+  font-size: var(--sf-text-xs);
+  font-weight: var(--sf-font-semibold);
+  line-height: var(--sf-leading-tight);
+  letter-spacing: var(--sf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--sf-color-text-muted);
+}
+
+/* The page title's size and no larger (CollectionHead in Rituals.js says why). */
+.collectionTitle {
+  margin: 0;
+  max-width: 24ch;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-2xl);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+  text-wrap: balance;
+}
+
+.collectionLede {
+  margin: 0;
+  max-width: 60ch;
+  font-size: var(--sf-text-md);
+  line-height: var(--sf-leading-relaxed);
+  color: var(--sf-color-text-secondary);
+}
+
+/* 900+: the name and the description side by side, split on the card's own
+   line — the 42% stage, then a 40px gap that is the card body's padding — so
+   the description starts at the x of the story in the card below. Change the
+   card's split or its padding and change these two with it. */
+@media (min-width: 900px) {
+  .collectionHead {
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    column-gap: var(--sf-space-10);
+    align-items: baseline;
+    margin-bottom: var(--sf-space-10);
+  }
+
+  .collectionMeta {
+    grid-column: 1 / -1;
   }
 }
 
