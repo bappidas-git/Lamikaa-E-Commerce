@@ -7,8 +7,8 @@ import React, {
 } from "react";
 import { useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
-import brand from "../../config/brand";
 import { useCart } from "../../hooks/useCart";
+import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { ROUTES } from "../../utils/constants";
 import { buildCartItem, productPath } from "../../utils/helpers";
 import { primaryImage, productAlt } from "../../utils/product";
@@ -604,6 +604,8 @@ const useMediaFlag = (query) => {
 const HeroCarousel = ({ heroProducts }) => {
   const prefersReducedMotion = useReducedMotion();
   const { addToCart } = useCart();
+  // Name and tagline are the admin's (Settings > General), not the build-time brand.
+  const { storeName, tagline } = useStoreSettings();
 
   const [rawConfig, setRawConfig] = useState(null);
   const [products, setProducts] = useState([]);
@@ -935,7 +937,7 @@ const HeroCarousel = ({ heroProducts }) => {
           hasHeroBackground(sectionBackground) && styles.heroBackdrop,
           themeClass(brandTheme)
         )}
-        aria-label={brand.name}
+        aria-label={storeName}
       >
         {/* The brand slide has no product, so it takes the SECTION picture —
             the wordmark still lands on whatever the merchant chose for the
@@ -956,7 +958,7 @@ const HeroCarousel = ({ heroProducts }) => {
         />
         <div id="hero-sentinel" aria-hidden="true" className={styles.sentinel} />
         <div className={`sf-container ${styles.brandInner}`}>
-          <h1 className="sf-visually-hidden">{brand.name}</h1>
+          <h1 className="sf-visually-hidden">{storeName}</h1>
           {/* The lockup on its plate: the wordmark is champagne gold with no
               light-ground variant, so its plate is the same near-black the
               masthead above it is, on either theme. */}
@@ -965,7 +967,7 @@ const HeroCarousel = ({ heroProducts }) => {
               <Logo variant="wordmark" width={280} alt="" className={styles.brandMark} />
             </span>
           </GlowWrap>
-          <p className={styles.brandTagline}>{brand.tagline}</p>
+          <p className={styles.brandTagline}>{tagline}</p>
           {/* `.cta` is what the backdrop's contrast rules key off (the CSS's
               "controls over a photograph" block). It carries no layout of its
               own outside `.actions`, so the one button on the brand slide takes
@@ -1046,7 +1048,7 @@ const HeroCarousel = ({ heroProducts }) => {
         aria-hidden="true"
       />
 
-      {!activeHeadline && <h1 className="sf-visually-hidden">{brand.name}</h1>}
+      {!activeHeadline && <h1 className="sf-visually-hidden">{storeName}</h1>}
 
       {/* Announced only while the timer is not running, so what a screen reader
           hears is always the answer to something the visitor just did — never

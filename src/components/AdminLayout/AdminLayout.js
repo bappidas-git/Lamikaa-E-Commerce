@@ -32,7 +32,6 @@ import { Icon } from "@iconify/react";
 import { useAdmin } from "../../context/AdminContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import Logo from "../brand/Logo";
-import brand from "../../config/brand";
 import { ADMIN_MAIN_ID, ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useAdminTheme } from "../../context/AdminThemeContext";
 import {
@@ -212,8 +211,8 @@ const AdminLayout = () => {
   const screenTitle =
     menuItems.find((item) => item.path === location.pathname)?.title || "Admin";
   useEffect(() => {
-    setPageTitle(`${screenTitle} \u00b7 Admin \u00b7 ${brand.name}`);
-  }, [screenTitle]);
+    setPageTitle(`${screenTitle} \u00b7 Admin \u00b7 ${storeName}`);
+  }, [screenTitle, storeName]);
   // The release runs once, on the way out of the admin — hence the ref: the
   // store title is whatever it is at that moment, and a settings save must not
   // hand the tab back while an admin is still standing on the screen.

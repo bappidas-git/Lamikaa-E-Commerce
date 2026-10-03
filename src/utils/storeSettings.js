@@ -137,7 +137,9 @@ const positive = (value) => {
 //
 // TWO KINDS OF TOKEN, TWO BEHAVIOURS
 //   {singleBrace}   a figure this function knows how to compute. Replaced.
-//   {{DOUBLE_BRACE}} a fact nobody has supplied yet. NEVER printed: the whole
+//   {{DOUBLE_BRACE}} a fact nobody has supplied yet (the contact tokens —
+//                   {{LAMIKAA_EMAIL}}, {{LAMIKAA_PHONE}}, {{LAMIKAA_ADDRESS}} —
+//                   are filled from Settings > General once saved). NEVER printed: the whole
 //                   sentence carrying it is dropped (see utils/placeholders.js),
 //                   which is also what happens to {freeShipping} when no
 //                   shipping method carries a free-shipping threshold.
@@ -186,7 +188,16 @@ export const fillStoreCopy = (text, settings, options = {}) => {
     .split("{taxNote}")
     .join(taxNote)
     .split("{{RETURN_WINDOW_DAYS}}")
-    .join(returnDays == null ? "{{RETURN_WINDOW_DAYS}}" : String(returnDays));
+    .join(returnDays == null ? "{{RETURN_WINDOW_DAYS}}" : String(returnDays))
+    // The contact tokens the policies and FAQ answers quote. `store` is already
+    // normalised, so a field the owner has not supplied is "" — keep the token
+    // then, and its sentence drops below rather than reading "Write to ."
+    .split("{{LAMIKAA_EMAIL}}")
+    .join(store.email || "{{LAMIKAA_EMAIL}}")
+    .split("{{LAMIKAA_PHONE}}")
+    .join(store.phone || "{{LAMIKAA_PHONE}}")
+    .split("{{LAMIKAA_ADDRESS}}")
+    .join(store.address || "{{LAMIKAA_ADDRESS}}");
 
   return stripPlaceholderSentences(filled);
 };

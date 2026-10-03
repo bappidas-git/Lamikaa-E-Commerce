@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import brand from "../../config/brand";
 import { ROUTES } from "../../utils/constants";
+import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { responsiveImage } from "../../utils/cloudinary";
 import { retryOriginalUpload } from "../../utils/helpers";
 import { reveal } from "../../theme/motion";
@@ -172,6 +173,7 @@ export const headlineLength = (count) => {
  */
 const FullPageCta = ({ content }) => {
   const reduceMotion = useReducedMotion();
+  const { tagline } = useStoreSettings();
   const block = content === undefined ? undefined : content || null;
   // The URL that failed to load, rather than a boolean: a background that 404s
   // drops out and leaves the wash over the page ground, and the state resets by
@@ -254,7 +256,7 @@ const FullPageCta = ({ content }) => {
                 })}
               </h2>
 
-              <p className={styles.lede}>{brand.tagline}</p>
+              <p className={styles.lede}>{tagline}</p>
 
               <div className={styles.actions}>
                 <Button variant="primary" size="lg" to={copy.primaryTo}>

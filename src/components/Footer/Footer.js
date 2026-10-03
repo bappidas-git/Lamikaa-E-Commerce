@@ -127,6 +127,7 @@ const Footer = () => {
   // this row rather than leaving a dead one.
   const {
     storeName,
+    tagline,
     email: supportEmail,
     phone: supportPhone,
     address: supportAddress,
@@ -298,7 +299,7 @@ const Footer = () => {
               alt=""
               className={styles.wordmark}
             />
-            <p className={styles.tagline}>{brand.tagline}</p>
+            <p className={styles.tagline}>{tagline}</p>
             <p className={styles.signature}>{brand.signatureLines[3]}</p>
           </div>
 
@@ -462,7 +463,7 @@ const Footer = () => {
               &copy; {currentYear} {COPYRIGHT_NAME} All rights reserved.
             </p>
             <p className={styles.copyLine}>
-              {brand.name} is a brand of {brand.legalShort}.
+              {storeName} is a brand of {brand.legalShort}.
             </p>
             {/* Registration rows appear the day the owner supplies them and
                 cost nothing until then. */}
