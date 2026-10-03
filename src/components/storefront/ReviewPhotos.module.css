@@ -1,0 +1,126 @@
+/* =============================================================================
+ * ReviewPhotos — the strip of a customer's pictures under their review
+ * =============================================================================
+ * Each tile is a BUTTON that opens the picture full screen (pdp/Lightbox), so it
+ * has to read as one without shouting about it: the cursor says zoom-in, a
+ * hover lifts the hairline to the strong one and eases the picture in a step,
+ * and a gold magnifier (the same gold disc the gallery's video thumbnails carry
+ * their play mark on) says what a press will do. A touch screen has no hover to
+ * reveal it, so there the magnifier is simply always shown.
+ *
+ * TWO SIZES, ONE TILE: `sm` is the testimonial card's 52px (46px on a phone),
+ * `md` the product page's 78px. Both clear the 44px tap target.
+ * ========================================================================== */
+
+.strip {
+  position: relative;
+  /* Above the testimonial card's decorative quote mark, which sits at z 0. */
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  margin: var(--sf-space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sm {
+  --review-photo-size: 52px;
+}
+
+.md {
+  --review-photo-size: 78px;
+}
+
+.thumb {
+  position: relative;
+  display: block;
+  width: var(--review-photo-size);
+  height: var(--review-photo-size);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-sm);
+  background: var(--sf-color-surface-2);
+  cursor: zoom-in;
+  transition: border-color var(--sf-transition-fast), box-shadow var(--sf-transition-fast);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--sf-transition);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--sf-color-gold);
+  color: var(--sf-color-primary-contrast);
+  font-size: 0.875rem;
+  box-shadow: var(--sf-shadow-sm);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity var(--sf-transition-fast), transform var(--sf-transition-fast);
+  pointer-events: none;
+}
+
+.sm .badge {
+  right: 3px;
+  bottom: 3px;
+  width: 20px;
+  height: 20px;
+  font-size: 0.8125rem;
+}
+
+/* Hover only where there is a real one: a tap on a phone would otherwise
+   leave the tile stuck in its hover state after the viewer closes. */
+@media (hover: hover) {
+  .thumb:hover {
+    border-color: var(--sf-color-border-strong);
+    box-shadow: var(--sf-shadow-sm);
+  }
+
+  .thumb:hover .image {
+    transform: scale(1.06);
+  }
+
+  .thumb:hover .badge {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.thumb:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
+.thumb:focus-visible .badge {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: none) {
+  .badge {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .sm {
+    --review-photo-size: 46px;
+  }
+}

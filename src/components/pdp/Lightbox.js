@@ -47,6 +47,10 @@ import styles from "./Lightbox.module.css";
 // pan offset was clamped against, and an offset clamped to the old one leaves
 // the picture hanging off the new edge with empty ground beside it. Every
 // resize re-clamps against the box as it now is.
+//
+// NOT ONLY THE PACK. The same viewer opens a customer's review photographs
+// (`storefront/ReviewPhotos`): rows carry their own `alt`, and `label` and
+// `caption` name whose pictures they are, where a product name would be wrong.
 // =============================================================================
 
 const MIN_ZOOM = 1;
@@ -97,6 +101,8 @@ const Lightbox = ({
   index = 0,
   onIndexChange,
   product,
+  label,
+  caption,
   zoom: zoomEnabled = true,
 }) => {
   const viewportRef = useRef(null);
@@ -340,40 +346,41 @@ const Lightbox = ({
   // Scoped to the panel rather than the document: Escape is already the focus
   // trap's, and a key the video player has claimed (it calls preventDefault on
   // its own seek keys) must not also move the gallery.
+  //
+  // A key the viewer takes stops here. The dialog is portalled, but a React
+  // event still bubbles through the tree the viewer was RENDERED in — and a
+  // review card's viewer is rendered inside a `Rail`, whose own Arrow/Home/End
+  // handler would otherwise page the row behind the dialog on every press.
   const onKeyDown = (event) => {
     if (event.defaultPrevented) return;
     switch (event.key) {
       case "ArrowRight":
-        event.preventDefault();
         step(1);
         break;
       case "ArrowLeft":
-        event.preventDefault();
         step(-1);
         break;
       case "Home":
-        event.preventDefault();
         onIndexChange?.(0);
         break;
       case "End":
-        event.preventDefault();
         onIndexChange?.(Math.max(0, count - 1));
         break;
       case "+":
       case "=":
         if (!canZoom) return;
-        event.preventDefault();
         zoomTo(zoom.scale + ZOOM_STEP);
         break;
       case "-":
       case "_":
         if (!canZoom) return;
-        event.preventDefault();
         zoomTo(zoom.scale - ZOOM_STEP);
         break;
       default:
-        break;
+        return;
     }
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   if (!row) return null;
@@ -389,20 +396,21 @@ const Lightbox = ({
       size="full"
       showClose={false}
       closeOnBackdrop={false}
-      aria-label={`${product?.name || "Product"} media viewer`}
+      aria-label={label || `${product?.name || "Product"} media viewer`}
       /* The one non-chrome dark surface: a product photograph at full screen
          reads best off black, and this dialog is nothing but the photograph. */
       className={`sf-on-dark ${styles.panel}`}
       onKeyDown={onKeyDown}
     >
       <div className={styles.head}>
-        {count > 1 ? (
-          <p className={`sf-glass ${styles.counter}`} aria-live="polite">
-            {index + 1} / {count}
-          </p>
-        ) : (
-          <span />
-        )}
+        <div className={styles.headStart}>
+          {count > 1 ? (
+            <p className={`sf-glass ${styles.counter}`} aria-live="polite">
+              {index + 1} / {count}
+            </p>
+          ) : null}
+          {caption ? <p className={`sf-glass ${styles.caption}`}>{caption}</p> : null}
+        </div>
         <button
           type="button"
           className={`sf-glass ${styles.control}`}
@@ -503,7 +511,7 @@ const Lightbox = ({
 
         {/* The shortcuts, for the pointer that has a keyboard beside it. */}
         <p className={styles.hints}>
-          <span>← → browse</span>
+          {count > 1 ? <span>← → browse</span> : null}
           {canZoom ? <span>+ − zoom</span> : null}
           <span>Esc close</span>
         </p>

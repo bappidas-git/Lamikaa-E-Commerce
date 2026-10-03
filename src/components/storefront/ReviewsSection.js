@@ -1,7 +1,8 @@
 import React from "react";
 import StarRating from "./StarRating";
 import ReviewerAvatar from "./ReviewerAvatar";
-import { formatDate, onImageError } from "../../utils/helpers";
+import ReviewPhotos from "./ReviewPhotos";
+import { formatDate } from "../../utils/helpers";
 import styles from "./ReviewsSection.module.css";
 
 // =============================================================================
@@ -159,7 +160,6 @@ const ReviewsSection = ({
             const name = review.userName || review.name || "Anonymous";
             const verified = review.isVerifiedPurchase || review.verified;
             const body = review.body || review.comment || review.text;
-            const photos = Array.isArray(review.photos) ? review.photos : [];
             // Only reachable with brand.flags.showSampleReviews on — the API
             // filters these rows out otherwise.
             const sample = review.isSample === true;
@@ -203,22 +203,9 @@ const ReviewsSection = ({
                   )}
                   {body && <p className={styles.reviewBody}>{body}</p>}
 
-                  {/* Customer photos (UGC) — only when the review really has them */}
-                  {photos.length > 0 && (
-                    <ul className={styles.photos}>
-                      {photos.map((src, i) => (
-                        <li key={i}>
-                          <img
-                            src={src}
-                            alt={`Customer upload ${i + 1} from ${name}`}
-                            loading="lazy"
-                            onError={onImageError}
-                            className={styles.photo}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {/* Customer photos (UGC) — only when the review really has
+                      them, and each one opens full screen. */}
+                  <ReviewPhotos photos={review.photos} name={name} />
 
                   {Number(review.helpfulCount) > 0 && (
                     <p className={styles.helpful}>
