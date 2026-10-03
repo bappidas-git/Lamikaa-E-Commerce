@@ -35,6 +35,15 @@ const slugify = (name) =>
 // products except "Rituals", which lists the ritual routines — the storefront
 // reads this rather than special-casing a slug, so a second ritual collection is
 // a data change, not a code change.
+//
+// TYPE AND PARENT AGREE. A "Rituals" category can only sit under another
+// "Rituals" category (or at the top, as the Rituals root), and a "Products"
+// category only under a "Products" one. On the storefront a products
+// sub-category is listed UNDER its parent in the Shop menu, and a rituals
+// sub-category is listed under the Rituals tab and opens /rituals scrolled to
+// its own section — mixing the two would put a category in neither place.
+const kindOf = (c) => (c?.kind === "rituals" ? "rituals" : "products");
+
 const CATEGORY_KINDS = [
   { value: "products", label: "Products", hint: "Lists the products filed under it" },
   { value: "rituals", label: "Rituals", hint: "Lists the ritual routines instead" },
@@ -86,7 +95,9 @@ const AdminCategories = () => {
   const openCreate = () => {
     setEditingCategory(null);
     const maxSort = categories.reduce((m, c) => Math.max(m, c.sortOrder || 0), 0);
-    setForm({ ...emptyForm, sortOrder: maxSort + 1 });
+    // New categories go in the main menu by default (at the end), so a new
+    // sub-category shows up under its parent without a second step.
+    setForm({ ...emptyForm, sortOrder: maxSort + 1, showInMainMenu: true, menuOrder: nextMenuOrder() });
     setDialogOpen(true);
   };
 
@@ -164,6 +175,36 @@ const AdminCategories = () => {
         [...blocked].some((id) => String(id) === String(parentId));
       if (isCycle) {
         Swal.fire({ icon: "warning", title: "Invalid parent", text: "A category can't be its own parent or descendant.", toast: true, position: "bottom-end", showConfirmButton: false, timer: 3000 });
+        return;
+      }
+    }
+
+    // Type and parent must agree (see kindOf above).
+    const formKind = form.kind === "rituals" ? "rituals" : "products";
+    if (parentId) {
+      const parent = categories.find((c) => String(c.id) === String(parentId));
+      if (parent && kindOf(parent) !== formKind) {
+        Swal.fire({
+          icon: "warning",
+          title: "Parent doesn't match the type",
+          text: formKind === "rituals"
+            ? "A Rituals category can only be placed under a Rituals category."
+            : "A Products category can't be placed under a Rituals category.",
+          toast: true, position: "bottom-end", showConfirmButton: false, timer: 3500,
+        });
+        return;
+      }
+    }
+    if (editingCategory && kindOf(editingCategory) !== formKind) {
+      const mismatched = categories.filter(
+        (c) => String(c.parentId) === String(editingCategory.id) && kindOf(c) !== formKind
+      );
+      if (mismatched.length > 0) {
+        Swal.fire({
+          icon: "info",
+          title: "Sub-categories have the other type",
+          text: `Change or move ${mismatched.map((c) => c.name).join(", ")} first — sub-categories must have the same type as their parent.`,
+        });
         return;
       }
     }
@@ -263,10 +304,13 @@ const AdminCategories = () => {
   const eligibleParents = useMemo(() => {
     const blocked = editingCategory ? getDescendantIds(editingCategory.id, categories) : new Set();
     if (editingCategory) blocked.add(editingCategory.id);
+    // …and any category of the other type: a Rituals category nests only
+    // under Rituals, a Products category only under Products.
+    const kind = form.kind === "rituals" ? "rituals" : "products";
     return categories
-      .filter((c) => !blocked.has(c.id))
+      .filter((c) => !blocked.has(c.id) && kindOf(c) === kind)
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
-  }, [categories, editingCategory]);
+  }, [categories, editingCategory, form.kind]);
 
   return (
     <Box>
@@ -353,9 +397,24 @@ const AdminCategories = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      {cat.parentId ? (
-                        <Chip label={categoryName(cat.parentId) || `#${cat.parentId}`} size="small" variant="outlined" />
-                      ) : (
+                      {cat.parentId ? (() => {
+                        const parent = categories.find((c) => String(c.id) === String(cat.parentId));
+                        const mismatch = parent && kindOf(parent) !== kindOf(cat);
+                        const chip = (
+                          <Chip
+                            label={categoryName(cat.parentId) || `#${cat.parentId}`}
+                            size="small"
+                            variant="outlined"
+                            color={mismatch ? "warning" : "default"}
+                            icon={mismatch ? <Icon icon="mdi:alert-outline" /> : undefined}
+                          />
+                        );
+                        return mismatch ? (
+                          <Tooltip title={`Type doesn't match its parent. Edit it and pick a ${kindOf(cat) === "rituals" ? "Rituals" : "Products"} parent (or change the type).`}>
+                            {chip}
+                          </Tooltip>
+                        ) : chip;
+                      })() : (
                         <Typography variant="caption" color="text.disabled">—</Typography>
                       )}
                     </TableCell>
@@ -412,7 +471,15 @@ const AdminCategories = () => {
               select
               label="This category lists"
               value={form.kind}
-              onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value }))}
+              onChange={(e) => {
+                const kind = e.target.value;
+                setForm((f) => {
+                  // A parent of the other type no longer fits — drop it.
+                  const parent = categories.find((c) => String(c.id) === String(f.parentId));
+                  const parentId = parent && kindOf(parent) !== kind ? null : f.parentId;
+                  return { ...f, kind, parentId };
+                });
+              }}
               fullWidth
               size="small"
               helperText={CATEGORY_KINDS.find((k) => k.value === form.kind)?.hint}
@@ -470,7 +537,15 @@ const AdminCategories = () => {
               select label="Parent Category" value={form.parentId ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value === "" ? null : Number(e.target.value) }))}
               fullWidth size="small"
-              helperText="A category can't be its own parent or descendant"
+              helperText={
+                form.kind === "rituals"
+                  ? form.parentId
+                    ? "A ritual collection: listed under the Rituals tab in the main menu, opening the Rituals page at its own section. Assign rituals to it in Rituals → Category."
+                    : "Top-level Rituals: the Rituals page itself. Pick a Rituals parent to make this a collection under the Rituals tab instead."
+                  : form.parentId
+                  ? "A sub-category: shown under its parent in the Shop menu, and its products also appear on the parent's page."
+                  : "Top-level: shown as its own row in the Shop menu."
+              }
             >
               <MenuItem value="">None (Top-level)</MenuItem>
               {eligibleParents.map((c) => (
@@ -485,7 +560,9 @@ const AdminCategories = () => {
             <Box sx={{ mt: 1, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
               <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Main Menu</Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                Controls whether this category appears in the storefront's top navigation menu.
+                Controls whether this category appears in the storefront's main menu — a top-level
+                category as a Shop row, a sub-category under its parent, a ritual collection under
+                the Rituals tab. Hiding a parent hides its sub-categories too.
               </Typography>
               <FormControlLabel
                 control={

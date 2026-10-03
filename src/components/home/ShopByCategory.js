@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { concernPath } from "../../utils/categories";
-import { firstProductForCategory, productsForCategory } from "../../utils/catalogue";
+import { concernPath, getShopMenuTree } from "../../utils/categories";
+import { firstProductForCategory, productsForCategoryTree } from "../../utils/catalogue";
 import { reveal } from "../../theme/motion";
 import { Chip, SectionHeading, Skeleton } from "../ui";
 import CategoryCard from "../catalogue/CategoryCard";
@@ -96,14 +96,19 @@ const ShopByCategory = ({
       ? products.find((p) => String(p.id) === String(firstRitualStep.productId)) || null
       : null;
 
-    return categories.map((category) => {
+    // Top-level categories only (getShopMenuTree): a sub-category is reached
+    // through its parent, whose count includes it, and a ritual collection is
+    // a section of the rituals page rather than a way into the shop.
+    return getShopMenuTree(categories, { menuOnly: false }).map(({ cat: category }) => {
       const isRituals = category.kind === "rituals";
       return {
         category,
         product: isRituals
           ? ritualProduct
           : firstProductForCategory(products, category),
-        count: isRituals ? rituals.length : productsForCategory(products, category).length,
+        count: isRituals
+          ? rituals.length
+          : productsForCategoryTree(products, category, categories).length,
         countNoun: isRituals ? "rituals" : "products",
       };
     });

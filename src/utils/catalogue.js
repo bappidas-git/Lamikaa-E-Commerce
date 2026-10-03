@@ -31,6 +31,7 @@
 // picture of its own still gets a tile rather than an empty plate.
 // =============================================================================
 import { plateSrc, stageSrc } from "./product";
+import { categoryScopeIds } from "./categories";
 
 /** Does this product belong to this category (by id or by category record)? */
 export const inCategory = (product, category) => {
@@ -47,6 +48,19 @@ export const inCategory = (product, category) => {
 /** Every product in a category, in the order the caller supplied them. */
 export const productsForCategory = (products, category) =>
   (Array.isArray(products) ? products : []).filter((p) => inCategory(p, category));
+
+/**
+ * Every product in a category OR in any category below it — what a parent's
+ * menu count and its /category page show. Without `categories` it is exactly
+ * `productsForCategory`.
+ */
+export const productsForCategoryTree = (products, category, categories = []) => {
+  const ids = categoryScopeIds(category, categories);
+  if (ids.length <= 1) return productsForCategory(products, category);
+  return (Array.isArray(products) ? products : []).filter((p) =>
+    ids.some((id) => inCategory(p, id))
+  );
+};
 
 /**
  * The product that represents a category on a menu row — the first member of

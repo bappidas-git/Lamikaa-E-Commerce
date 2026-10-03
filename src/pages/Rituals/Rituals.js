@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import apiService, { resolveRitualSteps } from "../../services/api";
 import useSeo from "../../hooks/useSeo";
 import { reveal } from "../../theme/motion";
-import { ritualPath } from "../../utils/categories";
+import { groupRitualsByCategory, ritualPath } from "../../utils/categories";
 import { ROUTES } from "../../utils/constants";
 import { onImageError } from "../../utils/helpers";
 import { stageSrc } from "../../utils/product";
@@ -42,6 +43,13 @@ import styles from "./Rituals.module.css";
 // named for the routine it opens, because three identical link names in a
 // screen reader's link list are three links to nowhere in particular.
 //
+// COLLECTIONS. A ritual can be filed (Admin → Rituals → Category) under the
+// Rituals root — it opens the page, in the first list — or under a ritual
+// SUB-category, which gets a section of its own further down with
+// `id={category.slug}`. The header's Rituals tab links each collection as
+// `/rituals#<slug>`, and this page scrolls to that section once the data is in
+// (ScrollToTop only waits a few frames, which a network read can outlast).
+//
 // EVERY WORD OF A ROUTINE IS THE ROUTINE'S OWN — name, tagline, story and
 // duration come from the record the admin edits. The page types its heading,
 // its lede, its CTA and its two empty-state sentences, and nothing else.
@@ -68,7 +76,12 @@ const THUMB_WIDTH = 96;
  *            products: object[]}}
  */
 const useRituals = () => {
-  const [state, setState] = useState({ status: "loading", rituals: [], products: [] });
+  const [state, setState] = useState({
+    status: "loading",
+    rituals: [],
+    products: [],
+    categories: [],
+  });
   // Bumped by the error state's "Try again", which re-runs the effect below
   // with its own guards rather than duplicating the fetch.
   const [reloadKey, setReloadKey] = useState(0);
@@ -77,19 +90,26 @@ const useRituals = () => {
   useEffect(() => {
     let alive = true;
     setState((prev) => ({ ...prev, status: "loading" }));
-    Promise.all([apiService.rituals.getAll(), apiService.products.getAll()])
-      .then(([rituals, products]) => {
+    Promise.all([
+      apiService.rituals.getAll(),
+      apiService.products.getAll(),
+      // Only for the collection headings — without them every ritual simply
+      // lists in the first section, which is still the whole page.
+      apiService.categories.getAll().catch(() => []),
+    ])
+      .then(([rituals, products, categories]) => {
         if (!alive) return;
         setState({
           status: "ready",
           rituals: Array.isArray(rituals) ? rituals : [],
           products: Array.isArray(products) ? products : [],
+          categories: Array.isArray(categories) ? categories : [],
         });
       })
       .catch((error) => {
         if (!alive) return;
         console.error("Failed to load the rituals:", error);
-        setState({ status: "failed", rituals: [], products: [] });
+        setState({ status: "failed", rituals: [], products: [], categories: [] });
       });
     return () => {
       alive = false;
@@ -101,7 +121,7 @@ const useRituals = () => {
 
 // ── One row ──────────────────────────────────────────────────────────────────
 
-const RitualRow = ({ ritual, products, index }) => {
+const RitualRow = ({ ritual, products, index, headingAs: Heading = "h2" }) => {
   const reduceMotion = useReducedMotion();
   const steps = resolveRitualSteps(ritual, products);
   const name = ritual.name || "";
@@ -140,9 +160,9 @@ const RitualRow = ({ ritual, products, index }) => {
             {stepCountLabel(steps.length)}
           </p>
 
-          <h2 id={headingId} className={styles.name}>
+          <Heading id={headingId} className={styles.name}>
             {name}
-          </h2>
+          </Heading>
 
           {ritual.tagline ? <p className={styles.tagline}>{ritual.tagline}</p> : null}
           {ritual.story ? <p className={styles.story}>{ritual.story}</p> : null}
@@ -197,7 +217,14 @@ const RitualRow = ({ ritual, products, index }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const Rituals = () => {
-  const { status, rituals, products, retry } = useRituals();
+  const { status, rituals, products, categories, retry } = useRituals();
+  const { hash } = useLocation();
+  const reduceMotion = useReducedMotion();
+
+  const { main, groups } = useMemo(
+    () => groupRitualsByCategory(rituals, categories),
+    [rituals, categories]
+  );
 
   useSeo({
     title: "Rituals",
@@ -207,6 +234,20 @@ const Rituals = () => {
 
   const loading = status === "loading";
   const failed = status === "failed";
+
+  // `/rituals#<collection>` — go to that collection once it is on the page.
+  useEffect(() => {
+    if (status !== "ready" || !hash) return undefined;
+    const id = decodeURIComponent(hash.slice(1));
+    const raf = window.requestAnimationFrame(() => {
+      const target = document.getElementById(id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      if (target.tabIndex < 0) target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [status, hash, reduceMotion]);
 
   return (
     <div className={styles.page}>
@@ -263,10 +304,10 @@ const Rituals = () => {
           />
         )}
 
-        {!loading && !failed && rituals.length > 0 && (
+        {!loading && !failed && main.length > 0 && (
           /* eslint-disable-next-line jsx-a11y/no-redundant-roles */
           <ul className={styles.rows} role="list">
-            {rituals.map((ritual, index) => (
+            {main.map((ritual, index) => (
               <RitualRow
                 key={ritual.id ?? ritual.slug ?? index}
                 ritual={ritual}
@@ -276,6 +317,49 @@ const Rituals = () => {
             ))}
           </ul>
         )}
+
+        {/* One section per ritual collection, each the target of
+            /rituals#<slug> from the header's Rituals tab. */}
+        {!loading &&
+          !failed &&
+          groups.map(({ category, rituals: list }, groupIndex) => {
+            const slug = String(category.slug || category.id);
+            const titleId = `collection-${slug}-title`;
+            // The glow keeps alternating across sections, not restarting.
+            const offset =
+              main.length +
+              groups.slice(0, groupIndex).reduce((n, g) => n + g.rituals.length, 0);
+            return (
+              <section
+                key={category.id ?? slug}
+                id={slug}
+                className={styles.collection}
+                aria-labelledby={titleId}
+              >
+                <header className={styles.collectionHead}>
+                  <p className="sf-eyebrow sf-eyebrow--rule">Collection</p>
+                  <h2 id={titleId} className={styles.collectionTitle}>
+                    {category.displayName || category.name}
+                  </h2>
+                  {category.description ? (
+                    <p className={styles.collectionLede}>{category.description}</p>
+                  ) : null}
+                </header>
+                {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
+                <ul className={styles.rows} role="list">
+                  {list.map((ritual, index) => (
+                    <RitualRow
+                      key={ritual.id ?? ritual.slug ?? index}
+                      ritual={ritual}
+                      products={products}
+                      index={offset + index}
+                      headingAs="h3"
+                    />
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
       </div>
 
       {/* One way back into the range, for a visitor who has read all three and

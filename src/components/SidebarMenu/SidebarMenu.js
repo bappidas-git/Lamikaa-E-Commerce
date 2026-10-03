@@ -14,7 +14,11 @@ import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
-import { categoryPath } from "../../utils/categories";
+import {
+  categoryPath,
+  getRitualMenuCategories,
+  getShopMenuTree,
+} from "../../utils/categories";
 import { categoryThumbSrc, firstProductForCategory } from "../../utils/catalogue";
 import { onImageError } from "../../utils/helpers";
 import { ROUTES } from "../../utils/constants";
@@ -115,7 +119,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   // picture of its own for — the same two reads the mega panel makes, resolved
   // through the same helpers, so the drawer and the desktop menu cannot show a
   // visitor two different pictures for the same category.
-  const [catalogue, setCatalogue] = useState({ categories: [], products: [] });
+  const [catalogue, setCatalogue] = useState({ categories: [], products: [], rituals: [] });
   const [loadingCatalogue, setLoadingCatalogue] = useState(false);
   const loadedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -132,14 +136,18 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
     return Promise.all([
       apiService.categories.getAll(),
       apiService.products.getHeroProducts(),
+      // Only for the Rituals link's collections — a failure costs those rows,
+      // never the Shop accordion.
+      apiService.rituals.getAll().catch(() => []),
     ])
-      .then(([categories, products]) => {
+      .then(([categories, products, rituals]) => {
         if (!mountedRef.current) return;
         setCatalogue({
           categories: Array.isArray(categories)
             ? categories
             : categories?.data ?? [],
           products: Array.isArray(products) ? products : [],
+          rituals: Array.isArray(rituals) ? rituals : [],
         });
       })
       // A catalogue that will not load leaves the accordion empty and every
@@ -193,10 +201,14 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   };
 
   // ---- Rows --------------------------------------------------------------
+  // A TREE, the same one the desktop Shop panel draws (getShopMenuTree): a
+  // sub-category is indented under its parent, and ritual sub-categories are
+  // listed under the Rituals link below instead.
   const categoryRows = useMemo(
     () =>
-      (catalogue.categories || []).map((cat) => ({
+      getShopMenuTree(catalogue.categories || []).map(({ cat, children }) => ({
         cat,
+        children,
         // The category's own "Card image" from the admin, and only when it has
         // none the cover of the first product in it (utils/catalogue.js). 32px
         // slot, requested at 2x for retina, padded to the plate's 1:1 so a wide
@@ -210,6 +222,11 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
     [catalogue]
   );
 
+  const ritualCollections = useMemo(
+    () => getRitualMenuCategories(catalogue.categories || [], catalogue.rituals || []),
+    [catalogue]
+  );
+
   const shopActive =
     pathname === ROUTES.SHOP || pathname.startsWith("/category/");
 
@@ -219,6 +236,11 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
       label: "Rituals",
       to: ROUTES.RITUALS,
       active: pathname === ROUTES.RITUALS || pathname.startsWith("/rituals/"),
+      children: ritualCollections.map((cat) => ({
+        key: `ritual-cat-${cat.id}`,
+        label: cat.displayName || cat.name,
+        to: categoryPath(cat),
+      })),
     },
     {
       key: "about",
@@ -281,7 +303,7 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
   // ---- The Shop accordion ------------------------------------------------
   const shopPanel = (
     <ul className={styles.catList}>
-      {categoryRows.map(({ cat, thumb }) => {
+      {categoryRows.map(({ cat, children, thumb }) => {
         const to = categoryPath(cat);
         return (
           <li key={cat.id ?? cat.slug}>
@@ -310,6 +332,27 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                 {cat.displayName || cat.name}
               </span>
             </Link>
+            {children.length > 0 ? (
+              <ul className={styles.subList}>
+                {children.map((child) => {
+                  const childTo = categoryPath(child);
+                  return (
+                    <li key={child.id ?? child.slug}>
+                      <Link
+                        to={childTo}
+                        className={`${styles.catRow} ${styles.subRow}`}
+                        onClick={close}
+                        aria-current={pathname === childTo ? "page" : undefined}
+                      >
+                        <span className={styles.catName}>
+                          {child.displayName || child.name}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
           </li>
         );
       })}
@@ -383,15 +426,29 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
       {/* ---- Brand ------------------------------------------------------- */}
       <nav aria-label="Brand" className={styles.brandNav}>
         {brandLinks.map((item) => (
-          <Link
-            key={item.key}
-            to={item.to}
-            className={styles.brandLink}
-            onClick={close}
-            aria-current={item.active ? "page" : undefined}
-          >
-            {item.label}
-          </Link>
+          <React.Fragment key={item.key}>
+            <Link
+              to={item.to}
+              className={styles.brandLink}
+              onClick={close}
+              aria-current={item.active ? "page" : undefined}
+            >
+              {item.label}
+            </Link>
+            {/* The Rituals link's collections — each opens /rituals scrolled
+                to that collection. */}
+            {item.children?.length > 0 ? (
+              <ul className={styles.brandSubList}>
+                {item.children.map((child) => (
+                  <li key={child.key}>
+                    <Link to={child.to} className={styles.brandSubLink} onClick={close}>
+                      {child.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </React.Fragment>
         ))}
       </nav>
 

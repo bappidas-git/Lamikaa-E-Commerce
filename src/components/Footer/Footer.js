@@ -5,7 +5,7 @@ import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import apiService from "../../services/api";
 import { ROUTES, SUPPORT_HOURS } from "../../utils/constants";
-import { categoryPath, ritualPath } from "../../utils/categories";
+import { categoryPath, getShopMenuTree, ritualPath } from "../../utils/categories";
 import brand from "../../config/brand";
 import { resolveOrNull } from "../../utils/placeholders";
 import Logo from "../brand/Logo";
@@ -168,11 +168,15 @@ const Footer = () => {
       id: "categories",
       title: "Shop by category",
       links: [
-        ...categories.map((cat) => ({
-          key: `cat-${cat.id}`,
-          label: cat.displayName || cat.name,
-          path: categoryPath(cat),
-        })),
+        // Top-level categories, each followed by its sub-categories; ritual
+        // collections are left to the Rituals column (getShopMenuTree).
+        ...getShopMenuTree(categories, { menuOnly: false })
+          .flatMap(({ cat, children }) => [cat, ...children])
+          .map((cat) => ({
+            key: `cat-${cat.id}`,
+            label: cat.displayName || cat.name,
+            path: categoryPath(cat),
+          })),
         { key: "all-products", label: "All products", path: ROUTES.SHOP },
       ],
     },

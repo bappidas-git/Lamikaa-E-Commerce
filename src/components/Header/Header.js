@@ -9,6 +9,7 @@ import { useWishlist } from "../../context/WishlistContext";
 import { useDealsConfig } from "../../context/DealsConfigContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import { ROUTES } from "../../utils/constants";
+import { categoryPath, getRitualMenuCategories } from "../../utils/categories";
 import Logo from "../brand/Logo";
 import AnnouncementBar from "../AnnouncementBar";
 import CartDrawer from "../CartDrawer/CartDrawer";
@@ -20,6 +21,7 @@ import MegaPanel, {
   clearMegaPanelCache,
   loadMegaPanelData,
 } from "./MegaPanel";
+import { clearRitualsMenuCache, loadRitualsMenuData } from "./ritualsMenuData";
 import styles from "./Header.module.css";
 
 // =============================================================================
@@ -220,6 +222,34 @@ const Header = () => {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
+  // ---- The Rituals tab's collections -------------------------------------
+  // Ritual sub-categories with rituals filed under them are listed UNDER the
+  // Rituals tab (never in the Shop menu). Each links to /rituals#<slug>, which
+  // opens the rituals page scrolled to that collection; the tab itself still
+  // opens the page from the top. Re-read on focus, like the Shop menu.
+  const [ritualCollections, setRitualCollections] = useState([]);
+  useEffect(() => {
+    let active = true;
+    const load = () =>
+      loadRitualsMenuData()
+        .then(({ categories, rituals }) => {
+          if (active) setRitualCollections(getRitualMenuCategories(categories, rituals));
+        })
+        .catch(() => {
+          // No dropdown is the honest fallback: the tab still opens /rituals.
+        });
+    load();
+    const onFocus = () => {
+      clearRitualsMenuCache();
+      load();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => {
+      active = false;
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
   const handleShopPointerEnter = () => {
     if (!hasFinePointer()) return;
     // Warm the cache while the intent delay runs, so the panel is drawn from
@@ -269,6 +299,11 @@ const Header = () => {
       label: "Rituals",
       to: ROUTES.RITUALS,
       active: pathname === ROUTES.RITUALS || pathname.startsWith("/rituals/"),
+      children: ritualCollections.map((cat) => ({
+        key: `ritual-cat-${cat.id}`,
+        label: cat.displayName || cat.name,
+        to: categoryPath(cat),
+      })),
     },
     {
       key: "about",
@@ -419,23 +454,66 @@ const Header = () => {
                   </AnimatePresence>
                 </li>
 
-                {navLinks.map((item) => (
-                  <li
-                    key={item.key}
-                    className={styles.navItem}
-                    onPointerEnter={dismissMegaFromPointer}
-                  >
-                    <Link
-                      to={item.to}
-                      className={`${styles.navLink} ${
-                        item.active ? styles.navLinkActive : ""
-                      }`}
-                      aria-current={item.active ? "page" : undefined}
+                {navLinks.map((item) => {
+                  const hasMenu = item.children?.length > 0;
+                  return (
+                    <li
+                      key={item.key}
+                      className={`${styles.navItem} ${hasMenu ? styles.navItemMenu : ""}`}
+                      onPointerEnter={dismissMegaFromPointer}
                     >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                      <Link
+                        to={item.to}
+                        className={`${styles.navLink} ${
+                          item.active ? styles.navLinkActive : ""
+                        }`}
+                        aria-current={item.active ? "page" : undefined}
+                        // A click hands focus back to the page, so the
+                        // focus-within dropdown does not stay up over it.
+                        onClick={hasMenu ? (e) => e.currentTarget.blur() : undefined}
+                      >
+                        {item.label}
+                        {hasMenu ? (
+                          <Icon
+                            icon="mdi:chevron-down"
+                            className={styles.navChevron}
+                            aria-hidden="true"
+                          />
+                        ) : null}
+                      </Link>
+                      {/* Shown on hover and on focus-within (CSS), so a
+                          keyboard visitor Tabs from the tab straight into its
+                          collections. Each opens /rituals at that section. */}
+                      {hasMenu ? (
+                        <ul
+                          className={`sf-on-dark ${styles.dropdown}`}
+                          aria-label={`${item.label} collections`}
+                        >
+                          <li>
+                            <Link
+                              to={item.to}
+                              className={`${styles.dropdownLink} ${styles.dropdownAll}`}
+                              onClick={(e) => e.currentTarget.blur()}
+                            >
+                              {`All ${item.label.toLowerCase()}`}
+                            </Link>
+                          </li>
+                          {item.children.map((child) => (
+                            <li key={child.key}>
+                              <Link
+                                to={child.to}
+                                className={styles.dropdownLink}
+                                onClick={(e) => e.currentTarget.blur()}
+                              >
+                                {child.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
           )}

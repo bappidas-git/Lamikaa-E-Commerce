@@ -178,6 +178,41 @@
   box-shadow: var(--sf-shadow-focus);
 }
 
+/* Sub-categories, indented under their parent: the parent's plate column is
+   the indent, so a child's name starts on the parent's name line. */
+.subList {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--sf-space-1);
+  padding: 0 0 0 calc(40px + var(--sf-space-3) + var(--sf-space-2));
+  list-style: none;
+}
+
+.subRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-height: 32px;
+  padding: 2px var(--sf-space-2);
+  border-left: 1px solid var(--sf-color-border);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-sm);
+  text-decoration: none;
+  transition: color var(--sf-transition-fast), border-color var(--sf-transition-fast);
+}
+
+.subRow:hover {
+  color: var(--sf-color-gold);
+  border-left-color: var(--sf-color-gold);
+}
+
+.subRow:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-radius: var(--sf-radius-sm);
+  box-shadow: var(--sf-shadow-focus);
+}
+
 /* The plate primitive at 40px. `aspect-ratio: 1` comes with it, so only the
    width and the smaller radius are set here. */
 .thumb {

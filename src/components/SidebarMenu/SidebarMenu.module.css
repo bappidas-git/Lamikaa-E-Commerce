@@ -117,6 +117,52 @@
   color: var(--sf-color-gold);
 }
 
+/* Sub-categories, indented under their parent's name (32px plate + gap). */
+.subList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 calc(32px + var(--sf-space-3));
+}
+
+.subRow {
+  min-height: 40px;
+  padding-left: var(--sf-space-3);
+  border-left: 1px solid var(--sf-color-border);
+  font-size: var(--sf-text-sm);
+}
+
+/* The Rituals link's collections, under it. */
+.brandSubList {
+  list-style: none;
+  margin: 0;
+  padding: var(--sf-space-1) 0 var(--sf-space-2) var(--sf-space-4);
+  border-bottom: 1px solid var(--sf-color-border);
+}
+
+.brandSubLink {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding-left: var(--sf-space-3);
+  border-left: 1px solid var(--sf-color-border);
+  color: var(--sf-color-text-secondary);
+  font-size: var(--sf-text-base);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .brandSubLink:hover {
+    color: var(--sf-color-gold);
+  }
+}
+
+.brandSubLink:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+  border-radius: var(--sf-radius-sm);
+}
+
 /* A catalogue still in flight says so rather than showing an empty group. */
 .note {
   margin: 0;

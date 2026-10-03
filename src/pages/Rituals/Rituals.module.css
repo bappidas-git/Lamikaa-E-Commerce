@@ -21,6 +21,37 @@
   min-width: 0;
 }
 
+/* A ritual collection (a ritual sub-category). `scroll-margin-top` keeps the
+   heading clear of the sticky 64px header when /rituals#<slug> lands here. */
+.collection {
+  margin-top: var(--sf-space-16, 4rem);
+  scroll-margin-top: calc(64px + var(--sf-space-6));
+}
+
+.collection:focus {
+  outline: none;
+}
+
+.collectionHead {
+  margin-bottom: var(--sf-space-8);
+}
+
+.collectionTitle {
+  margin: var(--sf-space-2) 0 0;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-3xl, 2rem);
+  font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-display);
+  letter-spacing: var(--sf-tracking-tight);
+  color: var(--sf-color-text);
+}
+
+.collectionLede {
+  max-width: 60ch;
+  margin: var(--sf-space-3) 0 0;
+  color: var(--sf-color-text-secondary);
+}
+
 .rows {
   display: flex;
   flex-direction: column;
