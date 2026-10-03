@@ -3,8 +3,9 @@
  * =============================================================================
  * `ui/Modal` at size="full" brings the panel, the portal, the trap and the
  * motion; everything here either repaints that panel (the scrim is flat and
- * unblurred, see the component header) or lays out the four things on top of
- * the picture: the counter, the close, the two arrows and the zoom bar.
+ * unblurred, see the component header) or lays out the things on top of the
+ * picture: the counter (and a caption, when the caller gives one), the close,
+ * the two arrows and the zoom bar.
  *
  * THE PICTURE GETS THE WHOLE SCREEN. The head and the foot are OVERLAID rather
  * than stacked above and below the frame. In flow they took 196px off a 903px
@@ -51,7 +52,7 @@
   pointer-events: auto;
 }
 
-/* ---- the head: counter left, close right --------------------------------- */
+/* ---- the head: counter and caption left, close right --------------------- */
 .head {
   top: 0;
   display: flex;
@@ -74,6 +75,21 @@
   );
 }
 
+/* The counter and the caption are words, not controls, so this group hands
+   the pointer back to the picture: a drag that starts on either is a pan. It
+   is the only part of the head allowed to shrink, which keeps the close
+   button on screen beside a long name on a narrow phone. */
+.head > .headStart {
+  pointer-events: none;
+}
+
+.headStart {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-2);
+  min-width: 0;
+}
+
 /* ---- the controls, over a photograph -------------------------------------
    `.sf-glass` inside `.sf-on-dark` is a 6% WHITE VEIL, and the recipe is right
    for what it was written for: a pill sitting on the chrome's own near-black
@@ -93,6 +109,7 @@
    Doubled class names, per this sheet's header: `.sf-glass` is one class too,
    and which of two equal selectors wins is a question about bundler order. */
 .counter.counter,
+.caption.caption,
 .control.control,
 .zoomBar.zoomBar {
   background: color-mix(in srgb, var(--sf-color-bg) 86%, transparent);
@@ -100,6 +117,7 @@
 }
 
 .counter {
+  flex: none;
   margin: 0;
   padding: var(--sf-space-2) var(--sf-space-4);
   border-radius: var(--sf-radius-pill);
@@ -108,6 +126,26 @@
   letter-spacing: var(--sf-tracking-wide);
   color: var(--sf-color-text);
   font-variant-numeric: tabular-nums;
+}
+
+/* Whose picture this is, when the viewer is not the product's own gallery —
+   "Photo by Ritu Bora · Face Wash". One line, cut with an ellipsis rather
+   than wrapped: a second line would push the pill down into the picture. */
+.caption {
+  min-width: 0;
+  margin: 0;
+  padding: var(--sf-space-2) var(--sf-space-4);
+  border-radius: var(--sf-radius-pill);
+  font-size: var(--sf-text-xs);
+  color: var(--sf-color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caption strong {
+  font-weight: var(--sf-font-semibold);
+  color: var(--sf-color-text);
 }
 
 /* ---- controls: 48px circles ---------------------------------------------- */

@@ -318,26 +318,8 @@
   color: var(--sf-color-text-secondary);
 }
 
-/* ---- Customer photographs ------------------------------------------------ */
-
-.photos {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sf-space-2);
-  margin: var(--sf-space-1) 0 0;
-  padding: 0;
-}
-
-.photo {
-  display: block;
-  width: 78px;
-  height: 78px;
-  object-fit: cover;
-  border: 1px solid var(--sf-color-border);
-  border-radius: var(--sf-radius-sm);
-  background: var(--sf-color-surface-2);
-}
+/* Customer photographs are `ReviewPhotos`, the strip the testimonial band
+   prints too — 78px tiles that open the picture full screen. */
 
 .helpful {
   margin: var(--sf-space-1) 0 0;

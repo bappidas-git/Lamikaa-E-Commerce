@@ -17,7 +17,7 @@ jest.mock("../../services/api", () => ({
 
 import React from "react";
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import apiService from "../../services/api";
 import Testimonials, { TESTIMONIALS_HEADING, currentProductId } from "./Testimonials";
@@ -129,6 +129,20 @@ describe("the band", () => {
     // The monogram is the normal state, not a failure state: a review is
     // published with or without a face.
     expect(screen.getByText("P")).toBeInTheDocument();
+  });
+
+  // The card prints a customer's photo as a 52px tile; pressing it is how the
+  // picture is actually seen.
+  it("opens a customer's photo full screen from the card", async () => {
+    renderBand([review({ photos: ["data:image/jpeg;base64,c2hlbGY="] })]);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "View photo from Ritu Bora at full size" })
+    );
+
+    const viewer = await screen.findByRole("dialog", { name: "Photos from Ritu Bora" });
+    expect(viewer).toHaveTextContent("Photo by Ritu Bora · Black Rice Face Wash");
+    expect(within(viewer).getByRole("img", { name: "Photo from Ritu Bora" })).toBeInTheDocument();
   });
 
   it("says nothing at all when the store has no approved reviews", async () => {

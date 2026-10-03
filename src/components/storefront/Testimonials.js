@@ -10,10 +10,11 @@ import {
   testimonialName,
   TESTIMONIAL_LIMIT,
 } from "../../utils/testimonials";
-import { formatDate, onImageError, productPath } from "../../utils/helpers";
+import { formatDate, productPath } from "../../utils/helpers";
 import { Rail, SectionHeading } from "../ui";
 import StarRating from "./StarRating";
 import ReviewerAvatar from "./ReviewerAvatar";
+import ReviewPhotos from "./ReviewPhotos";
 import styles from "./Testimonials.module.css";
 
 // =============================================================================
@@ -114,23 +115,14 @@ const TestimonialCard = ({ review, product }) => {
         <p className={styles.quoteBody}>{body}</p>
       </blockquote>
 
-      {/* What they photographed, when they photographed anything. */}
-      {photos.length > 0 && (
-        <ul className={styles.shots}>
-          {photos.map((src, index) => (
-            <li key={index}>
-              <img
-                className={styles.shot}
-                src={src}
-                alt={`Customer upload ${index + 1} from ${name}`}
-                loading="lazy"
-                decoding="async"
-                onError={onImageError}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* What they photographed, when they photographed anything — each one
+          opens full screen. */}
+      <ReviewPhotos
+        photos={photos}
+        name={name}
+        productName={product ? product.shortName || product.name : ""}
+        size="sm"
+      />
 
       <figcaption className={styles.person}>
         <ReviewerAvatar name={name} src={review.avatar} size="lg" />
