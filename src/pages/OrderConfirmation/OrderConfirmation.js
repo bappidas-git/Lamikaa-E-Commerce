@@ -41,6 +41,7 @@ import { useParams } from "react-router-dom";
 import confetti from "canvas-confetti";
 import apiService from "../../services/api";
 import {
+  copyToClipboard,
   formatCurrency,
   formatDate,
   normalizeOrderAddress,
@@ -107,6 +108,8 @@ const OrderConfirmation = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const copyTimer = useRef(null);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   // Guards the celebratory confetti to a single one-shot burst per mount.
   const confettiFiredRef = useRef(false);
 
@@ -166,19 +169,19 @@ const OrderConfirmation = () => {
     }
   };
 
-  const handleCopyOrderNumber = () => {
+  const handleCopyOrderNumber = async () => {
     const text = order?.orderNumber || orderNumber;
-    // Only claim "Copied" once the write has actually resolved. An unfocused
-    // tab or an insecure context rejects, and announcing a copy that never
-    // happened would be a lie the customer only finds out about on paste.
-    const write = navigator.clipboard?.writeText(text);
-    if (!write) return;
-    write
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch((err) => console.error("Clipboard write failed:", err));
+    // Only claim "Copied" once the text has really reached the clipboard:
+    // announcing a copy that never happened would be a lie the customer only
+    // finds out about on paste. `copyToClipboard` also copies on a plain-HTTP
+    // page, where `navigator.clipboard` does not exist, and its fallback needs
+    // this click's activation, so nothing is awaited before it.
+    if (!(await copyToClipboard(text))) return;
+    setCopied(true);
+    // A second copy restarts the confirmation instead of being cut short by
+    // the first one's timer.
+    clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopied(false), 2000);
   };
 
   const formatDeliveryDate = (date) =>

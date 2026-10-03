@@ -349,7 +349,9 @@
 /* The code is a string to be typed exactly, so it is set in the one monospace
    on the storefront and coloured gold: it is the thing on the card you take
    away with you. The stack is local — the token layer has no `--sf-font-mono`,
-   and a font stack is not a colour. */
+   and a font stack is not a colour.
+   It copies on a click as well (a pointer's shortcut to the button), so it
+   answers a hover by firming its hairline. */
 .voucherCode {
   padding: var(--sf-space-2) var(--sf-space-4);
   border: 1px dashed var(--sf-color-border-strong);
@@ -362,32 +364,54 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+  transition: border-color var(--sf-transition-fast),
+    background-color var(--sf-transition);
 }
 
-/* Copy is a word with a hairline under it, not a button-shaped button. */
+/* Copy is a word with a hairline under it, not a button-shaped button. A
+   hairline mark opens it so it reads as an action at a glance, and the side
+   padding widens the target without moving the word off the card's edge. */
 .copyBtn {
-  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sf-space-2);
   flex: none;
   min-height: var(--sf-tap-target);
-  padding: 0;
+  margin: 0 calc(var(--sf-space-2) * -1);
+  padding: 0 var(--sf-space-2);
   border: none;
+  border-radius: var(--sf-radius-sm);
   background: transparent;
   color: var(--sf-color-text);
   font-family: var(--sf-font-family);
   font-size: var(--sf-text-xs);
   font-weight: var(--sf-font-medium);
+  line-height: var(--sf-leading-tight);
   text-transform: uppercase;
   letter-spacing: var(--sf-tracking-wide);
+  white-space: nowrap;
   cursor: pointer;
   transition: color var(--sf-transition-fast);
 }
 
-.copyBtn::after {
+.copyMark {
+  flex: none;
+  display: block;
+}
+
+/* The hairline sits under the word, not under the mark, and hangs below the
+   label's box rather than padding it, so the mark centres on the letters. */
+.copyLabel {
+  position: relative;
+}
+
+.copyLabel::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(50% - 0.85em);
+  bottom: -4px;
   height: 1px;
   background: currentColor;
   transform: scaleX(0.4);
@@ -395,29 +419,69 @@
   transition: transform var(--sf-transition);
 }
 
-.copyBtn:hover {
-  color: var(--sf-color-gold-deep);
-}
-
-.copyBtn:hover::after {
-  transform: scaleX(1);
-}
-
 .copyBtn:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;
   box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
 }
 
-/* Confirmed — gold, with the rule drawn all the way through. */
+/* Hovering either half lights both, so the pair reads as one control; a
+   browser without `:has()` lights the half under the pointer alone. Only where
+   hover is real: on touch it would stick after the tap and keep the pair lit
+   long after "Copied" has gone. */
+@media (hover: hover) {
+  .voucherCode:hover,
+  .voucherFoot:has(.copyBtn:hover) .voucherCode {
+    border-color: var(--sf-color-gold);
+  }
+
+  .copyBtn:hover,
+  .voucherFoot:has(.voucherCode:hover) .copyBtn {
+    color: var(--sf-color-gold-deep);
+  }
+
+  .copyBtn:hover .copyLabel::after,
+  .voucherFoot:has(.voucherCode:hover) .copyLabel::after {
+    transform: scaleX(1);
+  }
+}
+
+/* Copied — the stamp is inked: a solid line and a wash of the gold. */
+.voucherCodeDone {
+  border-style: solid;
+  border-color: var(--sf-color-gold);
+  background-color: var(--sf-color-primary-soft);
+}
+
+/* Confirmed — gold, with the rule drawn all the way through and the tick
+   drawn in. Refused — the instruction, in ink, ruled through the same way. */
 .copyBtnDone,
 .copyBtnDone:hover {
   color: var(--sf-color-gold-deep);
 }
 
-.copyBtnDone::after {
+.copyBtnRefused,
+.copyBtnRefused:hover {
+  color: var(--sf-color-text);
+}
+
+.copyBtnDone .copyLabel::after,
+.copyBtnRefused .copyLabel::after {
   transform: scaleX(1);
+}
+
+/* The polyline is ~21 units long; a 22-unit dash hides it at the offset's
+   start and shows all of it at the end. */
+.copyMarkCheck polyline {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 0;
+  animation: offer-tick var(--sf-transition) both;
+}
+
+@keyframes offer-tick {
+  from {
+    stroke-dashoffset: 22;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1027,7 +1091,12 @@
   }
 
   .tab::after,
-  .copyBtn::after {
+  .copyLabel::after {
     transition: none;
+  }
+
+  /* The tick arrives whole. */
+  .copyMarkCheck polyline {
+    animation: none;
   }
 }

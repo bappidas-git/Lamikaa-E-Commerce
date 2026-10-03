@@ -115,6 +115,33 @@ const couponTerms = (c) => {
   return rows;
 };
 
+// ── Copying a code ───────────────────────────────────────────────────────────
+// `copyToClipboard` reaches the clipboard on every browser the store supports,
+// plain-HTTP pages included. A refusal is still possible (a locked-down
+// browser), and then the page hands the code over instead of going quiet: the
+// chip's text is selected and the button says what to do with it.
+
+const NOT_COPIED = { code: null, ok: true, hint: "", seq: 0 };
+
+// Select a node's text, so a refused copy leaves the code ready for one chord.
+const selectContents = (el) => {
+  const selection = window.getSelection?.();
+  if (!el || !selection) return;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  selection.removeAllRanges();
+  selection.addRange(range);
+};
+
+// What a refused copy tells the visitor to do instead. The code is already
+// selected, so a keyboard needs one chord; a touch screen needs a long press.
+const manualCopyHint = () => {
+  if (window.matchMedia?.("(pointer: coarse)").matches) return "Hold to copy";
+  const platform =
+    navigator.userAgentData?.platform || navigator.platform || navigator.userAgent || "";
+  return /mac|iphone|ipad|ipod/i.test(platform) ? "Press ⌘C" : "Press Ctrl+C";
+};
+
 // Resolve an ordered id selection against a list, preserving the admin order and
 // dropping ids that no longer exist.
 const pickByIds = (items, ids) => {
@@ -199,6 +226,46 @@ const ChevronMark = ({ dir }) => (
     aria-hidden="true"
   >
     <polyline points={dir === "left" ? "15 6 9 12 15 18" : "9 6 15 12 9 18"} />
+  </svg>
+);
+
+// Two sheets, one over the other — the copy action, drawn as a hairline.
+const CopyMark = () => (
+  <svg
+    className={styles.copyMark}
+    viewBox="0 0 24 24"
+    width="15"
+    height="15"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3" />
+  </svg>
+);
+
+// The tick that replaces it once the code is on the clipboard. Its stroke is
+// drawn in (CSS), so each successful copy is seen to land.
+const CheckMark = () => (
+  <svg
+    className={`${styles.copyMark} ${styles.copyMarkCheck}`}
+    viewBox="0 0 24 24"
+    width="15"
+    height="15"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <polyline points="5 12.5 10 17.5 19 7" />
   </svg>
 );
 
@@ -326,6 +393,63 @@ const CategoryTabs = ({ categories, activeTab, onChange }) => {
         <ChevronMark dir="right" />
       </button>
     </div>
+  );
+};
+
+// ── The voucher ──────────────────────────────────────────────────────────────
+// The figure, the honest small print, and the code on its dashed chip with Copy
+// beside it. The chip copies too: it is what a shopper reaches for first. The
+// button stays the keyboard's way in, and its label carries the outcome:
+// "Copied" with a tick, or (on a refusal) what to do with the selected code.
+const Voucher = ({ coupon, copied, onCopy }) => {
+  const codeRef = useRef(null);
+  const mine = copied.code === coupon.code;
+  const done = mine && copied.ok;
+  const refused = mine && !copied.ok;
+  const copy = () => onCopy(coupon.code, codeRef.current);
+
+  return (
+    <GlassCard as="article" glow="gold" padding="md" className={styles.voucher}>
+      <p className={styles.voucherFigure}>
+        <span className={styles.voucherValue}>{couponHeadline(coupon)}</span>
+        <span className={styles.voucherOff}>off</span>
+      </p>
+
+      {coupon.description && <p className={styles.voucherDesc}>{coupon.description}</p>}
+
+      {/* The small print — every row a condition checkout applies. */}
+      <ul className={styles.voucherTerms}>
+        {couponTerms(coupon).map((row) => (
+          <li key={row}>{row}</li>
+        ))}
+      </ul>
+
+      <div className={styles.voucherFoot}>
+        {/* A pointer's shortcut to the button beside it, so it is not a tab
+            stop of its own. */}
+        <code
+          ref={codeRef}
+          className={`${styles.voucherCode} ${done ? styles.voucherCodeDone : ""}`}
+          onClick={copy}
+        >
+          {coupon.code}
+        </code>
+        <button
+          type="button"
+          className={`${styles.copyBtn} ${done ? styles.copyBtnDone : ""} ${
+            refused ? styles.copyBtnRefused : ""
+          }`}
+          onClick={copy}
+          aria-label={`Copy coupon code ${coupon.code}`}
+        >
+          {/* Keyed on the copy, so a second click draws the tick again. */}
+          {done ? <CheckMark key={copied.seq} /> : <CopyMark />}
+          <span className={styles.copyLabel}>
+            {done ? "Copied" : refused ? copied.hint : "Copy"}
+          </span>
+        </button>
+      </div>
+    </GlassCard>
   );
 };
 
@@ -461,9 +585,10 @@ const SpecialOffers = () => {
   // answered. (Prompt 31 — "a fetch error never masquerades as empty".)
   const [failed, setFailed] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-  // { code, ok } — drives the button's own label AND the polite announcement,
-  // including the honest failure case where the clipboard is unavailable.
-  const [copied, setCopied] = useState({ code: null, ok: true });
+  // { code, ok, hint, seq } — the last Copy. Drives the button's own label, the
+  // chip AND the polite announcement, including the honest case where the
+  // browser refused the write. `seq` counts copies, so a repeat redraws the tick.
+  const [copied, setCopied] = useState(NOT_COPIED);
   const copyTimer = useRef(null);
   useEffect(() => () => clearTimeout(copyTimer.current), []);
 
@@ -568,11 +693,19 @@ const SpecialOffers = () => {
   }, [dealCategories, activeTab]);
 
   // Handlers
-  const handleCopyCode = useCallback(async (code) => {
+  // Called straight from the click: the clipboard write needs that activation.
+  const handleCopyCode = useCallback(async (code, codeEl) => {
     const ok = await copyToClipboard(code);
-    setCopied({ code, ok });
+    // Refused: hand the code over instead, selected and ready to copy.
+    if (!ok) selectContents(codeEl);
+    const hint = ok ? "" : manualCopyHint();
+    setCopied((prev) => ({ code, ok, hint, seq: prev.seq + 1 }));
     clearTimeout(copyTimer.current);
-    copyTimer.current = setTimeout(() => setCopied({ code: null, ok: true }), 2400);
+    // The instruction stays up long enough to be read and followed.
+    copyTimer.current = setTimeout(
+      () => setCopied((prev) => ({ ...NOT_COPIED, seq: prev.seq })),
+      ok ? 2400 : 6000
+    );
   }, []);
 
   const handleAddToCart = useCallback(
@@ -600,7 +733,7 @@ const SpecialOffers = () => {
   const copyAnnouncement = copied.code
     ? copied.ok
       ? `Code ${copied.code} copied to your clipboard.`
-      : `Could not copy ${copied.code}. Select the code and copy it manually.`
+      : `Could not copy ${copied.code} automatically. The code is selected, ready for you to copy.`
     : "";
 
   // ── Master toggle: page hidden ─────────────────────────────────────────────
@@ -704,46 +837,14 @@ const SpecialOffers = () => {
             />
           ) : featuredCoupons.length > 0 ? (
             <div className={styles.voucherGrid}>
-              {featuredCoupons.map((coupon) => {
-                const isCopied = copied.code === coupon.code && copied.ok;
-                return (
-                  <GlassCard
-                    as="article"
-                    glow="gold"
-                    padding="md"
-                    key={coupon.id ?? coupon.code}
-                    className={styles.voucher}
-                  >
-                    <p className={styles.voucherFigure}>
-                      <span className={styles.voucherValue}>{couponHeadline(coupon)}</span>
-                      <span className={styles.voucherOff}>off</span>
-                    </p>
-
-                    {coupon.description && (
-                      <p className={styles.voucherDesc}>{coupon.description}</p>
-                    )}
-
-                    {/* The small print — every row a condition checkout applies. */}
-                    <ul className={styles.voucherTerms}>
-                      {couponTerms(coupon).map((row) => (
-                        <li key={row}>{row}</li>
-                      ))}
-                    </ul>
-
-                    <div className={styles.voucherFoot}>
-                      <code className={styles.voucherCode}>{coupon.code}</code>
-                      <button
-                        type="button"
-                        className={`${styles.copyBtn} ${isCopied ? styles.copyBtnDone : ""}`}
-                        onClick={() => handleCopyCode(coupon.code)}
-                        aria-label={`Copy coupon code ${coupon.code}`}
-                      >
-                        {isCopied ? "Copied" : "Copy"}
-                      </button>
-                    </div>
-                  </GlassCard>
-                );
-              })}
+              {featuredCoupons.map((coupon) => (
+                <Voucher
+                  key={coupon.id ?? coupon.code}
+                  coupon={coupon}
+                  copied={copied}
+                  onCopy={handleCopyCode}
+                />
+              ))}
             </div>
           ) : (
             /* Says nothing about the markdowns below — this note also shows on a
