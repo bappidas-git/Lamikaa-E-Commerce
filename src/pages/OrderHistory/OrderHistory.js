@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fireAlert } from "../../utils/alerts";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../hooks/useAuth";
 import apiService from "../../services/api";
 import {
+  copyToClipboard,
   formatCurrency,
   formatDate,
   normalizeOrderAddress,
@@ -185,6 +186,8 @@ const OrderHistory = () => {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [trackingVisible, setTrackingVisible] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const copyTimer = useRef(null);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reviews authored by this customer (any status), keyed by productId for the
@@ -238,15 +241,16 @@ const OrderHistory = () => {
   };
 
   const handleCopy = async (text) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(text);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch (err) {
-      // Clipboard access can be refused (an unfocused document, a denied
-      // permission). Stay silent rather than claim a copy that never happened.
-      console.error("Couldn't copy to clipboard:", err);
-    }
+    // `copyToClipboard` also copies on a plain-HTTP page, where
+    // `navigator.clipboard` does not exist, and its fallback needs this click's
+    // activation, so nothing is awaited before it. A refusal (a locked-down
+    // browser) stays silent rather than claim a copy that never happened.
+    if (!(await copyToClipboard(text))) return;
+    setCopiedId(text);
+    // Another copy, of this number or a different one, restarts the
+    // confirmation instead of being cut short by the previous one's timer.
+    clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopiedId(null), 2000);
   };
 
   /** Every return this customer has raised against one order, newest first. */
