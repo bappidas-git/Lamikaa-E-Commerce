@@ -33,9 +33,9 @@ import apiService from "../../services/api";
 //   value       an array or an object  → the section renders
 //
 // SITE CONTENT IS ONE REQUEST, not four. `siteContent.get()` with no key
-// answers the whole record, so `home` and `impact` are two properties of one
-// response rather than two round trips — and the three sections that each
-// wanted `home` now share it.
+// answers the whole record, so `home`, `impact` and `whyLamikaa` (the pillars)
+// are properties of one response rather than three round trips — and the three
+// sections that each wanted `home` now share it.
 //
 // NO CROSS-MOUNT CACHE. The map below de-duplicates requests that are IN FLIGHT
 // (React 18 StrictMode mounts every effect twice in development, and that is
@@ -104,6 +104,7 @@ const PENDING = KEYS.reduce((acc, key) => ({ ...acc, [key]: undefined }), {});
  *   rituals:       object[]|null|undefined,
  *   homeContent:   object|null|undefined,
  *   impactContent: object|null|undefined,
+ *   whyContent:    object|null|undefined,
  *   loading:       boolean,
  *   error:         Error|null,
  * }}
@@ -146,7 +147,7 @@ export default function useHomeData() {
       categories: slices.categories,
       concerns: slices.concerns,
       rituals: slices.rituals,
-      // The two blocks the content sections read, split out of the one record.
+      // The blocks the content sections read, split out of the one record.
       // `undefined` while the record is in flight, `null` when it failed or the
       // owner has not written that block — the same answer, and the same thin
       // fallback, as before.
@@ -158,6 +159,11 @@ export default function useHomeData() {
         slices.siteContent === undefined
           ? undefined
           : slices.siteContent?.impact ?? null,
+      // The Why LAMIKAA block, for the pillars Admin → Content publishes.
+      whyContent:
+        slices.siteContent === undefined
+          ? undefined
+          : slices.siteContent?.whyLamikaa ?? null,
       loading: KEYS.some((key) => slices[key] === undefined),
       // The first failure, for a caller that wants to know the page is degraded.
       // No section uses it to render an error panel: a home page missing one of

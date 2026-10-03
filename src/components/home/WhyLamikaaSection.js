@@ -1,30 +1,31 @@
-import React from "react";
+import React, { useMemo } from "react";
 import brand from "../../config/brand";
 import { ROUTES } from "../../utils/constants";
 import { Button, SectionHeading, Skeleton } from "../ui";
-import Pillars from "../brand/Pillars";
+import Pillars, { pillarsFrom } from "../brand/Pillars";
 import ImpactTriptych from "../brand/ImpactTriptych";
 import styles from "./WhyLamikaaSection.module.css";
 
 // =============================================================================
-// WhyLamikaaSection — the philosophy, the four pillars and the three impacts
+// WhyLamikaaSection — the philosophy, the pillars and the three impacts
 // =============================================================================
 //
 // The page has shown what the range is, who owns it and where the value goes.
 // This is the band that says what the brand stands on: BRAND.md §3.2's
-// philosophy line over the four pillars, then §3.4–3.6's impact as a triptych,
-// then one way through to the full story at /why-lamikaa.
+// philosophy line over the brand's pillars, then §3.4–3.6's impact as a
+// triptych, then one way through to the full story at /why-lamikaa.
 //
-// TWO SOURCES, EACH IN ITS RIGHT PLACE. The pillars and the philosophy are
-// BRAND facts — they change when the brand changes, not when a merchandiser
-// edits a page — so they live in `src/config/brand.js` and `Pillars` reads them
-// straight from there. The impact copy is EDITORIAL and carries the legal
-// qualifiers, so it is `siteContent.impact`, fetched here and handed to
+// WHERE EACH HALF COMES FROM. The philosophy line is a BRAND fact, so it lives
+// in `src/config/brand.js`. The pillars are the list Admin → Content edits
+// (`siteContent.whyLamikaa.pillars`, handed in as `whyContent`) — the same list
+// /about, /why-lamikaa and /contact draw. The impact copy is EDITORIAL and
+// carries the legal qualifiers, so it is `siteContent.impact`, handed to
 // `ImpactTriptych` untouched. Neither half has a word of copy in this file.
 //
-// THE TWO HALVES FAIL SEPARATELY, and that is the point. `brand.pillars` is a
-// module the bundle always has, so the philosophy, the four cards and the CTA
-// are always true and always render. The impact block can be missing,
+// THE TWO HALVES FAIL SEPARATELY, and that is the point. The pillars fall back
+// to `brand.pillars` — a module the bundle always has — when the record cannot
+// be read, so the philosophy, the cards and the CTA always render. The impact
+// block can be missing,
 // unpublished or unreachable — and when it is, its heading goes with it rather
 // than standing over an empty space. An impact section that invents an impact
 // is worse than no impact section (the rule WhyBlackRice states for the
@@ -32,7 +33,7 @@ import styles from "./WhyLamikaaSection.module.css";
 // claim about the world).
 //
 // HEADING OUTLINE. The hero owns the page's <h1>; this section's <h2> is the
-// philosophy line, the four pillar titles and the impact headline are <h3>, and
+// philosophy line, the pillar titles and the impact headline are <h3>, and
 // the three column titles are <h4>. Prompt 28's page shifts the whole run up
 // one level through the same `as` / `titleAs` props — which is why both
 // components take them rather than hard-coding a tag.
@@ -66,13 +67,18 @@ export const impactCopy = (block) => {
  *        useHomeData(): `undefined` while it is in flight, `null` for a record
  *        that could not be read or one the owner has not written — and both
  *        land on the same empty state.
+ * @param {object|null|undefined} props.whyContent  the `whyLamikaa` record,
+ *        on the same three states: skeleton cards while it is in flight, the
+ *        config's pillars when it is `null` or carries no list.
  */
-const WhyLamikaaSection = ({ content }) => {
+const WhyLamikaaSection = ({ content, whyContent }) => {
   const block = content === undefined ? undefined : content || null;
 
   const loading = block === undefined;
   const copy = impactCopy(block);
   const showImpact = loading || copy.items.length > 0;
+
+  const pillars = useMemo(() => pillarsFrom(whyContent), [whyContent]);
 
   return (
     <section className={`sf-section ${styles.section}`} aria-labelledby="why-lamikaa">
@@ -90,7 +96,11 @@ const WhyLamikaaSection = ({ content }) => {
           className={styles.heading}
         />
 
-        <Pillars className={styles.pillars} />
+        <Pillars
+          pillars={pillars}
+          loading={whyContent === undefined}
+          className={styles.pillars}
+        />
 
         {/* ---- The impact ----------------------------------------------- */}
         {showImpact ? (

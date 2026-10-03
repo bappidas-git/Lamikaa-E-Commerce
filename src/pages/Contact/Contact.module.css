@@ -424,13 +424,6 @@
   box-shadow: var(--sf-shadow-focus);
 }
 
-/* One column in the rail whatever the viewport: `Pillars compact` is a
-   responsive grid, and four cards side by side in a 320px column is four
-   slivers. */
-.railPillars {
-  grid-template-columns: minmax(0, 1fr);
-}
-
 .socials {
   display: flex;
   flex-wrap: wrap;

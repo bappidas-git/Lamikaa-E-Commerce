@@ -27,7 +27,7 @@ import styles from "./Home.module.css";
 //   6  WHY BLACK RICE   the ingredient spotlight                        (18)
 //   7  RITUALS          three routines, in the designed order           (18)
 //   8  FULL-PAGE CTA    the page stops for one screen and asks          (19)
-//   9  WHY LAMIKAA      the philosophy, four pillars, the triptych      (20)
+//   9  WHY LAMIKAA      the philosophy, the pillars, the triptych       (20)
 //   10 RECENTLY VIEWED  the one kept secondary section  [conditional]   (22)
 //   11 GOOD TO KNOW     up to eight admin-managed answers               (21)
 //
@@ -173,6 +173,7 @@ const Home = () => {
     rituals,
     homeContent,
     impactContent,
+    whyContent,
   } = useHomeData();
 
   // The live social map, so `sameAs` publishes the profiles the owner has
@@ -256,11 +257,11 @@ const Home = () => {
         <FullPageCta content={homeContent?.fullPageCta} />
       </DeferredSection>
 
-      {/* ── 9. WHY LAMIKAA — the four pillars, and what the business is for ──
+      {/* ── 9. WHY LAMIKAA — the pillars, and what the business is for ───────
           Both halves are shared with the Why LAMIKAA page (Prompt 28), which
           mounts the same two components. */}
       <DeferredSection reserve="2400px">
-        <WhyLamikaaSection content={impactContent} />
+        <WhyLamikaaSection content={impactContent} whyContent={whyContent} />
       </DeferredSection>
 
       {/* ── 10. RECENTLY VIEWED — the one kept secondary section ──────────────

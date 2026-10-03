@@ -373,7 +373,7 @@ Rewritten for LAMIKAA NATURALS. **23 collections in this order**; `banners` is g
 | `concerns` | 11 | `id, slug, name, order` | cleansing · brightening · hydration · refresh · glow · revive · exfoliation · texture · even-tone · comfort · nourishing. "Shop by concern" links to `/shop?concern=<slug>`. |
 | `rituals` | 3 | `id, slug, name, tagline, story, image, duration, steps[{order, productId, alternativeProductId?, note, frequency}], isActive, sortOrder, createdAt, updatedAt` | morning-glow (4 steps) · evening-renewal (5) · black-rice-body (2, step 1 offers the bar **or** the wash via `alternativeProductId`). `story` is derived from `BRAND.md` — no new facts. |
 | `faqs` | 8 | `id, question, answer, group ("brand"\|"products"\|"orders"\|"account"), placements[] (home/help/product), productIds[], isActive, sortOrder, createdAt, updatedAt` | The eight site FAQs from `constants.js → FAQ_ITEMS`, same ids and order. `group` is new and must be one of `siteContent.faqPage.groups[].key`; rows 1–2 `brand`, 3–5 `products`, 6–8 `orders`. Answers keep the `{freeShipping}` and `{{RETURN_WINDOW_DAYS}}` copy tokens `fillStoreCopy()` resolves. |
-| `siteContent` | singleton | `about{heroImage,image2,eyebrow,title,lede,body,ctaLabel,ctaTo}`, `whyLamikaa{heroImage,eyebrow,title,body,pillars[{key,title,text}],difference,vision}`, `impact{eyebrow,title,intro,items[{key,title,image,points[],body}]}`, `home{aboutTeaser{…},whyBlackRice{…},fullPageCta{lines[],primaryLabel,primaryTo,secondaryLabel,secondaryTo,image}}`, `contact{eyebrow,title,lede,hoursNote}`, `policies{privacy{title,updatedAt,body},terms{title,body},shippingReturns{title,body},cookies{title,body}}`, `faqPage{eyebrow,title,groups[{key,label}]}` | Every long `body`/`text`/`intro`/`difference` field is plain text in the markdown-lite grammar of `src/utils/contentBlocks.js` (`## `, `### `, `- `, `1. `, `> `, `---`, `::callout Title` … `::`, `::steps` … `::`, `**bold**`, `[label](/href)`). Copy traces to `BRAND.md` §3 or to packaging; the four policies are generic templates carrying `{{TOKENS}}`. |
+| `siteContent` | singleton | `about{heroImage,image2,eyebrow,title,lede,body,ctaLabel,ctaTo}`, `whyLamikaa{heroImage,eyebrow,title,body,pillars[{key,title,text,icon?}],difference,vision}`, `impact{eyebrow,title,intro,items[{key,title,image,points[],body}]}`, `home{aboutTeaser{…},whyBlackRice{…},fullPageCta{lines[],primaryLabel,primaryTo,secondaryLabel,secondaryTo,image}}`, `contact{eyebrow,title,lede,hoursNote}`, `policies{privacy{title,updatedAt,body},terms{title,body},shippingReturns{title,body},cookies{title,body}}`, `faqPage{eyebrow,title,groups[{key,label}]}` | Every long `body`/`text`/`intro`/`difference` field is plain text in the markdown-lite grammar of `src/utils/contentBlocks.js` (`## `, `### `, `- `, `1. `, `> `, `---`, `::callout Title` … `::`, `::steps` … `::`, `**bold**`, `[label](/href)`). Copy traces to `BRAND.md` §3 or to packaging; the four policies are generic templates carrying `{{TOKENS}}`. `whyLamikaa.pillars` is the list every storefront surface draws (home band, `/why-lamikaa`, `/about`, the `/contact` rail) — `brand.pillars` is only the fallback for a record that cannot be read, and an emptied list stays empty. A pillar's `text` is one plain sentence (not markdown-lite); `icon` is an optional Iconify name (`mdi:…`), written only once the admin picks one — absent means "Auto". |
 | `announcements` | 3 | `id, text, link ("" \| "/shop"), isActive, sortOrder, startsAt (null), endsAt (null), createdAt, updatedAt` | Replaces `banners`. From `brand.announcements`: "Farmer-owned. Assam-grown." then two token-carrying rows (`{{FREE_SHIPPING_THRESHOLD}}`, `{{LAUNCH_OFFER_TEXT}}`) left `isActive: true` — the bar hides an unresolved text rather than printing it. |
 | `heroConfig` | singleton | `enabled, source ("products"), autoplay, intervalMs (6500), transition, pauseOnHover, showControls, showCounter, showProgress, showArrows, showPause, background{url,mobileUrl,position,overlay,blur,showContent}, updatedAt` | Product-driven: the slides are the eight products ordered by `heroOrder`, so the old `overlayOpacity`, `heights{}`, `secondaryCta{}` and `openers{}` keys are dropped. |
 | `settings` | singleton | `store{name,tagline,email,phone,address,currency,currencySymbol,timezone,logo,favicon,taxRate,taxIncluded}, shipping{shiprocketEnabled,shiprocketEmail,shiprocketPassword,defaultWeight,defaultDimensions{}}, payment{razorpayEnabled,razorpayKeyId,stripeEnabled,stripePublishableKey,codEnabled,codFee,codMinOrder,codMaxOrder}, notifications{orderConfirmationEmail,shippingUpdateEmail,adminNewOrderEmail,adminEmail,lowStockAlert,lowStockEmail}, seo{metaTitle,metaDescription,googleAnalyticsId,facebookPixelId}, social{facebook,instagram,twitter,youtube,whatsapp}` | Contact, notification and social fields are `{{TOKENS}}` (blanked by `normalizeStoreSettings`/`normalizeSocialUrl` until the owner fills Admin → Settings). `taxRate: 0` with `taxIncluded: true` — packs print "M.R.P (incl. of all taxes)". Gateway credentials blank, COD on with no cap. |
@@ -1236,29 +1236,44 @@ components the Why LAMIKAA page (Prompt 28) mounts unchanged.
 - `brand/Pillars.js` (142) + `.module.css` (158) + `.test.js` (196, shared with the
   other two components of this prompt) — **new**. BRAND.md §3.2's four pillars as
   glass cards.
-  **Contract:** `pillars` (default `brand.pillars`) · `compact` · `titleAs`
-  (default `"h3"`) · `className` · rest spread onto the `<ul>`.
-  **Markup:** one `<ul role="list">` of four `GlassCard as={motion.li}` at
+  **Contract:** `pillars` (default `brand.pillars`; every surface now passes
+  `pillarsFrom(siteContent.whyLamikaa)`) · `loading` (skeleton cards in the same
+  grid, `aria-hidden`, while the record is in flight — never the config's copy) ·
+  `compact` · `maxColumns` (the `/contact` rail passes 1) · `titleAs` (default
+  `"h3"`) · `className` · rest spread onto the `<ul>`.
+  **Markup:** one `<ul role="list">` of one `GlassCard as={motion.li}` a pillar at
   `padding="md"` (16px when `compact`), each carrying a 44px glass circle with a
-  24px gold glyph, a `Chip variant="step"` numeral "01"–"04" (`aria-hidden` — a
+  24px gold glyph, a `Chip variant="step"` numeral "01", "02", … (`aria-hidden` — a
   visual ordinal on an unordered list), the title in Fraunces 22px and the text in
   Manrope 15px `--sf-color-text-secondary`. **Not one word of copy is in the
-  component**; it is all `brand.pillars`.
-  **Icons** resolve by KEY first (`indigenous-knowledge` → `mdi:leaf`,
-  `modern-science` → `mdi:flask-outline`, `farmer-ownership` →
-  `mdi:account-group-outline`, `responsible-beauty` → `mdi:earth`), then by
-  position, then to `mdi:star-four-points-outline`.
+  component**; it is the owner's list from Admin → Content (`brand.pillars` when
+  the record cannot be read).
+  **Icons** resolve by the glyph chosen in the admin (`pillar.icon`), then by
+  KEY (`indigenous-knowledge` → `mdi:leaf`, `modern-science` →
+  `mdi:flask-outline`, `farmer-ownership` → `mdi:account-group-outline`,
+  `responsible-beauty` → `mdi:earth`), then by position — only when no other
+  pillar in the list already wears that slot's glyph — then to
+  `mdi:star-four-points-outline`. Decided over the whole list by
+  `pillarIcons()` in `utils/pillars.js`.
   **The cards are NOT links and never take `interactive`** — its 4px lift, firmed
   hairline and focus ring promise a destination that does not exist. The
   `glow` tone node is instead held at `opacity: 0` and faded in by
   `.grid .card:hover :global(.sf-glow)`, alternating gold/violet by index.
   **Measured: one tab stop in the whole section (the CTA) and `transform: none` on
   every card, hovered or not.**
-  **Layout:** 4 columns ≥1025px, 2 at 769–1024px, 1 stacked ≤768px, 16px gaps,
-  `minmax(0, 1fr)` at every step. Backdrop blur is dropped ≤768px
-  (`--sf-glass-fallback`), the same guard `ProductChapter` uses.
-  **Exports:** default plus `PILLAR_ICONS`, `pillarIcon(pillar, index)`,
-  `pillarNumeral(index)`, `pillarTone(index)` — all pure, all unit-tested.
+  **Layout:** at most 5 to a row ≥1280px, 4 at 1025–1279px, 2 at 769–1024px, 1
+  stacked ≤768px, 16px gaps, `minmax(0, 1fr)` tracks. Rows are BALANCED for the
+  count (`pillarColumns`): five are one row of five on a desktop and 3 + 2 on a
+  laptop, never 4 + 1, and a short last row is centred — the grid has two tracks
+  per card and the first card of a short row starts one track in per missing
+  card (`pillarLayout` hands `--pl-tracks-*` / `--pl-start-*` over as inline
+  custom properties). The seeded four lay out exactly as before. Backdrop blur
+  is dropped ≤768px (`--sf-glass-fallback`), the same guard `ProductChapter`
+  uses.
+  **Exports:** default plus `pillarNumeral(index)`, `pillarTone(index)`, and,
+  re-exported from `utils/pillars.js` (pure, unit-tested, shared with the admin):
+  `PILLAR_ICONS`, `pillarIcon(pillar, index, taken?)`, `pillarIcons(list)`,
+  `pillarsFrom(block)`.
 - `brand/ImpactTriptych.js` (184) + `.module.css` (128) — **new**.
   `siteContent.impact.items` as three columns.
   **Contract:** `items` · `showImages` (false on the home band, true on the page) ·
@@ -1287,16 +1302,18 @@ components the Why LAMIKAA page (Prompt 28) mounts unchanged.
   **Composition:** `SectionHeading` (eyebrow "Why LAMIKAA", `brand.philosophy` as
   the `h2` at `--sf-text-3xl`, **no gradient word** — the headline is the
   philosophy, and lighting one of its three sentences would be an argument the
-  brand has not made; lede `brand.philosophyLede`) → `Pillars` → a second
+  brand has not made; lede `brand.philosophyLede`) → `Pillars` (the
+  `whyContent` prop — `siteContent.whyLamikaa` from `useHomeData`) → a second
   `SectionHeading as="h3"` (eyebrow and title from the fetched block, defaults
   "Our impact" / "Beauty That Creates Prosperity for Farmers") →
   `ImpactTriptych showImages={false} titleAs="h4"` → `Button variant="secondary"`
   "Why LAMIKAA" → `ROUTES.WHY` (`/why-lamikaa`, a stub until Prompt 28).
-  **The two halves fail separately:** the philosophy, the pillars and the CTA come
-  from `config/brand.js` and always render; the impact half renders nothing —
+  **The two halves fail separately:** the philosophy and the CTA come from
+  `config/brand.js`, and the pillars fall back to `brand.pillars` when the record
+  cannot be read, so all three always render; the impact half renders nothing —
   heading included — when its block is missing, unpublished or unreachable. While
   loading it shows its heading over three text skeletons at the column widths.
-  **Outline:** page `h1` (hero) → this `h2` → pillar `h3` ×4 and the impact `h3` →
+  **Outline:** page `h1` (hero) → this `h2` → a pillar `h3` each and the impact `h3` →
   column `h4` ×3. Prompt 28 shifts the run up one level through `as` / `titleAs`.
   **Exports:** default plus `impactCopy(block)`.
 - `config/brand.js`: one new key, **`philosophyLede`** — BRAND.md §3.2's first
@@ -1938,13 +1955,14 @@ deleted** (6,844 lines).
   the `::steps` fence**, so the seven-step chain is drawn by `ValueChain` and not
   by the generic stepper; runs after the first pass `dropCap={false}` (a page
   opens on one drop cap, not one per run). Then the `image2` plate,
-  `ImpactTriptych showImages` from `siteContent.impact`, `Pillars compact`,
-  `LegalNote`, and a CTA row (`ctaLabel` → `ctaTo`, secondary → `/why-lamikaa`).
+  `ImpactTriptych showImages` from `siteContent.impact`, `Pillars compact` under
+  a heading that counts them (`pillarsTitle` — "Five pillars"; heading and grid
+  go when the owner empties the list), `LegalNote`, and a CTA row (`ctaLabel` → `ctaTo`, secondary → `/why-lamikaa`).
   `useSeo({ title: "Our Story", description: lede, jsonLd: breadcrumbJsonLd })`.
   Exports `splitAtChain`, `aboutCopy`.
 - `pages/WhyLamikaa/WhyLamikaa.{js,module.css}` (new): the same opening band,
-  then the philosophy + `Pillars` (from `brand.pillars`, not from the record —
-  pillars are BRAND facts), `#difference` (the six-step **ownership** chain
+  then the philosophy + `Pillars` (from `siteContent.whyLamikaa.pillars` through
+  `pillarsFrom`, `brand.pillars` only as the fallback), `#difference` (the six-step **ownership** chain
   through `ContentBlocks`' own stepper, because it is not `brand.valueChain` and
   `ValueChain` exists so the canonical seven cannot be invented) + `LegalNote`,
   `#impact` (`ImpactTriptych showImages` + an `Accordion` carrying each item's
@@ -1971,7 +1989,9 @@ deleted** (6,844 lines).
   first-invalid focus, email pre-fill for a signed-in visitor, a glass success
   panel that takes focus — restyled onto the design system's 48px input; and a
   rail carrying a Visit card (only when the address resolves, with a Maps link
-  built from it), `Pillars compact`, the social marks and "Read the FAQ".
+  built from it), `Pillars compact maxColumns={1}` (the page reads the whole
+  content record, so the contact copy and the pillars are one request), the
+  social marks and "Read the FAQ".
   Exports `buildChannels`.
 - `pages/Policies/PolicyPage.{js,module.css,test.js}` (new, replaces the four
   policy folders): **one component for four documents**, `useParams().policy` ∈
@@ -2291,7 +2311,13 @@ above describe the TABLE; the FORM they hand to Prompt 33 no longer exists. What
   level down; anything else is shown read-only rather than dropped on save. A sub-block saves `{ [sub]: block }` into
   its parent key and `updateSiteContent` merges, so siblings survive. **The dividend guardrail** (BRAND.md §3.9 rule 2)
   raises a persistent `Alert` AND a confirmation on save whenever a block mentions a dividend with no qualifier left in
-  it — see the PROGRESS decision for which wordings count and why.
+  it — see the PROGRESS decision for which wordings count and why. **A list can type its own fields**
+  (`LIST_FIELD_KINDS`): a pillar's `text` is a short multiline box, its `icon` a picker of the storefront's glyphs
+  (`PILLAR_ICON_CHOICES`, folded behind "Change"; "Auto" previews what the card would wear). A row is offered every
+  field of its list's template even if it predates one, and an OPTIONAL field (`icon`) is only written while it holds
+  a value, so trying a glyph and going back to Auto leaves the row as saved. A pillar with no title is flagged "Not
+  shown on the site", and any section whose copy states a pillar count ("built on four pillars") that disagrees with
+  the cards raises a warning `Alert` — the sentence is the owner's to rewrite.
 - **`src/pages/Admin/components/MarkdownField.js` (new)** — the shared markdown-lite textarea + `<ContentBlocks>`
   preview, plus `ContentHelp` (the whole block grammar and the twelve placeholder tokens, including PLACEHOLDERS.md's
   rule about where a token may sit). Used by Content and Rituals; lives beside Prompt 33's `ListEditor` /

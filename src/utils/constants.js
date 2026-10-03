@@ -314,5 +314,6 @@ export const BREAKPOINTS = {
 //
 // WHY_CHOOSE_US was here too, and went the same way in Prompt 28: it re-shaped
 // `brand.pillars` into `{id, title, description, icon}` rows for the Contact
-// page's rail, and that rail now mounts <Pillars compact/>, which reads the
-// pillars from the config and owns its own glyphs. One shape, one owner.
+// page's rail, and that rail now mounts <Pillars compact/>, which draws the
+// pillars Admin → Content publishes and owns its own glyphs. One shape, one
+// owner.

@@ -1,8 +1,8 @@
 /* =============================================================================
- * Pillars — four cards, three layouts, one set of measurements
+ * Pillars — any number of cards, balanced rows, one set of measurements
  * =============================================================================
  * Every distance the grid needs is a custom property on the list, so `compact`
- * is four value changes rather than a second stylesheet — the same shape
+ * is three value changes rather than a second stylesheet — the same shape
  * ValueChain.module.css uses for its own variant.
  *
  *   --pl-icon    the glass circle behind the glyph      44px (36 compact)
@@ -13,14 +13,27 @@
  * WHY TWO OF THOSE ARE NOT TOKENS. The type scale (DESIGN_SYSTEM §6) steps
  * 14 → 16 → 17 → 20 → clamp(22…28); the brief asks for 22px and 15px, and
  * neither is a step. 22px IS the floor of --sf-text-xl, but --sf-text-xl grows
- * to 28px by 1440 and a four-up card cannot carry a headline that grows with
- * the viewport — so both are declared here, once, as named variables rather
- * than as numbers scattered through the rules.
+ * to 28px by 1440 and a card in a row of four or five cannot carry a headline
+ * that grows with the viewport — so both are declared here, once, as named
+ * variables rather than as numbers scattered through the rules.
  *
- * LAYOUT. 4 columns from 1025px, 2 from 769px, one stacked below — 16px gaps
- * throughout, per the brief. `minmax(0, 1fr)` rather than `1fr` at every step:
- * a grid track's default floor is min-content, and one long ingredient word in
- * a card would push the row past the container.
+ * LAYOUT. One column below 769px; from there the row holds at most 2, then 4
+ * from 1025px and 5 from 1280px, 16px gaps throughout. How many cards a row
+ * ACTUALLY holds depends on how many pillars there are — five on a laptop are
+ * 3 + 2, not 4 + 1 — so `pillarLayout()` (utils/pillars.js) works it out and
+ * hands the answer over as custom properties:
+ *
+ *   --pl-tracks-md/-lg/-xl   on the list: grid tracks at that width, TWO per
+ *                            card, so a card always spans two
+ *   --pl-start-md/-lg/-xl    on the first card of a SHORT last row: the grid
+ *                            line it starts on, one track in per missing card,
+ *                            which centres the row under the one above it
+ *
+ * Every other card is auto-placed after it. Tracks are `minmax(0, 1fr)` rather
+ * than `1fr`: a grid track's default floor is min-content, and one long
+ * ingredient word in a card would push the row past the container. The
+ * fallbacks after each `var()` are the four-pillar grid, which is what a list
+ * rendered without the properties should look like.
  * ========================================================================== */
 
 .grid {
@@ -47,13 +60,31 @@
 
 @media (min-width: 769px) {
   .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--pl-tracks-md, 4), minmax(0, 1fr));
+  }
+
+  .grid .card {
+    grid-column: var(--pl-start-md, auto) / span 2;
   }
 }
 
 @media (min-width: 1025px) {
   .grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--pl-tracks-lg, 8), minmax(0, 1fr));
+  }
+
+  .grid .card {
+    grid-column: var(--pl-start-lg, auto) / span 2;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(var(--pl-tracks-xl, 8), minmax(0, 1fr));
+  }
+
+  .grid .card {
+    grid-column: var(--pl-start-xl, auto) / span 2;
   }
 }
 
@@ -69,7 +100,7 @@
 }
 
 /* The glyph and the numeral share one row, pushed to the two edges: the icon
-   says what the pillar is about, the numeral says where it sits in the four. */
+   says what the pillar is about, the numeral says where it sits in the row. */
 .head {
   display: flex;
   align-items: center;
@@ -108,6 +139,9 @@
   font-weight: var(--sf-font-medium);
   line-height: var(--sf-leading-tight);
   color: var(--sf-color-text);
+  /* A pillar's name is two or three words; set in a narrow card it breaks
+     where the words are of a length, not with one word left on a line. */
+  text-wrap: balance;
 }
 
 .grid .text {
@@ -116,6 +150,20 @@
   font-size: var(--pl-text);
   line-height: var(--sf-leading-normal);
   color: var(--sf-color-text-secondary);
+}
+
+/* ---- The skeleton ---------------------------------------------------------
+   The same card, glyph circle and headline in outline while the list is in
+   flight. Two classes so the circle's size beats Skeleton's own `.circle`
+   (the tap target) whichever module is emitted last. */
+.grid .iconSkeleton {
+  width: var(--pl-icon);
+  height: var(--pl-icon);
+}
+
+.grid .titleSkeleton {
+  width: 64%;
+  font-size: var(--pl-title);
 }
 
 /* ---- The hover lamp -------------------------------------------------------
@@ -143,11 +191,11 @@
 }
 
 /* ---- No backdrop blur on a phone -----------------------------------------
-   Stacked, each card is most of the screen, and four blurred panels in one
-   scroll is the case DESIGN_SYSTEM §4 budgets against — the sticky masthead
-   has already spent one of the two layers. Below the breakpoint the card
-   paints the same opaque ground `@supports not (backdrop-filter)` uses. The
-   property is unset here rather than left to the cascade: `.card` in
+   Stacked, each card is most of the screen, and a column of blurred panels in
+   one scroll is the case DESIGN_SYSTEM §4 budgets against — the sticky
+   masthead has already spent one of the two layers. Below the breakpoint the
+   card paints the same opaque ground `@supports not (backdrop-filter)` uses.
+   The property is unset here rather than left to the cascade: `.card` in
    GlassCard.module.css and `.card` here tie on specificity. */
 @media (max-width: 768px) {
   .grid .card {

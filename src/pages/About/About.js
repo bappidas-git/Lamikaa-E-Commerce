@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import LegalNote from "../../components/brand/LegalNote";
 import ImpactTriptych from "../../components/brand/ImpactTriptych";
-import Pillars from "../../components/brand/Pillars";
+import Pillars, { pillarsFrom } from "../../components/brand/Pillars";
 import ValueChain from "../../components/brand/ValueChain";
 import {
   Button,
@@ -16,6 +16,7 @@ import useSeo from "../../hooks/useSeo";
 import useSiteContent from "../../hooks/useSiteContent";
 import { RISE, reveal } from "../../theme/motion";
 import { parseBlocks } from "../../utils/contentBlocks";
+import { pillarsTitle } from "../../utils/pillars";
 import { ROUTES } from "../../utils/constants";
 import { onImageError } from "../../utils/helpers";
 import { responsiveImage } from "../../utils/cloudinary";
@@ -30,14 +31,17 @@ import styles from "./About.module.css";
 // then offers a way through. This is what it offers a way through TO: BRAND.md
 // §3.1 entire, the value chain drawn rather than described, the LAMIKAA
 // Difference as a callout, the vision as a pull-quote, the three impacts with
-// their photographs, and the four pillars underneath.
+// their photographs, and the brand's pillars underneath.
 //
 // NOT ONE WORD OF THE STORY IS IN THIS FILE. Every paragraph, the heading over
 // the chain, the callout, the quote and the CTA label come from
 // `siteContent.about`; the impact copy comes from `siteContent.impact`; the
-// pillars come from `brand.pillars` and the ownership sentence from
-// `brand.legalNote`. What the page types is FURNITURE — "Home", "Our Story",
-// "Why LAMIKAA" — labels about the page rather than claims about the company.
+// pillars come from `siteContent.whyLamikaa.pillars` (the list Admin → Content
+// edits, with `brand.pillars` standing in when the record cannot be read) and
+// the ownership sentence from `brand.legalNote`. What the page types is
+// FURNITURE — "Home", "Our Story", "Five pillars" — labels about the page
+// rather than claims about the company; the count in that last one is the
+// list's own length, so it cannot say "Four" over five cards.
 //
 // That distinction is legal, not stylistic. BRAND.md §3.9 rule 2 makes the
 // qualifiers part of the sentence ("profits distributed by BAOPCL CAN reach its
@@ -54,8 +58,8 @@ import styles from "./About.module.css";
 // not on one per run.
 //
 // FAILURE IS QUIET AND HONEST. A record that cannot be read leaves the page
-// with its heading, its pillars and its ownership note — the things the bundle
-// itself can state — and no invented story underneath.
+// with its heading, the config's pillars and its ownership note — the things
+// the bundle itself can state — and no invented story underneath.
 // =============================================================================
 
 /** Where the band and the plate wait before they arrive — see ValueChain.js. */
@@ -140,6 +144,10 @@ const About = () => {
   });
 
   const impactItems = Array.isArray(impact?.items) ? impact.items : [];
+
+  // The pillars live in the Why LAMIKAA block; the same record answered both.
+  const why = content === undefined ? undefined : content?.whyLamikaa ?? null;
+  const pillars = useMemo(() => pillarsFrom(why), [why]);
 
   return (
     <div className={styles.page}>
@@ -251,19 +259,30 @@ const About = () => {
       )}
 
       {/* ── 5. THE PILLARS AND THE NOTE ──────────────────────────────────
-          `brand.pillars` is a module the bundle always has, so this half of the
-          page is true whether or not the CMS answered. */}
-      <section className={`sf-section ${styles.pillars}`} aria-labelledby="about-pillars">
+          The list Admin → Content edits, with `brand.pillars` standing in when
+          the record cannot be read — so this half of the page is never empty
+          because the CMS did not answer. The heading counts the cards it
+          stands over, and goes with them if the owner has removed every one;
+          the ownership note stays either way. */}
+      <section
+        className={`sf-section ${styles.pillars}`}
+        aria-labelledby={pillars.length > 0 ? "about-pillars" : undefined}
+        aria-label={pillars.length > 0 ? undefined : "Ownership"}
+      >
         <div className="sf-container">
-          <SectionHeading
-            id="about-pillars"
-            as="h2"
-            eyebrow="Our philosophy"
-            title="Four pillars"
-            rule
-            className={styles.heading}
-          />
-          <Pillars compact />
+          {pillars.length > 0 ? (
+            <>
+              <SectionHeading
+                id="about-pillars"
+                as="h2"
+                eyebrow="Our philosophy"
+                title={pillarsTitle(pillars.length)}
+                rule
+                className={styles.heading}
+              />
+              <Pillars pillars={pillars} loading={loading} compact />
+            </>
+          ) : null}
           <LegalNote className={styles.legal} />
         </div>
       </section>

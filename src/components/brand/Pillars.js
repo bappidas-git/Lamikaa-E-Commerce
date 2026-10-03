@@ -1,32 +1,59 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import brand from "../../config/brand";
 import { RISE, reveal } from "../../theme/motion";
-import { Chip, GlassCard } from "../ui";
+import {
+  normalizePillars,
+  pillarIcons,
+  pillarLayout,
+} from "../../utils/pillars";
+import { Chip, GlassCard, Skeleton } from "../ui";
 import styles from "./Pillars.module.css";
 
+// The data half — where the list comes from and which glyph each pillar wears —
+// lives in `utils/pillars.js`, which the admin's editor imports too. Re-exported
+// so a surface that mounts this component can import both from one place.
+export {
+  PILLAR_ICONS,
+  pillarIcon,
+  pillarIcons,
+  pillarsFrom,
+} from "../../utils/pillars";
+
 // =============================================================================
-// Pillars — the four things the brand says it is built on
+// Pillars — the things the brand says it is built on
 // =============================================================================
 //
-// BRAND.md §3.2's four pillars — Indigenous Knowledge, Modern Cosmetic Science,
-// Farmer Ownership, Responsible Beauty — as four glass cards. The home section
-// (Prompt 20) and the Why LAMIKAA page (Prompt 28) mount the same component, so
-// the two surfaces cannot drift apart on the wording, the order or the icons.
+// The pillars BRAND.md §3.2 names — Indigenous Knowledge, Modern Cosmetic
+// Science, Farmer Ownership, Responsible Beauty — and any the owner adds, as a
+// row of glass cards. The home section, /about, /why-lamikaa and the /contact
+// rail all mount this component, so the four surfaces cannot drift apart on
+// the wording, the order or the icons.
 //
-// THE COPY IS CONFIG, NOT COMPONENT. Every title and every sentence comes from
-// `brand.pillars` and not one word of it is typed here — the same rule the
-// trust strip and the value chain follow, and for the same reason: brand copy
-// is edited in `src/config/brand.js`, reviewed once, and used everywhere. What
-// this file owns is the PRESENTATION — which glyph a pillar wears, which lamp
-// it lights on hover, and how four cards behave between 360px and 1440px.
+// THE LIST IS THE OWNER'S. Every surface hands this component
+// `pillarsFrom(siteContent.whyLamikaa)` — the list Admin → Content edits — and
+// passes `loading` while that record is in flight, which draws skeleton cards
+// rather than the config's copy: a page that showed `brand.pillars` first and
+// then swapped in the owner's list would flash yesterday's pillars at every
+// visitor. `brand.pillars` is the default and the fallback for a record that
+// could not be read; no word of the copy is typed in this file. What this file
+// owns is the PRESENTATION — which glyph a pillar wears, which lamp it lights on
+// hover, and how any number of cards behave between 360px and 1440px.
+//
+// ANY NUMBER OF CARDS, IN BALANCED ROWS. One column on a phone, at most two on
+// a tablet, four on a laptop and five on a desktop — and the rows are balanced
+// so the last one is never a lone card under a full row: five pillars are one
+// row of five on a desktop and 3 + 2 on a laptop, with a short last row centred
+// under the one above it. `pillarLayout()` works the grid out; the stylesheet
+// draws it.
 //
 // THE CARDS ARE NOT LINKS, AND THEY DO NOT PRETEND TO BE. They carry no `to`,
 // no `onClick` and — deliberately — not GlassCard's `interactive`, whose 4px
 // lift, hover lamp and focus ring together promise a destination that does not
 // exist. The section's one way onward is its CTA. So a keyboard walk passes
-// straight through this grid: zero tab stops, four <li> and nothing else.
+// straight through this grid: zero tab stops, one <li> a pillar and nothing
+// else.
 //
 // WHICH LEAVES THE GLOW WITH NOWHERE TO LIVE except a hover rule of the card's
 // own. GlassCard's `glow` prop renders an inert, negative-z-index tone node; the
@@ -35,42 +62,14 @@ import styles from "./Pillars.module.css";
 // block zeroes `--sf-transition`, so the lamp appears rather than fades — and
 // nothing here moves, loops or lifts at any setting.
 //
-// SEMANTICS. One <ul> of four <li>; `role="list"` is written out because Safari
-// drops list semantics the moment a list loses its bullets. The numerals are
-// `aria-hidden`: "01" is a visual ordinal on an unordered list, and a screen
-// reader that has already announced "list, 4 items" gains nothing from it.
+// SEMANTICS. One <ul>, one <li> a pillar; `role="list"` is written out because
+// Safari drops list semantics the moment a list loses its bullets. The numerals
+// are `aria-hidden`: "01" is a visual ordinal on an unordered list, and a
+// screen reader that has already announced "list, 5 items" gains nothing from
+// it. The skeleton is `aria-hidden` as a whole and is not a list at all.
 // =============================================================================
 
-/** The glyph each pillar wears, keyed by the id `brand.pillars` gives it. */
-export const PILLAR_ICONS = {
-  "indigenous-knowledge": "mdi:leaf",
-  "modern-science": "mdi:flask-outline",
-  "farmer-ownership": "mdi:account-group-outline",
-  "responsible-beauty": "mdi:earth",
-};
-
-// The same four, in the order the brief lists them — the fallback for a pillar
-// whose key the owner has renamed, so a config edit degrades to the right icon
-// in the right slot instead of to the generic one.
-const ICON_ORDER = [
-  "mdi:leaf",
-  "mdi:flask-outline",
-  "mdi:account-group-outline",
-  "mdi:earth",
-];
-
-// A FIFTH pillar is a pillar this file has never seen. It gets the neutral mark
-// the trust strip uses for the same case rather than a guess at its meaning.
-const FALLBACK_ICON = "mdi:star-four-points-outline";
-
-/**
- * The glyph for a pillar: by key, else by position, else the neutral mark.
- * Exported for the unit test — a renamed key must not silently swap two icons.
- */
-export const pillarIcon = (pillar, index) =>
-  PILLAR_ICONS[pillar?.key] || ICON_ORDER[index] || FALLBACK_ICON;
-
-/** "01"–"04", padded so a column of numerals lines up on the digit. */
+/** "01", "02", … — padded so a column of numerals lines up on the digit. */
 export const pillarNumeral = (index) => String(index + 1).padStart(2, "0");
 
 /** The hover lamp, alternating down the row: gold, violet, gold, violet. */
@@ -84,36 +83,70 @@ const RESTING = { opacity: 0, y: RISE.reveal };
 
 const Pillars = ({
   pillars = brand.pillars,
+  loading = false,
   compact = false,
+  maxColumns,
   titleAs: Title = "h3",
   className = "",
+  style,
   ...rest
 }) => {
   const reduceMotion = useReducedMotion();
 
-  // A pillar with no title is not a thinner pillar, it is a hole in the row.
-  const items = (Array.isArray(pillars) ? pillars : []).filter(
-    (pillar) => pillar && typeof pillar.title === "string" && pillar.title.trim()
+  const items = useMemo(() => normalizePillars(pillars), [pillars]);
+  const icons = useMemo(() => pillarIcons(items), [items]);
+  const layout = useMemo(
+    () => pillarLayout(items.length, maxColumns),
+    [items.length, maxColumns]
   );
 
   if (items.length === 0) return null;
 
+  const classes = [styles.grid, compact ? styles.compact : "", className]
+    .filter(Boolean)
+    .join(" ");
+
+  // The record is in flight: the shapes of the cards, as many as the fallback
+  // list has, in the same grid — so the band does not reflow when the copy
+  // lands in the common case of an unchanged list.
+  if (loading) {
+    return (
+      <div
+        className={classes}
+        style={{ ...layout.list, ...style }}
+        aria-hidden="true"
+        data-loading="true"
+        {...rest}
+      >
+        {items.map((pillar, index) => (
+          <GlassCard
+            key={pillar.id}
+            padding={compact ? "sm" : "md"}
+            className={styles.card}
+            style={layout.items[index]}
+          >
+            <div className={styles.head}>
+              <Skeleton variant="circle" className={styles.iconSkeleton} />
+            </div>
+            <Skeleton variant="text" lines={1} className={styles.titleSkeleton} />
+            <Skeleton variant="text" lines={3} />
+          </GlassCard>
+        ))}
+      </div>
+    );
+  }
+
   return (
     /* eslint-disable-next-line jsx-a11y/no-redundant-roles */
-    <ul
-      role="list"
-      className={[styles.grid, compact ? styles.compact : "", className]
-        .filter(Boolean)
-        .join(" ")}
-      {...rest}
-    >
+    <ul role="list" className={classes} style={{ ...layout.list, ...style }} {...rest}>
       {items.map((pillar, index) => (
         <GlassCard
           as={motion.li}
-          key={pillar.key || pillar.title}
+          key={pillar.id}
           glow={pillarTone(index)}
           padding={compact ? "sm" : "md"}
           className={styles.card}
+          style={layout.items[index]}
           {...(reduceMotion ? {} : { animate: RESTING })}
           {...reveal(reduceMotion, { index, inView: true, amount: 0.2 })}
         >
@@ -124,7 +157,7 @@ const Pillars = ({
                 <Icon> would collapse to 0px and then shove the row sideways
                 when it landed. The svg is 1em, so 24px is one font-size here. */}
             <span className={styles.icon} aria-hidden="true">
-              <Icon icon={pillarIcon(pillar, index)} />
+              <Icon icon={icons[index]} />
             </span>
             <Chip variant="step" className={styles.numeral} aria-hidden="true">
               {pillarNumeral(index)}
