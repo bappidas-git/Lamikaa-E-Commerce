@@ -168,7 +168,8 @@
   background: var(--sf-color-surface-hover);
 }
 
-.categoryRow:hover .categoryName {
+.categoryRow:hover .categoryName,
+.categoryRow[aria-current="page"] .categoryName {
   color: var(--sf-color-gold);
 }
 
@@ -178,39 +179,107 @@
   box-shadow: var(--sf-shadow-focus);
 }
 
-/* Sub-categories, indented under their parent: the parent's plate column is
-   the indent, so a child's name starts on the parent's name line. */
+/* A parent and its sub-categories are ONE block. Hovering the parent's row
+   lights the whole item, pills included, so the highlight never stops short
+   of children it owns. Same ground as the row's own hover, so the two layers
+   read as one; a browser without `:has()` lights the row alone. */
+.categoryItem {
+  border-radius: var(--sf-radius-md);
+  transition: background var(--sf-transition-fast);
+}
+
+.categoryItem:has(> .categoryRow:hover) {
+  background: var(--sf-color-surface-hover);
+}
+
+/* Keyboard focus rings the same block. A ring round the row alone would run
+   through the top of the pills tucked under it (`.subList`), so a parent that
+   has pills hands its ring to the item. Without `:has()` both rules drop and
+   the row keeps its own ring. */
+.categoryItem:has(> .subList) > .categoryRow:focus-visible {
+  box-shadow: none;
+}
+
+.categoryItem:has(> .subList):has(> .categoryRow:focus-visible) {
+  box-shadow: var(--sf-shadow-focus);
+}
+
+/* ---- Sub-categories ------------------------------------------------------
+   Pills on the line under the parent, starting on the parent's name x (the
+   row's padding, the 40px plate and the gap), and wrapping when there are
+   more than fit. A pill line costs ~36px however many children share it,
+   where a stacked list cost 32px per child and pushed the sheet past one
+   screen. The bottom padding sits INSIDE the item and matches the row's own,
+   so the block lit by the parent's hover closes below the pills rather than
+   through them. */
 .subList {
   display: flex;
-  flex-direction: column;
-  margin: 0 0 var(--sf-space-1);
-  padding: 0 0 0 calc(40px + var(--sf-space-3) + var(--sf-space-2));
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  /* Tucked 4px into the row's bottom padding, so the pills read as the
+     parent's last line rather than as the next row. */
+  margin: calc(var(--sf-space-1) * -1) 0 0;
+  padding: 0 var(--sf-space-2) var(--sf-space-2)
+    calc(var(--sf-space-2) + 40px + var(--sf-space-3));
   list-style: none;
 }
 
-.subRow {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-2);
-  min-height: 32px;
-  padding: 2px var(--sf-space-2);
-  border-left: 1px solid var(--sf-color-border);
+.subList > li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The concern chips' vocabulary at a quieter size: a hairline pill on the
+   neutral badge ground, champagne gold on hover. `inline-block` rather than
+   flex so a name too long for the column ends in an ellipsis instead of
+   overflowing it; the 28px height is the line box plus the hairline. */
+.subPill {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 var(--sf-space-3);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-badge-bg);
   color: var(--sf-color-text-secondary);
-  font-size: var(--sf-text-sm);
+  font-size: 0.8125rem; /* 13px, the chip primitive's size */
+  font-weight: var(--sf-font-medium);
+  line-height: 26px;
+  letter-spacing: 0.01em;
   text-decoration: none;
-  transition: color var(--sf-transition-fast), border-color var(--sf-transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  transition: background var(--sf-transition-fast),
+    border-color var(--sf-transition-fast), color var(--sf-transition-fast);
 }
 
-.subRow:hover {
+.subPill:hover {
+  background: var(--sf-color-surface-hover);
+  border-color: var(--sf-color-border-strong);
   color: var(--sf-color-gold);
-  border-left-color: var(--sf-color-gold);
 }
 
-.subRow:focus-visible {
+/* The page the visitor is on: gold on the soft gold wash, not the solid CTA
+   fill — the pill marks a place, it is not a button. */
+.subPill[aria-current="page"] {
+  background: var(--sf-color-primary-soft);
+  border-color: var(--sf-color-border-strong);
+  color: var(--sf-color-gold);
+}
+
+.subPill:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  border-radius: var(--sf-radius-sm);
   box-shadow: var(--sf-shadow-focus);
+}
+
+/* A touch screen wide enough for this panel (a tablet in landscape) gets the
+   tap target every interactive chip clears (storefront-primitives.css). */
+@media (pointer: coarse) {
+  .subPill {
+    line-height: calc(var(--sf-tap-target) - 2px);
+  }
 }
 
 /* The plate primitive at 40px. `aspect-ratio: 1` comes with it, so only the
@@ -449,6 +518,13 @@
     padding-block: var(--sf-space-1);
   }
 
+  /* The pill line follows the row it hangs from: the row's bottom padding is
+     already down to 4px, so there is nothing left to tuck into. */
+  .subList {
+    margin-top: 0;
+    padding-bottom: var(--sf-space-1);
+  }
+
   .allRow {
     padding-top: var(--sf-space-2);
   }
@@ -459,7 +535,9 @@
    the Shop menu at those widths. */
 
 @media (prefers-reduced-motion: reduce) {
-  .categoryRow {
+  .categoryRow,
+  .categoryItem,
+  .subPill {
     transition: none;
   }
 }

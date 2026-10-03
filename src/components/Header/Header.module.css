@@ -461,6 +461,9 @@
    the signature gradient IS the background, sized from 0 to full width, so
    nothing is added to the box and no label ever shifts. */
 .navLink {
+  /* Anchors the focus ring below. The Shop panel and the Rituals dropdown are
+     siblings of this element, not children, so they are not affected. */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--sf-space-1);
@@ -495,11 +498,24 @@
   background-size: 100% 1px;
 }
 
+/* THE RING HAS ROOM. The label carries no padding (the underline above has to
+   start on its first letter), so a ring drawn on the element itself was a 44px
+   box with "Shop" pressed against both sides. It is drawn by a pseudo-element
+   instead: a pill 4px inside the target vertically and 12px outside the label
+   horizontally, inside the 24-32px gap between entries. The transparent
+   outline stays on the element for forced-colours mode, which drops shadows. */
 .navLink:focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  border-radius: var(--sf-radius-sm);
+}
+
+.navLink:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: var(--sf-space-1) calc(var(--sf-space-3) * -1);
+  border-radius: var(--sf-radius-pill);
   box-shadow: var(--sf-shadow-focus);
+  pointer-events: none;
 }
 
 /* The trigger's affordance, not a word: it turns over when the panel is up. */

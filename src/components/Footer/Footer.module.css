@@ -179,6 +179,39 @@
   background-size: 100% 1px;
 }
 
+/* Sub-categories, nested under their parent: indented, a step quieter, and
+   led by a short gold tick, so the column still reads as the categories with
+   a few children under them rather than as more categories. The tick hangs in
+   the indent, outside the link's box, so the hover hairline underlines the
+   name alone — and it is `::after` because `::before` is the link's 44px tap
+   band on a touch screen (TOUCH TARGETS, below). 13px on a 20px line, so the
+   band arithmetic there comes out whole. */
+.subLinkList {
+  list-style: none;
+  margin: var(--sf-space-2) 0 0;
+  padding: 0 0 0 var(--sf-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-2);
+}
+
+.subLink {
+  position: relative;
+  color: var(--sf-color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 20px;
+}
+
+.subLink::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--sf-space-3) * -1);
+  width: var(--sf-space-2);
+  height: 1px;
+  background: var(--sf-color-border-strong);
+}
+
 /* The phone's disclosure stack spans the single column and takes the row rules
    the accordion primitive already draws, so no second set is added here. */
 .disclosures {
@@ -196,6 +229,15 @@
   align-items: center;
   min-height: var(--sf-tap-target);
   font-size: var(--sf-text-base);
+}
+
+.disclosures .subLinkList {
+  margin-top: 0;
+  gap: 0;
+}
+
+.disclosures .subLink {
+  font-size: var(--sf-text-sm);
 }
 
 /* =============================================================================
@@ -479,6 +521,14 @@
      12px colophon link needs 26px. The next steps up on the scale are 24px and
      32px. */
   .linkList {
+    gap: var(--sf-space-6);
+  }
+
+  /* A 20px sub-category row clears its neighbours' bands at 24px exactly —
+     the parent above it included, hence the margin. The disclosure rows
+     below reset both, as they do the parent list's gap. */
+  .subLinkList {
+    margin-top: var(--sf-space-6);
     gap: var(--sf-space-6);
   }
 
