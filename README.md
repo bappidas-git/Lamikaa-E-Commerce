@@ -321,9 +321,12 @@ schema). A few things are worth knowing before you touch it:
 ## Brand configuration
 
 `src/config/brand.js` is the single source of brand truth: names and casing,
-tagline, philosophy, pillars, value chain, trust badges, pack badges, the logo
-and icon URLs, contact and social fields, SEO defaults, and two feature flags
-(`showSampleReviews`, `enableRitualBundles`). **No other file in `src/`
+tagline, philosophy, the fallback pillars, value chain, trust badges, pack
+badges, the logo and icon URLs, contact and social fields, SEO defaults, and two
+feature flags (`showSampleReviews`, `enableRitualBundles`). The pillars the site
+actually shows are `siteContent.whyLamikaa.pillars`, edited in Admin → Content →
+Why LAMIKAA (title, text and an optional icon each); `brand.pillars` is drawn
+only when that record cannot be read. **No other file in `src/`
 hard-codes the brand name, the legal name, the logo URL or the icon URL** — the
 owner rebrands by editing one file. `src/config/brand.test.js` pins the parts
 that must not drift.

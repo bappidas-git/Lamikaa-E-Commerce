@@ -77,6 +77,10 @@ export const brand = {
     "Profit",
     "Farmer Members",
   ],
+  // The pillars as BRAND.md §3.2 writes them — the SEED and the FALLBACK. The
+  // list the site draws is `siteContent.whyLamikaa.pillars`, which the owner
+  // edits in Admin → Content → Why LAMIKAA; these four are drawn only when that
+  // record cannot be read (see `pillarsFrom` in utils/pillars.js).
   pillars: [
     {
       key: "indigenous-knowledge",

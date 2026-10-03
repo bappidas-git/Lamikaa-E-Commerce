@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Icon } from "@iconify/react";
-import Pillars from "../../components/brand/Pillars";
+import Pillars, { pillarsFrom } from "../../components/brand/Pillars";
 import { Button, GlassCard } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
@@ -44,9 +44,12 @@ import styles from "./Contact.module.css";
 // card whose href would be `mailto:` or `https://{{…}}` is simply not rendered.
 // The same rule governs the Visit card and its Maps link.
 //
-// THE RAIL IS THE BRAND'S OWN FURNITURE — `Pillars compact` reading
-// `brand.pillars`, the social marks the admin has filled in, and the way
-// through to the FAQ. It is not copy this file wrote.
+// THE RAIL IS THE BRAND'S OWN FURNITURE — `Pillars compact` reading the
+// pillars Admin → Content publishes (`brand.pillars` when the record cannot be
+// read), the social marks the admin has filled in, and the way through to the
+// FAQ. It is not copy this file wrote. The page reads the WHOLE content record
+// for it: the contact copy and the pillars are two properties of one response,
+// which is one request rather than two.
 // =============================================================================
 
 // A message has to say something — the same floor the old form enforced.
@@ -111,7 +114,10 @@ const Contact = () => {
       "Talk to the LAMIKAA Naturals care desk about an order, a product or the farmer-owned enterprise behind the brand.",
   });
 
-  const { content } = useSiteContent("contact");
+  const { content: record, loading: recordLoading } = useSiteContent();
+  const content = record?.contact;
+  const why = record === undefined ? undefined : record?.whyLamikaa ?? null;
+  const pillars = useMemo(() => pillarsFrom(why), [why]);
   const { user } = useAuth();
   const location = useLocation();
   const {
@@ -490,9 +496,16 @@ const Contact = () => {
               <h2 className={styles.railTitle} id="contact-why">
                 Why LAMIKAA
               </h2>
-              {/* The four pillars, read from `brand.pillars` — not four
-                  sentences retyped into a sidebar. */}
-              <Pillars compact titleAs="h3" className={styles.railPillars} />
+              {/* The owner's pillars, from the content record — not
+                  sentences retyped into a sidebar. One column at every
+                  width: side by side in a 320px rail they are slivers. */}
+              <Pillars
+                pillars={pillars}
+                loading={recordLoading}
+                compact
+                maxColumns={1}
+                titleAs="h3"
+              />
               <Link className={styles.railLink} to={ROUTES.WHY}>
                 Read the full story
                 <Icon icon="mdi:arrow-right" aria-hidden="true" />

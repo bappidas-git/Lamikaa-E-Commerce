@@ -2,7 +2,9 @@
 // a pillar finds its glyph, how the impact eyebrow is derived from a key, where
 // the category prefix comes off a title, and what either half says when the CMS
 // has nothing to say — are pinned down here rather than by scrolling the home
-// page.
+// page. The list and layout maths behind the cards are in utils/pillars.test.js;
+// the render tests at the bottom are the regression for the bug that sent them
+// there: a pillar added in Admin → Content never reached the site.
 //
 // The one rule that is not about presentation is the LEGAL one: the impact
 // points render verbatim, qualifiers and all. `impactColumns` is where a future
@@ -12,10 +14,60 @@
 // build a real axios client; nothing in this file calls it.
 jest.mock("../../services/api", () => ({ __esModule: true, default: {} }));
 
+import React from "react";
+import "@testing-library/jest-dom";
+import { render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import brand from "../../config/brand";
-import { PILLAR_ICONS, pillarIcon, pillarNumeral, pillarTone } from "./Pillars";
+import Pillars, {
+  PILLAR_ICONS,
+  pillarIcon,
+  pillarNumeral,
+  pillarTone,
+  pillarsFrom,
+} from "./Pillars";
 import { impactColumns, impactEyebrow, impactTitle } from "./ImpactTriptych";
-import { impactCopy } from "../home/WhyLamikaaSection";
+import WhyLamikaaSection, { impactCopy } from "../home/WhyLamikaaSection";
+
+// jsdom ships neither: matchMedia is read by framer-motion's reduced-motion
+// hook, IntersectionObserver by the cards' in-view reveal. The stub reports
+// "visible" the moment it is asked.
+beforeAll(() => {
+  window.matchMedia =
+    window.matchMedia ||
+    ((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }));
+  global.IntersectionObserver =
+    global.IntersectionObserver ||
+    class {
+      constructor(callback) {
+        this.callback = callback;
+      }
+      observe(target) {
+        this.callback([{ isIntersecting: true, intersectionRatio: 1, target }], this);
+      }
+      unobserve() {}
+      disconnect() {}
+      takeRecords() {
+        return [];
+      }
+    };
+});
+
+// The admin's list as the owner left it: the four the brand shipped and the
+// fifth they added.
+const PUBLISHED = {
+  title: "Indigenous Wisdom. Modern Science. Responsible Beauty.",
+  pillars: [...brand.pillars, { key: "test", title: "test", text: "test" }],
+};
 
 describe("pillarIcon", () => {
   it("gives each of the four brand pillars its own glyph", () => {
@@ -192,5 +244,78 @@ describe("the section's own copy", () => {
   it("states no number, share or promise anywhere in the four pillars", () => {
     const copy = brand.pillars.map((p) => `${p.title} ${p.text}`).join(" ");
     expect(copy).not.toMatch(/\d|%|percent|guarantee|promise/i);
+  });
+});
+
+describe("<Pillars>", () => {
+  it("draws every pillar Admin → Content publishes — the new fifth included", () => {
+    render(<Pillars pillars={pillarsFrom(PUBLISHED)} />);
+
+    const cards = within(screen.getByRole("list")).getAllByRole("listitem");
+    expect(cards).toHaveLength(5);
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+      "Indigenous Knowledge",
+      "Modern Cosmetic Science",
+      "Farmer Ownership",
+      "Responsible Beauty",
+      "test",
+    ]);
+  });
+
+  it("hands the grid five cards' worth of tracks and centres the short row", () => {
+    render(<Pillars pillars={pillarsFrom(PUBLISHED)} />);
+
+    const list = screen.getByRole("list");
+    expect(list.style.getPropertyValue("--pl-tracks-lg")).toBe("6");
+    expect(list.style.getPropertyValue("--pl-tracks-xl")).toBe("10");
+    const cards = within(list).getAllByRole("listitem");
+    // 3 + 2 on a laptop: the fourth card opens the centred second row.
+    expect(cards[3].style.getPropertyValue("--pl-start-lg")).toBe("2");
+    expect(cards[0].style.getPropertyValue("--pl-start-lg")).toBe("");
+  });
+
+  it("draws skeleton cards, not the config's copy, while the record is in flight", () => {
+    const { container } = render(<Pillars pillars={pillarsFrom(undefined)} loading />);
+
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+    expect(screen.queryByText("Indigenous Knowledge")).not.toBeInTheDocument();
+    const skeleton = container.querySelector('[data-loading="true"]');
+    expect(skeleton).toHaveAttribute("aria-hidden", "true");
+    expect(skeleton.children).toHaveLength(brand.pillars.length);
+  });
+
+  it("draws nothing once the owner has removed every pillar", () => {
+    const { container } = render(<Pillars pillars={pillarsFrom({ pillars: [] })} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("still draws the brand's four with no list handed to it", () => {
+    render(<Pillars />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(brand.pillars.length);
+  });
+});
+
+describe("<WhyLamikaaSection> (the home band)", () => {
+  const renderBand = (whyContent) =>
+    render(
+      <MemoryRouter>
+        <WhyLamikaaSection content={null} whyContent={whyContent} />
+      </MemoryRouter>
+    );
+
+  it("draws the pillars from the content record, not from the config", () => {
+    renderBand(PUBLISHED);
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.getByRole("heading", { level: 3, name: "test" })).toBeInTheDocument();
+  });
+
+  it("waits for the record with skeleton cards", () => {
+    renderBand(undefined);
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the config's pillars when the record could not be read", () => {
+    renderBand(null);
+    expect(screen.getAllByRole("listitem")).toHaveLength(brand.pillars.length);
   });
 });

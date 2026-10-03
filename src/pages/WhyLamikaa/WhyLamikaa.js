@@ -4,7 +4,7 @@ import LegalNote from "../../components/brand/LegalNote";
 import ImpactTriptych, {
   impactEyebrow,
 } from "../../components/brand/ImpactTriptych";
-import Pillars from "../../components/brand/Pillars";
+import Pillars, { pillarsFrom } from "../../components/brand/Pillars";
 import {
   Accordion,
   Button,
@@ -28,7 +28,7 @@ import styles from "./WhyLamikaa.module.css";
 //
 // The nav item the brief asks for, and the page the home band (Prompt 20) has
 // been pointing at since it was built. Where `/about` tells the STORY — who
-// owns this and how the value travels — this page makes the ARGUMENT: the four
+// owns this and how the value travels — this page makes the ARGUMENT: the
 // pillars the brand stands on, what makes a farmer-owned beauty brand different
 // from one that merely buys from farmers, what that difference is meant to
 // achieve, and where it is going.
@@ -40,13 +40,14 @@ import styles from "./WhyLamikaa.module.css";
 // therefore renders its heading and its skeleton WHILE THE COPY IS IN FLIGHT,
 // so `/why-lamikaa#impact` has something to scroll to on a cold load.
 //
-// TWO SOURCES, EACH IN ITS RIGHT PLACE — the split `WhyLamikaaSection` already
-// makes on the home page, kept here so the two surfaces cannot drift:
+// ONE SOURCE, the record Admin → Content edits — the same one the home band,
+// /about and the /contact rail read, so the four surfaces cannot drift:
 //
-//   brand.pillars       BRAND facts. They change when the brand changes, not
-//                       when a merchandiser edits a page, so `Pillars` reads
-//                       them from `src/config/brand.js` and no CMS record can
-//                       quietly reword one.
+//   whyLamikaa.pillars  the pillars, through `pillarsFrom()`: the owner's list
+//                       as published, or `brand.pillars` from the config when
+//                       the record cannot be read. While it is in flight the
+//                       grid draws skeleton cards rather than the config's copy,
+//                       so a visitor never sees yesterday's pillars swapped out.
 //   siteContent         EDITORIAL copy, and the half that carries the legal
 //                       qualifiers (BRAND.md §3.9 rule 2). Every paragraph of
 //                       the difference, the impact and the vision comes from
@@ -119,6 +120,8 @@ const WhyLamikaa = () => {
   const impact = content === undefined ? undefined : content?.impact ?? null;
 
   const copy = whyCopy(why);
+  // The owner's pillars, or the config's when the record could not be read.
+  const pillars = useMemo(() => pillarsFrom(why), [why]);
   // Read off the record inside the memo: `impact?.items` is a fresh array on
   // every render of a record that has none, and a dependency that changes every
   // render is a memo that never memoises.
@@ -188,9 +191,10 @@ const WhyLamikaa = () => {
             ) : null}
           </div>
 
-          {/* `brand.pillars` is a module the bundle always has, so this half of
-              the page is true whether or not the CMS answered. */}
-          <Pillars className={styles.pillars} />
+          {/* The list Admin → Content edits. `brand.pillars` stands in when the
+              record cannot be read, so this half of the page is never empty
+              because the CMS did not answer. */}
+          <Pillars pillars={pillars} loading={loading} className={styles.pillars} />
         </div>
       </section>
 

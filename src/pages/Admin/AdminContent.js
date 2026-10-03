@@ -15,6 +15,7 @@ import {
   ListSubheader,
   Paper,
   Skeleton,
+  ToggleButton,
   Tooltip,
   TextField,
   Typography,
@@ -32,6 +33,15 @@ import ListEditor from "./components/ListEditor";
 import MarkdownField, { ContentHelp } from "./components/MarkdownField";
 import { notifySiteContentUpdated } from "../../hooks/useSiteContent";
 import { isPlaceholder } from "../../utils/placeholders";
+import {
+  FALLBACK_PILLAR_ICON,
+  PILLAR_ICON_CHOICES,
+  automaticPillarIcons,
+  countWord,
+  isIconName,
+  pillarsFrom,
+  statedPillarCount,
+} from "../../utils/pillars";
 
 // =============================================================================
 // Admin → Storefront → Content
@@ -58,6 +68,19 @@ import { isPlaceholder } from "../../utils/placeholders";
 // A key the record grows later needs no edit here: it renders by its shape. A
 // value of a kind this screen cannot edit (a nested object, a number inside an
 // array) is shown read-only rather than silently dropped on save.
+//
+// A LIST CAN NAME WHAT ITS FIELDS ARE when the field name alone would mislead.
+// A pillar's `text` is one sentence printed plainly on a card, so it is a short
+// multiline box rather than the markdown editor every other `text` gets; its
+// `icon` is a picker of the glyphs the storefront draws. A row written before
+// its list's template grew a field (every pillar seeded before `icon`) still
+// shows that field, empty, and only carries it once it is set.
+//
+// THE PILLARS ARE THE SITE'S (Why LAMIKAA → Pillars). The list is what the home
+// page, /why-lamikaa, /about and /contact draw, in this order — add, reword,
+// reorder or remove one here and every surface follows. When the copy around
+// them states a count ("built on four pillars") the list no longer matches, the
+// editor says so: the sentence is the owner's to rewrite, not the code's.
 //
 // SAVING IS PER SECTION AND MERGES. `updateSiteContent` merges `data` into the
 // stored section, so the `policies` and `home` sub-blocks — which the rail
@@ -221,15 +244,53 @@ const isImageField = (name) => /image|photo|thumbnail|logo/i.test(name);
 // reader of that block would then choke on.
 const OBJECT_LIST_FIELDS = new Set(["items", "pillars", "groups"]);
 
-// What a new row in an emptied list starts from, when there is no row left to
-// copy the shape off. Keyed by field name, and kept in step with `db.json`.
+// Every field a row of each list can carry, in the order the editor shows them.
+// It is what a new row in an emptied list starts from, and what a row written
+// before the template grew a field is offered (empty) — kept in step with
+// `db.json`. A pillar leads with what the card shows, title first; its `key` is
+// bookkeeping and goes last.
 const OBJECT_LIST_TEMPLATES = {
   items: { key: "", title: "", image: "", points: [], body: "" },
-  pillars: { key: "", title: "", text: "" },
+  pillars: { title: "", text: "", icon: "", key: "" },
   groups: { key: "", label: "" },
 };
 
-const kindOf = (name, value) => {
+// Fields a list types by itself, overriding what the field's NAME would pick.
+const LIST_FIELD_KINDS = {
+  pillars: { text: "multiline", icon: "icon" },
+};
+
+// Fields every row is OFFERED but carries only while they hold a value: a
+// pillar with no icon is "Auto", and an absent key is the one way to say so —
+// trying a glyph and going back to Auto leaves the row exactly as it was saved.
+const OPTIONAL_LIST_FIELDS = {
+  pillars: ["icon"],
+};
+
+const isOptionalField = (listName, field) =>
+  (OPTIONAL_LIST_FIELDS[listName] || []).includes(field);
+
+// A line under a list's heading, and the label of its add button.
+const LIST_COPY = {
+  pillars: {
+    hint:
+      "The cards on the home page, /why-lamikaa, /about and /contact, in this order. " +
+      "Every surface shows exactly this list.",
+    add: "Add pillar",
+  },
+};
+
+// Helper text under a field of a list's rows.
+const LIST_FIELD_HELP = {
+  pillars: {
+    text: "One or two sentences, shown as written under the title.",
+    key: "Optional. A short id for this pillar, such as farmer-ownership.",
+  },
+};
+
+const kindOf = (name, value, listName) => {
+  const listKind = LIST_FIELD_KINDS[listName]?.[name];
+  if (listKind && typeof value === "string") return listKind;
   if (Array.isArray(value)) {
     if (value.length === 0) return OBJECT_LIST_FIELDS.has(name) ? "objectList" : "stringList";
     return value.every((row) => typeof row === "string") ? "stringList" : "objectList";
@@ -252,15 +313,27 @@ const humanise = (name) => {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 };
 
-/** Rows a new item in an object list starts from: the shape already in use,
-    else the named template for that field. */
+/** Rows a new item in an object list starts from: the named template for that
+    field together with the shape already in use, every value blank — less the
+    optional fields, which a row only carries once they are set. */
 const templateFor = (rows, name) => {
   const first = rows.find((row) => row && typeof row === "object");
-  if (!first) return OBJECT_LIST_TEMPLATES[name] ? { ...OBJECT_LIST_TEMPLATES[name] } : null;
-  return Object.keys(first).reduce(
+  const named = OBJECT_LIST_TEMPLATES[name];
+  if (!first && !named) return null;
+  const blank = Object.keys(first || {}).reduce(
     (acc, key) => ({ ...acc, [key]: Array.isArray(first[key]) ? [] : "" }),
-    {}
+    { ...named }
   );
+  (OPTIONAL_LIST_FIELDS[name] || []).forEach((field) => delete blank[field]);
+  return blank;
+};
+
+/** A row's fields: its list's template first, in the template's order, then
+    anything else the row carries. A field the row lacks is offered empty. */
+export const rowFields = (row, name) => {
+  const own = Object.keys(row && typeof row === "object" ? row : {});
+  const template = Object.keys(OBJECT_LIST_TEMPLATES[name] || {});
+  return [...template, ...own.filter((field) => !template.includes(field))];
 };
 
 // ─── The two content checks ──────────────────────────────────────────────────
@@ -292,6 +365,21 @@ export const missingDividendQualifier = (block) => {
 };
 
 const blockHasPlaceholder = (block) => collectStrings(block).some(isPlaceholder);
+
+/**
+ * The first field of this block whose copy counts the pillars differently from
+ * the site — "built on four pillars" over five cards — as `{ field, stated }`,
+ * or `null` when every count it states agrees (or it states none).
+ */
+export const pillarCountMismatch = (block, count) => {
+  if (!block || typeof block !== "object") return null;
+  for (const [field, value] of Object.entries(block)) {
+    if (typeof value !== "string") continue;
+    const stated = statedPillarCount(value);
+    if (stated !== null && stated !== count) return { field, stated };
+  }
+  return null;
+};
 
 // ─── Field controls ──────────────────────────────────────────────────────────
 
@@ -339,9 +427,133 @@ const ImageField = ({ label, value, onChange, helperText }) => (
   </Box>
 );
 
+/**
+ * The glyph a pillar wears on its card: "Auto", or one of the glyphs the
+ * storefront offers. Auto is the pillar's own glyph for the four the brand
+ * shipped and the neutral star for a new one — `autoIcon` is that answer for
+ * this row, so the preview is never a guess.
+ *
+ * The palette folds away behind "Change": open on every row it would be five
+ * rows of two dozen buttons between the fields an owner actually types into.
+ */
+const IconField = ({ label, value, onChange, autoIcon, labelId }) => {
+  const [open, setOpen] = useState(false);
+  const chosen = isIconName(value) ? value.trim() : "";
+  const known = PILLAR_ICON_CHOICES.find((choice) => choice.icon === chosen);
+  // A glyph set some other way (db.json, the API) stays visible and selected
+  // rather than silently reading as "Auto".
+  const choices =
+    chosen && !known ? [...PILLAR_ICON_CHOICES, { icon: chosen, label: chosen }] : PILLAR_ICON_CHOICES;
+  const shown = chosen || autoIcon || FALLBACK_PILLAR_ICON;
+  const paletteId = `${labelId}-choices`;
+
+  // Picking the option already selected is not an edit.
+  const choose = (icon) => {
+    if (icon !== chosen) onChange(icon);
+    setOpen(false);
+  };
+
+  const option = (selected) => ({
+    width: 38,
+    height: 38,
+    p: 0,
+    borderRadius: 1.5,
+    color: selected ? "primary.main" : "text.secondary",
+    borderColor: selected ? "primary.main" : "divider",
+    "&.Mui-selected, &.Mui-selected:hover": {
+      color: "primary.main",
+      bgcolor: (t) => alpha(t.palette.primary.main, 0.14),
+      borderColor: "primary.main",
+    },
+  });
+
+  return (
+    <Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          aria-hidden="true"
+          sx={{
+            width: 44,
+            height: 44,
+            flexShrink: 0,
+            borderRadius: "50%",
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "action.hover",
+            color: "primary.main",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Icon icon={shown} style={{ fontSize: 24 }} />
+        </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography id={labelId} variant="subtitle2" fontWeight={600}>
+            {label}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {chosen
+              ? `${known ? known.label : chosen} — chosen for this pillar.`
+              : shown === FALLBACK_PILLAR_ICON
+                ? "Auto — a neutral star until a glyph is chosen."
+                : "Auto — this pillar's own glyph."}
+          </Typography>
+        </Box>
+        <Button
+          size="small"
+          onClick={() => setOpen((wasOpen) => !wasOpen)}
+          aria-expanded={open}
+          aria-controls={paletteId}
+          aria-label={`${open ? "Close" : "Change"} ${label.toLowerCase()}`}
+          endIcon={<Icon icon={open ? "mdi:chevron-up" : "mdi:chevron-down"} />}
+          sx={{ flexShrink: 0, color: "text.primary" }}
+        >
+          {open ? "Close" : "Change"}
+        </Button>
+      </Box>
+      {open ? (
+        <Box
+          id={paletteId}
+          role="group"
+          aria-labelledby={labelId}
+          sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1.25 }}
+        >
+          <ToggleButton
+            value=""
+            size="small"
+            selected={!chosen}
+            onChange={() => choose("")}
+            sx={{ ...option(!chosen), width: "auto", px: 1.25, fontSize: 12, fontWeight: 600 }}
+          >
+            Auto
+          </ToggleButton>
+          {choices.map((choice) => (
+            <Tooltip key={choice.icon} title={choice.label} disableInteractive>
+              <ToggleButton
+                value={choice.icon}
+                size="small"
+                aria-label={choice.label}
+                selected={chosen === choice.icon}
+                onChange={() => choose(choice.icon)}
+                sx={option(chosen === choice.icon)}
+              >
+                <Icon icon={choice.icon} style={{ fontSize: 20 }} />
+              </ToggleButton>
+            </Tooltip>
+          ))}
+        </Box>
+      ) : null}
+    </Box>
+  );
+};
+
 const ObjectListEditor = ({ label, name, path, value, onChange, renderField }) => {
   const rows = Array.isArray(value) ? value : [];
   const template = templateFor(rows, name);
+  const copy = LIST_COPY[name] || {};
+  // What "Auto" resolves to on each pillar's card, given the rest of the list.
+  const autoIcons = name === "pillars" ? automaticPillarIcons(rows) : [];
 
   const setRow = (index, next) =>
     onChange(rows.map((row, i) => (i === index ? next : row)));
@@ -365,9 +577,16 @@ const ObjectListEditor = ({ label, name, path, value, onChange, renderField }) =
           mb: 1,
         }}
       >
-        <Typography variant="subtitle2" fontWeight={600}>
-          {label}
-        </Typography>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle2" fontWeight={600}>
+            {label}
+          </Typography>
+          {copy.hint ? (
+            <Typography variant="caption" color="text.secondary" component="p">
+              {copy.hint}
+            </Typography>
+          ) : null}
+        </Box>
         <Tooltip
           title={template ? "" : "Nothing to copy the shape from — add the first row in db.json"}
         >
@@ -377,8 +596,9 @@ const ObjectListEditor = ({ label, name, path, value, onChange, renderField }) =
               startIcon={<Icon icon="mdi:plus" />}
               onClick={() => onChange([...rows, { ...template }])}
               disabled={!template}
+              sx={{ flexShrink: 0 }}
             >
-              Add row
+              {copy.add || "Add row"}
             </Button>
           </span>
         </Tooltip>
@@ -407,10 +627,19 @@ const ObjectListEditor = ({ label, name, path, value, onChange, renderField }) =
                   mb: 1.5,
                 }}
               >
-                <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                  {String(index + 1).padStart(2, "0")}
-                  {row?.title || row?.label ? ` · ${row.title || row.label}` : ""}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, minWidth: 0 }}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                    {String(index + 1).padStart(2, "0")}
+                    {row?.title || row?.label ? ` · ${row.title || row.label}` : ""}
+                  </Typography>
+                  {/* The storefront skips a pillar with no title, so say so
+                      here rather than let a half-made row look published. */}
+                  {name === "pillars" && !String(row?.title ?? "").trim() ? (
+                    <Typography variant="caption" color="warning.main">
+                      Not shown on the site until it has a title
+                    </Typography>
+                  ) : null}
+                </Box>
                 <Box>
                   <IconButton
                     size="small"
@@ -439,12 +668,29 @@ const ObjectListEditor = ({ label, name, path, value, onChange, renderField }) =
                 </Box>
               </Box>
               <Box sx={{ display: "grid", gap: 2 }}>
-                {Object.keys(row || {}).map((field) =>
+                {rowFields(row, name).map((field) =>
                   renderField({
                     name: field,
-                    value: row[field],
+                    // A template field the row predates — or one a backend
+                    // handed back as null for an empty string — is offered
+                    // with the template's empty value, and only written once
+                    // it is set. Any other null stays visible as it is.
+                    value:
+                      row?.[field] ??
+                      (field in (OBJECT_LIST_TEMPLATES[name] || {})
+                        ? OBJECT_LIST_TEMPLATES[name][field]
+                        : row?.[field]),
                     path: `${path}.${index}.${field}`,
-                    onChange: (next) => setRow(index, { ...row, [field]: next }),
+                    onChange: (next) => {
+                      if (isOptionalField(name, field) && next === "") {
+                        const { [field]: _cleared, ...rest } = row || {};
+                        setRow(index, rest);
+                        return;
+                      }
+                      setRow(index, { ...row, [field]: next });
+                    },
+                    listName: name,
+                    autoIcon: autoIcons[index],
                   })
                 )}
               </Box>
@@ -520,6 +766,11 @@ const AdminContent = () => {
   const dirty = dirtyIds.includes(sectionId);
   const qualifierMissing = missingDividendQualifier(draft);
   const hasToken = blockHasPlaceholder(draft);
+  // How many pillar cards the site draws from the Why LAMIKAA draft — the
+  // config's four when the record carries no list — and any sentence in THIS
+  // section that counts them differently.
+  const pillarCount = pillarsFrom(drafts.whyLamikaa).length;
+  const countMismatch = pillarCountMismatch(draft, pillarCount);
 
   const setFieldValue = (name, value) =>
     setDrafts((prev) => ({ ...prev, [sectionId]: { ...(prev[sectionId] || {}), [name]: value } }));
@@ -574,9 +825,10 @@ const AdminContent = () => {
   };
 
   // ── Field rendering ────────────────────────────────────────────────────────
-  const renderField = ({ name, value, path, onChange }) => {
-    const kind = kindOf(name, value);
+  const renderField = ({ name, value, path, onChange, listName, autoIcon }) => {
+    const kind = kindOf(name, value, listName);
     const label = humanise(name);
+    const helperText = LIST_FIELD_HELP[listName]?.[name];
 
     if (kind === "markdown") {
       return (
@@ -598,6 +850,19 @@ const AdminContent = () => {
         </Box>
       );
     }
+    if (kind === "icon") {
+      return (
+        <Box key={path}>
+          <IconField
+            label={label}
+            value={value}
+            onChange={onChange}
+            autoIcon={autoIcon}
+            labelId={`content-field-${path.replace(/[^a-zA-Z0-9_-]/g, "-")}`}
+          />
+        </Box>
+      );
+    }
     if (kind === "multiline") {
       return (
         <TextField
@@ -608,7 +873,8 @@ const AdminContent = () => {
           fullWidth
           size="small"
           multiline
-          minRows={3}
+          minRows={listName ? 2 : 3}
+          helperText={helperText}
         />
       );
     }
@@ -621,6 +887,7 @@ const AdminContent = () => {
           onChange={(e) => onChange(e.target.value)}
           fullWidth
           size="small"
+          helperText={helperText}
         />
       );
     }
@@ -823,6 +1090,16 @@ const AdminContent = () => {
                 without the wording that must travel with it — &ldquo;subject to applicable laws and
                 the company&rsquo;s dividend declaration&rdquo;. Profits <em>can</em> reach member
                 farmers; they are never promised.
+              </Alert>
+            )}
+
+            {countMismatch && (
+              <Alert severity="warning" icon={<Icon icon="mdi:pillar" />} sx={{ mb: 2.5 }}>
+                <strong>The copy and the cards disagree.</strong> {humanise(countMismatch.field)}{" "}
+                says &ldquo;{countWord(countMismatch.stated)} pillar
+                {countMismatch.stated === 1 ? "" : "s"}&rdquo;, but the site shows{" "}
+                {countWord(pillarCount)} pillar card{pillarCount === 1 ? "" : "s"}. Reword the
+                sentence so the page agrees with what is under it.
               </Alert>
             )}
 
