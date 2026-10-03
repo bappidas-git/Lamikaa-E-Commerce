@@ -5,7 +5,8 @@ import { fireAlert } from "../../utils/alerts";
 import { useAuth } from "../../hooks/useAuth";
 import { useWishlist } from "../../context/WishlistContext";
 import apiService, { getErrorMessage } from "../../services/api";
-import { formatDate, formatCurrency, getInitials, generateId, isValidPhone } from "../../utils/helpers";
+import { formatDate, formatCurrency, getInitials, generateId, isValidPhone, onImageError } from "../../utils/helpers";
+import { plateSrc } from "../../utils/product";
 import { collapse, reveal } from "../../theme/motion";
 import { ROUTES } from "../../utils/constants";
 import { Button, Chip, EmptyState, GlassCard } from "../../components/ui";
@@ -1367,7 +1368,14 @@ const Profile = () => {
                             aria-label={`Order ${order.orderNumber || order.id}, ${statusInfo.label}`}
                           >
                             <span className={`sf-plate ${styles.recentPlate}`}>
-                              {firstItem.image ? <img src={firstItem.image} alt="" loading="lazy" /> : null}
+                              {firstItem.image ? (
+                                <img
+                                  src={plateSrc(firstItem.image, { w: 160 })}
+                                  alt=""
+                                  loading="lazy"
+                                  onError={onImageError}
+                                />
+                              ) : null}
                             </span>
                             <span className={styles.recentBody}>
                               <span className={styles.recentNumber}>

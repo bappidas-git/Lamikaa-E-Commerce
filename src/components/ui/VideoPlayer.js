@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Icon } from "@iconify/react";
 import useInView from "../../hooks/useInView";
 import { parseVideoSource } from "../../utils/videoSource";
+import { onImageError } from "../../utils/helpers";
 import styles from "./VideoPlayer.module.css";
 
 // =============================================================================
@@ -271,7 +272,7 @@ const VideoPlayer = ({
         ) : (
           <>
             {still ? (
-              <img src={still} alt="" className={styles.poster} loading="lazy" decoding="async" />
+              <img src={still} alt="" className={styles.poster} loading="lazy" decoding="async" onError={onImageError} />
             ) : (
               <span className={styles.posterEmpty} aria-hidden="true">
                 <Icon icon="mdi:play-box-outline" />
@@ -336,7 +337,7 @@ const VideoPlayer = ({
       {errored ? (
         <div className={styles.error}>
           {still ? (
-            <img src={still} alt="" className={styles.errorPoster} />
+            <img src={still} alt="" className={styles.errorPoster} onError={onImageError} />
           ) : null}
           <p className={styles.errorText}>Video unavailable</p>
         </div>

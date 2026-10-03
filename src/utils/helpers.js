@@ -10,6 +10,7 @@ import { isPriceKnown } from "./product";
 // The canonical route map (Prompt 08). constants.js pulls in brand.js only, so
 // there is no cycle back to this file.
 import { ROUTES } from "./constants";
+import { isCloudinary, originalUpload } from "./cloudinary";
 
 // Inline SVG placeholder (no network) used when an image is missing or its URL
 // fails to load, so image-bearing cards always degrade gracefully.
@@ -30,11 +31,29 @@ import { ROUTES } from "./constants";
 export const PLACEHOLDER_IMG =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Ctext x='50%25' y='50%25' font-family='system-ui,sans-serif' font-size='22' fill='%238E8B86' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
 
-// <img onError> handler: swap to the placeholder once (guarded against loops).
+// <img onError> handler. Recovers before it gives up:
+//
+//   1. A Cloudinary delivery URL is a DERIVED image, built on first request,
+//      and that build can fail transiently (a timeout or a rate limit on a
+//      cold transformation) while the upload itself is fine. So the first
+//      failure retries the untransformed original, which always serves if the
+//      asset exists. Before this, one cold-cache hiccup painted a permanent
+//      "No Image" plate over a picture that was really there.
+//   2. Anything else, or a second failure, takes the placeholder.
+//
+// `srcset`/`sizes` are dropped at each step: while an <img> carries a srcset
+// the browser picks its source from that list and IGNORES `src`, so a swap of
+// `src` alone left responsive images showing the broken icon instead.
 export const onImageError = (e) => {
-  if (e.currentTarget.src === PLACEHOLDER_IMG) return;
-  e.currentTarget.onerror = null;
-  e.currentTarget.src = PLACEHOLDER_IMG;
+  const img = e.currentTarget;
+  if (!img || img.src === PLACEHOLDER_IMG) return;
+  const failed = img.currentSrc || img.src;
+  img.removeAttribute("srcset");
+  img.removeAttribute("sizes");
+  // The original of an original is itself, so a failing upload falls through
+  // to the placeholder rather than looping.
+  const original = isCloudinary(failed) ? originalUpload(failed) : failed;
+  img.src = original !== failed ? original : PLACEHOLDER_IMG;
 };
 
 // ── Active currency ─────────────────────────────────────────────

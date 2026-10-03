@@ -3,7 +3,8 @@
 // after a pad measures the padded frame instead of the artwork. The two options
 // added for the brand lockups (`trim`, `background`) are pinned here alongside
 // the invariants the rest of the catalogue already depends on.
-import { cld, isCloudinary, srcSet } from "./cloudinary";
+import { cld, isCloudinary, originalUpload, srcSet } from "./cloudinary";
+import { PLACEHOLDER_IMG, onImageError } from "./helpers";
 
 const UPLOAD = "https://res.cloudinary.com/v8vrixwq/image/upload";
 const LOGO = `${UPLOAD}/v1789379844/new_logo.png`;
@@ -81,5 +82,48 @@ describe("cld", () => {
       `${UPLOAD}/e_trim/f_auto,q_auto,w_480/v1789379844/new_logo.png 480w, ` +
         `${UPLOAD}/e_trim/f_auto,q_auto,w_960/v1789379844/new_logo.png 960w`
     );
+  });
+});
+
+describe("originalUpload()", () => {
+  const RAW = `${UPLOAD}/v1789080365/face_scrub_v3.png`;
+
+  it("strips the whole transformation chain back to the upload", () => {
+    expect(originalUpload(cld(RAW, { ar: "1:1", pad: true, w: 480 }))).toBe(RAW);
+    expect(originalUpload(cld(RAW, { trim: true, gravity: "center", ar: "4:5", w: 900 }))).toBe(RAW);
+  });
+
+  it("returns an untransformed or foreign URL unchanged", () => {
+    expect(originalUpload(RAW)).toBe(RAW);
+    expect(originalUpload(`${UPLOAD}/face_scrub_v3.png`)).toBe(`${UPLOAD}/face_scrub_v3.png`);
+    expect(originalUpload("https://example.com/a.jpg")).toBe("https://example.com/a.jpg");
+  });
+});
+
+describe("onImageError()", () => {
+  const RAW = `${UPLOAD}/v1789080365/face_scrub_v3.png`;
+  const fail = (img) => onImageError({ currentTarget: img });
+
+  it("retries the original upload, then falls back to the placeholder", () => {
+    const img = document.createElement("img");
+    img.setAttribute("srcset", `${cld(RAW, { w: 480 })} 480w`);
+    img.setAttribute("sizes", "50vw");
+    img.src = cld(RAW, { ar: "1:1", pad: true, w: 480 });
+
+    fail(img);
+    expect(img.src).toBe(RAW);
+    // A srcset would keep overriding `src`, so it has to go.
+    expect(img.hasAttribute("srcset")).toBe(false);
+    expect(img.hasAttribute("sizes")).toBe(false);
+
+    fail(img);
+    expect(img.src).toBe(PLACEHOLDER_IMG);
+  });
+
+  it("sends a non-Cloudinary failure straight to the placeholder", () => {
+    const img = document.createElement("img");
+    img.src = "https://example.com/missing.jpg";
+    fail(img);
+    expect(img.src).toBe(PLACEHOLDER_IMG);
   });
 });
