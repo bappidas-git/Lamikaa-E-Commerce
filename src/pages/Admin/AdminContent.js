@@ -288,6 +288,15 @@ const LIST_FIELD_HELP = {
   },
 };
 
+// Helper text under a section's own field, by its path — what the storefront
+// does with it, where that is not what the field's name would suggest.
+const FIELD_HELP = {
+  "home.fullPageCta.lines":
+    "Each line is its own row of the headline, in this order, and every one is shown — " +
+    "from four lines the headline is set smaller so the buttons stay in view. " +
+    "The word “value” in the first line takes the brand gradient.",
+};
+
 const kindOf = (name, value, listName) => {
   const listKind = LIST_FIELD_KINDS[listName]?.[name];
   if (listKind && typeof value === "string") return listKind;
@@ -828,7 +837,7 @@ const AdminContent = () => {
   const renderField = ({ name, value, path, onChange, listName, autoIcon }) => {
     const kind = kindOf(name, value, listName);
     const label = humanise(name);
-    const helperText = LIST_FIELD_HELP[listName]?.[name];
+    const helperText = LIST_FIELD_HELP[listName]?.[name] ?? FIELD_HELP[path];
 
     if (kind === "markdown") {
       return (
@@ -898,6 +907,7 @@ const AdminContent = () => {
             value={value}
             onChange={onChange}
             label={label}
+            helperText={helperText}
             multiline
             addLabel="Add line"
             emptyText="Nothing here yet."

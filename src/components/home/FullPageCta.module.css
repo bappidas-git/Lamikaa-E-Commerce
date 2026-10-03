@@ -171,7 +171,7 @@
   justify-content: center;
 }
 
-/* ---- The three lines -----------------------------------------------------
+/* ---- The headline --------------------------------------------------------
    Each line is its own block, 8px apart, so the break is the composition and
    the copy never has to carry a <br>. `balance` keeps a line that wraps on a
    phone from breaking one word onto a row of its own. */
@@ -187,6 +187,18 @@
   letter-spacing: var(--sf-tracking-tight);
   color: var(--sf-color-text);
   text-wrap: balance;
+}
+
+/* A LONGER HEADLINE IS SET SMALLER, NEVER CUT. Every line the owner publishes
+   is printed; `data-length` (headlineLength in the component) steps the type
+   one size down the display scale from four lines and a second from six, which
+   keeps the buttons no lower than the triplet left them. On a phone the steps
+   stop at --sf-text-2xl, the size of every section heading on the site: this
+   headline is never set smaller than an ordinary one, and a phone scrolls a
+   taller card rather than squinting at a smaller one. */
+.headline[data-length="long"],
+.headline[data-length="longer"] {
+  font-size: var(--sf-text-2xl);
 }
 
 .line {
@@ -256,6 +268,12 @@
 
   .headline {
     font-size: var(--sf-text-4xl);
+  }
+
+  /* One size down for four or five lines. Six or more keep --sf-text-2xl from
+     the rule above, which is two sizes down from here. */
+  .headline[data-length="long"] {
+    font-size: var(--sf-text-3xl);
   }
 }
 
