@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { fireAlert } from "../../utils/alerts";
@@ -35,7 +35,7 @@ import styles from "./Checkout.module.css";
 // WHAT IT DID NOT CHANGE, AND WHAT MUST NOT CHANGE
 //   • The 4-step state machine. `step` 0–3 over STEPS, `handleNext`'s gating
 //     (empty-cart bail → auth gate → validateAddress + selectedShipping), Back
-//     as setStep(step - 1), the scroll-to-top effect, the AnimatePresence keys
+//     as one step back, the scroll-to-top effect, the AnimatePresence keys
 //     ("cart" / "shipping" / "payment" / "review") and the Review step's Edit
 //     jumps (setStep(1) / setStep(2)).
 //   • Every number. subtotal from getCartTotal, couponDiscountFor, the shipping
@@ -65,6 +65,42 @@ import styles from "./Checkout.module.css";
 // =============================================================================
 
 const STEPS = ["Cart", "Shipping", "Payment", "Review"];
+
+// ── Steps live in the browser history ────────────────────────────────────────
+// The step used to be component state only, so the device / browser Back
+// button left /checkout altogether and dropped the shopper on the product
+// page with everything they had typed gone. Each step is now its own history
+// entry (`/checkout?step=shipping` …), so Back walks Review → Payment →
+// Shipping → Cart exactly like the on-screen Back button, and a refresh keeps
+// the step. `/checkout` with no (or an unknown) `step` is the Cart step.
+const STEP_KEYS = ["cart", "shipping", "payment", "review"];
+const stepFromParam = (value) => Math.max(0, STEP_KEYS.indexOf(value));
+
+// ── The checkout draft ───────────────────────────────────────────────────────
+// What the shopper has entered (address, saved-address choice, shipping
+// method, payment method) is kept in sessionStorage for this tab, so leaving
+// checkout and coming back — or a refresh — never makes them fill it again.
+// Cleared once the order is placed.
+const DRAFT_KEY = "checkoutDraft";
+const readDraft = () => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    const draft = raw ? JSON.parse(raw) : null;
+    return draft && typeof draft === "object" ? draft : null;
+  } catch {
+    return null;
+  }
+};
+const writeDraft = (draft) => {
+  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* storage unavailable */ }
+};
+const clearDraft = () => {
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* storage unavailable */ }
+};
+
+const REQUIRED_ADDRESS_FIELDS = ["firstName", "lastName", "phone", "addressLine1", "city", "state", "postalCode"];
+const isAddressComplete = (addr) =>
+  !!addr && REQUIRED_ADDRESS_FIELDS.every((key) => String(addr[key] ?? "").trim());
 
 // Discount for an applied coupon at the current subtotal. Derived (never
 // stored), so qty changes can't leave a stale amount and re-applying a coupon
@@ -226,7 +262,7 @@ const Checkout = () => {
     appliedCoupon: couponApplied,
     setAppliedCoupon: setCouponApplied,
   } = useCart();
-  const { user, isAuthenticated, openAuthModal } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, openAuthModal } = useAuth();
   const { createOrder } = useOrder();
   // Tax rate, tax treatment, COD rules, the currency symbol and the care
   // address the rail quotes all come from the admin's Settings > General — one
@@ -240,13 +276,40 @@ const Checkout = () => {
     fillCopy,
   } = useStoreSettings();
 
-  const [step, setStep] = useState(0);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const step = stepFromParam(searchParams.get("step"));
+
+  // Every step change is a history push, tagged with the step it came from so
+  // the on-screen Back can simply pop the entry when it is the previous step.
+  const setStep = (next, { replace = false } = {}) => {
+    if (next === step) return;
+    navigate(
+      { pathname: location.pathname, search: next === 0 ? "" : `?step=${STEP_KEYS[next]}` },
+      { replace, state: { checkoutFrom: step } }
+    );
+  };
+  const goBack = () => {
+    if (step === 0) return;
+    if (location.state?.checkoutFrom === step - 1) navigate(-1);
+    else setStep(step - 1);
+  };
+
+  // Read once: the draft this tab already has, if any.
+  const draftRef = useRef(undefined);
+  if (draftRef.current === undefined) draftRef.current = readDraft();
+  const draft = draftRef.current;
+  // Set once the order is placed, so the draft is not written back after it
+  // has been cleared.
+  const orderDoneRef = useRef(false);
+
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [shippingMethods, setShippingMethods] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState(null);
   const [shippingError, setShippingError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [paymentMethod, setPaymentMethod] = useState(draft?.paymentMethod || "card");
+  const [shippingLoaded, setShippingLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(null);
   // Additive (Prompt 29): the order could not be created. Nothing was charged —
@@ -262,13 +325,17 @@ const Checkout = () => {
   const [applyStoreCredit, setApplyStoreCredit] = useState(false);
   const [creditAmount, setCreditAmount] = useState(0); // amount the customer chose to apply
 
-  const [shippingAddress, setShippingAddress] = useState({
+  const [shippingAddress, setShippingAddress] = useState(() => ({
     firstName: user?.firstName || "", lastName: user?.lastName || "",
     phone: user?.phone || "", addressLine1: "", addressLine2: "",
     city: "", state: "", postalCode: "", country: "India",
-  });
+    ...(draft?.shippingAddress || {}),
+  }));
   const [addressErrors, setAddressErrors] = useState({});
   const [useExistingAddress, setUseExistingAddress] = useState(null);
+  // The user id whose saved-address choice has been settled (draft or default),
+  // so a later profile update never silently swaps the address picked here.
+  const [addressHydratedFor, setAddressHydratedFor] = useState(null);
 
   useEffect(() => {
     const loadShipping = async () => {
@@ -278,8 +345,12 @@ const Checkout = () => {
         const methods = await apiService.shipping.getMethods();
         const active = methods.filter((m) => m.isActive !== false);
         setShippingMethods(active);
-        if (active.length > 0) setSelectedShipping(active[0]);
+        if (active.length > 0) {
+          const saved = draftRef.current?.shippingId;
+          setSelectedShipping(active.find((m) => saved != null && m.id === saved) || active[0]);
+        }
       } catch (e) { console.error("Load shipping methods error:", e); }
+      finally { setShippingLoaded(true); }
     };
     loadShipping();
   }, []);
@@ -305,12 +376,67 @@ const Checkout = () => {
         lastName: prev.lastName || user.lastName || "",
         phone: prev.phone || user.phone || "",
       }));
-      if (user.addresses?.length > 0) {
-        const defaultAddr = user.addresses.find((a) => a.isDefault) || user.addresses[0];
-        setUseExistingAddress(defaultAddr);
+      if (addressHydratedFor === user.id) {
+        // Already settled for this account — only refresh the selected saved
+        // address's details if the profile changed underneath it.
+        setUseExistingAddress((prev) =>
+          prev ? user.addresses?.find((a) => a.id === prev.id) || prev : prev
+        );
+        return;
       }
+      const saved = draftRef.current;
+      const ownDraft = saved && (saved.userId == null || saved.userId === user.id);
+      if (saved && !ownDraft) {
+        // Another account's draft in this tab — never show its address here.
+        setShippingAddress({
+          firstName: user.firstName || "", lastName: user.lastName || "",
+          phone: user.phone || "", addressLine1: "", addressLine2: "",
+          city: "", state: "", postalCode: "", country: "India",
+        });
+      }
+      if (ownDraft && saved.addressMode === "new") {
+        setUseExistingAddress(null);
+      } else if (user.addresses?.length > 0) {
+        const fromDraft = ownDraft && saved.addressMode === "saved"
+          ? user.addresses.find((a) => a.id === saved.savedAddressId)
+          : null;
+        const defaultAddr = user.addresses.find((a) => a.isDefault) || user.addresses[0];
+        setUseExistingAddress(fromDraft || defaultAddr);
+      }
+      setAddressHydratedFor(user.id);
     }
-  }, [user]);
+  }, [user, addressHydratedFor]);
+
+  // Keep the draft current as the shopper types and chooses.
+  useEffect(() => {
+    if (orderDoneRef.current || cartItems.length === 0) return;
+    writeDraft({
+      userId: user?.id ?? null,
+      shippingAddress,
+      addressMode: useExistingAddress ? "saved" : "new",
+      savedAddressId: useExistingAddress?.id ?? null,
+      shippingId: selectedShipping?.id ?? draftRef.current?.shippingId ?? null,
+      paymentMethod,
+    });
+  }, [user, shippingAddress, useExistingAddress, selectedShipping, paymentMethod, cartItems.length]);
+
+  // A step reached through history, a refresh or a pasted URL still has to
+  // meet the same gates handleNext enforces. Once auth and the address have
+  // settled, anything that is not satisfied sends the shopper back to the
+  // first step that needs them (replacing, so Back is not a loop).
+  useEffect(() => {
+    if (step === 0 || authLoading) return;
+    if (!isAuthenticated) { setStep(0, { replace: true }); return; }
+    if (step < 2 || addressHydratedFor !== user?.id) return;
+    if (!isAddressComplete(useExistingAddress || shippingAddress)) {
+      setStep(1, { replace: true });
+      return;
+    }
+    if (shippingLoaded && !selectedShipping) setStep(1, { replace: true });
+    // setStep is recreated each render; the inputs below are what matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, authLoading, isAuthenticated, user, addressHydratedFor, useExistingAddress,
+      shippingAddress, shippingLoaded, selectedShipping]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -542,8 +668,12 @@ const Checkout = () => {
       if (result.success) {
         setOrderPlaced(result.order);
         clearCart({ silent: true });
+        orderDoneRef.current = true;
+        clearDraft();
         const orderNum = result.order.orderNumber || result.order.id;
-        navigate(`/order-confirmation/${orderNum}`);
+        // Replace the Review entry so Back from the confirmation never offers
+        // to place the same order again.
+        navigate(`/order-confirmation/${orderNum}`, { replace: true });
       } else {
         setOrderFailed(true);
       }
@@ -1735,7 +1865,7 @@ const Checkout = () => {
                   variant="ghost"
                   icon="mdi:arrow-left"
                   className={styles.backBtn}
-                  onClick={() => setStep(step - 1)}
+                  onClick={goBack}
                   disabled={isProcessing}
                 >
                   Back
