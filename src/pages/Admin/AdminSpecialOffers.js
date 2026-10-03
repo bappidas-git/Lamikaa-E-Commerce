@@ -27,6 +27,7 @@ import { motion } from "framer-motion";
 import apiService from "../../services/api";
 import { formatCurrency, getProductMinPrice, getProductMaxDiscount } from "../../utils/helpers";
 import { normalizeDealsConfig } from "../../utils/dealsConfig";
+import { plateSrc } from "../../utils/product";
 
 // =============================================================================
 // Admin → Special Offers
@@ -108,7 +109,7 @@ const SelectionManager = ({
     return (
       <>
         {data.image ? (
-          <Avatar src={data.image} alt="" variant="rounded" sx={{ width: 40, height: 40 }} />
+          <Avatar src={plateSrc(data.image, { w: 80 })} alt="" variant="rounded" sx={{ width: 40, height: 40 }} />
         ) : (
           <Avatar variant="rounded" sx={{ width: 40, height: 40, bgcolor: "action.selected", color: "primary.main" }}>
             <Icon icon={data.icon || "mdi:tag"} />

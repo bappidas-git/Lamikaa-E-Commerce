@@ -12,7 +12,7 @@ import apiService from "../../services/api";
 import { ADMIN_PALETTE } from "../../theme/adminTheme";
 import { useStoreSettings } from "../../context/StoreSettingsContext";
 import brand from "../../config/brand";
-import { normalizeProduct, syncProductMedia, validateMedia } from "../../utils/product";
+import { normalizeProduct, plateSrc, syncProductMedia, validateMedia } from "../../utils/product";
 import ProductFormSections from "./components/ProductFormSections";
 
 // Every key a LAMIKAA product carries (PRODUCTS.md §6). A new product starts
@@ -580,7 +580,7 @@ const AdminProducts = () => {
                     <TableRow key={p.id} hover>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                          <Avatar src={p.images?.[0]} alt="" variant="rounded" sx={{ width: 48, height: 48, bgcolor: "action.hover" }}>
+                          <Avatar src={plateSrc(p.images?.[0], { w: 96 }) || undefined} alt="" variant="rounded" sx={{ width: 48, height: 48, bgcolor: "action.hover" }}>
                             <Icon icon="mdi:package-variant" style={{ fontSize: 22 }} />
                           </Avatar>
                           <Box>

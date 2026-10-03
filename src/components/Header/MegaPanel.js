@@ -381,6 +381,7 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
                     alt={productAlt(featured, primaryImage(featured))}
                     loading="lazy"
                     decoding="async"
+                    onError={onImageError}
                   />
                 </span>
                 <p className={`sf-eyebrow ${styles.featuredEyebrow}`}>

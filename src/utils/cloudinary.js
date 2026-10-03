@@ -155,6 +155,62 @@ export function cld(
   return `${origin}/upload/${chain.join("/")}/${rest}`;
 }
 
+// One transformation component: comma-separated `x_value` parameters, e.g.
+// `c_pad,ar_1:1,b_auto` or `f_auto,q_auto,w_900`. A version (`v1789080365`)
+// has no underscore and a public id ends in a file name, so neither matches.
+const TRANSFORM_SEGMENT = /^[a-z]{1,3}_[^/,]+(,[a-z]{1,3}_[^/,]+)*$/;
+
+/**
+ * The untransformed upload behind a delivery URL — the `cld()` chain stripped
+ * back off. Used as the recovery source when a derived image fails to load:
+ * Cloudinary builds every transformation on first request, and that build can
+ * fail (a timeout, a rate limit, a transient 5xx) while the original upload,
+ * which is a plain stored file, still serves. A non-Cloudinary URL, or one
+ * with no chain to strip, is returned unchanged.
+ */
+export const originalUpload = (url) => {
+  if (!isCloudinary(url)) return url;
+  const [origin, rest] = url.split("/upload/");
+  const parts = rest.split("/");
+  let i = 0;
+  // Never strip the last segment: that is the asset itself.
+  while (i < parts.length - 1 && TRANSFORM_SEGMENT.test(parts[i])) i += 1;
+  return `${origin}/upload/${parts.slice(i).join("/")}`;
+};
+
+/**
+ * `src`, `srcSet` and `sizes` for a plain <img> that shows an admin-supplied
+ * picture whole — an editorial band, a column photograph, a ritual cover —
+ * rather than a product on a plate.
+ *
+ * Those call sites used to hand the browser the raw upload: 1.6-4 MB PNG
+ * masters for frames a few hundred pixels wide, which on a phone connection
+ * is several seconds of blank panel before the picture appears, and on a poor
+ * one a picture that never arrives. This is the delivery rule
+ * `CloudinaryImage` already applies, for the elements that have to stay a
+ * bare <img> because their own class carries the layout. `limit` stops a rung
+ * wider than the master from being upscaled into a bigger, blurrier file.
+ *
+ * Spread it where the `src` was: `<img {...responsiveImage(url, { sizes })} />`.
+ * A URL that is not a Cloudinary upload comes back as a bare `src`, untouched.
+ *
+ * @param {string} url
+ * @param {object} [opts]
+ * @param {string} [opts.sizes]     the frame's rendered width, as a `sizes` list
+ * @param {number[]} [opts.widths]  the candidate ladder (default SRCSET_WIDTHS)
+ * @returns {{ src: string, srcSet?: string, sizes?: string }}
+ */
+export const responsiveImage = (url, { sizes = "100vw", widths = SRCSET_WIDTHS } = {}) => {
+  const clean = typeof url === "string" ? url.trim() : "";
+  if (!isCloudinary(clean)) return { src: clean };
+  const fallback = widths[Math.floor(widths.length / 2)] || widths[0];
+  return {
+    src: cld(clean, { w: fallback, limit: true }),
+    srcSet: srcSet(clean, widths, { limit: true }),
+    sizes,
+  };
+};
+
 /**
  * A `srcset` string for the given widths. `opts` is passed through to `cld()`,
  * so a crop or an aspect ratio applies identically at every width.
@@ -162,5 +218,5 @@ export function cld(
 export const srcSet = (url, widths = SRCSET_WIDTHS, opts) =>
   widths.map((w) => `${cld(url, { ...opts, w })} ${w}w`).join(", ");
 
-const cloudinary = { isCloudinary, cld, srcSet, SRCSET_WIDTHS };
+const cloudinary = { isCloudinary, cld, srcSet, originalUpload, responsiveImage, SRCSET_WIDTHS };
 export default cloudinary;

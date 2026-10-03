@@ -495,13 +495,16 @@
         <!-- src and the preload in <head> must stay identical: same URL, one
              fetch. width/height are the TRIMMED master's intrinsic pixels
              (1923x502), which is what `e_trim` actually delivers — they only
-             have to carry the right ratio, and `.loader-logo` sizes the box. -->
+             have to carry the right ratio, and `.loader-logo` sizes the box.
+             onerror falls back to the untrimmed master, as <Logo> does, so a
+             trim the CDN fails to build never shows a broken-image icon. -->
         <img
           class="loader-logo"
           src="https://res.cloudinary.com/v8vrixwq/image/upload/e_trim/f_auto,q_auto,w_520/v1789379844/new_logo.png"
           alt="LAMIKAA NATURALS"
           width="1923"
           height="502"
+          onerror="this.onerror=null;this.src='https://res.cloudinary.com/v8vrixwq/image/upload/v1789379844/new_logo.png'"
         />
         <p class="loader-tagline">
           Indigenous Wisdom. Modern Beauty. Shared Prosperity.

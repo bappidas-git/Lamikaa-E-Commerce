@@ -3,7 +3,8 @@
 // after a pad measures the padded frame instead of the artwork. The two options
 // added for the brand lockups (`trim`, `background`) are pinned here alongside
 // the invariants the rest of the catalogue already depends on.
-import { cld, isCloudinary, srcSet } from "./cloudinary";
+import { cld, isCloudinary, originalUpload, responsiveImage, srcSet } from "./cloudinary";
+import { PLACEHOLDER_IMG, onImageError, retryOriginalUpload } from "./helpers";
 
 const UPLOAD = "https://res.cloudinary.com/v8vrixwq/image/upload";
 const LOGO = `${UPLOAD}/v1789379844/new_logo.png`;
@@ -81,5 +82,99 @@ describe("cld", () => {
       `${UPLOAD}/e_trim/f_auto,q_auto,w_480/v1789379844/new_logo.png 480w, ` +
         `${UPLOAD}/e_trim/f_auto,q_auto,w_960/v1789379844/new_logo.png 960w`
     );
+  });
+});
+
+describe("originalUpload()", () => {
+  const RAW = `${UPLOAD}/v1789080365/face_scrub_v3.png`;
+
+  it("strips the whole transformation chain back to the upload", () => {
+    expect(originalUpload(cld(RAW, { ar: "1:1", pad: true, w: 480 }))).toBe(RAW);
+    expect(originalUpload(cld(RAW, { trim: true, gravity: "center", ar: "4:5", w: 900 }))).toBe(RAW);
+  });
+
+  it("returns an untransformed or foreign URL unchanged", () => {
+    expect(originalUpload(RAW)).toBe(RAW);
+    expect(originalUpload(`${UPLOAD}/face_scrub_v3.png`)).toBe(`${UPLOAD}/face_scrub_v3.png`);
+    expect(originalUpload("https://example.com/a.jpg")).toBe("https://example.com/a.jpg");
+  });
+});
+
+describe("onImageError()", () => {
+  const RAW = `${UPLOAD}/v1789080365/face_scrub_v3.png`;
+  const fail = (img) => onImageError({ currentTarget: img });
+
+  it("retries the original upload, then falls back to the placeholder", () => {
+    const img = document.createElement("img");
+    img.setAttribute("srcset", `${cld(RAW, { w: 480 })} 480w`);
+    img.setAttribute("sizes", "50vw");
+    img.src = cld(RAW, { ar: "1:1", pad: true, w: 480 });
+
+    fail(img);
+    expect(img.src).toBe(RAW);
+    // A srcset would keep overriding `src`, so it has to go.
+    expect(img.hasAttribute("srcset")).toBe(false);
+    expect(img.hasAttribute("sizes")).toBe(false);
+
+    fail(img);
+    expect(img.src).toBe(PLACEHOLDER_IMG);
+  });
+
+  it("sends a non-Cloudinary failure straight to the placeholder", () => {
+    const img = document.createElement("img");
+    img.src = "https://example.com/missing.jpg";
+    fail(img);
+    expect(img.src).toBe(PLACEHOLDER_IMG);
+  });
+});
+
+describe("retryOriginalUpload()", () => {
+  const RAW = `${UPLOAD}/v1789121532/hero_image_desktop.png`;
+
+  it("swaps a failed derived image to its upload once, then reports nothing left", () => {
+    const img = document.createElement("img");
+    img.setAttribute("srcset", `${cld(RAW, { w: 1440 })} 1440w`);
+    img.src = cld(RAW, { w: 900 });
+
+    expect(retryOriginalUpload(img)).toBe(true);
+    expect(img.src).toBe(RAW);
+    expect(img.hasAttribute("srcset")).toBe(false);
+
+    // The upload itself failing: no further source, and no loop.
+    expect(retryOriginalUpload(img)).toBe(false);
+    expect(img.src).toBe(RAW);
+  });
+
+  it("has nothing to offer a non-Cloudinary image", () => {
+    const img = document.createElement("img");
+    img.src = "https://example.com/ground.jpg";
+    expect(retryOriginalUpload(img)).toBe(false);
+  });
+});
+
+describe("responsiveImage()", () => {
+  const RAW = `${UPLOAD}/v1789121641/why_black_rice.png`;
+
+  it("delivers a Cloudinary upload as a capped srcset instead of the master", () => {
+    const props = responsiveImage(RAW, { sizes: "(min-width: 1025px) 530px, 100vw" });
+    expect(props.src).toBe(`${UPLOAD}/f_auto,q_auto,w_900,c_limit/v1789121641/why_black_rice.png`);
+    expect(props.srcSet.split(", ")).toHaveLength(7);
+    expect(props.srcSet).toContain(`${UPLOAD}/f_auto,q_auto,w_480,c_limit/v1789121641/why_black_rice.png 480w`);
+    expect(props.srcSet).toContain(`${UPLOAD}/f_auto,q_auto,w_1920,c_limit/v1789121641/why_black_rice.png 1920w`);
+    expect(props.sizes).toBe("(min-width: 1025px) 530px, 100vw");
+    // Every candidate recovers to the same upload.
+    props.srcSet.split(", ").forEach((candidate) => {
+      expect(originalUpload(candidate.split(" ")[0])).toBe(RAW);
+    });
+  });
+
+  it("defaults to a full-bleed frame", () => {
+    expect(responsiveImage(RAW).sizes).toBe("100vw");
+  });
+
+  it("passes any other URL through as a bare, trimmed src", () => {
+    expect(responsiveImage(" https://example.com/a.jpg ")).toEqual({ src: "https://example.com/a.jpg" });
+    expect(responsiveImage("")).toEqual({ src: "" });
+    expect(responsiveImage(undefined)).toEqual({ src: "" });
   });
 });

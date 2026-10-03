@@ -6,7 +6,7 @@ import apiService from "../../services/api";
 import brand from "../../config/brand";
 import { Button, Chip, Modal, Price } from "../ui";
 import { useCart } from "../../hooks/useCart";
-import { buildCartItem, productPath } from "../../utils/helpers";
+import { buildCartItem, onImageError, productPath } from "../../utils/helpers";
 import { isPriceKnown, stageSrc } from "../../utils/product";
 import { categoryPath } from "../../utils/categories";
 import { rankProducts } from "../../utils/search";
@@ -412,7 +412,7 @@ const SearchModal = ({ open, onClose }) => {
           onFocus={() => setActiveIndex(index)}
         >
           <span className={`sf-plate ${styles.thumb}`}>
-            {thumb ? <img src={thumb} alt="" loading="lazy" /> : null}
+            {thumb ? <img src={thumb} alt="" loading="lazy" onError={onImageError} /> : null}
           </span>
           {/* A <div>, not a <span>: `Price` renders a block element, and an
               <a> inside an <li> may hold flow content while a <span> may not. */}

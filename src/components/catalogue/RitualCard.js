@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { resolveRitualSteps } from "../../services/api";
 import { ritualPath } from "../../utils/categories";
 import { onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { stageSrc } from "../../utils/product";
 import { Chip, GlassCard } from "../ui";
 import styles from "./RitualCard.module.css";
@@ -134,7 +135,9 @@ const RitualCard = ({ ritual, products = [], compact = false, className = "" }) 
           <span className={`sf-placeholder-media ${styles.media}`}>
             <img
               className={styles.image}
-              src={ritual.image}
+              {...responsiveImage(ritual.image, {
+                sizes: "(min-width: 1280px) 410px, (min-width: 769px) 33vw, 100vw",
+              })}
               alt=""
               loading="lazy"
               decoding="async"

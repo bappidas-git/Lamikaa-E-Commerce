@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { RISE, reveal } from "../../theme/motion";
 import { onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import styles from "./ImpactTriptych.module.css";
 
 // =============================================================================
@@ -40,8 +41,10 @@ import styles from "./ImpactTriptych.module.css";
 // enterprise" reads as a claim that it has already happened, which is precisely
 // what BRAND.md §3.9 forbids. A dot is a dot.
 //
-// The photographs are plain <img>, not `CloudinaryImage`: the placeholders are
-// Picsum URLs and Cloudinary transformations do not apply to them. Each carries
+// The photographs are plain <img>, not `CloudinaryImage` — the element's own
+// class carries the layout — but they are delivered the same way:
+// `responsiveImage()` hands a Cloudinary upload over as a resized srcset rather
+// than the multi-megabyte master, and leaves any other URL untouched. Each carries
 // `.sf-placeholder-media` and `alt=""` — they are decorative, and describing a
 // scene the brand has not photographed would be inventing one.
 // =============================================================================
@@ -143,7 +146,9 @@ const ImpactTriptych = ({
             <div className={`sf-placeholder-media ${styles.media}`}>
               <img
                 className={styles.image}
-                src={column.image}
+                {...responsiveImage(column.image, {
+                  sizes: "(min-width: 1280px) 410px, (min-width: 1025px) 33vw, 100vw",
+                })}
                 alt=""
                 loading="lazy"
                 decoding="async"

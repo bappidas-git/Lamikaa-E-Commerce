@@ -12,7 +12,7 @@
 // asserted here rather than eyeballed.
 import React from "react";
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import brand from "../../config/brand";
 import Logo from "./Logo";
 
@@ -57,5 +57,17 @@ describe("Logo", () => {
 
     expect(img).toHaveAttribute("width", "40");
     expect(img).toHaveAttribute("height", "40");
+  });
+
+  it("falls back to the master upload when the trimmed delivery fails", () => {
+    const onError = jest.fn();
+    render(<Logo width={168} onError={onError} />);
+    const img = screen.getByAltText(brand.name);
+
+    fireEvent.error(img);
+    // The same artwork, untrimmed — never a broken-image icon in the masthead.
+    expect(img.getAttribute("src")).toBe(brand.logoUrl);
+    // A consumer's own handler still runs.
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 });

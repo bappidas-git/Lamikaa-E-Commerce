@@ -18,6 +18,7 @@ import useSiteContent from "../../hooks/useSiteContent";
 import brand from "../../config/brand";
 import { ROUTES } from "../../utils/constants";
 import { onImageError } from "../../utils/helpers";
+import { responsiveImage } from "../../utils/cloudinary";
 import { breadcrumbJsonLd } from "../../utils/seo";
 import styles from "./WhyLamikaa.module.css";
 
@@ -146,7 +147,7 @@ const WhyLamikaa = () => {
           {copy.heroImage ? (
             <img
               className={styles.bandImage}
-              src={copy.heroImage}
+              {...responsiveImage(copy.heroImage)}
               alt=""
               loading="eager"
               decoding="async"

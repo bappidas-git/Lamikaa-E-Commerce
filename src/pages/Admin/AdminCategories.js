@@ -8,6 +8,7 @@ import {
 import { Icon } from "@iconify/react";
 import Swal from "sweetalert2";
 import apiService from "../../services/api";
+import { plateSrc } from "../../utils/product";
 import { ADMIN_PALETTE } from "../../theme/adminTheme";
 
 // Ids that sit *below* a category in the tree (children, grandchildren…). A
@@ -363,7 +364,7 @@ const AdminCategories = () => {
                   <TableRow key={cat.id} hover>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <Avatar src={cat.image || undefined} alt="" variant="rounded" sx={{ width: 44, height: 44, bgcolor: "primary.light" }}>
+                        <Avatar src={plateSrc(cat.image, { w: 88 }) || undefined} alt="" variant="rounded" sx={{ width: 44, height: 44, bgcolor: "primary.light" }}>
                           <Icon icon={cat.icon || "mdi:shape"} style={{ fontSize: 20 }} />
                         </Avatar>
                         <Box sx={{ minWidth: 0 }}>
