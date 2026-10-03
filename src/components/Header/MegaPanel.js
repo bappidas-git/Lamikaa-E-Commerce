@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import apiService from "../../services/api";
 import {
@@ -121,6 +121,10 @@ export const clearMegaPanelCache = () => {
 
 const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
   const reduce = useReducedMotion();
+  // Marks the row or pill for the page the visitor is already on, the same
+  // `aria-current` the mobile drawer sets on its rows.
+  const { pathname } = useLocation();
+  const currentFor = (to) => (pathname === to ? "page" : undefined);
   const [data, setData] = useState(megaDataCache);
   const [failed, setFailed] = useState(false);
 
@@ -258,11 +262,12 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
             <p className={`sf-eyebrow ${styles.eyebrow}`}>Categories</p>
             <ul className={styles.categoryList}>
               {rows.map(({ cat, children, thumb, count }) => (
-                <li key={cat.id}>
+                <li key={cat.id} className={styles.categoryItem}>
                   <Link
                     to={categoryPath(cat)}
                     className={styles.categoryRow}
                     onClick={onNavigate}
+                    aria-current={currentFor(categoryPath(cat))}
                   >
                     <span className={`sf-plate ${styles.thumb}`} aria-hidden="true">
                       {thumb ? (
@@ -294,6 +299,9 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
                       </span>
                     ) : null}
                   </Link>
+                  {/* Sub-categories are pills under the parent, starting on
+                      its name's x: a sibling list, never inside the row's
+                      link, so each is its own tab stop. */}
                   {children.length > 0 ? (
                     <ul
                       className={styles.subList}
@@ -303,8 +311,9 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
                         <li key={child.id}>
                           <Link
                             to={categoryPath(child)}
-                            className={styles.subRow}
+                            className={styles.subPill}
                             onClick={onNavigate}
+                            aria-current={currentFor(categoryPath(child))}
                           >
                             {child.displayName || child.name}
                           </Link>
@@ -319,6 +328,7 @@ const MegaPanel = ({ id = "mega-panel", onNavigate }) => {
                   to={ROUTES.SHOP}
                   className={`${styles.categoryRow} ${styles.allRow}`}
                   onClick={onNavigate}
+                  aria-current={currentFor(ROUTES.SHOP)}
                 >
                   {/* The empty thumbnail cell keeps this label on the same x as
                       the seven names above it. */}

@@ -168,15 +168,20 @@ const Footer = () => {
       id: "categories",
       title: "Shop by category",
       links: [
-        // Top-level categories, each followed by its sub-categories; ritual
-        // collections are left to the Rituals column (getShopMenuTree).
-        ...getShopMenuTree(categories, { menuOnly: false })
-          .flatMap(({ cat, children }) => [cat, ...children])
-          .map((cat) => ({
-            key: `cat-${cat.id}`,
-            label: cat.displayName || cat.name,
-            path: categoryPath(cat),
+        // Top-level categories, each carrying its sub-categories as a nested
+        // list (`linkList` below), so a child never reads as a category of
+        // its own. Ritual collections are left to the Rituals column
+        // (getShopMenuTree).
+        ...getShopMenuTree(categories, { menuOnly: false }).map(({ cat, children }) => ({
+          key: `cat-${cat.id}`,
+          label: cat.displayName || cat.name,
+          path: categoryPath(cat),
+          children: children.map((child) => ({
+            key: `cat-${child.id}`,
+            label: child.displayName || child.name,
+            path: categoryPath(child),
           })),
+        })),
         { key: "all-products", label: "All products", path: ROUTES.SHOP },
       ],
     },
@@ -233,6 +238,17 @@ const Footer = () => {
           <Link to={link.path} className={styles.footerLink}>
             {link.label}
           </Link>
+          {link.children?.length > 0 ? (
+            <ul className={styles.subLinkList} aria-label={`${link.label} sub-categories`}>
+              {link.children.map((child) => (
+                <li key={child.key}>
+                  <Link to={child.path} className={`${styles.footerLink} ${styles.subLink}`}>
+                    {child.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </li>
       ))}
     </ul>

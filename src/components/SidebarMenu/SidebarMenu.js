@@ -58,8 +58,9 @@ import styles from "./SidebarMenu.module.css";
 // landmark list.
 //
 // WHAT IS DELIBERATELY GONE. The theme row (there is one theme — Prompt 03),
-// the recursive multi-level category tree (the catalogue is one flat level of
-// seven), the "Discover" sort deep links (the shop has no sort — brief §7.3),
+// the recursive multi-level category tree (a sub-category is one line of pills
+// under its parent, never a nested accordion), the "Discover" sort deep links
+// (the shop has no sort — brief §7.3),
 // and `TrustStrip`, which becomes a home page section in Prompt 15.
 // =============================================================================
 
@@ -332,21 +333,24 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
                 {cat.displayName || cat.name}
               </span>
             </Link>
+            {/* Sub-categories as pills under the parent, starting on its
+                name's x — the desktop Shop panel draws the same thing. */}
             {children.length > 0 ? (
-              <ul className={styles.subList}>
+              <ul
+                className={styles.subList}
+                aria-label={`${cat.displayName || cat.name} sub-categories`}
+              >
                 {children.map((child) => {
                   const childTo = categoryPath(child);
                   return (
                     <li key={child.id ?? child.slug}>
                       <Link
                         to={childTo}
-                        className={`${styles.catRow} ${styles.subRow}`}
+                        className={styles.subPill}
                         onClick={close}
                         aria-current={pathname === childTo ? "page" : undefined}
                       >
-                        <span className={styles.catName}>
-                          {child.displayName || child.name}
-                        </span>
+                        {child.displayName || child.name}
                       </Link>
                     </li>
                   );
@@ -425,31 +429,37 @@ const SidebarMenu = ({ open, onClose, onOpenAuth }) => {
 
       {/* ---- Brand ------------------------------------------------------- */}
       <nav aria-label="Brand" className={styles.brandNav}>
-        {brandLinks.map((item) => (
-          <React.Fragment key={item.key}>
-            <Link
-              to={item.to}
-              className={styles.brandLink}
-              onClick={close}
-              aria-current={item.active ? "page" : undefined}
-            >
-              {item.label}
-            </Link>
-            {/* The Rituals link's collections — each opens /rituals scrolled
-                to that collection. */}
-            {item.children?.length > 0 ? (
-              <ul className={styles.brandSubList}>
-                {item.children.map((child) => (
-                  <li key={child.key}>
-                    <Link to={child.to} className={styles.brandSubLink} onClick={close}>
-                      {child.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </React.Fragment>
-        ))}
+        {brandLinks.map((item) => {
+          const hasSub = item.children?.length > 0;
+          return (
+            <React.Fragment key={item.key}>
+              <Link
+                to={item.to}
+                className={`${styles.brandLink} ${hasSub ? styles.brandLinkWithSub : ""}`}
+                onClick={close}
+                aria-current={item.active ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+              {/* The Rituals link's collections, as the same pills — each
+                  opens /rituals scrolled to that collection. */}
+              {hasSub ? (
+                <ul
+                  className={`${styles.subList} ${styles.brandSubList}`}
+                  aria-label={`${item.label} collections`}
+                >
+                  {item.children.map((child) => (
+                    <li key={child.key}>
+                      <Link to={child.to} className={styles.subPill} onClick={close}>
+                        {child.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </React.Fragment>
+          );
+        })}
       </nav>
 
       {/* ---- Account ----------------------------------------------------- */}

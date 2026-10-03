@@ -8,10 +8,12 @@
  *
  * WHAT THIS FILE OWNS is the CONTENT of a drawer someone else draws: five
  * custom properties that retune the primitive's chrome to a navigation menu,
- * and the four row languages the body is made of —
+ * and the five row languages the body is made of —
  *
  *   Fraunces 22px / 52px      the primary rows: "Shop" and the brand links
  *   Manrope 16px / 48px       a category row, behind a 32px product plate
+ *   Manrope 14px / 44px pill  a sub-category or ritual collection, under its
+ *                             parent row
  *   Manrope 15px / 48px       an account or contact row, behind a 20px glyph
  *   Manrope 12px muted        the legal note under the CTA
  *
@@ -117,50 +119,58 @@
   color: var(--sf-color-gold);
 }
 
-/* Sub-categories, indented under their parent's name (32px plate + gap). */
+/* ---- Sub-categories --------------------------------------------------------
+   Pills under the parent row, starting on its name's x (the 32px plate and
+   the gap) and wrapping as they need to — the language the desktop Shop panel
+   uses for the same tree. Tucked 4px into the row above, so they read as the
+   parent's last line rather than as the next category. */
 .subList {
-  list-style: none;
-  margin: 0;
-  padding: 0 0 0 calc(32px + var(--sf-space-3));
-}
-
-.subRow {
-  min-height: 40px;
-  padding-left: var(--sf-space-3);
-  border-left: 1px solid var(--sf-color-border);
-  font-size: var(--sf-text-sm);
-}
-
-/* The Rituals link's collections, under it. */
-.brandSubList {
-  list-style: none;
-  margin: 0;
-  padding: var(--sf-space-1) 0 var(--sf-space-2) var(--sf-space-4);
-  border-bottom: 1px solid var(--sf-color-border);
-}
-
-.brandSubLink {
   display: flex;
-  align-items: center;
-  min-height: 40px;
-  padding-left: var(--sf-space-3);
-  border-left: 1px solid var(--sf-color-border);
+  flex-wrap: wrap;
+  gap: var(--sf-space-2);
+  list-style: none;
+  margin: calc(var(--sf-space-1) * -1) 0 0;
+  padding: 0 0 var(--sf-space-3) calc(32px + var(--sf-space-3));
+}
+
+.subList > li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* A hairline pill on the neutral badge ground at the full tap target: the
+   44px is the line box plus the hairline. `inline-block` rather than flex so
+   a name longer than the drawer ends in an ellipsis instead of overflowing. */
+.subPill {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 var(--sf-space-4);
+  border: 1px solid var(--sf-color-border);
+  border-radius: var(--sf-radius-pill);
+  background: var(--sf-color-badge-bg);
   color: var(--sf-color-text-secondary);
-  font-size: var(--sf-text-base);
+  font-family: var(--sf-font-family);
+  font-size: var(--sf-text-sm);
+  font-weight: var(--sf-font-medium);
+  line-height: calc(var(--sf-tap-target) - 2px);
   text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  transition: color var(--sf-transition-fast),
+    border-color var(--sf-transition-fast),
+    background-color var(--sf-transition-fast);
 }
 
-@media (hover: hover) {
-  .brandSubLink:hover {
-    color: var(--sf-color-gold);
-  }
-}
-
-.brandSubLink:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--sf-shadow-focus);
-  border-radius: var(--sf-radius-sm);
+/* The Rituals link's collections: the same pills, flush with the link (the
+   brand rows have no plate to indent past). The link gives up its own hairline
+   and the pills close the block with it, so the collections sit inside the
+   Rituals row rather than between two rules of their own. */
+.brandSubList {
+  padding-left: 0;
+  padding-bottom: var(--sf-space-4);
+  border-bottom: 1px solid var(--sf-color-border);
 }
 
 /* A catalogue still in flight says so rather than showing an empty group. */
@@ -193,6 +203,11 @@
   line-height: var(--sf-leading-tight);
   text-decoration: none;
   transition: color var(--sf-transition-fast);
+}
+
+/* Its collections' pills close the block instead (`.brandSubList`). */
+.brandLinkWithSub {
+  border-bottom: 0;
 }
 
 /* ---- Account -------------------------------------------------------------- */
@@ -382,6 +397,14 @@
   color: var(--sf-color-gold);
 }
 
+/* A pill marks the place with the soft gold wash as well — gold type alone is
+   too little on a 14px label inside a hairline. */
+.subPill[aria-current="page"] {
+  background-color: var(--sf-color-primary-soft);
+  border-color: var(--sf-color-border-strong);
+  color: var(--sf-color-gold);
+}
+
 @media (hover: hover) {
   .shopAccordion button[aria-expanded]:hover,
   .catRow:hover,
@@ -391,10 +414,17 @@
   .socialLink:hover {
     color: var(--sf-color-gold);
   }
+
+  .subPill:hover {
+    background-color: var(--sf-color-surface-hover);
+    border-color: var(--sf-color-border-strong);
+    color: var(--sf-color-gold);
+  }
 }
 
 .catRow:focus,
 .brandLink:focus,
+.subPill:focus,
 .accountRow:focus,
 .contactRow:focus,
 .socialLink:focus {
@@ -412,9 +442,17 @@
   border-radius: var(--sf-radius-sm);
 }
 
+/* The ring without the radius override above: a pill stays a pill. */
+.subPill:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--sf-shadow-focus);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .catRow,
   .brandLink,
+  .subPill,
   .accountRow,
   .contactRow,
   .socialLink {
